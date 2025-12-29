@@ -179,6 +179,63 @@ export default function BecomeSubscriberPage() {
     }
   };
 
+  const handleDownloadApplication = async () => {
+    if (!applicationRef.current) return;
+
+    try {
+      const html2canvas = (await import("html2canvas")).default;
+      const jsPDF = (await import("jspdf")).default;
+
+      // Создаем canvas из HTML элемента
+      const canvas = await html2canvas(applicationRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      });
+
+      // Создаем PDF
+      const pdf = new jsPDF("p", "mm", "a4");
+      const imgData = canvas.toDataURL("image/png");
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      const imgScaledWidth = imgWidth * ratio;
+      const imgScaledHeight = imgHeight * ratio;
+      const xOffset = (pdfWidth - imgScaledWidth) / 2;
+      const yOffset = (pdfHeight - imgScaledHeight) / 2;
+
+      pdf.addImage(imgData, "PNG", xOffset, yOffset, imgScaledWidth, imgScaledHeight);
+      
+      // Генерируем имя файла
+      const fileName = `zayavlenie_TU_${formData.lastName}_${new Date().toISOString().split("T")[0]}.pdf`;
+      
+      // Скачиваем PDF
+      pdf.save(fileName);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      // Fallback на печать браузера
+      window.print();
+    }
+  };
+
+  const handlePrintApplication = () => {
+    window.print();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+      setUploadedFiles((prev) => [...prev, ...files]);
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async () => {
     setError(null);
     setIsSubmitting(true);

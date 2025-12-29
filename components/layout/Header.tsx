@@ -360,12 +360,12 @@ export function Header() {
         <>
           {/* Затемнение фона */}
           <div 
-            className="fixed inset-0 bg-black/50 z-40 md:hidden animate-in fade-in"
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden animate-in fade-in"
             onClick={() => setMobileMenuOpen(false)}
           />
           
           {/* Само меню */}
-          <div className="fixed inset-y-0 right-0 w-full max-w-sm bg-white shadow-xl z-50 md:hidden transform transition-transform duration-300 ease-out animate-in slide-in-from-right">
+          <div className="fixed inset-y-0 right-0 w-full max-w-sm bg-white shadow-xl z-50 lg:hidden transform transition-transform duration-300 ease-out animate-in slide-in-from-right">
             <div className="flex flex-col h-full">
               {/* Заголовок меню */}
               <div className="flex items-center justify-between p-4 border-b bg-gradient-to-br from-blue-200 via-blue-100 to-cyan-100">

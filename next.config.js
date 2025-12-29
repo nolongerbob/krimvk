@@ -19,6 +19,14 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
+  // Явно указываем webpack для разрешения путей
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': __dirname,
+    };
+    return config;
+  },
   // Безопасность заголовков
   async headers() {
     return [

@@ -407,7 +407,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
 
               return (
                 <div key={step.id} className="flex items-center flex-1">
-                  <div className="flex flex-col items-center flex-1">
+                  <div className="flex flex-col items-center flex-1 min-w-0">
                     <button
                       onClick={() => {
                         if (isAccessible) {
@@ -416,7 +416,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                         }
                       }}
                       disabled={!isAccessible}
-                      className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+                      className={`w-12 h-12 rounded-full flex items-center justify-center transition-all flex-shrink-0 ${
                         isActive
                           ? "bg-blue-600 text-white scale-110"
                           : isCompleted
@@ -429,7 +429,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                       <StepIcon className="h-5 w-5" />
                     </button>
                     <span
-                      className={`mt-2 text-xs font-medium ${
+                      className={`mt-2 text-xs font-medium text-center whitespace-nowrap ${
                         isActive ? "text-blue-600" : "text-gray-600"
                       }`}
                     >

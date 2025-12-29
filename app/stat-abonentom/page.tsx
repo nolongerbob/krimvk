@@ -1001,8 +1001,8 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {/* Скрытое заявление для генерации PDF */}
-                  <div ref={applicationRef} className="hidden print:block">
-                    <div className="p-8 space-y-6" style={{ fontFamily: "Arial, sans-serif" }}>
+                  <div ref={applicationRef} className="hidden print:block print:visible">
+                    <div className="p-8 space-y-6 print:p-4" style={{ fontFamily: "Arial, sans-serif", fontSize: "12pt" }}>
                       <div className="text-center mb-8">
                         <h2 className="text-2xl font-bold mb-2">ЗАЯВЛЕНИЕ</h2>
                         <p className="text-lg">о выдаче технических условий</p>

@@ -245,3 +245,35 @@ main {
 /* BVI Font Size - поддержка процентных значений */
 /* Размер шрифта применяется через inline стили в JavaScript */
 /* CSS правила не нужны, так как fontSize устанавливается напрямую на html и body */
+
+/* Стили для печати заявления */
+@media print {
+  @page {
+    margin: 2cm;
+  }
+  
+  body * {
+    visibility: hidden;
+  }
+  
+  .print\\:block,
+  .print\\:block * {
+    visibility: visible;
+  }
+  
+  .print\\:block {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+  
+  /* Скрываем все остальное при печати */
+  header,
+  footer,
+  nav,
+  button,
+  .no-print {
+    display: none !important;
+  }
+}

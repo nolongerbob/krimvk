@@ -1,0 +1,336 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String? // Опционально для OAuth пользователей
+  name      String?
+  phone     String?
+  address   String?
+  role      UserRole @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  accounts         Account[] // NextAuth accounts
+  sessions         Session[]
+  applications     Application[]
+  bills            Bill[]
+  meters           WaterMeter[]
+  questions        Question[]
+  news             News[]
+  pages            Page[]
+  posts            Post[]
+  emergencyReports EmergencyReport[]
+  userAccounts     UserAccount[] // Лицевые счета пользователя
+
+  @@map("users")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// Услуги водоканала
+model Service {
+  id          String   @id @default(cuid())
+  title       String
+  description String   @db.Text
+  category    String // подключение, ремонт, консультация и т.д.
+  price       Float?
+  icon        String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  applications Application[]
+
+  @@map("services")
+}
+
+// Заявки на услуги
+model Application {
+  id          String            @id @default(cuid())
+  userId      String
+  serviceId   String
+  status      ApplicationStatus @default(PENDING)
+  description String?           @db.Text
+  address     String?
+  phone       String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@map("applications")
+}
+
+enum ApplicationStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+// Счета за воду
+model Bill {
+  id        String     @id @default(cuid())
+  userId    String
+  amount    Float
+  period    String // "2024-01"
+  status    BillStatus @default(UNPAID)
+  dueDate   DateTime
+  paidAt    DateTime?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("bills")
+}
+
+enum BillStatus {
+  UNPAID
+  PAID
+  OVERDUE
+}
+
+// Лицевые счета
+model UserAccount {
+  id            String   @id @default(cuid())
+  userId        String
+  accountNumber String   @unique // Номер лицевого счета (из 1С) - WaLsCode
+  address       String
+  name          String? // ФИО абонента
+  phone         String?
+  password1c    String? // Пароль для доступа к 1С API - WaPass
+  region        String? // Регион для 1С API (prog или название региона)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  meters WaterMeter[]
+
+  @@map("user_accounts")
+}
+
+// Счетчики воды
+model WaterMeter {
+  id           String   @id @default(cuid())
+  userId       String
+  accountId    String? // Связь с лицевым счетом
+  serialNumber String
+  address      String
+  type         String // горячая/холодная
+  lastReading  Float?
+  installedAt  DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account  UserAccount?   @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  readings MeterReading[]
+
+  @@unique([accountId, serialNumber])
+  @@map("water_meters")
+}
+
+// Показания счетчиков
+model MeterReading {
+  id                String   @id @default(cuid())
+  meterId           String
+  value             Float
+  readingDate       DateTime @default(now())
+  photoUrl          String? // URL фотографии счетчика
+  aiRecognizedValue Float? // Значение, распознанное ИИ
+  aiConfidence      Float? // Уровень уверенности ИИ (0-1)
+  createdAt         DateTime @default(now())
+
+  meter WaterMeter @relation(fields: [meterId], references: [id], onDelete: Cascade)
+
+  @@map("meter_readings")
+}
+
+// Новости
+model News {
+  id          String    @id @default(cuid())
+  title       String
+  content     String    @db.Text
+  imageUrl    String? // URL изображения
+  authorId    String
+  published   Boolean   @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@map("news")
+}
+
+// Диалоги (чаты) с поддержкой
+model Question {
+  id        String         @id @default(cuid())
+  userId    String
+  status    QuestionStatus @default(PENDING)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@map("questions")
+}
+
+enum QuestionStatus {
+  PENDING // Ожидает ответа
+  IN_PROGRESS // В работе
+  COMPLETED // Завершен
+}
+
+// Сообщения в диалогах
+model Message {
+  id          String   @id @default(cuid())
+  questionId  String
+  text        String   @db.Text
+  imageUrl    String? // URL изображения
+  isFromAdmin Boolean  @default(false)
+  authorId    String? // ID админа, если сообщение от админа
+  createdAt   DateTime @default(now())
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+// Страницы/разделы сайта (категории)
+model Page {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique // URL путь, например "/abonenty/otkachka"
+  description String?  @db.Text // Описание для SEO
+  content     String?  @db.Text // HTML контент страницы (опционально, для статических страниц)
+  parentId    String? // ID родительской страницы для иерархии
+  order       Int      @default(0) // Порядок отображения
+  isActive    Boolean  @default(true)
+  isCategory  Boolean  @default(false) // true = категория для постов, false = обычная страница
+  authorId    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  parent   Page?  @relation("PageHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children Page[] @relation("PageHierarchy")
+  posts    Post[] // Посты в этой категории
+
+  @@map("pages")
+}
+
+// Посты в разделах (как новости)
+model Post {
+  id        String   @id @default(cuid())
+  pageId    String // ID раздела (категории)
+  title     String
+  slug      String   @unique // URL slug поста (автоматически генерируется из title)
+  content   String   @db.Text // HTML контент поста
+  authorId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  page        Page       @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  author      User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  attachments PostFile[] // Файлы, прикрепленные к посту
+
+  @@map("posts")
+}
+
+// Файлы, прикрепленные к постам
+model PostFile {
+  id         String   @id @default(cuid())
+  postId     String
+  fileName   String // Оригинальное имя файла
+  filePath   String // Путь к файлу в public/uploads/posts
+  fileSize   Int // Размер файла в байтах
+  mimeType   String // MIME тип файла
+  uploadedAt DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@map("post_files")
+}
+
+// Сообщения об авариях (доступны всем пользователям, даже неавторизованным)
+model EmergencyReport {
+  id          String          @id @default(cuid())
+  name        String? // Имя заявителя (опционально для неавторизованных)
+  phone       String // Телефон (обязательно)
+  email       String? // Email (опционально)
+  address     String // Адрес аварии
+  description String          @db.Text // Описание проблемы
+  userId      String? // ID пользователя, если авторизован
+  status      EmergencyStatus @default(PENDING)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("emergency_reports")
+}
+
+enum EmergencyStatus {
+  PENDING
+  IN_PROGRESS
+  RESOLVED
+  CANCELLED
+}

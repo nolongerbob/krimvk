@@ -6,6 +6,7 @@ import { Wrench, FileText, CreditCard, Phone, CheckCircle, Droplet, AlertTriangl
 import { QuickActionCard } from "@/components/QuickActionCard";
 import { AboutCompany } from "@/components/AboutCompany";
 import { NewsSection } from "@/components/NewsSection";
+import { BecomeSubscriberButton } from "@/components/BecomeSubscriberButton";
 import { prisma } from "@/lib/prisma";
 
 export default async function HomePage() {
@@ -66,9 +67,7 @@ export default async function HomePage() {
               <Button asChild size="lg" variant="outline" className="bg-white border-blue-300 text-blue-600 hover:bg-blue-50 text-lg px-8 py-10">
                 <Link href="/login">Личный кабинет</Link>
               </Button>
-              <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700 text-white text-lg px-20 py-10">
-                <Link href="/register">Стать абонентом</Link>
-              </Button>
+              <BecomeSubscriberButton className="bg-blue-600 hover:bg-blue-700 text-white text-lg px-20 py-10" />
             </div>
           </div>
         </div>

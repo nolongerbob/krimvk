@@ -229,18 +229,34 @@ export default function BecomeSubscriberPage() {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Error downloading PDF:", error);
-      setError(error instanceof Error ? error.message : "Ошибка при скачивании PDF");
+      const errorMessage = error instanceof Error ? error.message : "Ошибка при скачивании PDF";
+      
       // Fallback на старый метод через html2canvas
       if (applicationRef.current) {
         try {
           const html2canvas = (await import("html2canvas")).default;
           const jsPDF = (await import("jspdf")).default;
 
-          const canvas = await html2canvas(applicationRef.current, {
+          // Показываем заявление для генерации
+          const hiddenElement = applicationRef.current;
+          const originalDisplay = hiddenElement.style.display;
+          hiddenElement.style.display = "block";
+          hiddenElement.style.position = "absolute";
+          hiddenElement.style.left = "-9999px";
+          hiddenElement.style.top = "0";
+
+          const canvas = await html2canvas(hiddenElement, {
             scale: 2,
             useCORS: true,
             logging: false,
+            backgroundColor: "#ffffff",
           });
+
+          // Восстанавливаем скрытие
+          hiddenElement.style.display = originalDisplay;
+          hiddenElement.style.position = "";
+          hiddenElement.style.left = "";
+          hiddenElement.style.top = "";
 
           const pdf = new jsPDF("p", "mm", "a4");
           const imgData = canvas.toDataURL("image/png");
@@ -261,8 +277,10 @@ export default function BecomeSubscriberPage() {
           pdf.save(fileName);
         } catch (fallbackError) {
           console.error("Fallback error:", fallbackError);
-          window.print();
+          setError(`Ошибка: ${errorMessage}. Попробуйте использовать кнопку "Печать" для сохранения заявления.`);
         }
+      } else {
+        setError(errorMessage);
       }
     }
   };
@@ -1047,13 +1065,13 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {/* Предпросмотр заявления */}
-                  <div className="border rounded-lg p-6 bg-white mb-4">
+                  <div className="border rounded-lg p-6 bg-white mb-4 max-h-[600px] overflow-y-auto">
                     <div className="space-y-3 text-xs" style={{ fontFamily: "Times New Roman, serif", lineHeight: "1.5" }}>
                       <div className="text-right mb-2">
                         <p className="text-xs">Приложение №1</p>
                       </div>
                       <div className="text-center mb-4">
-                        <p className="text-xs mb-2">к Правилам подключения (технологического присоединения) объектов капитального строительства к централизованным системам горячего водоснабжения, холодного водоснабжения и (или) водоотведения</p>
+                        <p className="text-xs mb-2 leading-relaxed">к Правилам подключения (технологического присоединения) объектов капитального строительства к централизованным системам горячего водоснабжения, холодного водоснабжения и (или) водоотведения</p>
                         <h3 className="text-base font-bold mb-1 mt-3">ЗАПРОС</h3>
                         <p className="text-sm">о выдаче технических условий на подключение</p>
                         <p className="text-sm">(технологическое присоединение) к централизованным системам</p>
@@ -1213,7 +1231,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                             для индивидуальных предпринимателей - наименование, основной государственный регистрационный номер записи в Едином государственном реестре индивидуальных предпринимателей, идентификационный номер налогоплательщика;<br/>
                             для физических лиц - фамилия, имя, отчество (последнее - при наличии), дата рождения, данные паспорта или иного документа, удостоверяющего личность, идентификационный номер налогоплательщика, страховой номер индивидуального лицевого счета)
                           </p>
-                          <p className="ml-4 border-b border-black min-h-[20px]">
+                          <p className="ml-4 border-b border-gray-400 min-h-[20px] py-1">
                             {formData.lastName} {formData.firstName} {formData.middleName}
                             {formData.birthDate && `, дата рождения: ${new Date(formData.birthDate).toLocaleDateString("ru-RU")}`}
                             {formData.passportSeries && formData.passportNumber && `, паспорт серия ${formData.passportSeries} № ${formData.passportNumber}`}
@@ -1226,105 +1244,105 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                         </div>
 
                         <div>
-                          <p className="mb-1"><strong>3. Контактные данные лица, обратившегося за выдачей технических условий</strong></p>
+                          <p className="mb-1 font-semibold">3. Контактные данные лица, обратившегося за выдачей технических условий</p>
                           <div className="ml-4 space-y-1 mb-2">
-                            <div className="border-b border-black min-h-[20px]"></div>
-                            <div className="border-b border-black min-h-[20px]"></div>
-                            <div className="border-b border-black min-h-[20px]"></div>
-                            <div className="border-b border-black min-h-[20px]"></div>
+                            <div className="border-b border-gray-400 min-h-[20px]"></div>
+                            <div className="border-b border-gray-400 min-h-[20px]"></div>
+                            <div className="border-b border-gray-400 min-h-[20px]"></div>
+                            <div className="border-b border-gray-400 min-h-[20px]"></div>
                           </div>
-                          <p className="ml-4 text-[10px] leading-tight mb-2">
+                          <p className="ml-4 text-[9px] leading-tight mb-2 text-gray-600">
                             (для органов государственной власти и местного самоуправления - место нахождения, почтовый адрес, контактный телефон, адрес электронной почты, для юридических лиц - место нахождения и адрес, указанные в Едином государственном реестре юридических лиц, почтовый адрес, фактический адрес, контактный телефон, адрес электронной почты;<br/>
                             для индивидуальных предпринимателей - адрес регистрации по месту жительства, почтовый адрес, контактный телефон, адрес электронной почты;<br/>
                             для физических лиц - адрес регистрации по месту жительства, почтовый адрес, контактный телефон, адрес электронной почты)
                           </p>
-                          <p className="ml-4 border-b border-black min-h-[20px]">
+                          <p className="ml-4 border-b border-gray-400 min-h-[20px] py-1">
                             Адрес регистрации: {formData.registrationAddress || "_________________"}
                             {formData.phone && `, телефон: ${formData.phone}`}
                           </p>
                         </div>
 
                         <div>
-                          <p className="mb-1"><strong>4. Основания обращения с запросом о выдаче технических условий:</strong></p>
-                          <p className="ml-4 border-b border-black min-h-[40px] mb-2">
+                          <p className="mb-1 font-semibold">4. Основания обращения с запросом о выдаче технических условий:</p>
+                          <p className="ml-4 border-b border-gray-400 min-h-[40px] mb-2 py-1">
                             Правообладатель земельного участка
                           </p>
-                          <p className="ml-4 text-[10px] leading-tight">
+                          <p className="ml-4 text-[9px] leading-tight text-gray-600">
                             (указание, кем именно из перечня лиц, имеющих право обратиться с запросом о выдаче технических условий, указанных в пунктах 9 и 11 Правил подключения (технологического присоединения) объектов капитального строительства к централизованным системам горячего водоснабжения, холодного водоснабжения и (или) водоотведения, утвержденных постановлением Правительства Российской Федерации от 30 ноября 2021 г. № 2130 является данное лицо, а для правообладателя земельного участка также информация о праве лица на земельный участок, на который расположен подключаемый объект основания возникновения такого права)
                           </p>
                         </div>
 
                         <div>
-                          <p className="mb-1"><strong>5. В связи с</strong> <span className="border-b border-black inline-block min-w-[200px]">{formData.constructionType || "_________________"}</span> <strong>прошу выдать технические условия на подключение (технологическое присоединение)</strong></p>
-                          <p className="ml-4 text-[10px] leading-tight mb-1">(новым строительством, реконструкцией, модернизацией - указать нужное)</p>
+                          <p className="mb-1 font-semibold">5. В связи с <span className="border-b border-gray-400 inline-block min-w-[200px] px-1">{formData.constructionType || "_________________"}</span> прошу выдать технические условия на подключение (технологическое присоединение)</p>
+                          <p className="ml-4 text-[9px] leading-tight mb-1 text-gray-600">(новым строительством, реконструкцией, модернизацией - указать нужное)</p>
                           <p className="ml-4 mb-1">объекта капитального строительства, водопроводных и (или) канализационных сетей, иного объекта, не относящегося к объектам капитального строительства (указать нужное):</p>
-                          <p className="ml-4 border-b border-black min-h-[30px] mb-1">
+                          <p className="ml-4 border-b border-gray-400 min-h-[30px] mb-1 py-1">
                             {formData.objectType === "residential" ? "Жилой дом" : formData.objectType === "apartment" ? "Квартира" : formData.objectType === "commercial" ? "Коммерческий объект" : formData.objectType === "industrial" ? "Промышленный объект" : "_________________"}
                           </p>
-                          <p className="ml-4 text-[10px] leading-tight mb-1">(наименование объекта или сетей)</p>
+                          <p className="ml-4 text-[9px] leading-tight mb-1 text-gray-600">(наименование объекта или сетей)</p>
                           <p className="ml-4 mt-1">расположенного (проектируемого) по адресу:</p>
-                          <p className="ml-4 border-b border-black min-h-[30px] mb-1">
+                          <p className="ml-4 border-b border-gray-400 min-h-[30px] mb-1 py-1">
                             {formData.objectAddress || "_________________"}
                           </p>
-                          <p className="ml-4 text-[10px] leading-tight">(место нахождения объекта или сетей)</p>
+                          <p className="ml-4 text-[9px] leading-tight text-gray-600">(место нахождения объекта или сетей)</p>
                         </div>
 
                         <div>
-                          <p className="mb-1"><strong>6. Требуется подключение к централизованной системе</strong></p>
-                          <p className="ml-4 border-b border-black min-h-[30px] mb-1">
+                          <p className="mb-1 font-semibold">6. Требуется подключение к централизованной системе</p>
+                          <p className="ml-4 border-b border-gray-400 min-h-[30px] mb-1 py-1">
                             {formData.connectionTypeWater && "холодного водоснабжения"} {formData.connectionTypeWater && formData.connectionTypeSewerage && ", "} {formData.connectionTypeSewerage && "водоотведения"}
                             {!formData.connectionTypeWater && !formData.connectionTypeSewerage && "_________________"}
                           </p>
-                          <p className="ml-4 text-[10px] leading-tight">(холодного водоснабжения, водоотведения – указать нужное)</p>
+                          <p className="ml-4 text-[9px] leading-tight text-gray-600">(холодного водоснабжения, водоотведения – указать нужное)</p>
                         </div>
 
                         <div>
-                          <p className="mb-1"><strong>7. Необходимые виды ресурсов или услуг, планируемых к получению через централизованную систему</strong></p>
-                          <p className="ml-4 border-b border-black min-h-[30px] mb-1">
+                          <p className="mb-1 font-semibold">7. Необходимые виды ресурсов или услуг, планируемых к получению через централизованную систему</p>
+                          <p className="ml-4 border-b border-gray-400 min-h-[30px] mb-1 py-1">
                             {formData.resourceType || "получение питьевой воды, сброс хозяйственно-бытовых сточных вод"}
                           </p>
-                          <p className="ml-4 text-[10px] leading-tight">(получение питьевой или технической воды, сброс хозяйственно-бытовых, сточных вод)</p>
+                          <p className="ml-4 text-[9px] leading-tight text-gray-600">(получение питьевой или технической воды, сброс хозяйственно-бытовых, сточных вод)</p>
                         </div>
 
                         <div>
-                          <p className="mb-1"><strong>8. Информация о предельных параметрах разрешенного строительства (реконструкции) подключаемых объектов, соответствующих указанному земельному участку</strong></p>
-                          <p className="ml-4 border-b border-black min-h-[30px] mb-1">
+                          <p className="mb-1 font-semibold">8. Информация о предельных параметрах разрешенного строительства (реконструкции) подключаемых объектов, соответствующих указанному земельному участку</p>
+                          <p className="ml-4 border-b border-gray-400 min-h-[30px] mb-1 py-1">
                             {formData.objectHeight && `Высота: ${formData.objectHeight} м, `}
                             {formData.objectFloors && `Этажность: ${formData.objectFloors}, `}
                             {formData.networkLength && `Протяженность сети: ${formData.networkLength} м, `}
                             {formData.pipeDiameter && `Диаметр: ${formData.pipeDiameter} мм`}
                             {!formData.objectHeight && !formData.objectFloors && !formData.networkLength && !formData.pipeDiameter && "_________________"}
                           </p>
-                          <p className="ml-4 text-[10px] leading-tight">(высота объекта, этажность, протяженность и диаметр сети)</p>
+                          <p className="ml-4 text-[9px] leading-tight text-gray-600">(высота объекта, этажность, протяженность и диаметр сети)</p>
                         </div>
 
                         <div>
-                          <p className="mb-1"><strong>9. Планируемый срок ввода в эксплуатацию подключаемого объекта</strong></p>
-                          <p className="ml-4 border-b border-black min-h-[30px] mb-1">
+                          <p className="mb-1 font-semibold">9. Планируемый срок ввода в эксплуатацию подключаемого объекта</p>
+                          <p className="ml-4 border-b border-gray-400 min-h-[30px] mb-1 py-1">
                             {formData.plannedCommissioningDate || "_________________"}
                           </p>
-                          <p className="ml-4 text-[10px] leading-tight">(указывается при наличии соответствующей информации)</p>
+                          <p className="ml-4 text-[9px] leading-tight text-gray-600">(указывается при наличии соответствующей информации)</p>
                         </div>
 
                         <div>
-                          <p className="mb-1"><strong>10. Планируемая величина максимальной необходимой мощности (нагрузки) составляет для:</strong></p>
+                          <p className="mb-1 font-semibold">10. Планируемая величина максимальной необходимой мощности (нагрузки) составляет для:</p>
                           <p className="ml-4">
-                            потребления холодной воды <span className="border-b border-black inline-block min-w-[40px] text-center">{formData.maxWaterConsumptionLps || "____"}</span> л/с, <span className="border-b border-black inline-block min-w-[40px] text-center">{formData.maxWaterConsumptionM3h || "____"}</span> куб.м/час, <span className="border-b border-black inline-block min-w-[40px] text-center">{formData.maxWaterConsumptionM3day || "____"}</span> куб. м./сутки,
+                            потребления холодной воды <span className="border-b border-gray-400 inline-block min-w-[40px] text-center px-1">{formData.maxWaterConsumptionLps || "____"}</span> л/с, <span className="border-b border-gray-400 inline-block min-w-[40px] text-center px-1">{formData.maxWaterConsumptionM3h || "____"}</span> куб.м/час, <span className="border-b border-gray-400 inline-block min-w-[40px] text-center px-1">{formData.maxWaterConsumptionM3day || "____"}</span> куб. м./сутки,
                           </p>
                           <p className="ml-4">
-                            в том числе на нужды пожаротушения - наружного <span className="border-b border-black inline-block min-w-[40px] text-center">{formData.fireExtinguishingExternal || "____"}</span> л/сек, внутреннего <span className="border-b border-black inline-block min-w-[40px] text-center">{formData.fireExtinguishingInternal || "____"}</span> л/сек. (количество пожарных кранов <span className="border-b border-black inline-block min-w-[40px] text-center">{formData.fireHydrantsCount || "____"}</span> штук), автоматическое <span className="border-b border-black inline-block min-w-[40px] text-center">{formData.fireExtinguishingAutomatic || "____"}</span> л/сек.
+                            в том числе на нужды пожаротушения - наружного <span className="border-b border-gray-400 inline-block min-w-[40px] text-center px-1">{formData.fireExtinguishingExternal || "____"}</span> л/сек, внутреннего <span className="border-b border-gray-400 inline-block min-w-[40px] text-center px-1">{formData.fireExtinguishingInternal || "____"}</span> л/сек. (количество пожарных кранов <span className="border-b border-gray-400 inline-block min-w-[40px] text-center px-1">{formData.fireHydrantsCount || "____"}</span> штук), автоматическое <span className="border-b border-gray-400 inline-block min-w-[40px] text-center px-1">{formData.fireExtinguishingAutomatic || "____"}</span> л/сек.
                           </p>
                           <p className="ml-4">
-                            водоотведения <span className="border-b border-black inline-block min-w-[40px] text-center">{formData.wastewaterLps || "____"}</span> л/с <span className="border-b border-black inline-block min-w-[40px] text-center">{formData.wastewaterM3h || "____"}</span> куб. м/час, <span className="border-b border-black inline-block min-w-[40px] text-center">{formData.wastewaterM3day || "____"}</span> куб. м/сутки
+                            водоотведения <span className="border-b border-gray-400 inline-block min-w-[40px] text-center px-1">{formData.wastewaterLps || "____"}</span> л/с <span className="border-b border-gray-400 inline-block min-w-[40px] text-center px-1">{formData.wastewaterM3h || "____"}</span> куб. м/час, <span className="border-b border-gray-400 inline-block min-w-[40px] text-center px-1">{formData.wastewaterM3day || "____"}</span> куб. м/сутки
                           </p>
                         </div>
 
                         <div>
-                          <p className="mb-1"><strong>11. Результаты рассмотрения запроса прошу направить (выбрать один из способов уведомления)</strong></p>
-                          <p className="ml-4 border-b border-black min-h-[30px] mb-1">
+                          <p className="mb-1 font-semibold">11. Результаты рассмотрения запроса прошу направить (выбрать один из способов уведомления)</p>
+                          <p className="ml-4 border-b border-gray-400 min-h-[30px] mb-1 py-1">
                             {formData.notificationMethod || "на адрес электронной почты"}
                           </p>
-                          <p className="ml-4 text-[10px] leading-tight">(на адрес электронной почты, письмом посредством почтовой связи по адресу, иной способ)</p>
+                          <p className="ml-4 text-[9px] leading-tight text-gray-600">(на адрес электронной почты, письмом посредством почтовой связи по адресу, иной способ)</p>
                         </div>
 
                         <div className="mt-4">
@@ -1332,7 +1350,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                         </div>
 
                         <div className="mt-4">
-                          <p className="text-[10px] leading-tight"><strong>Примечание.</strong> К настоящему запросу прилагаются документы, предусмотренные пунктом 14 Правил подключения (технологического присоединения) объектов капитального строительства к централизованным системам горячего водоснабжения, холодного водоснабжения и (или) водоотведения, утвержденных постановлением Правительства Российской Федерации от 30 ноября 2021 г. №2130 «Об утверждении Правил подключения (технологического присоединения) объектов капитального строительства к централизованным системам горячего водоснабжения, холодного водоснабжения и (или) водоотведения и о внесении изменений и признании утратившими силу некоторых актов Правительства Российской Федерации».</p>
+                          <p className="text-[9px] leading-tight text-gray-600"><strong>Примечание.</strong> К настоящему запросу прилагаются документы, предусмотренные пунктом 14 Правил подключения (технологического присоединения) объектов капитального строительства к централизованным системам горячего водоснабжения, холодного водоснабжения и (или) водоотведения, утвержденных постановлением Правительства Российской Федерации от 30 ноября 2021 г. №2130 «Об утверждении Правил подключения (технологического присоединения) объектов капитального строительства к централизованным системам горячего водоснабжения, холодного водоснабжения и (или) водоотведения и о внесении изменений и признании утратившими силу некоторых актов Правительства Российской Федерации».</p>
                         </div>
 
                         <div className="mt-6 flex justify-between items-end">
@@ -1340,9 +1358,9 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                             <p className="text-xs">«____»_____________20__ г.</p>
                           </div>
                           <div className="text-right">
-                            <p className="text-xs mb-8 border-b border-black inline-block min-w-[150px]"></p>
+                            <p className="text-xs mb-8 border-b border-gray-400 inline-block min-w-[150px]"></p>
                             <p className="text-xs">(М.П., подпись)</p>
-                            <p className="text-xs mt-2 border-b border-black inline-block min-w-[150px]">{formData.lastName} {formData.firstName} {formData.middleName}</p>
+                            <p className="text-xs mt-2 border-b border-gray-400 inline-block min-w-[150px]">{formData.lastName} {formData.firstName} {formData.middleName}</p>
                             <p className="text-xs">(Ф.И.О.)</p>
                           </div>
                         </div>

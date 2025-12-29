@@ -12,7 +12,7 @@ interface SearchProps {
 }
 
 export function Search({ mobileMode = false }: SearchProps) {
-  const [isOpen, setIsOpen] = useState(mobileMode);
+  const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);

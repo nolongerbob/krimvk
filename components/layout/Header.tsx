@@ -84,7 +84,7 @@ export function Header() {
             <span className="text-2xl font-bold hidden sm:inline">КрымВК</span>
           </Link>
 
-          <nav className="hidden md:flex items-center space-x-6">
+          <nav className="hidden lg:flex items-center space-x-6">
             {navLinks.map((link) => (
               <Link
                 key={link.href}

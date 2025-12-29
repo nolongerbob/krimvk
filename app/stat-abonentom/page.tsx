@@ -1022,10 +1022,13 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                 <CardContent className="space-y-4">
                   {/* Предпросмотр заявления */}
                   <div className="border rounded-lg p-6 bg-white mb-4">
-                    <div className="space-y-4 text-xs" style={{ fontFamily: "Times New Roman, serif", lineHeight: "1.5" }}>
+                    <div className="space-y-3 text-xs" style={{ fontFamily: "Times New Roman, serif", lineHeight: "1.5" }}>
+                      <div className="text-right mb-2">
+                        <p className="text-xs">Приложение №1</p>
+                      </div>
                       <div className="text-center mb-4">
-                        <p className="text-xs mb-2">Приложение №1 к Правилам подключения (технологического присоединения) объектов капитального строительства к централизованным системам горячего водоснабжения, холодного водоснабжения и (или) водоотведения</p>
-                        <h3 className="text-base font-bold mb-1">ЗАПРОС</h3>
+                        <p className="text-xs mb-2">к Правилам подключения (технологического присоединения) объектов капитального строительства к централизованным системам горячего водоснабжения, холодного водоснабжения и (или) водоотведения</p>
+                        <h3 className="text-base font-bold mb-1 mt-3">ЗАПРОС</h3>
                         <p className="text-sm">о выдаче технических условий на подключение</p>
                         <p className="text-sm">(технологическое присоединение) к централизованным системам</p>
                         <p className="text-sm">холодного водоснабжения и (или) водоотведения</p>
@@ -1152,10 +1155,13 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
 
                   {/* Скрытое заявление для генерации PDF */}
                   <div ref={applicationRef} className="hidden print:block print:visible">
-                    <div className="p-8 space-y-4 print:p-4" style={{ fontFamily: "Times New Roman, serif", fontSize: "11pt", lineHeight: "1.5" }}>
+                    <div className="p-8 space-y-3 print:p-4" style={{ fontFamily: "Times New Roman, serif", fontSize: "11pt", lineHeight: "1.5" }}>
+                      <div className="text-right mb-2">
+                        <p className="text-xs">Приложение №1</p>
+                      </div>
                       <div className="text-center mb-4">
-                        <p className="text-xs mb-2">Приложение №1 к Правилам подключения (технологического присоединения) объектов капитального строительства к централизованным системам горячего водоснабжения, холодного водоснабжения и (или) водоотведения</p>
-                        <h2 className="text-base font-bold mb-1">ЗАПРОС</h2>
+                        <p className="text-xs mb-2">к Правилам подключения (технологического присоединения) объектов капитального строительства к централизованным системам горячего водоснабжения, холодного водоснабжения и (или) водоотведения</p>
+                        <h2 className="text-base font-bold mb-1 mt-3">ЗАПРОС</h2>
                         <p className="text-sm">о выдаче технических условий на подключение</p>
                         <p className="text-sm">(технологическое присоединение) к централизованным системам</p>
                         <p className="text-sm">холодного водоснабжения и (или) водоотведения</p>

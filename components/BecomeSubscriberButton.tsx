@@ -21,14 +21,25 @@ export function BecomeSubscriberButton({ className }: BecomeSubscriberButtonProp
     // Если не авторизован, просто переходим на /register (стандартное поведение Link)
   };
 
+  if (status === "authenticated") {
+    return (
+      <Button
+        size="lg"
+        className={className}
+        onClick={handleClick}
+      >
+        Стать абонентом
+      </Button>
+    );
+  }
+
   return (
     <Button
       asChild
       size="lg"
       className={className}
-      onClick={status === "authenticated" ? handleClick : undefined}
     >
-      <Link href={status === "authenticated" ? "/stat-abonentom" : "/register"}>
+      <Link href="/register">
         Стать абонентом
       </Link>
     </Button>

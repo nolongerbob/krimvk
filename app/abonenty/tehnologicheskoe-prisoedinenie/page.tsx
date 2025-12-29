@@ -10,13 +10,6 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   FileText,
   CheckCircle,
   AlertCircle,
@@ -120,27 +113,33 @@ ${fileUrls.map((url, i) => `${i + 1}. ${url}`).join("\n")}
 Дополнительная информация:
 ${formData.description || "не указано"}`;
 
-      // Сначала пытаемся найти услугу "Технологическое присоединение"
-      const servicesResponse = await fetch("/api/services");
-      let serviceId = null;
+      // Пытаемся найти услугу "Технологическое присоединение" в базе
+      // Если не найдена, создадим заявку с описанием, которое будет обработано администратором
+      let serviceId = "tehnologicheskoe-prisoedinenie"; // Используем специальный ID
       
-      if (servicesResponse.ok) {
-        const services = await servicesResponse.json();
-        const techService = services.find((s: any) => 
-          s.title?.toLowerCase().includes("технологическое") || 
-          s.title?.toLowerCase().includes("присоединение")
-        );
-        if (techService) {
-          serviceId = techService.id;
+      // Пытаемся найти существующую услугу через прямой запрос к БД через API
+      try {
+        const servicesResponse = await fetch("/api/services");
+        if (servicesResponse.ok) {
+          const services: Array<{ id: string; title?: string; category?: string }> = await servicesResponse.json();
+          const techService = services.find((s) => 
+            s.title?.toLowerCase().includes("технологическое") || 
+            s.title?.toLowerCase().includes("присоединение") ||
+            s.category?.toLowerCase().includes("подключение")
+          );
+          if (techService) {
+            serviceId = techService.id;
+          }
         }
+      } catch (err) {
+        console.log("Could not fetch services, using default serviceId");
       }
 
-      // Если услуга не найдена, используем специальный маркер
       const response = await fetch("/api/applications/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          serviceId: serviceId || "tehnologicheskoe-prisoedinenie",
+          serviceId: serviceId,
           address: formData.address,
           phone: formData.phone || session?.user?.email,
           description: description,
@@ -414,10 +413,9 @@ ${formData.description || "не указано"}`;
                       </Label>
                       <AddressInput
                         value={formData.address}
-                        onChange={(value) =>
+                        onChange={(value: string) =>
                           setFormData({ ...formData, address: value })
                         }
-                        disabled={isSubmitting}
                       />
                     </div>
 
@@ -426,25 +424,23 @@ ${formData.description || "не указано"}`;
                         <Label htmlFor="objectType">
                           Тип объекта <span className="text-red-500">*</span>
                         </Label>
-                        <Select
+                        <select
+                          id="objectType"
                           value={formData.objectType}
-                          onValueChange={(value) =>
-                            setFormData({ ...formData, objectType: value })
+                          onChange={(e) =>
+                            setFormData({ ...formData, objectType: e.target.value })
                           }
                           required
                           disabled={isSubmitting}
+                          className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                         >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Выберите тип объекта" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="residential">Жилой дом</SelectItem>
-                            <SelectItem value="apartment">Квартира</SelectItem>
-                            <SelectItem value="commercial">Коммерческий объект</SelectItem>
-                            <SelectItem value="industrial">Промышленный объект</SelectItem>
-                            <SelectItem value="other">Другое</SelectItem>
-                          </SelectContent>
-                        </Select>
+                          <option value="">Выберите тип объекта</option>
+                          <option value="residential">Жилой дом</option>
+                          <option value="apartment">Квартира</option>
+                          <option value="commercial">Коммерческий объект</option>
+                          <option value="industrial">Промышленный объект</option>
+                          <option value="other">Другое</option>
+                        </select>
                       </div>
 
                       <div className="space-y-2">
@@ -467,25 +463,23 @@ ${formData.description || "не указано"}`;
                       <Label htmlFor="objectPurpose">
                         Назначение объекта <span className="text-red-500">*</span>
                       </Label>
-                      <Select
+                      <select
+                        id="objectPurpose"
                         value={formData.objectPurpose}
-                        onValueChange={(value) =>
-                          setFormData({ ...formData, objectPurpose: value })
+                        onChange={(e) =>
+                          setFormData({ ...formData, objectPurpose: e.target.value })
                         }
                         required
                         disabled={isSubmitting}
+                        className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                       >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Выберите назначение" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="residential">Жилое</SelectItem>
-                          <SelectItem value="commercial">Коммерческое</SelectItem>
-                          <SelectItem value="industrial">Промышленное</SelectItem>
-                          <SelectItem value="public">Общественное</SelectItem>
-                          <SelectItem value="other">Другое</SelectItem>
-                        </SelectContent>
-                      </Select>
+                        <option value="">Выберите назначение</option>
+                        <option value="residential">Жилое</option>
+                        <option value="commercial">Коммерческое</option>
+                        <option value="industrial">Промышленное</option>
+                        <option value="public">Общественное</option>
+                        <option value="other">Другое</option>
+                      </select>
                     </div>
 
                     <div className="space-y-2">

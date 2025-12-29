@@ -654,6 +654,228 @@ ${formData.connectionMethod === "with-well" ? `- Тип колодца: ${formDa
             </div>
           )}
 
+          {/* Шаг 4: Параметры присоединения */}
+          {currentStep === "params" && personType === "individual" && (
+            <div className="space-y-6">
+              <div>
+                <Label className="mb-4 block">
+                  Вид подключения <span className="text-red-500">*</span>
+                </Label>
+                <div className="flex gap-6">
+                  <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={formData.connectionTypeWater}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          connectionTypeWater: e.target.checked,
+                        })
+                      }
+                      className="w-5 h-5"
+                    />
+                    <span>Водопровод</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={formData.connectionTypeSewerage}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          connectionTypeSewerage: e.target.checked,
+                        })
+                      }
+                      className="w-5 h-5"
+                    />
+                    <span>Канализация</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>
+                  Тип подключения <span className="text-red-500">*</span>
+                </Label>
+                <div className="space-y-3">
+                  <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                    <input
+                      type="radio"
+                      name="connectionMethod"
+                      value="by-length"
+                      checked={formData.connectionMethod === "by-length"}
+                      onChange={(e) => {
+                        setFormData({
+                          ...formData,
+                          connectionMethod: e.target.value,
+                          wellType: "", // Сбрасываем тип колодца при выборе "по протяженности"
+                        });
+                      }}
+                      className="w-4 h-4"
+                    />
+                    <span>по протяженности</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                    <input
+                      type="radio"
+                      name="connectionMethod"
+                      value="with-well"
+                      checked={formData.connectionMethod === "with-well"}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          connectionMethod: e.target.value,
+                        })
+                      }
+                      className="w-4 h-4"
+                    />
+                    <span>с колодцем</span>
+                  </label>
+                </div>
+              </div>
+
+              {formData.connectionMethod === "with-well" && (
+                <div className="space-y-2">
+                  <Label>
+                    Колодец <span className="text-red-500">*</span>
+                  </Label>
+                  <div className="space-y-3">
+                    <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                      <input
+                        type="radio"
+                        name="wellType"
+                        value="existing"
+                        checked={formData.wellType === "existing"}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            wellType: e.target.value,
+                          })
+                        }
+                        className="w-4 h-4"
+                      />
+                      <span>Существующий</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                      <input
+                        type="radio"
+                        name="wellType"
+                        value="planned"
+                        checked={formData.wellType === "planned"}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            wellType: e.target.value,
+                          })
+                        }
+                        className="w-4 h-4"
+                      />
+                      <span>Проектируемый</span>
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="requestedLoad">Запрошенная нагрузка (м³)</Label>
+                <Input
+                  id="requestedLoad"
+                  type="number"
+                  step="0.1"
+                  value={formData.requestedLoad}
+                  onChange={(e) =>
+                    setFormData({ ...formData, requestedLoad: e.target.value })
+                  }
+                  placeholder="0"
+                  min="0"
+                />
+              </div>
+
+              <div className="space-y-3">
+                <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={formData.waterSupplyRestriction}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        waterSupplyRestriction: e.target.checked,
+                      })
+                    }
+                    className="w-5 h-5"
+                  />
+                  <span>Ограничение водоснабжения</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={formData.privateNetworkPermission}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        privateNetworkPermission: e.target.checked,
+                      })
+                    }
+                    className="w-5 h-5"
+                  />
+                  <span>Требуется разрешение на подключение к частным сетям</span>
+                </label>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="connectionPointLocation">
+                  Расположение точки подключения
+                </Label>
+                <Textarea
+                  id="connectionPointLocation"
+                  value={formData.connectionPointLocation}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      connectionPointLocation: e.target.value,
+                    })
+                  }
+                  rows={3}
+                  placeholder="Опишите расположение точки подключения..."
+                />
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="pipeDiameter">Диаметр водопровода (мм)</Label>
+                  <Input
+                    id="pipeDiameter"
+                    type="number"
+                    value={formData.pipeDiameter}
+                    onChange={(e) =>
+                      setFormData({ ...formData, pipeDiameter: e.target.value })
+                    }
+                    placeholder="0"
+                    min="0"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="pipeMaterial">Материал труб</Label>
+                  <select
+                    id="pipeMaterial"
+                    value={formData.pipeMaterial}
+                    onChange={(e) =>
+                      setFormData({ ...formData, pipeMaterial: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value="">Выберите материал</option>
+                    <option value="PE">ПЭ (Полиэтилен)</option>
+                    <option value="steel">Сталь</option>
+                    <option value="asbestos">Асбестоцемент</option>
+                    <option value="cast-iron">Чугун</option>
+                    <option value="ceramic">Керамика</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Навигация */}
           <div className="flex justify-between pt-6 border-t mt-6">
             <Button

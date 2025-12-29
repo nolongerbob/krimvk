@@ -18,7 +18,8 @@
     "dadata:add": "node scripts/add-dadata-keys.js",
     "seed:services": "node scripts/seed-services.js",
     "user:create": "node scripts/create-test-user.js",
-    "db:reset": "node scripts/reset-db.js"
+    "db:reset": "node scripts/reset-db.js",
+    "db:setup:neon": "prisma generate && prisma db push"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.2",

@@ -19,12 +19,17 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
 interface ReceiptData {
-  LSCode: string;
-  LSName: string;
-  Address: string;
-  CommonDuty: string;
-  CommonPayment: string;
-  StartCommonDuty: string;
+  LSCode?: string;
+  lscode?: string;
+  LSName?: string;
+  Address?: string;
+  address?: string;
+  CommonDuty?: string;
+  commonDuty?: string;
+  CommonPayment?: string;
+  commonPayment?: string;
+  StartCommonDuty?: string;
+  startCommonDuty?: string;
   StartDutys?: Array<{
     Service: string;
     Duty: string;

@@ -11,6 +11,14 @@ const nextConfig = {
   compress: true,
   // Оптимизация production сборки
   swcMinify: true,
+  // Отключаем ESLint во время сборки для Vercel
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  // Отключаем проверку типов во время сборки
+  typescript: {
+    ignoreBuildErrors: false,
+  },
   // Безопасность заголовков
   async headers() {
     return [

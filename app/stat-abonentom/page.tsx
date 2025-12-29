@@ -184,6 +184,27 @@ export default function BecomeSubscriberPage() {
     setIsSubmitting(true);
 
     try {
+      // Загружаем файлы, если есть
+      let fileUrls: string[] = [];
+      if (uploadedFiles.length > 0) {
+        for (const file of uploadedFiles) {
+          const formDataFiles = new FormData();
+          formDataFiles.append("file", file);
+
+          const uploadResponse = await fetch("/api/applications/upload", {
+            method: "POST",
+            body: formDataFiles,
+          });
+
+          if (uploadResponse.ok) {
+            const uploadData = await uploadResponse.json();
+            if (uploadData.url) {
+              fileUrls.push(uploadData.url);
+            }
+          }
+        }
+      }
+
       const description = `Заявка на подключение к водоснабжению/водоотведению
 
 Тип лица: ${personType === "individual" ? "Физическое лицо" : "Юридическое лицо"}
@@ -218,7 +239,7 @@ ${formData.connectionMethod === "with-well" ? `- Тип колодца: ${formDa
 - Материал труб: ${formData.pipeMaterial || "не указано"}
 
 Прикрепленные документы: ${fileUrls.length} файл(ов)
-${fileUrls.map((url, i) => `${i + 1}. ${url}`).join("\n")}
+${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
 `;
 
       const response = await fetch("/api/applications/create", {
@@ -887,6 +908,234 @@ ${fileUrls.map((url, i) => `${i + 1}. ${url}`).join("\n")}
                   </select>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Шаг 5: Документы */}
+          {currentStep === "documents" && personType === "individual" && (
+            <div className="space-y-6">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-blue-900 mb-1">Инструкция</p>
+                    <ol className="list-decimal list-inside space-y-1 text-sm text-blue-800">
+                      <li>Скачайте заявление на выдачу технических условий</li>
+                      <li>Распечатайте заявление</li>
+                      <li>Подпишите заявление</li>
+                      <li>Отсканируйте подписанное заявление</li>
+                      <li>Отсканируйте копии паспорта (страницы с фото и пропиской)</li>
+                      <li>Загрузите все документы ниже</li>
+                    </ol>
+                  </div>
+                </div>
+              </div>
+
+              {/* Заявление на выдачу ТУ */}
+              <Card className="border-2 border-dashed border-gray-300">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-blue-600" />
+                    Заявление на выдачу технических условий
+                  </CardTitle>
+                  <CardDescription>
+                    Заявление автоматически заполнено вашими данными
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Скрытое заявление для генерации PDF */}
+                  <div ref={applicationRef} className="hidden print:block">
+                    <div className="p-8 space-y-6" style={{ fontFamily: "Arial, sans-serif" }}>
+                      <div className="text-center mb-8">
+                        <h2 className="text-2xl font-bold mb-2">ЗАЯВЛЕНИЕ</h2>
+                        <p className="text-lg">о выдаче технических условий</p>
+                        <p className="text-lg">на подключение к системам водоснабжения и водоотведения</p>
+                      </div>
+
+                      <div className="space-y-4 text-sm">
+                        <p>
+                          <strong>В ООО "Крымская Водная Компания"</strong>
+                        </p>
+                        
+                        <div className="space-y-2">
+                          <p><strong>От:</strong> {formData.lastName} {formData.firstName} {formData.middleName}</p>
+                          <p><strong>Адрес регистрации:</strong> {formData.registrationAddress || "не указано"}</p>
+                          <p><strong>Телефон:</strong> {formData.phone}</p>
+                        </div>
+
+                        <div className="space-y-2 mt-6">
+                          <p><strong>Паспортные данные:</strong></p>
+                          <p>Серия: {formData.passportSeries} № {formData.passportNumber}</p>
+                          <p>Выдан: {formData.passportIssuedBy || "не указано"}</p>
+                          <p>Дата выдачи: {formData.passportIssueDate ? new Date(formData.passportIssueDate).toLocaleDateString("ru-RU") : "не указано"}</p>
+                          {formData.passportDivisionCode && (
+                            <p>Код подразделения: {formData.passportDivisionCode}</p>
+                          )}
+                        </div>
+
+                        <div className="space-y-2 mt-6">
+                          <p><strong>Информация об объекте:</strong></p>
+                          <p>Тип объекта: {formData.objectType === "residential" ? "Жилой дом" : formData.objectType === "apartment" ? "Квартира" : formData.objectType === "commercial" ? "Коммерческий объект" : formData.objectType === "industrial" ? "Промышленный объект" : "не указано"}</p>
+                          <p>Назначение: {formData.objectPurpose === "residential" ? "Жилое" : formData.objectPurpose === "commercial" ? "Коммерческое" : formData.objectPurpose === "industrial" ? "Промышленное" : formData.objectPurpose === "public" ? "Общественное" : "не указано"}</p>
+                          <p>Адрес объекта: {formData.objectAddress || "не указано"}</p>
+                          {formData.cadastralNumber && (
+                            <p>Кадастровый номер: {formData.cadastralNumber}</p>
+                          )}
+                          {formData.area && (
+                            <p>Площадь: {formData.area} кв.м</p>
+                          )}
+                        </div>
+
+                        <div className="space-y-2 mt-6">
+                          <p><strong>Параметры присоединения:</strong></p>
+                          <p>Вид подключения: {formData.connectionTypeWater ? "Водопровод" : ""} {formData.connectionTypeSewerage ? "Канализация" : ""}</p>
+                          <p>Тип подключения: {formData.connectionMethod === "with-well" ? "с колодцем" : formData.connectionMethod === "by-length" ? "по протяженности" : "не указано"}</p>
+                          {formData.connectionMethod === "with-well" && (
+                            <p>Тип колодца: {formData.wellType === "existing" ? "Существующий" : formData.wellType === "planned" ? "Проектируемый" : "не указано"}</p>
+                          )}
+                          {formData.requestedLoad && (
+                            <p>Запрошенная нагрузка: {formData.requestedLoad} м³</p>
+                          )}
+                        </div>
+
+                        <div className="mt-8 space-y-4">
+                          <p className="text-sm">
+                            Прошу выдать технические условия на подключение указанного объекта к системам водоснабжения и водоотведения.
+                          </p>
+                          <p className="text-sm">
+                            Обязуюсь предоставить все необходимые документы в соответствии с требованиями.
+                          </p>
+                        </div>
+
+                        <div className="mt-12 flex justify-between">
+                          <div>
+                            <p className="text-sm">Дата: {new Date().toLocaleDateString("ru-RU")}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm mb-12">_________________</p>
+                            <p className="text-sm">{formData.lastName} {formData.firstName} {formData.middleName}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-3">
+                    <Button
+                      type="button"
+                      onClick={handleDownloadApplication}
+                      className="gap-2"
+                    >
+                      <Download className="h-4 w-4" />
+                      Скачать заявление (PDF)
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handlePrintApplication}
+                      className="gap-2"
+                    >
+                      <Printer className="h-4 w-4" />
+                      Печать
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      asChild
+                      className="gap-2"
+                    >
+                      <a
+                        href="/documents/zayavlenie-o-vydache-tehnicheskih-uslovij.docx"
+                        download
+                      >
+                        <Download className="h-4 w-4" />
+                        Скачать бланк (DOCX)
+                      </a>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Загрузка документов */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Загрузка документов</CardTitle>
+                  <CardDescription>
+                    Загрузите отсканированные документы: подписанное заявление и копии паспорта
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
+                      <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                      <p className="text-sm text-gray-600 mb-2">
+                        Перетащите файлы сюда или нажмите для выбора
+                      </p>
+                      <Input
+                        type="file"
+                        multiple
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        onChange={handleFileChange}
+                        className="hidden"
+                        id="documents-upload"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => document.getElementById("documents-upload")?.click()}
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        Выбрать файлы
+                      </Button>
+                      <p className="text-xs text-gray-500 mt-2">
+                        PDF, JPG, PNG (макс. 10 МБ каждый)
+                      </p>
+                    </div>
+
+                    {uploadedFiles.length > 0 && (
+                      <div className="space-y-2">
+                        <Label>Загруженные документы:</Label>
+                        {uploadedFiles.map((file, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                          >
+                            <div className="flex items-center gap-2">
+                              <FileText className="h-4 w-4 text-gray-600" />
+                              <span className="text-sm text-gray-700">
+                                {file.name} ({(file.size / 1024 / 1024).toFixed(2)} МБ)
+                              </span>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeFile(index)}
+                            >
+                              Удалить
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                      <div className="flex items-start gap-2">
+                        <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-semibold text-xs text-amber-900 mb-1">Требования к документам:</p>
+                          <ul className="text-xs text-amber-800 space-y-1 list-disc list-inside">
+                            <li>Подписанное заявление на выдачу ТУ (отсканированное)</li>
+                            <li>Копии страниц паспорта с фото и пропиской</li>
+                            <li>Все документы должны быть четкими и читаемыми</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           )}
 

@@ -16,7 +16,7 @@ export default function EmergencyPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
     name: session?.user?.name || "",
-    phone: session?.user?.phone || "",
+    phone: (session?.user as any)?.phone || "",
     email: session?.user?.email || "",
     address: "",
     description: "",

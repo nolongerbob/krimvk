@@ -239,24 +239,24 @@ export default function BecomeSubscriberPage() {
 
           // Показываем заявление для генерации
           const hiddenElement = applicationRef.current;
-          const originalDisplay = hiddenElement.style.display;
-          hiddenElement.style.display = "block";
-          hiddenElement.style.position = "absolute";
-          hiddenElement.style.left = "-9999px";
-          hiddenElement.style.top = "0";
+          const originalClasses = hiddenElement.className;
+          hiddenElement.className = "block bg-white p-8";
+          hiddenElement.style.width = "210mm";
+          hiddenElement.style.minHeight = "297mm";
 
           const canvas = await html2canvas(hiddenElement, {
             scale: 2,
             useCORS: true,
             logging: false,
             backgroundColor: "#ffffff",
+            width: hiddenElement.scrollWidth,
+            height: hiddenElement.scrollHeight,
           });
 
           // Восстанавливаем скрытие
-          hiddenElement.style.display = originalDisplay;
-          hiddenElement.style.position = "";
-          hiddenElement.style.left = "";
-          hiddenElement.style.top = "";
+          hiddenElement.className = originalClasses;
+          hiddenElement.style.width = "";
+          hiddenElement.style.minHeight = "";
 
           const pdf = new jsPDF("p", "mm", "a4");
           const imgData = canvas.toDataURL("image/png");

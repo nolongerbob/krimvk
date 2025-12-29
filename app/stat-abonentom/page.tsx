@@ -1000,6 +1000,81 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {/* Предпросмотр заявления */}
+                  <div className="border rounded-lg p-6 bg-white mb-4">
+                    <div className="space-y-4 text-sm" style={{ fontFamily: "Arial, sans-serif" }}>
+                      <div className="text-center mb-6">
+                        <h3 className="text-xl font-bold mb-1">ЗАЯВЛЕНИЕ</h3>
+                        <p className="text-base">о выдаче технических условий</p>
+                        <p className="text-base">на подключение к системам водоснабжения и водоотведения</p>
+                      </div>
+
+                      <div className="space-y-3">
+                        <p><strong>В ООО "Крымская Водная Компания"</strong></p>
+                        
+                        <div className="space-y-1">
+                          <p><strong>От:</strong> {formData.lastName} {formData.firstName} {formData.middleName}</p>
+                          <p><strong>Адрес регистрации:</strong> {formData.registrationAddress || "не указано"}</p>
+                          <p><strong>Телефон:</strong> {formData.phone}</p>
+                        </div>
+
+                        <div className="space-y-1 mt-4">
+                          <p><strong>Паспортные данные:</strong></p>
+                          <p>Серия: {formData.passportSeries} № {formData.passportNumber}</p>
+                          <p>Выдан: {formData.passportIssuedBy || "не указано"}</p>
+                          <p>Дата выдачи: {formData.passportIssueDate ? new Date(formData.passportIssueDate).toLocaleDateString("ru-RU") : "не указано"}</p>
+                          {formData.passportDivisionCode && (
+                            <p>Код подразделения: {formData.passportDivisionCode}</p>
+                          )}
+                        </div>
+
+                        <div className="space-y-1 mt-4">
+                          <p><strong>Информация об объекте:</strong></p>
+                          <p>Тип объекта: {formData.objectType === "residential" ? "Жилой дом" : formData.objectType === "apartment" ? "Квартира" : formData.objectType === "commercial" ? "Коммерческий объект" : formData.objectType === "industrial" ? "Промышленный объект" : "не указано"}</p>
+                          <p>Назначение: {formData.objectPurpose === "residential" ? "Жилое" : formData.objectPurpose === "commercial" ? "Коммерческое" : formData.objectPurpose === "industrial" ? "Промышленное" : formData.objectPurpose === "public" ? "Общественное" : "не указано"}</p>
+                          <p>Адрес объекта: {formData.objectAddress || "не указано"}</p>
+                          {formData.cadastralNumber && (
+                            <p>Кадастровый номер: {formData.cadastralNumber}</p>
+                          )}
+                          {formData.area && (
+                            <p>Площадь: {formData.area} кв.м</p>
+                          )}
+                        </div>
+
+                        <div className="space-y-1 mt-4">
+                          <p><strong>Параметры присоединения:</strong></p>
+                          <p>Вид подключения: {formData.connectionTypeWater ? "Водопровод" : ""} {formData.connectionTypeSewerage ? "Канализация" : ""}</p>
+                          <p>Тип подключения: {formData.connectionMethod === "with-well" ? "с колодцем" : formData.connectionMethod === "by-length" ? "по протяженности" : "не указано"}</p>
+                          {formData.connectionMethod === "with-well" && (
+                            <p>Тип колодца: {formData.wellType === "existing" ? "Существующий" : formData.wellType === "planned" ? "Проектируемый" : "не указано"}</p>
+                          )}
+                          {formData.requestedLoad && (
+                            <p>Запрошенная нагрузка: {formData.requestedLoad} м³</p>
+                          )}
+                        </div>
+
+                        <div className="mt-6 space-y-2">
+                          <p className="text-sm">
+                            Прошу выдать технические условия на подключение указанного объекта к системам водоснабжения и водоотведения.
+                          </p>
+                          <p className="text-sm">
+                            Обязуюсь предоставить все необходимые документы в соответствии с требованиями.
+                          </p>
+                        </div>
+
+                        <div className="mt-8 flex justify-between">
+                          <div>
+                            <p className="text-sm">Дата: {new Date().toLocaleDateString("ru-RU")}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm mb-12">_________________</p>
+                            <p className="text-sm">{formData.lastName} {formData.firstName} {formData.middleName}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Скрытое заявление для генерации PDF */}
                   <div ref={applicationRef} className="hidden print:block print:visible">
                     <div className="p-8 space-y-6 print:p-4" style={{ fontFamily: "Arial, sans-serif", fontSize: "12pt" }}>

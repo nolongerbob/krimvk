@@ -70,18 +70,18 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-gradient-to-br from-blue-200 via-blue-100 to-cyan-100">
-      <div className="w-full flex h-24 items-center justify-between px-4 sm:px-6 md:px-8 lg:px-14">
+      <div className="w-full flex h-20 lg:h-24 items-center justify-between px-3 sm:px-4 md:px-6 lg:px-14">
         {/* Левая часть: Логотип + Навигация */}
-        <div className="flex items-center space-x-4 lg:space-x-8 flex-1 min-w-0">
-          <Link href="/" className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-8 flex-1 min-w-0">
+          <Link href="/" className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
             <Image
               src="/images/logo.png"
               alt="Крымская Водная Компания"
               width={60}
               height={60}
-              className="h-16 w-16"
+              className="h-10 w-10 sm:h-12 sm:w-12 lg:h-16 lg:w-16"
             />
-            <span className="text-2xl font-bold hidden sm:inline">КрымВК</span>
+            <span className="text-lg sm:text-xl lg:text-2xl font-bold hidden sm:inline lg:inline">КрымВК</span>
           </Link>
 
           <nav className="hidden lg:flex items-center space-x-6">

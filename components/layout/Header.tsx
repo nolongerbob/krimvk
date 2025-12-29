@@ -84,12 +84,12 @@ export function Header() {
             <span className="text-lg sm:text-xl lg:text-2xl font-bold hidden sm:inline lg:inline">КрымВК</span>
           </Link>
 
-          <nav className="hidden lg:flex items-center space-x-6">
+          <nav className="hidden xl:flex items-center space-x-4">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`text-sm font-medium transition-colors ${
+                className={`text-xs xl:text-sm font-medium transition-colors whitespace-nowrap ${
                   isActive(link.href)
                     ? "text-primary"
                     : "hover:text-primary"
@@ -101,13 +101,13 @@ export function Header() {
             
             {/* Абонентам */}
             <DropdownMenu>
-              <DropdownMenuTrigger className={`text-sm font-medium transition-colors flex items-center gap-1 ${
+              <DropdownMenuTrigger className={`text-xs xl:text-sm font-medium transition-colors flex items-center gap-1 whitespace-nowrap ${
                 pathname.startsWith("/abonenty")
                   ? "text-primary"
                   : "hover:text-primary"
               }`}>
                 Абонентам
-                <ChevronDown className="h-4 w-4" />
+                <ChevronDown className="h-3 w-3 xl:h-4 xl:w-4" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-64">
                 <DropdownMenuItem asChild>
@@ -131,13 +131,13 @@ export function Header() {
 
             {/* О компании */}
             <DropdownMenu>
-              <DropdownMenuTrigger className={`text-sm font-medium transition-colors flex items-center gap-1 ${
+              <DropdownMenuTrigger className={`text-xs xl:text-sm font-medium transition-colors flex items-center gap-1 whitespace-nowrap ${
                 pathname.startsWith("/o-kompanii")
                   ? "text-primary"
                   : "hover:text-primary"
               }`}>
                 О компании
-                <ChevronDown className="h-4 w-4" />
+                <ChevronDown className="h-3 w-3 xl:h-4 xl:w-4" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-72">
                 <DropdownMenuItem asChild>
@@ -205,20 +205,20 @@ export function Header() {
         {/* Правая часть: Поиск и кнопки входа/регистрации */}
         <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4 flex-shrink-0">
           {/* Поиск */}
-          <div className="hidden lg:block">
+          <div className="hidden xl:block">
             <Search />
           </div>
           
           {/* Кнопка версии для слабовидящих */}
-          <div className="hidden lg:block">
+          <div className="hidden xl:block">
             <BVIButton />
           </div>
           
           {/* Позвоните нам - выпадающее меню */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="hidden lg:flex items-center gap-1.5 text-sm px-3 focus:outline-none focus-visible:outline-none active:outline-none">
-                <Phone className="h-4 w-4" />
+              <Button variant="ghost" size="sm" className="hidden xl:flex items-center gap-1.5 text-xs xl:text-sm px-2 xl:px-3 focus:outline-none focus-visible:outline-none active:outline-none">
+                <Phone className="h-3 w-3 xl:h-4 xl:w-4" />
                 <span className="whitespace-nowrap">Позвоните нам</span>
               </Button>
             </DropdownMenuTrigger>
@@ -262,14 +262,14 @@ export function Header() {
           </DropdownMenu>
 
           {status === "loading" ? (
-            <div className="hidden lg:block w-20 h-9 bg-gray-200 animate-pulse rounded"></div>
+            <div className="hidden xl:block w-20 h-9 bg-gray-200 animate-pulse rounded"></div>
           ) : session ? (
             <>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="hidden lg:flex items-center gap-2 text-sm focus:outline-none focus-visible:outline-none active:outline-none">
-                    <User className="h-4 w-4" />
-                    <span className="max-w-[120px] lg:max-w-[150px] truncate">
+                  <Button variant="ghost" size="sm" className="hidden xl:flex items-center gap-2 text-xs xl:text-sm focus:outline-none focus-visible:outline-none active:outline-none">
+                    <User className="h-3 w-3 xl:h-4 xl:w-4" />
+                    <span className="max-w-[100px] xl:max-w-[150px] truncate">
                       {session.user.name || session.user.email}
                     </span>
                   </Button>
@@ -328,7 +328,7 @@ export function Header() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="lg:hidden"
+                className="xl:hidden"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               >
                 <Menu className="h-5 w-5" />
@@ -336,16 +336,16 @@ export function Header() {
             </>
           ) : (
             <>
-              <Button asChild variant="ghost" size="sm" className="hidden lg:inline-flex text-sm focus:outline-none focus-visible:outline-none active:outline-none">
+              <Button asChild variant="ghost" size="sm" className="hidden xl:inline-flex text-xs xl:text-sm focus:outline-none focus-visible:outline-none active:outline-none">
                 <Link href="/login">Войти</Link>
               </Button>
-              <Button asChild size="sm" className="hidden lg:inline-flex text-sm focus:outline-none focus-visible:outline-none active:outline-none">
+              <Button asChild size="sm" className="hidden xl:inline-flex text-xs xl:text-sm focus:outline-none focus-visible:outline-none active:outline-none">
                 <Link href="/register">Регистрация</Link>
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
-                className="lg:hidden"
+                className="xl:hidden"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               >
                 <Menu className="h-5 w-5" />

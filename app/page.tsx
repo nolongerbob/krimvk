@@ -67,7 +67,7 @@ export default async function HomePage() {
                 <Link href="/login">Личный кабинет</Link>
               </Button>
               <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700 text-white text-lg px-20 py-10">
-                <Link href="/services">Наши услуги</Link>
+                <Link href="/register">Стать абонентом</Link>
               </Button>
             </div>
           </div>

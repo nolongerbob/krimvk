@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,11 +18,15 @@ import {
   User,
   Building,
   Settings,
+  FileText,
+  Upload,
+  Download,
+  Printer,
 } from "lucide-react";
 import { AddressInput } from "@/components/AddressInput";
 
 type PersonType = "individual" | "legal" | null;
-type Step = "type" | "abonent" | "object" | "params";
+type Step = "type" | "abonent" | "object" | "params" | "documents";
 
 export default function BecomeSubscriberPage() {
   const { data: session, status } = useSession();
@@ -33,6 +37,8 @@ export default function BecomeSubscriberPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const applicationRef = useRef<HTMLDivElement>(null);
 
   // Данные формы
   const [formData, setFormData] = useState({
@@ -117,6 +123,7 @@ export default function BecomeSubscriberPage() {
     { id: "abonent", label: "Личные данные", icon: User },
     { id: "object", label: "Объект", icon: Building },
     { id: "params", label: "Параметры", icon: Settings },
+    { id: "documents", label: "Документы", icon: FileText },
   ];
 
   const getCurrentStepIndex = () => {
@@ -145,6 +152,10 @@ export default function BecomeSubscriberPage() {
         formData.connectionMethod &&
         (formData.connectionMethod !== "with-well" || formData.wellType)
       );
+    }
+    if (currentStep === "documents") {
+      // На последнем шаге можно отправить даже без документов, но лучше проверить наличие подписанного заявления
+      return true;
     }
     return true;
   };
@@ -205,6 +216,9 @@ ${formData.connectionMethod === "with-well" ? `- Тип колодца: ${formDa
 - Расположение точки подключения: ${formData.connectionPointLocation || "не указано"}
 - Диаметр водопровода: ${formData.pipeDiameter || "не указано"} мм
 - Материал труб: ${formData.pipeMaterial || "не указано"}
+
+Прикрепленные документы: ${fileUrls.length} файл(ов)
+${fileUrls.map((url, i) => `${i + 1}. ${url}`).join("\n")}
 `;
 
       const response = await fetch("/api/applications/create", {

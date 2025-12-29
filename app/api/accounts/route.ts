@@ -239,7 +239,7 @@ export async function POST(request: NextRequest) {
     // Создаем счетчики из данных 1С
     const createdMeters = [];
     for (const meter of meters) {
-      const serialNumber = meter.SerialNumber || meter.Number || meter.DeviceNumber || meter.Номер || `Счетчик-${meter.Number || createdMeters.length + 1}`;
+      const serialNumber: string = meter.SerialNumber || meter.Number || meter.DeviceNumber || meter.Номер || `Счетчик-${meter.Number || createdMeters.length + 1}`;
       const serviceName = meter.ServiceName || meter.Услуга || "";
       const type = serviceName.toLowerCase().includes("горяч") ? "горячая" : "холодная";
       const lastReading = meter.LastReading ? parseFloat(meter.LastReading) : null;

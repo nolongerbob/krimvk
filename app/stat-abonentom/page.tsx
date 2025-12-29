@@ -17,11 +17,12 @@ import {
   ArrowLeft,
   User,
   Building,
+  Settings,
 } from "lucide-react";
 import { AddressInput } from "@/components/AddressInput";
 
 type PersonType = "individual" | "legal" | null;
-type Step = "type" | "abonent" | "object";
+type Step = "type" | "abonent" | "object" | "params";
 
 export default function BecomeSubscriberPage() {
   const { data: session, status } = useSession();
@@ -53,6 +54,17 @@ export default function BecomeSubscriberPage() {
     cadastralNumber: "",
     objectAddress: "",
     area: "",
+    // Параметры присоединения
+    connectionTypeWater: false,
+    connectionTypeSewerage: false,
+    connectionMethod: "",
+    requestedLoad: "",
+    waterSupplyRestriction: false,
+    privateNetworkPermission: false,
+    wellType: "",
+    connectionPointLocation: "",
+    pipeDiameter: "",
+    pipeMaterial: "",
   });
 
   useEffect(() => {
@@ -104,6 +116,7 @@ export default function BecomeSubscriberPage() {
     { id: "type", label: "Тип лица", icon: User },
     { id: "abonent", label: "Личные данные", icon: User },
     { id: "object", label: "Объект", icon: Building },
+    { id: "params", label: "Параметры", icon: Settings },
   ];
 
   const getCurrentStepIndex = () => {
@@ -125,6 +138,13 @@ export default function BecomeSubscriberPage() {
     }
     if (currentStep === "object") {
       return formData.objectType && formData.objectAddress;
+    }
+    if (currentStep === "params") {
+      return (
+        (formData.connectionTypeWater || formData.connectionTypeSewerage) &&
+        formData.connectionMethod &&
+        (formData.connectionMethod !== "with-well" || formData.wellType)
+      );
     }
     return true;
   };
@@ -173,6 +193,18 @@ export default function BecomeSubscriberPage() {
 - Кадастровый номер: ${formData.cadastralNumber}
 - Адрес: ${formData.objectAddress}
 - Площадь: ${formData.area} кв.м
+
+Параметры присоединения:
+- Водопровод: ${formData.connectionTypeWater ? "Да" : "Нет"}
+- Канализация: ${formData.connectionTypeSewerage ? "Да" : "Нет"}
+- Тип подключения: ${formData.connectionMethod === "with-well" ? "с колодцем" : "по протяженности"}
+${formData.connectionMethod === "with-well" ? `- Тип колодца: ${formData.wellType === "existing" ? "Существующий" : "Проектируемый"}` : ""}
+- Запрошенная нагрузка: ${formData.requestedLoad || "не указано"} м³
+- Ограничение водоснабжения: ${formData.waterSupplyRestriction ? "Да" : "Нет"}
+- Разрешение на подключение к частным сетям: ${formData.privateNetworkPermission ? "Да" : "Нет"}
+- Расположение точки подключения: ${formData.connectionPointLocation || "не указано"}
+- Диаметр водопровода: ${formData.pipeDiameter || "не указано"} мм
+- Материал труб: ${formData.pipeMaterial || "не указано"}
 `;
 
       const response = await fetch("/api/applications/create", {

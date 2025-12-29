@@ -71,6 +71,26 @@ export default function BecomeSubscriberPage() {
     connectionPointLocation: "",
     pipeDiameter: "",
     pipeMaterial: "",
+    // Дополнительные поля для официального заявления
+    inn: "",
+    snils: "",
+    constructionType: "", // новое строительство, реконструкция, модернизация
+    resourceType: "", // получение питьевой или технической воды, сброс хозяйственно-бытовых, сточных вод
+    objectHeight: "",
+    objectFloors: "",
+    networkLength: "",
+    plannedCommissioningDate: "",
+    maxWaterConsumptionLps: "",
+    maxWaterConsumptionM3h: "",
+    maxWaterConsumptionM3day: "",
+    fireExtinguishingExternal: "",
+    fireExtinguishingInternal: "",
+    fireHydrantsCount: "",
+    fireExtinguishingAutomatic: "",
+    wastewaterLps: "",
+    wastewaterM3h: "",
+    wastewaterM3day: "",
+    notificationMethod: "", // email, почта, иной способ
   });
 
   useEffect(() => {
@@ -1002,73 +1022,128 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                 <CardContent className="space-y-4">
                   {/* Предпросмотр заявления */}
                   <div className="border rounded-lg p-6 bg-white mb-4">
-                    <div className="space-y-4 text-sm" style={{ fontFamily: "Arial, sans-serif" }}>
-                      <div className="text-center mb-6">
-                        <h3 className="text-xl font-bold mb-1">ЗАЯВЛЕНИЕ</h3>
-                        <p className="text-base">о выдаче технических условий</p>
-                        <p className="text-base">на подключение к системам водоснабжения и водоотведения</p>
+                    <div className="space-y-4 text-xs" style={{ fontFamily: "Times New Roman, serif", lineHeight: "1.5" }}>
+                      <div className="text-center mb-4">
+                        <p className="text-xs mb-2">Приложение №1 к Правилам подключения (технологического присоединения) объектов капитального строительства к централизованным системам горячего водоснабжения, холодного водоснабжения и (или) водоотведения</p>
+                        <h3 className="text-base font-bold mb-1">ЗАПРОС</h3>
+                        <p className="text-sm">о выдаче технических условий на подключение</p>
+                        <p className="text-sm">(технологическое присоединение) к централизованным системам</p>
+                        <p className="text-sm">холодного водоснабжения и (или) водоотведения</p>
                       </div>
 
-                      <div className="space-y-3">
-                        <p><strong>В ООО "Крымская Водная Компания"</strong></p>
-                        
-                        <div className="space-y-1">
-                          <p><strong>От:</strong> {formData.lastName} {formData.firstName} {formData.middleName}</p>
-                          <p><strong>Адрес регистрации:</strong> {formData.registrationAddress || "не указано"}</p>
-                          <p><strong>Телефон:</strong> {formData.phone}</p>
+                      <div className="space-y-3 text-xs">
+                        <div>
+                          <p className="mb-1"><strong>1. Наименование исполнителя, которому направлен запрос</strong></p>
+                          <p className="ml-4">ООО «Крымская Водная Компания»</p>
                         </div>
 
-                        <div className="space-y-1 mt-4">
-                          <p><strong>Паспортные данные:</strong></p>
-                          <p>Серия: {formData.passportSeries} № {formData.passportNumber}</p>
-                          <p>Выдан: {formData.passportIssuedBy || "не указано"}</p>
-                          <p>Дата выдачи: {formData.passportIssueDate ? new Date(formData.passportIssueDate).toLocaleDateString("ru-RU") : "не указано"}</p>
-                          {formData.passportDivisionCode && (
-                            <p>Код подразделения: {formData.passportDivisionCode}</p>
-                          )}
-                        </div>
-
-                        <div className="space-y-1 mt-4">
-                          <p><strong>Информация об объекте:</strong></p>
-                          <p>Тип объекта: {formData.objectType === "residential" ? "Жилой дом" : formData.objectType === "apartment" ? "Квартира" : formData.objectType === "commercial" ? "Коммерческий объект" : formData.objectType === "industrial" ? "Промышленный объект" : "не указано"}</p>
-                          <p>Назначение: {formData.objectPurpose === "residential" ? "Жилое" : formData.objectPurpose === "commercial" ? "Коммерческое" : formData.objectPurpose === "industrial" ? "Промышленное" : formData.objectPurpose === "public" ? "Общественное" : "не указано"}</p>
-                          <p>Адрес объекта: {formData.objectAddress || "не указано"}</p>
-                          {formData.cadastralNumber && (
-                            <p>Кадастровый номер: {formData.cadastralNumber}</p>
-                          )}
-                          {formData.area && (
-                            <p>Площадь: {formData.area} кв.м</p>
-                          )}
-                        </div>
-
-                        <div className="space-y-1 mt-4">
-                          <p><strong>Параметры присоединения:</strong></p>
-                          <p>Вид подключения: {formData.connectionTypeWater ? "Водопровод" : ""} {formData.connectionTypeSewerage ? "Канализация" : ""}</p>
-                          <p>Тип подключения: {formData.connectionMethod === "with-well" ? "с колодцем" : formData.connectionMethod === "by-length" ? "по протяженности" : "не указано"}</p>
-                          {formData.connectionMethod === "with-well" && (
-                            <p>Тип колодца: {formData.wellType === "existing" ? "Существующий" : formData.wellType === "planned" ? "Проектируемый" : "не указано"}</p>
-                          )}
-                          {formData.requestedLoad && (
-                            <p>Запрошенная нагрузка: {formData.requestedLoad} м³</p>
-                          )}
-                        </div>
-
-                        <div className="mt-6 space-y-2">
-                          <p className="text-sm">
-                            Прошу выдать технические условия на подключение указанного объекта к системам водоснабжения и водоотведения.
-                          </p>
-                          <p className="text-sm">
-                            Обязуюсь предоставить все необходимые документы в соответствии с требованиями.
+                        <div>
+                          <p className="mb-1"><strong>2. Сведения о лице, обратившемся с запросом</strong></p>
+                          <p className="ml-4 border-b border-black min-h-[60px]">
+                            {formData.lastName} {formData.firstName} {formData.middleName}
+                            {formData.birthDate && `, дата рождения: ${new Date(formData.birthDate).toLocaleDateString("ru-RU")}`}
+                            {formData.passportSeries && formData.passportNumber && `, паспорт серия ${formData.passportSeries} № ${formData.passportNumber}`}
+                            {formData.passportIssuedBy && `, выдан ${formData.passportIssuedBy}`}
+                            {formData.passportIssueDate && `, дата выдачи ${new Date(formData.passportIssueDate).toLocaleDateString("ru-RU")}`}
+                            {formData.passportDivisionCode && `, код подразделения ${formData.passportDivisionCode}`}
+                            {formData.inn && `, ИНН ${formData.inn}`}
+                            {formData.snils && `, СНИЛС ${formData.snils}`}
                           </p>
                         </div>
 
-                        <div className="mt-8 flex justify-between">
+                        <div>
+                          <p className="mb-1"><strong>3. Контактные данные лица, обратившегося за выдачей технических условий</strong></p>
+                          <p className="ml-4 border-b border-black min-h-[40px]">
+                            Адрес регистрации: {formData.registrationAddress || "_________________"}
+                            {formData.phone && `, телефон: ${formData.phone}`}
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="mb-1"><strong>4. Основания обращения с запросом о выдаче технических условий:</strong></p>
+                          <p className="ml-4 border-b border-black min-h-[40px]">
+                            Правообладатель земельного участка
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="mb-1"><strong>5. В связи с</strong> {formData.constructionType || "_________________"} <strong>прошу выдать технические условия на подключение (технологическое присоединение)</strong></p>
+                          <p className="ml-4 mb-1">объекта капитального строительства, водопроводных и (или) канализационных сетей, иного объекта, не относящегося к объектам капитального строительства (указать нужное):</p>
+                          <p className="ml-4 border-b border-black min-h-[30px]">
+                            {formData.objectType === "residential" ? "Жилой дом" : formData.objectType === "apartment" ? "Квартира" : formData.objectType === "commercial" ? "Коммерческий объект" : formData.objectType === "industrial" ? "Промышленный объект" : "_________________"}
+                          </p>
+                          <p className="ml-4 mt-1">расположенного (проектируемого) по адресу:</p>
+                          <p className="ml-4 border-b border-black min-h-[30px]">
+                            {formData.objectAddress || "_________________"}
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="mb-1"><strong>6. Требуется подключение к централизованной системе</strong></p>
+                          <p className="ml-4 border-b border-black min-h-[30px]">
+                            {formData.connectionTypeWater && "холодного водоснабжения"} {formData.connectionTypeWater && formData.connectionTypeSewerage && ", "} {formData.connectionTypeSewerage && "водоотведения"}
+                            {!formData.connectionTypeWater && !formData.connectionTypeSewerage && "_________________"}
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="mb-1"><strong>7. Необходимые виды ресурсов или услуг, планируемых к получению через централизованную систему</strong></p>
+                          <p className="ml-4 border-b border-black min-h-[30px]">
+                            {formData.resourceType || "получение питьевой воды, сброс хозяйственно-бытовых сточных вод"}
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="mb-1"><strong>8. Информация о предельных параметрах разрешенного строительства (реконструкции) подключаемых объектов, соответствующих указанному земельному участку</strong></p>
+                          <p className="ml-4 border-b border-black min-h-[30px]">
+                            {formData.objectHeight && `Высота: ${formData.objectHeight} м, `}
+                            {formData.objectFloors && `Этажность: ${formData.objectFloors}, `}
+                            {formData.networkLength && `Протяженность сети: ${formData.networkLength} м, `}
+                            {formData.pipeDiameter && `Диаметр: ${formData.pipeDiameter} мм`}
+                            {!formData.objectHeight && !formData.objectFloors && !formData.networkLength && !formData.pipeDiameter && "_________________"}
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="mb-1"><strong>9. Планируемый срок ввода в эксплуатацию подключаемого объекта</strong></p>
+                          <p className="ml-4 border-b border-black min-h-[30px]">
+                            {formData.plannedCommissioningDate || "_________________"}
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="mb-1"><strong>10. Планируемая величина максимальной необходимой мощности (нагрузки) составляет для:</strong></p>
+                          <p className="ml-4">
+                            потребления холодной воды {formData.maxWaterConsumptionLps || "____"} л/с, {formData.maxWaterConsumptionM3h || "____"} куб.м/час, {formData.maxWaterConsumptionM3day || "____"} куб. м./сутки,
+                          </p>
+                          <p className="ml-4">
+                            в том числе на нужды пожаротушения - наружного {formData.fireExtinguishingExternal || "____"} л/сек, внутреннего {formData.fireExtinguishingInternal || "____"} л/сек. (количество пожарных кранов {formData.fireHydrantsCount || "____"} штук), автоматическое {formData.fireExtinguishingAutomatic || "____"} л/сек.
+                          </p>
+                          <p className="ml-4">
+                            водоотведения {formData.wastewaterLps || "____"} л/с {formData.wastewaterM3h || "____"} куб. м/час, {formData.wastewaterM3day || "____"} куб. м/сутки
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="mb-1"><strong>11. Результаты рассмотрения запроса прошу направить (выбрать один из способов уведомления)</strong></p>
+                          <p className="ml-4 border-b border-black min-h-[30px]">
+                            {formData.notificationMethod || "на адрес электронной почты"}
+                          </p>
+                        </div>
+
+                        <div className="mt-4">
+                          <p className="text-xs">Заявитель дает согласие на обработку персональных данных для оформления процедуры выдачи ТУ и заключения ДТП.</p>
+                        </div>
+
+                        <div className="mt-6 flex justify-between items-end">
                           <div>
-                            <p className="text-sm">Дата: {new Date().toLocaleDateString("ru-RU")}</p>
+                            <p className="text-xs">«____»_____________20__ г.</p>
                           </div>
                           <div className="text-right">
-                            <p className="text-sm mb-12">_________________</p>
-                            <p className="text-sm">{formData.lastName} {formData.firstName} {formData.middleName}</p>
+                            <p className="text-xs mb-8">______________</p>
+                            <p className="text-xs">(М.П., подпись)</p>
+                            <p className="text-xs mt-2">{formData.lastName} {formData.firstName} {formData.middleName}</p>
+                            <p className="text-xs">(Ф.И.О.)</p>
                           </div>
                         </div>
                       </div>
@@ -1077,75 +1152,128 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
 
                   {/* Скрытое заявление для генерации PDF */}
                   <div ref={applicationRef} className="hidden print:block print:visible">
-                    <div className="p-8 space-y-6 print:p-4" style={{ fontFamily: "Arial, sans-serif", fontSize: "12pt" }}>
-                      <div className="text-center mb-8">
-                        <h2 className="text-2xl font-bold mb-2">ЗАЯВЛЕНИЕ</h2>
-                        <p className="text-lg">о выдаче технических условий</p>
-                        <p className="text-lg">на подключение к системам водоснабжения и водоотведения</p>
+                    <div className="p-8 space-y-4 print:p-4" style={{ fontFamily: "Times New Roman, serif", fontSize: "11pt", lineHeight: "1.5" }}>
+                      <div className="text-center mb-4">
+                        <p className="text-xs mb-2">Приложение №1 к Правилам подключения (технологического присоединения) объектов капитального строительства к централизованным системам горячего водоснабжения, холодного водоснабжения и (или) водоотведения</p>
+                        <h2 className="text-base font-bold mb-1">ЗАПРОС</h2>
+                        <p className="text-sm">о выдаче технических условий на подключение</p>
+                        <p className="text-sm">(технологическое присоединение) к централизованным системам</p>
+                        <p className="text-sm">холодного водоснабжения и (или) водоотведения</p>
                       </div>
 
-                      <div className="space-y-4 text-sm">
-                        <p>
-                          <strong>В ООО "Крымская Водная Компания"</strong>
-                        </p>
-                        
-                        <div className="space-y-2">
-                          <p><strong>От:</strong> {formData.lastName} {formData.firstName} {formData.middleName}</p>
-                          <p><strong>Адрес регистрации:</strong> {formData.registrationAddress || "не указано"}</p>
-                          <p><strong>Телефон:</strong> {formData.phone}</p>
+                      <div className="space-y-3 text-xs">
+                        <div>
+                          <p className="mb-1"><strong>1. Наименование исполнителя, которому направлен запрос</strong></p>
+                          <p className="ml-4">ООО «Крымская Водная Компания»</p>
                         </div>
 
-                        <div className="space-y-2 mt-6">
-                          <p><strong>Паспортные данные:</strong></p>
-                          <p>Серия: {formData.passportSeries} № {formData.passportNumber}</p>
-                          <p>Выдан: {formData.passportIssuedBy || "не указано"}</p>
-                          <p>Дата выдачи: {formData.passportIssueDate ? new Date(formData.passportIssueDate).toLocaleDateString("ru-RU") : "не указано"}</p>
-                          {formData.passportDivisionCode && (
-                            <p>Код подразделения: {formData.passportDivisionCode}</p>
-                          )}
-                        </div>
-
-                        <div className="space-y-2 mt-6">
-                          <p><strong>Информация об объекте:</strong></p>
-                          <p>Тип объекта: {formData.objectType === "residential" ? "Жилой дом" : formData.objectType === "apartment" ? "Квартира" : formData.objectType === "commercial" ? "Коммерческий объект" : formData.objectType === "industrial" ? "Промышленный объект" : "не указано"}</p>
-                          <p>Назначение: {formData.objectPurpose === "residential" ? "Жилое" : formData.objectPurpose === "commercial" ? "Коммерческое" : formData.objectPurpose === "industrial" ? "Промышленное" : formData.objectPurpose === "public" ? "Общественное" : "не указано"}</p>
-                          <p>Адрес объекта: {formData.objectAddress || "не указано"}</p>
-                          {formData.cadastralNumber && (
-                            <p>Кадастровый номер: {formData.cadastralNumber}</p>
-                          )}
-                          {formData.area && (
-                            <p>Площадь: {formData.area} кв.м</p>
-                          )}
-                        </div>
-
-                        <div className="space-y-2 mt-6">
-                          <p><strong>Параметры присоединения:</strong></p>
-                          <p>Вид подключения: {formData.connectionTypeWater ? "Водопровод" : ""} {formData.connectionTypeSewerage ? "Канализация" : ""}</p>
-                          <p>Тип подключения: {formData.connectionMethod === "with-well" ? "с колодцем" : formData.connectionMethod === "by-length" ? "по протяженности" : "не указано"}</p>
-                          {formData.connectionMethod === "with-well" && (
-                            <p>Тип колодца: {formData.wellType === "existing" ? "Существующий" : formData.wellType === "planned" ? "Проектируемый" : "не указано"}</p>
-                          )}
-                          {formData.requestedLoad && (
-                            <p>Запрошенная нагрузка: {formData.requestedLoad} м³</p>
-                          )}
-                        </div>
-
-                        <div className="mt-8 space-y-4">
-                          <p className="text-sm">
-                            Прошу выдать технические условия на подключение указанного объекта к системам водоснабжения и водоотведения.
-                          </p>
-                          <p className="text-sm">
-                            Обязуюсь предоставить все необходимые документы в соответствии с требованиями.
+                        <div>
+                          <p className="mb-1"><strong>2. Сведения о лице, обратившемся с запросом</strong></p>
+                          <p className="ml-4 border-b border-black min-h-[60px]">
+                            {formData.lastName} {formData.firstName} {formData.middleName}
+                            {formData.birthDate && `, дата рождения: ${new Date(formData.birthDate).toLocaleDateString("ru-RU")}`}
+                            {formData.passportSeries && formData.passportNumber && `, паспорт серия ${formData.passportSeries} № ${formData.passportNumber}`}
+                            {formData.passportIssuedBy && `, выдан ${formData.passportIssuedBy}`}
+                            {formData.passportIssueDate && `, дата выдачи ${new Date(formData.passportIssueDate).toLocaleDateString("ru-RU")}`}
+                            {formData.passportDivisionCode && `, код подразделения ${formData.passportDivisionCode}`}
+                            {formData.inn && `, ИНН ${formData.inn}`}
+                            {formData.snils && `, СНИЛС ${formData.snils}`}
                           </p>
                         </div>
 
-                        <div className="mt-12 flex justify-between">
+                        <div>
+                          <p className="mb-1"><strong>3. Контактные данные лица, обратившегося за выдачей технических условий</strong></p>
+                          <p className="ml-4 border-b border-black min-h-[40px]">
+                            Адрес регистрации: {formData.registrationAddress || "_________________"}
+                            {formData.phone && `, телефон: ${formData.phone}`}
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="mb-1"><strong>4. Основания обращения с запросом о выдаче технических условий:</strong></p>
+                          <p className="ml-4 border-b border-black min-h-[40px]">
+                            Правообладатель земельного участка
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="mb-1"><strong>5. В связи с</strong> {formData.constructionType || "_________________"} <strong>прошу выдать технические условия на подключение (технологическое присоединение)</strong></p>
+                          <p className="ml-4 mb-1">объекта капитального строительства, водопроводных и (или) канализационных сетей, иного объекта, не относящегося к объектам капитального строительства (указать нужное):</p>
+                          <p className="ml-4 border-b border-black min-h-[30px]">
+                            {formData.objectType === "residential" ? "Жилой дом" : formData.objectType === "apartment" ? "Квартира" : formData.objectType === "commercial" ? "Коммерческий объект" : formData.objectType === "industrial" ? "Промышленный объект" : "_________________"}
+                          </p>
+                          <p className="ml-4 mt-1">расположенного (проектируемого) по адресу:</p>
+                          <p className="ml-4 border-b border-black min-h-[30px]">
+                            {formData.objectAddress || "_________________"}
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="mb-1"><strong>6. Требуется подключение к централизованной системе</strong></p>
+                          <p className="ml-4 border-b border-black min-h-[30px]">
+                            {formData.connectionTypeWater && "холодного водоснабжения"} {formData.connectionTypeWater && formData.connectionTypeSewerage && ", "} {formData.connectionTypeSewerage && "водоотведения"}
+                            {!formData.connectionTypeWater && !formData.connectionTypeSewerage && "_________________"}
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="mb-1"><strong>7. Необходимые виды ресурсов или услуг, планируемых к получению через централизованную систему</strong></p>
+                          <p className="ml-4 border-b border-black min-h-[30px]">
+                            {formData.resourceType || "получение питьевой воды, сброс хозяйственно-бытовых сточных вод"}
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="mb-1"><strong>8. Информация о предельных параметрах разрешенного строительства (реконструкции) подключаемых объектов, соответствующих указанному земельному участку</strong></p>
+                          <p className="ml-4 border-b border-black min-h-[30px]">
+                            {formData.objectHeight && `Высота: ${formData.objectHeight} м, `}
+                            {formData.objectFloors && `Этажность: ${formData.objectFloors}, `}
+                            {formData.networkLength && `Протяженность сети: ${formData.networkLength} м, `}
+                            {formData.pipeDiameter && `Диаметр: ${formData.pipeDiameter} мм`}
+                            {!formData.objectHeight && !formData.objectFloors && !formData.networkLength && !formData.pipeDiameter && "_________________"}
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="mb-1"><strong>9. Планируемый срок ввода в эксплуатацию подключаемого объекта</strong></p>
+                          <p className="ml-4 border-b border-black min-h-[30px]">
+                            {formData.plannedCommissioningDate || "_________________"}
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="mb-1"><strong>10. Планируемая величина максимальной необходимой мощности (нагрузки) составляет для:</strong></p>
+                          <p className="ml-4">
+                            потребления холодной воды {formData.maxWaterConsumptionLps || "____"} л/с, {formData.maxWaterConsumptionM3h || "____"} куб.м/час, {formData.maxWaterConsumptionM3day || "____"} куб. м./сутки,
+                          </p>
+                          <p className="ml-4">
+                            в том числе на нужды пожаротушения - наружного {formData.fireExtinguishingExternal || "____"} л/сек, внутреннего {formData.fireExtinguishingInternal || "____"} л/сек. (количество пожарных кранов {formData.fireHydrantsCount || "____"} штук), автоматическое {formData.fireExtinguishingAutomatic || "____"} л/сек.
+                          </p>
+                          <p className="ml-4">
+                            водоотведения {formData.wastewaterLps || "____"} л/с {formData.wastewaterM3h || "____"} куб. м/час, {formData.wastewaterM3day || "____"} куб. м/сутки
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="mb-1"><strong>11. Результаты рассмотрения запроса прошу направить (выбрать один из способов уведомления)</strong></p>
+                          <p className="ml-4 border-b border-black min-h-[30px]">
+                            {formData.notificationMethod || "на адрес электронной почты"}
+                          </p>
+                        </div>
+
+                        <div className="mt-4">
+                          <p className="text-xs">Заявитель дает согласие на обработку персональных данных для оформления процедуры выдачи ТУ и заключения ДТП.</p>
+                        </div>
+
+                        <div className="mt-6 flex justify-between items-end">
                           <div>
-                            <p className="text-sm">Дата: {new Date().toLocaleDateString("ru-RU")}</p>
+                            <p className="text-xs">«____»_____________20__ г.</p>
                           </div>
                           <div className="text-right">
-                            <p className="text-sm mb-12">_________________</p>
-                            <p className="text-sm">{formData.lastName} {formData.firstName} {formData.middleName}</p>
+                            <p className="text-xs mb-8">______________</p>
+                            <p className="text-xs">(М.П., подпись)</p>
+                            <p className="text-xs mt-2">{formData.lastName} {formData.firstName} {formData.middleName}</p>
+                            <p className="text-xs">(Ф.И.О.)</p>
                           </div>
                         </div>
                       </div>

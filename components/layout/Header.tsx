@@ -70,9 +70,9 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-gradient-to-br from-blue-200 via-blue-100 to-cyan-100">
-      <div className="w-full flex h-24 items-center justify-between px-6 sm:px-8 md:px-10 lg:px-14">
+      <div className="w-full flex h-24 items-center justify-between px-4 sm:px-6 md:px-8 lg:px-14">
         {/* Левая часть: Логотип + Навигация */}
-        <div className="flex items-center space-x-8 flex-1">
+        <div className="flex items-center space-x-4 lg:space-x-8 flex-1 min-w-0">
           <Link href="/" className="flex items-center space-x-3">
             <Image
               src="/images/logo.png"
@@ -203,7 +203,7 @@ export function Header() {
         </div>
 
         {/* Правая часть: Поиск и кнопки входа/регистрации */}
-        <div className="flex items-center space-x-2 md:space-x-4 flex-shrink-0">
+        <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4 flex-shrink-0">
           {/* Поиск */}
           <div className="hidden lg:block">
             <Search />
@@ -222,7 +222,7 @@ export function Header() {
                 <span className="whitespace-nowrap">Позвоните нам</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-72 md:w-80">
+            <DropdownMenuContent align="end" className="w-72 lg:w-80">
               <DropdownMenuLabel className="text-xs">Прием показаний водомеров ХВС</DropdownMenuLabel>
               <DropdownMenuItem asChild className="py-2.5">
                 <a href="tel:+79780800366" className="cursor-pointer flex flex-col w-full">
@@ -262,12 +262,12 @@ export function Header() {
           </DropdownMenu>
 
           {status === "loading" ? (
-            <div className="hidden md:block w-20 h-9 bg-gray-200 animate-pulse rounded"></div>
+            <div className="hidden lg:block w-20 h-9 bg-gray-200 animate-pulse rounded"></div>
           ) : session ? (
             <>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="hidden md:flex items-center gap-2 text-sm focus:outline-none focus-visible:outline-none active:outline-none">
+                  <Button variant="ghost" size="sm" className="hidden lg:flex items-center gap-2 text-sm focus:outline-none focus-visible:outline-none active:outline-none">
                     <User className="h-4 w-4" />
                     <span className="max-w-[120px] lg:max-w-[150px] truncate">
                       {session.user.name || session.user.email}
@@ -328,7 +328,7 @@ export function Header() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="md:hidden"
+                className="lg:hidden"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               >
                 <Menu className="h-5 w-5" />
@@ -336,16 +336,16 @@ export function Header() {
             </>
           ) : (
             <>
-              <Button asChild variant="ghost" size="sm" className="hidden md:inline-flex text-sm focus:outline-none focus-visible:outline-none active:outline-none">
+              <Button asChild variant="ghost" size="sm" className="hidden lg:inline-flex text-sm focus:outline-none focus-visible:outline-none active:outline-none">
                 <Link href="/login">Войти</Link>
               </Button>
-              <Button asChild size="sm" className="hidden md:inline-flex text-sm focus:outline-none focus-visible:outline-none active:outline-none">
+              <Button asChild size="sm" className="hidden lg:inline-flex text-sm focus:outline-none focus-visible:outline-none active:outline-none">
                 <Link href="/register">Регистрация</Link>
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
-                className="md:hidden"
+                className="lg:hidden"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               >
                 <Menu className="h-5 w-5" />

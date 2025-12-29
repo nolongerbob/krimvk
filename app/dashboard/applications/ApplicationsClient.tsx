@@ -228,7 +228,7 @@ export function ApplicationsClient({ applications: initialApplications }: Applic
                     </CardDescription>
                     <div className="flex items-center gap-4 text-sm text-gray-600">
                       <span>
-                        Создана: {new Date(app.createdAt as string).toLocaleDateString("ru-RU")}
+                        Создана: {new Date(app.createdAt instanceof Date ? app.createdAt : new Date(app.createdAt)).toLocaleDateString("ru-RU")}
                       </span>
                       {app.address && <span>Адрес: {app.address}</span>}
                     </div>

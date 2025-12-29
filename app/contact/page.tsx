@@ -174,31 +174,31 @@ export default function ContactPage() {
             <div className="space-y-3 text-sm text-gray-600 flex-1">
               <div>
                 <p className="font-medium text-gray-900 mb-1">Наименование организации</p>
-                <p>ООО &quot;Крымская Водная Компания&quot;</p>
+                <p>ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ &quot;КРЫМСКАЯ ВОДНАЯ КОМПАНИЯ&quot;</p>
               </div>
               <div>
-                <p className="font-medium text-gray-900 mb-1">ИНН</p>
+                <p className="font-medium text-gray-900 mb-1">ИНН организации</p>
                 <p>9107000240</p>
               </div>
               <div>
-                <p className="font-medium text-gray-900 mb-1">КПП</p>
-                <p>910201001</p>
+                <p className="font-medium text-gray-900 mb-1">КПП организации</p>
+                <p>910701001</p>
+              </div>
+              <div>
+                <p className="font-medium text-gray-900 mb-1">Счёт</p>
+                <p>40702810725190003625</p>
               </div>
               <div>
                 <p className="font-medium text-gray-900 mb-1">Банк</p>
-                <p>РНКБ Банк (ПАО) г. Симферополь</p>
+                <p>ФИЛИАЛ &quot;ЦЕНТРАЛЬНЫЙ&quot; БАНКА ВТБ (ПАО)</p>
+              </div>
+              <div>
+                <p className="font-medium text-gray-900 mb-1">Корр. счёт</p>
+                <p>30101810145250000411</p>
               </div>
               <div>
                 <p className="font-medium text-gray-900 mb-1">БИК</p>
-                <p>043510607</p>
-              </div>
-              <div>
-                <p className="font-medium text-gray-900 mb-1">Корр. счет</p>
-                <p>30101810335100000607</p>
-              </div>
-              <div>
-                <p className="font-medium text-gray-900 mb-1">Расчетный счет</p>
-                <p>40702810540790000668</p>
+                <p>044525411</p>
               </div>
             </div>
           </CardContent>

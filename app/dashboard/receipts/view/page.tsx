@@ -628,6 +628,41 @@ export default function ReceiptViewPage() {
               );
             })()}
 
+            {/* Реквизиты для оплаты */}
+            <div className="mt-8 p-6 bg-gray-50 rounded-lg border border-gray-200">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Реквизиты счёта</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="font-semibold text-gray-900 mb-1">Организация</p>
+                  <p className="text-gray-700">ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ &quot;КРЫМСКАЯ ВОДНАЯ КОМПАНИЯ&quot;</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900 mb-1">ИНН организации</p>
+                  <p className="text-gray-700">9107000240</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900 mb-1">КПП организации</p>
+                  <p className="text-gray-700">910701001</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900 mb-1">Счёт</p>
+                  <p className="text-gray-700">40702810725190003625</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900 mb-1">Банк</p>
+                  <p className="text-gray-700">ФИЛИАЛ &quot;ЦЕНТРАЛЬНЫЙ&quot; БАНКА ВТБ (ПАО)</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900 mb-1">Корр. счёт</p>
+                  <p className="text-gray-700">30101810145250000411</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900 mb-1">БИК</p>
+                  <p className="text-gray-700">044525411</p>
+                </div>
+              </div>
+            </div>
+
             {/* Подвал */}
             <div className="mt-8 pt-6 border-t border-gray-300 text-center text-sm text-gray-500">
               <p>Квитанция сформирована автоматически</p>

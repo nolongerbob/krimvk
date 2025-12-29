@@ -200,44 +200,70 @@ export default function BecomeSubscriberPage() {
   };
 
   const handleDownloadApplication = async () => {
-    if (!applicationRef.current) return;
-
     try {
-      const html2canvas = (await import("html2canvas")).default;
-      const jsPDF = (await import("jspdf")).default;
-
-      // Создаем canvas из HTML элемента
-      const canvas = await html2canvas(applicationRef.current, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
+      // Отправляем данные на сервер для заполнения PDF
+      const response = await fetch("/api/applications/fill-pdf", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
       });
 
-      // Создаем PDF
-      const pdf = new jsPDF("p", "mm", "a4");
-      const imgData = canvas.toDataURL("image/png");
-      
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-      const imgScaledWidth = imgWidth * ratio;
-      const imgScaledHeight = imgHeight * ratio;
-      const xOffset = (pdfWidth - imgScaledWidth) / 2;
-      const yOffset = (pdfHeight - imgScaledHeight) / 2;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Ошибка при заполнении PDF");
+      }
 
-      pdf.addImage(imgData, "PNG", xOffset, yOffset, imgScaledWidth, imgScaledHeight);
+      // Получаем PDF blob
+      const blob = await response.blob();
       
-      // Генерируем имя файла
-      const fileName = `zayavlenie_TU_${formData.lastName}_${new Date().toISOString().split("T")[0]}.pdf`;
-      
-      // Скачиваем PDF
-      pdf.save(fileName);
+      // Создаем ссылку для скачивания
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `zayavlenie_TU_${formData.lastName}_${new Date().toISOString().split("T")[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Error generating PDF:", error);
-      // Fallback на печать браузера
-      window.print();
+      console.error("Error downloading PDF:", error);
+      setError(error instanceof Error ? error.message : "Ошибка при скачивании PDF");
+      // Fallback на старый метод через html2canvas
+      if (applicationRef.current) {
+        try {
+          const html2canvas = (await import("html2canvas")).default;
+          const jsPDF = (await import("jspdf")).default;
+
+          const canvas = await html2canvas(applicationRef.current, {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+          });
+
+          const pdf = new jsPDF("p", "mm", "a4");
+          const imgData = canvas.toDataURL("image/png");
+          
+          const pdfWidth = pdf.internal.pageSize.getWidth();
+          const pdfHeight = pdf.internal.pageSize.getHeight();
+          const imgWidth = canvas.width;
+          const imgHeight = canvas.height;
+          const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+          const imgScaledWidth = imgWidth * ratio;
+          const imgScaledHeight = imgHeight * ratio;
+          const xOffset = (pdfWidth - imgScaledWidth) / 2;
+          const yOffset = (pdfHeight - imgScaledHeight) / 2;
+
+          pdf.addImage(imgData, "PNG", xOffset, yOffset, imgScaledWidth, imgScaledHeight);
+          
+          const fileName = `zayavlenie_TU_${formData.lastName}_${new Date().toISOString().split("T")[0]}.pdf`;
+          pdf.save(fileName);
+        } catch (fallbackError) {
+          console.error("Fallback error:", fallbackError);
+          window.print();
+        }
+      }
     }
   };
 

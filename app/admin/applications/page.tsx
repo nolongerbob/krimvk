@@ -128,11 +128,25 @@ export default async function AdminApplicationsPage() {
       })
     );
   } catch (error) {
-    console.error("Failed to fetch applications:", error);
+    console.error("❌ Failed to fetch applications:", error);
+    if (error instanceof Error) {
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+    }
     // Возвращаем пустые массивы, чтобы страница не упала
     applications = [];
     categories = [];
   }
+
+  console.log("📤 Admin: Final applications before sending:", {
+    total: applications.length,
+    applications: applications.map(a => ({
+      id: a.id,
+      status: a.status,
+      serviceTitle: a.service?.title || "no service",
+      hasDescription: !!a.description,
+    })),
+  });
 
   return (
     <div className="container py-8 px-4">

@@ -84,10 +84,14 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
       applications: applications.map(a => ({
         id: a.id,
         status: a.status,
-        serviceTitle: a.service.title,
+        serviceTitle: a.service?.title || "no service",
+        serviceId: a.service?.id || "no service id",
         hasDescription: !!a.description,
         descriptionPreview: a.description ? a.description.substring(0, 100) : null,
+        createdAt: a.createdAt,
+        userEmail: a.user?.email || "no user",
       })),
+      rawApplications: applications, // Полные данные для отладки
     });
   }, [applications]);
   

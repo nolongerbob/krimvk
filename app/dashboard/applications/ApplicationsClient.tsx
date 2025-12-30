@@ -238,16 +238,28 @@ export function ApplicationsClient({ applications: initialApplications }: Applic
           // Проверяем, является ли это заявкой на технические условия
           let isTechnicalConditions = false;
           let techData: any = null;
+          let displayDescription = app.description || "Без описания";
+          
           try {
             if (app.description) {
-              const parsed = JSON.parse(app.description);
+              // Пытаемся найти JSON в начале строки (до комментария)
+              let jsonPart = app.description;
+              
+              // Если есть комментарий, извлекаем только JSON часть
+              const commentIndex = app.description.indexOf('\n\nКомментарий при завершении:');
+              if (commentIndex !== -1) {
+                jsonPart = app.description.substring(0, commentIndex).trim();
+              }
+              
+              // Пытаемся распарсить JSON
+              const parsed = JSON.parse(jsonPart);
               if (parsed.type === "technical_conditions") {
                 isTechnicalConditions = true;
                 techData = parsed;
               }
             }
           } catch (e) {
-            // Не JSON, значит обычная заявка
+            // Не JSON, значит обычная заявка - используем description как есть
           }
 
           return (

@@ -25,32 +25,41 @@ interface CompletedApplicationDetailsProps {
 export function CompletedApplicationDetails({ application, isTechnicalConditions = false }: CompletedApplicationDetailsProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  // Извлекаем комментарий из description
-  const getCompletionComment = () => {
-    if (!application.description) return null;
+  // Извлекаем данные заявки и комментарий из description
+  const getApplicationData = () => {
+    if (!application.description) return { data: null, comment: null };
     
-    // Ищем комментарий при завершении (может быть в конце или в середине)
-    const lines = application.description.split('\n');
-    let commentStartIndex = -1;
+    let data: any = null;
+    let comment: string | null = null;
     
-    for (let i = 0; i < lines.length; i++) {
-      if (lines[i].includes('Комментарий при завершении:')) {
-        commentStartIndex = i;
-        break;
+    try {
+      // Пытаемся найти JSON в начале строки (до комментария)
+      let jsonPart = application.description;
+      
+      // Если есть комментарий, извлекаем только JSON часть
+      const commentIndex = application.description.indexOf('\n\nКомментарий при завершении:');
+      if (commentIndex !== -1) {
+        jsonPart = application.description.substring(0, commentIndex).trim();
+        const commentText = application.description.substring(commentIndex + 2).replace(/^Комментарий при завершении:\s*/, '').trim();
+        comment = commentText || null;
+      }
+      
+      // Пытаемся распарсить JSON
+      data = JSON.parse(jsonPart);
+    } catch (e) {
+      // Не JSON, значит это обычная заявка
+      // Проверяем, есть ли комментарий в обычном тексте
+      const commentMatch = application.description.match(/Комментарий при завершении:\s*(.+)/s);
+      if (commentMatch) {
+        comment = commentMatch[1].trim();
       }
     }
     
-    if (commentStartIndex !== -1) {
-      // Берем все строки после "Комментарий при завершении:"
-      const commentLines = lines.slice(commentStartIndex);
-      const commentText = commentLines.join('\n').replace(/^.*?Комментарий при завершении:\s*/, '');
-      return commentText.trim() || null;
-    }
-    
-    return null;
+    return { data, comment };
   };
 
-  const completionComment = getCompletionComment();
+  const { data: applicationData, comment: completionComment } = getApplicationData();
+  const isTechnicalConditions = applicationData && applicationData.type === "technical_conditions";
   const hasFiles = application.files && application.files.length > 0;
   const files = application.files || [];
 
@@ -72,6 +81,53 @@ export function CompletedApplicationDetails({ application, isTechnicalConditions
         </DialogHeader>
 
         <div className="space-y-6">
+          {/* Данные заявки на технические условия */}
+          {isTechnicalConditions && applicationData && applicationData.type === "technical_conditions" && (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <h3 className="font-semibold text-gray-900 mb-4">Данные заявки</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-gray-600">ФИО:</span>
+                  <span className="ml-2 font-medium">
+                    {[applicationData.lastName, applicationData.firstName, applicationData.middleName]
+                      .filter(Boolean)
+                      .join(" ") || "не указано"}
+                  </span>
+                </div>
+                {applicationData.objectAddress && (
+                  <div>
+                    <span className="text-gray-600">Адрес объекта:</span>
+                    <span className="ml-2 font-medium">{applicationData.objectAddress}</span>
+                  </div>
+                )}
+                {applicationData.cadastralNumber && (
+                  <div>
+                    <span className="text-gray-600">Кадастровый номер:</span>
+                    <span className="ml-2 font-medium">{applicationData.cadastralNumber}</span>
+                  </div>
+                )}
+                {applicationData.area && (
+                  <div>
+                    <span className="text-gray-600">Площадь:</span>
+                    <span className="ml-2 font-medium">{applicationData.area} м²</span>
+                  </div>
+                )}
+                <div>
+                  <span className="text-gray-600">Тип подключения:</span>
+                  <span className="ml-2 font-medium">
+                    {applicationData.connectionTypeWater && applicationData.connectionTypeSewerage
+                      ? "Водоснабжение и водоотведение"
+                      : applicationData.connectionTypeWater
+                      ? "Водоснабжение"
+                      : applicationData.connectionTypeSewerage
+                      ? "Водоотведение"
+                      : "не указано"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Комментарий администратора */}
           {completionComment && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">

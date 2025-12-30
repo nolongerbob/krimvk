@@ -199,13 +199,31 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
     const status = statusConfig[app.status as keyof typeof statusConfig];
     const StatusIcon = status.icon;
 
+    // Обрабатываем description - может быть JSON для технических условий
+    let displayDescription = app.description || "Без описания";
+    try {
+      if (app.description) {
+        const parsed = JSON.parse(app.description);
+        if (parsed.type === "technical_conditions") {
+          // Для технических условий показываем краткую информацию
+          const fio = [parsed.lastName, parsed.firstName, parsed.middleName].filter(Boolean).join(" ");
+          displayDescription = fio ? `ФИО: ${fio}` : "Заявка на технические условия";
+          if (parsed.objectAddress) {
+            displayDescription += ` | Адрес объекта: ${parsed.objectAddress}`;
+          }
+        }
+      }
+    } catch (e) {
+      // Не JSON, используем как есть
+    }
+
     return (
       <Card key={app.id} className={`${status.bgClassName} border-2`}>
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <CardTitle className="mb-2">{app.service.title}</CardTitle>
-              <CardDescription className="mb-2">{app.description || "Без описания"}</CardDescription>
+              <CardDescription className="mb-2">{displayDescription}</CardDescription>
               <div className="space-y-2 text-sm text-gray-600">
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4" />

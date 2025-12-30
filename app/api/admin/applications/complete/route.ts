@@ -59,8 +59,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Заявка не найдена" }, { status: 404 });
     }
 
+    // Используем ту же структуру, что и в /api/admin/applications/[id]/upload
+    // Сохраняем файлы в public/uploads/applications без поддиректорий
+    const uploadsDir = join(process.cwd(), "public", "uploads", "applications");
+    
     // Создаем директорию для файлов, если её нет
-    const uploadsDir = join(process.cwd(), "public", "uploads", "applications", applicationId);
     if (!existsSync(uploadsDir)) {
       await mkdir(uploadsDir, { recursive: true });
     }
@@ -93,9 +96,11 @@ export async function POST(request: NextRequest) {
           const bytes = await file.arrayBuffer();
           const buffer = Buffer.from(bytes);
           const timestamp = Date.now();
-          const fileName = `${timestamp}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+          const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
+          // Используем тот же формат имени файла, что и в /api/admin/applications/[id]/upload
+          const fileName = `${applicationId}_${timestamp}_${originalName}`;
           const filePath = join(uploadsDir, fileName);
-          const publicPath = `/uploads/applications/${applicationId}/${fileName}`;
+          const publicPath = `/uploads/applications/${fileName}`;
 
           // Сохраняем файл на диск
           await writeFile(filePath, buffer);

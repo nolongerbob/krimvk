@@ -51,14 +51,6 @@ export function ApplicationForm({ formData, isPreview = false }: { formData: any
         <span> подключения<br/>(технологического присоединения)<br/>объектов капитального строительства<br/>к централизованным системам<br/>горячего водоснабжения,<br/>холодного водоснабжения<br/>и (или) водоотведения</span>
       </p>
       
-      <p style={{ margin: 0, textAlign: "justify", textIndent: "36pt" }}>
-        <span> </span>
-      </p>
-      
-      <p style={{ margin: 0, textAlign: "center" }}>
-        <span> </span>
-      </p>
-      
       {/* ЗАПРОС */}
       <p style={{ margin: 0, textAlign: "center", fontWeight: "bold", fontSize: fontSizeLarge }}>
         <span>ЗАПРОС</span>

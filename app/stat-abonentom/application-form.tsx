@@ -37,10 +37,9 @@ export function ApplicationForm({ formData, isPreview = false }: { formData: any
   ].filter(Boolean).join("");
 
   // Контактные данные для пункта 3
-  const contactData = [
-    formData.registrationAddress ? `Адрес регистрации: ${formData.registrationAddress}` : "",
-    formData.phone ? (formData.registrationAddress ? ", " : "") + `телефон: ${formData.phone}` : ""
-  ].filter(Boolean).join("");
+  const registrationAddressData = formData.registrationAddress ? `Адрес регистрации: ${formData.registrationAddress}` : "";
+  const objectAddressData = formData.objectAddress ? `Адрес объекта: ${formData.objectAddress}` : "";
+  const phoneData = formData.phone ? `телефон: ${formData.phone}` : "";
 
   return (
     <div className={containerClass} style={{ fontFamily: "Times New Roman, serif", lineHeight: "1.5", fontSize: fontSize, ...containerStyle }}>
@@ -126,17 +125,22 @@ export function ApplicationForm({ formData, isPreview = false }: { formData: any
       <p style={{ margin: 0, textAlign: "justify", textIndent: "35.4pt" }}>
         <span>3. Контактные данные лица, обратившегося  за  выдачей   технических условий</span>
       </p>
-      {formData.registrationAddress && (
+      {registrationAddressData && (
         <p style={{ margin: 0, textAlign: "justify", textIndent: 0, fontSize: fontSize }}>
-          <span>{underlineField(`Адрес регистрации: ${formData.registrationAddress}`, 70)}</span>
+          <span>{underlineField(registrationAddressData, 70)}</span>
         </p>
       )}
-      {formData.phone && (
+      {objectAddressData && (
         <p style={{ margin: 0, textAlign: "justify", textIndent: 0, fontSize: fontSize }}>
-          <span>{underlineField(`телефон: ${formData.phone}`, 70)}</span>
+          <span>{underlineField(objectAddressData, 70)}</span>
         </p>
       )}
-      {!formData.registrationAddress && !formData.phone && (
+      {phoneData && (
+        <p style={{ margin: 0, textAlign: "justify", textIndent: 0, fontSize: fontSize }}>
+          <span>{underlineField(phoneData, 70)}</span>
+        </p>
+      )}
+      {!registrationAddressData && !objectAddressData && !phoneData && (
         <p style={{ margin: 0, textAlign: "justify", textIndent: 0, fontSize: fontSize }}>
           <span>{underlineField("", 70)}</span>
         </p>

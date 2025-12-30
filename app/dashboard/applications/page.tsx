@@ -51,6 +51,14 @@ export default async function ApplicationsPage() {
 
   let applications: ApplicationWithRelations = [];
   try {
+    // Сначала проверяем, сколько всего заявок у пользователя
+    const userAppCount = await withRetry(() =>
+      prisma.application.count({
+        where: { userId: session.user.id },
+      })
+    );
+    console.log("📊 User applications count in database:", userAppCount);
+
     applications = await withRetry(() =>
       prisma.application.findMany({
         where: { userId: session.user.id },
@@ -66,7 +74,9 @@ export default async function ApplicationsPage() {
 
     console.log("📋 User: Loaded applications:", {
       userId: session.user.id,
-      total: applications.length,
+      expected: userAppCount,
+      loaded: applications.length,
+      match: applications.length === userAppCount,
       withDescription: applications.filter(a => a.description).length,
       technicalConditions: applications.filter(a => {
         try {
@@ -77,9 +87,23 @@ export default async function ApplicationsPage() {
         } catch {}
         return false;
       }).length,
+      firstApp: applications[0] ? {
+        id: applications[0].id,
+        status: applications[0].status,
+        serviceId: applications[0].service?.id,
+        serviceTitle: applications[0].service?.title,
+      } : null,
     });
+
+    if (userAppCount > 0 && applications.length === 0) {
+      console.error("❌ CRITICAL: Applications exist in database but were not loaded!");
+    }
   } catch (error) {
     console.error("❌ Error fetching applications:", error);
+    if (error instanceof Error) {
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+    }
     applications = [];
   }
 

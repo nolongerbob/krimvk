@@ -6,6 +6,14 @@ export function ApplicationForm({ formData, isPreview = false }: { formData: any
     ? "border rounded-lg p-6 bg-white mb-4 max-h-[600px] overflow-y-auto"
     : "bg-white";
   
+  const containerStyle = isPreview ? {} : {
+    width: "210mm",
+    maxWidth: "210mm",
+    margin: "0 auto",
+    padding: "20mm",
+    boxSizing: "border-box" as const,
+  };
+  
   const fontSize = isPreview ? "11px" : "10pt";
   const fontSizeLarge = isPreview ? "19px" : "19pt";
 
@@ -35,7 +43,7 @@ export function ApplicationForm({ formData, isPreview = false }: { formData: any
   ].filter(Boolean).join("");
 
   return (
-    <div className={containerClass} style={{ fontFamily: "Times New Roman, serif", lineHeight: "1.5", fontSize: fontSize }}>
+    <div className={containerClass} style={{ fontFamily: "Times New Roman, serif", lineHeight: "1.5", fontSize: fontSize, ...containerStyle }}>
       {/* Приложение №1 */}
       <p style={{ margin: 0, textAlign: "right", textIndent: "34.9pt", fontWeight: "bold" }}>
         <span>Приложение №1<br/>к </span>

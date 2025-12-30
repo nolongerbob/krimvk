@@ -75,7 +75,7 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
       await new Promise(resolve => setTimeout(resolve, 500));
 
       const canvas = await html2canvas(tempDiv, {
-        scale: 2,
+        scale: 1.5, // Уменьшаем scale для меньшего размера файла
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
@@ -93,14 +93,15 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
       root.unmount();
 
       const pdf = new jsPDF("p", "mm", "a4");
-      const imgData = canvas.toDataURL("image/png", 1.0);
+      // Используем JPEG с качеством 0.85 для меньшего размера файла
+      const imgData = canvas.toDataURL("image/jpeg", 0.85);
 
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
 
       const imgWidth = canvas.width;
       const imgHeight = canvas.height;
-      const scale = 2;
+      const scale = 1.5;
       const realWidthPx = imgWidth / scale;
       const realHeightPx = imgHeight / scale;
       const pxToMm = 25.4 / 96;
@@ -143,7 +144,7 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
               0, sourceY, imgWidth, currentPageHeightPx,
               0, 0, imgWidth, currentPageHeightPx
             );
-            const pageImgData = pageCanvas.toDataURL("image/png", 1.0);
+            const pageImgData = pageCanvas.toDataURL("image/jpeg", 0.85);
 
             if (pageNumber > 0) {
               pdf.addPage();

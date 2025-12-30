@@ -95,7 +95,7 @@ export function Search({ mobileMode = false }: SearchProps) {
               placeholder="Поиск по сайту..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className={`pl-10 pr-10 ${mobileMode ? 'w-full' : 'w-48 md:w-64'}`}
+              className={`pl-10 pr-10 ${mobileMode ? 'w-full' : 'w-64 md:w-80'}`}
             />
             {query && (
               <button

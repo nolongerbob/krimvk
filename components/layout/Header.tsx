@@ -69,12 +69,11 @@ export function Header() {
   ];
 
   return (
-    <div className="sticky top-0 z-50 px-2 sm:px-4 md:px-6 lg:px-8 mt-2">
-      <header className="w-full border-b bg-gradient-to-br from-blue-200/90 via-blue-100/90 to-cyan-100/90 backdrop-blur-sm rounded-t-2xl rounded-b-2xl">
-        <div className="w-full flex h-20 lg:h-24 items-center px-3 sm:px-4 md:px-6 lg:px-8">
-        {/* Левая часть: Логотип */}
-        <div className="flex items-center flex-shrink-0 w-1/3">
-          <Link href="/" className="flex items-center space-x-2 sm:space-x-3">
+    <header className="sticky top-0 z-50 w-full border-b bg-gradient-to-br from-blue-200 via-blue-100 to-cyan-100">
+      <div className="w-full flex h-20 lg:h-24 items-center justify-between px-3 sm:px-4 md:px-6 lg:px-14">
+        {/* Левая часть: Логотип + Навигация */}
+        <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-8 flex-1 min-w-0">
+          <Link href="/" className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
             <Image
               src="/images/logo.png"
               alt="Крымская Водная Компания"
@@ -84,10 +83,7 @@ export function Header() {
             />
             <span className="text-lg sm:text-xl lg:text-2xl font-bold hidden sm:inline lg:inline">КрымВК</span>
           </Link>
-        </div>
 
-        {/* Центральная часть: Навигация + Кнопки */}
-        <div className="flex items-center gap-1 sm:gap-2 flex-1 justify-center min-w-0">
           <nav className="hidden xl:flex items-center space-x-4">
             {navLinks.map((link) => (
               <Link
@@ -206,8 +202,8 @@ export function Header() {
           </nav>
         </div>
 
-        {/* Правая часть: Кнопки и пользователь */}
-        <div className="flex items-center flex-shrink-0 w-1/3 justify-end gap-1 sm:gap-2">
+        {/* Правая часть: Поиск и кнопки входа/регистрации */}
+        <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4 flex-shrink-0">
           {/* Поиск */}
           <div className="hidden xl:block">
             <Search />
@@ -221,7 +217,7 @@ export function Header() {
           {/* Позвоните нам - выпадающее меню */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="hidden xl:flex items-center gap-1.5 text-xs xl:text-sm px-1.5 xl:px-2 focus:outline-none focus-visible:outline-none active:outline-none">
+              <Button variant="ghost" size="sm" className="hidden xl:flex items-center gap-1.5 text-xs xl:text-sm px-2 xl:px-3 focus:outline-none focus-visible:outline-none active:outline-none">
                 <Phone className="h-3 w-3 xl:h-4 xl:w-4" />
                 <span className="whitespace-nowrap">Позвоните нам</span>
               </Button>
@@ -264,6 +260,7 @@ export function Header() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
           {status === "loading" ? (
             <div className="hidden xl:block w-20 h-9 bg-gray-200 animate-pulse rounded"></div>
           ) : session ? (
@@ -708,8 +705,7 @@ export function Header() {
           </div>
         </>
       )}
-      </header>
-    </div>
+    </header>
   );
 }
 

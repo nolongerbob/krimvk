@@ -247,7 +247,7 @@ export default function BecomeSubscriberPage() {
       const scrollHeight = hiddenElement.scrollHeight;
 
       const canvas = await html2canvas(hiddenElement, {
-        scale: 2,
+        scale: 1.5, // Уменьшаем scale для меньшего размера файла
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
@@ -271,17 +271,18 @@ export default function BecomeSubscriberPage() {
       hiddenElement.style.zIndex = originalZIndex;
 
       const pdf = new jsPDF("p", "mm", "a4");
-      const imgData = canvas.toDataURL("image/png", 1.0);
+      // Используем JPEG с качеством 0.85 для меньшего размера файла
+      const imgData = canvas.toDataURL("image/jpeg", 0.85);
       
       const pdfWidth = pdf.internal.pageSize.getWidth(); // 210mm
       const pdfHeight = pdf.internal.pageSize.getHeight(); // 297mm
       
-      // Размеры canvas в пикселях (при scale=2)
+      // Размеры canvas в пикселях (при scale=1.5)
       const imgWidth = canvas.width;
       const imgHeight = canvas.height;
       
       // Реальный размер в пикселях (делим на scale)
-      const scale = 2;
+      const scale = 1.5;
       const realWidthPx = imgWidth / scale;
       const realHeightPx = imgHeight / scale;
       
@@ -337,7 +338,7 @@ export default function BecomeSubscriberPage() {
               0, sourceY, imgWidth, currentPageHeightPx,
               0, 0, imgWidth, currentPageHeightPx
             );
-            const pageImgData = pageCanvas.toDataURL("image/png", 1.0);
+            const pageImgData = pageCanvas.toDataURL("image/jpeg", 0.85);
             
             if (pageNumber > 0) {
               pdf.addPage();

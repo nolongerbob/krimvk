@@ -110,10 +110,26 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Возвращаем только сериализуемые данные
     return NextResponse.json({ 
       success: true, 
-      application: updatedApplication,
-      files: savedFiles,
+      application: {
+        id: updatedApplication.id,
+        status: updatedApplication.status,
+        description: updatedApplication.description,
+      },
+      files: savedFiles.map(f => ({
+        id: f.id,
+        fileName: f.fileName,
+        filePath: f.filePath,
+        fileSize: f.fileSize,
+        mimeType: f.mimeType,
+      })),
+    }, { 
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
   } catch (error) {
     console.error("Error completing application:", error);

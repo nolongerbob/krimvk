@@ -14,8 +14,8 @@ export function ApplicationForm({ formData, isPreview = false }: { formData: any
     boxSizing: "border-box" as const,
   };
   
-  const fontSize = isPreview ? "11px" : "10pt"; // Уменьшили еще для умещения на 2 листа
-  const fontSizeLarge = isPreview ? "19px" : "16pt"; // Уменьшили заголовок пропорционально
+  const fontSize = isPreview ? "10px" : "9pt"; // Еще уменьшили шрифт
+  const fontSizeLarge = isPreview ? "17px" : "14pt"; // Уменьшили заголовок пропорционально
 
   // Функция для создания строки подчеркивания с данными
   const underlineField = (text: string, length: number = 70) => {

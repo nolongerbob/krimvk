@@ -330,15 +330,17 @@ export default function BecomeSubscriberPage() {
         
         while (sourceY < imgHeight) {
           const remainingHeight = imgHeight - sourceY;
-          // Берем высоту страницы или оставшуюся высоту, что меньше
-          // Вычитаем небольшой запас для предотвращения обрезания строк
-          const safetyMarginPx = (safetyMargin / pxToMm / widthRatio) * scale;
-          let currentPageHeightPx = Math.min(pageHeightPx - safetyMarginPx, remainingHeight);
+          const isLastPage = sourceY + pageHeightPx >= imgHeight - 1; // -1 для учета погрешности
           
-          // Убеждаемся, что не берем меньше чем нужно
-          if (currentPageHeightPx < remainingHeight && pageNumber === 0 && sourceY === 0) {
-            // На первой странице можем взять чуть больше
-            currentPageHeightPx = Math.min(pageHeightPx, remainingHeight);
+          // Для всех страниц кроме последней используем фиксированную высоту pageHeightPx
+          // Это обеспечивает одинаковое масштабирование на всех страницах
+          let currentPageHeightPx: number;
+          if (isLastPage) {
+            // На последней странице берем оставшуюся высоту
+            currentPageHeightPx = remainingHeight;
+          } else {
+            // На всех остальных страницах используем фиксированную высоту
+            currentPageHeightPx = pageHeightPx;
           }
           
           // Создаем временный canvas для текущей страницы
@@ -360,25 +362,21 @@ export default function BecomeSubscriberPage() {
               pdf.addPage();
             }
             
-            // Вычисляем высоту страницы в мм для добавления в PDF
-            // Используем реальную высоту изображения для каждой страницы, чтобы избежать растягивания
-            const currentPageHeightRealPx = currentPageHeightPx / scale;
-            const currentPageHeightMm = currentPageHeightRealPx * pxToMm * widthRatio;
-            
             // На каждой странице добавляем верхний отступ
             const yPosition = paddingTop;
-            const isLastPage = sourceY + currentPageHeightPx >= imgHeight - 1; // -1 для учета погрешности
             
-            // Используем реальную высоту изображения для каждой страницы
+            // Для всех страниц кроме последней используем фиксированную высоту availableHeight
             // Это обеспечивает одинаковое масштабирование без растягивания
             let pageHeightForPdf: number;
             if (isLastPage) {
-              // На последней странице добавляем дополнительный запас снизу
+              // На последней странице используем реальную высоту с дополнительным запасом снизу
+              const currentPageHeightRealPx = currentPageHeightPx / scale;
+              const currentPageHeightMm = currentPageHeightRealPx * pxToMm * widthRatio;
               const lastPageExtraMargin = 15; // мм - увеличенный запас для последней страницы
               pageHeightForPdf = currentPageHeightMm + (lastPageExtraMargin / pxToMm / widthRatio);
             } else {
-              // На всех остальных страницах используем реальную высоту изображения
-              pageHeightForPdf = currentPageHeightMm;
+              // На всех остальных страницах используем фиксированную высоту для одинакового масштабирования
+              pageHeightForPdf = availableHeight;
             }
             
             pdf.addImage(pageImgData, "JPEG", paddingLeft, yPosition, finalWidth, pageHeightForPdf);

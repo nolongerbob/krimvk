@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { FileText, MessageSquare, Newspaper, Users, AlertCircle, CheckCircle, Clock, Folder, BookOpen } from "lucide-react";
+import { FileText, MessageSquare, Newspaper, Users, AlertCircle, CheckCircle, Clock, Folder, BookOpen, Settings } from "lucide-react";
 import { AdminNotificationsBadge } from "@/components/admin/AdminNotificationsBadge";
 
 export const dynamic = 'force-dynamic';
@@ -165,6 +165,22 @@ export default async function AdminPage() {
           <CardContent>
             <Button asChild className="w-full">
               <Link href="/admin/applications">Перейти</Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow border-2 border-blue-200 bg-blue-50">
+          <CardHeader>
+            <Settings className="h-10 w-10 text-blue-600 mb-2" />
+            <CardTitle className="flex items-center">
+              Технологическое присоединение
+              <AdminNotificationsBadge type="applications" />
+            </CardTitle>
+            <CardDescription>Заявки на технические условия</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild className="w-full" variant="outline">
+              <Link href="/admin/applications?filter=technical_conditions">Перейти</Link>
             </Button>
           </CardContent>
         </Card>

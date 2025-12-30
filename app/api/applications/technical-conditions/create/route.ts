@@ -14,11 +14,35 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.json();
 
+    // Ищем или создаем услугу "Технологическое присоединение"
+    let service = await prisma.service.findFirst({
+      where: {
+        OR: [
+          { id: "tehnologicheskoe-prisoedinenie" },
+          { title: { contains: "Технологическое присоединение", mode: "insensitive" } },
+          { title: { contains: "технические условия", mode: "insensitive" } },
+        ],
+      },
+    });
+
+    // Если услуга не найдена, создаем её
+    if (!service) {
+      service = await prisma.service.create({
+        data: {
+          id: "tehnologicheskoe-prisoedinenie",
+          title: "Технологическое присоединение",
+          description: "Заявка на выдачу технических условий на подключение (технологическое присоединение) к централизованным системам холодного водоснабжения и (или) водоотведения",
+          category: "Подключение",
+          isActive: true,
+        },
+      });
+    }
+
     // Создаем заявку на технические условия
     // Используем существующую модель Application, но сохраняем все данные в description как JSON
     const applicationData = {
       userId: session.user.id,
-      serviceId: "tehnologicheskoe-prisoedinenie", // ID услуги технологического присоединения
+      serviceId: service.id,
       status: "PENDING" as const,
       address: formData.objectAddress || null,
       phone: formData.phone || null,

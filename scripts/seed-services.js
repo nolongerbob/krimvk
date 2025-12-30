@@ -52,6 +52,13 @@ async function seedServices() {
       price: null,
       isActive: true,
     },
+    {
+      title: "Откачка сточных вод",
+      description: "Услуга по откачке сточных вод из выгребных ям и септиков. Быстрое и качественное обслуживание для частных домов и дач.",
+      category: "ремонт",
+      price: null,
+      isActive: true,
+    },
   ];
 
   try {

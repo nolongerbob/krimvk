@@ -365,23 +365,23 @@ export default function BecomeSubscriberPage() {
             // На каждой странице добавляем верхний отступ
             const yPosition = paddingTop;
             
-            // Вычисляем реальную высоту изображения в мм для каждой страницы
-            // Это обеспечивает одинаковое масштабирование без растягивания
-            const currentPageHeightRealPx = currentPageHeightPx / scale;
-            const currentPageHeightMm = currentPageHeightRealPx * pxToMm * widthRatio;
+            // Используем тот же подход, что и для одной страницы
+            // Вычисляем высоту страницы пропорционально finalHeight
+            // Это обеспечивает одинаковое масштабирование на всех страницах
+            const pageHeightRatio = currentPageHeightPx / imgHeight; // Доля от общей высоты
+            const pageHeightForPdf = finalHeight * pageHeightRatio; // Пропорциональная высота в мм
             
-            let pageHeightForPdf: number;
+            let actualPageHeight: number;
             if (isLastPage) {
               // На последней странице добавляем дополнительный запас снизу
-              const lastPageExtraMargin = 15; // мм - увеличенный запас для последней страницы
-              pageHeightForPdf = currentPageHeightMm + (lastPageExtraMargin / pxToMm / widthRatio);
+              const lastPageExtraMargin = 15; // мм
+              actualPageHeight = pageHeightForPdf + lastPageExtraMargin;
             } else {
-              // На всех остальных страницах используем реальную высоту изображения
-              // Это гарантирует одинаковое масштабирование без растягивания
-              pageHeightForPdf = currentPageHeightMm;
+              // На всех остальных страницах используем пропорциональную высоту
+              actualPageHeight = pageHeightForPdf;
             }
             
-            pdf.addImage(pageImgData, "JPEG", paddingLeft, yPosition, finalWidth, pageHeightForPdf);
+            pdf.addImage(pageImgData, "JPEG", paddingLeft, yPosition, finalWidth, actualPageHeight);
           }
           
           sourceY += currentPageHeightPx;

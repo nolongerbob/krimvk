@@ -12,7 +12,9 @@ import {
   Lightbulb,
   Wrench,
   Building,
-  FileCheck
+  FileCheck,
+  User,
+  ArrowRight
 } from "lucide-react";
 import Link from "next/link";
 
@@ -104,6 +106,12 @@ export default function PodklyucheniePage() {
               <Link href="/documents/zayavlenie-o-vydache-tehnicheskih-uslovij.docx">
                 <Download className="h-4 w-4" />
                 Скачать бланк заявления на выдачу ТУ
+              </Link>
+            </Button>
+            <Button asChild size="sm" className="gap-2 bg-blue-600 hover:bg-blue-700">
+              <Link href="/stat-abonentom">
+                <User className="h-4 w-4" />
+                Стать абонентом
               </Link>
             </Button>
           </div>
@@ -340,6 +348,14 @@ export default function PodklyucheniePage() {
                   <span className="font-medium">Тел:</span>
                   <a href="tel:98180" className="text-blue-600 hover:underline">98-180</a>
                 </div>
+                <div className="pt-2">
+                  <Button asChild size="sm" className="gap-2 bg-blue-600 hover:bg-blue-700 w-full">
+                    <Link href="/stat-abonentom">
+                      <ArrowRight className="h-4 w-4" />
+                      Заполнить заявление онлайн
+                    </Link>
+                  </Button>
+                </div>
                 <div className="flex items-center gap-2 text-gray-700">
                   <Calendar className="h-4 w-4 text-blue-600" />
                   <span className="text-sm">
@@ -379,6 +395,14 @@ export default function PodklyucheniePage() {
                 <div className="flex items-center gap-2 text-gray-700">
                   <Clock className="h-4 w-4 text-orange-500" />
                   <span className="text-sm">Обед: 12:00 – 13:00</span>
+                </div>
+                <div className="pt-2">
+                  <Button asChild size="sm" className="gap-2 bg-green-600 hover:bg-green-700 w-full">
+                    <Link href="/stat-abonentom">
+                      <ArrowRight className="h-4 w-4" />
+                      Заполнить заявление онлайн
+                    </Link>
+                  </Button>
                 </div>
                 <div className="bg-amber-50 border border-amber-200 rounded p-2 mt-3">
                   <div className="flex items-start gap-2">

@@ -166,17 +166,27 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
               pdf.addPage();
             }
 
+            // Вычисляем высоту страницы в мм для добавления в PDF
+            // Используем одинаковое масштабирование для всех страниц
             const currentPageHeightRealPx = currentPageHeightPx / scale;
             const currentPageHeightMm = currentPageHeightRealPx * pxToMm * widthRatio;
             // На каждой странице добавляем верхний отступ
             const yPosition = paddingTop;
             // Высота страницы должна быть точно равна availableHeight для всех страниц кроме последней
             const isLastPage = sourceY + currentPageHeightPx >= imgHeight - 1; // -1 для учета погрешности
-            // На последней странице добавляем дополнительный запас снизу
-            const lastPageExtraMargin = isLastPage ? 10 : 0; // мм - увеличенный запас для последней страницы
-            const pageHeightForPdf = isLastPage 
-              ? Math.min(currentPageHeightMm + (lastPageExtraMargin / pxToMm / widthRatio), availableHeight + lastPageExtraMargin + safetyMargin) // На последней странице используем реальную высоту + увеличенный запас
-              : availableHeight; // На всех остальных - фиксированная высота
+            
+            // Для всех страниц используем одинаковую высоту (availableHeight), чтобы масштабирование было одинаковым
+            // Только на последней странице можем использовать реальную высоту с запасом
+            let pageHeightForPdf: number;
+            if (isLastPage) {
+              // На последней странице используем реальную высоту с запасом
+              const lastPageExtraMargin = 10; // мм - увеличенный запас для последней страницы
+              pageHeightForPdf = Math.min(currentPageHeightMm, availableHeight + lastPageExtraMargin);
+            } else {
+              // На всех остальных страницах используем фиксированную высоту для одинакового масштабирования
+              pageHeightForPdf = availableHeight;
+            }
+            
             pdf.addImage(pageImgData, "JPEG", paddingLeft, yPosition, finalWidth, pageHeightForPdf);
           }
 

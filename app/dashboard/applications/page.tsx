@@ -93,6 +93,17 @@ export default async function ApplicationsPage() {
     })) || [],
   }));
 
+  console.log("📤 Sending to client:", {
+    userId: session.user.id,
+    total: serializedApplications.length,
+    applications: serializedApplications.map(a => ({
+      id: a.id,
+      status: a.status,
+      serviceTitle: a.service?.title || "no service",
+      hasDescription: !!a.description,
+    })),
+  });
+
   return (
     <div className="container py-8 px-4">
       <div className="mb-8 flex items-center justify-between">

@@ -1,5 +1,5 @@
 -- CreateTable
-CREATE TABLE IF NOT EXISTS "application_files" (
+CREATE TABLE "application_files" (
     "id" TEXT NOT NULL,
     "applicationId" TEXT NOT NULL,
     "fileName" TEXT NOT NULL,
@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS "application_files" (
 );
 
 -- CreateIndex
-CREATE INDEX IF NOT EXISTS "application_files_applicationId_idx" ON "application_files"("applicationId");
+CREATE INDEX "application_files_applicationId_idx" ON "application_files"("applicationId");
 
 -- AddForeignKey
 ALTER TABLE "application_files" ADD CONSTRAINT "application_files_applicationId_fkey" FOREIGN KEY ("applicationId") REFERENCES "applications"("id") ON DELETE CASCADE ON UPDATE CASCADE;

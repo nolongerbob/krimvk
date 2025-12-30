@@ -182,15 +182,18 @@ export function ApplicationForm({ formData, isPreview = false }: { formData: any
               <p>«____»_____________20__ г.</p>
             </div>
             <div className="text-right" style={{ fontSize: isPreview ? "10px" : "10pt" }}>
-              <div className="mb-12" style={{ marginBottom: isPreview ? "2rem" : "3rem" }}>
+              {/* Линия для подписи */}
+              <div className="mb-2" style={{ marginBottom: isPreview ? "0.5rem" : "0.5rem" }}>
                 <div className="border-b border-black inline-block" style={{ minWidth: "150px", height: "1px" }}></div>
               </div>
-              <p className="mb-1">(М.П., подпись)</p>
-              <div className="mt-2">
+              <p className="mb-4" style={{ marginBottom: isPreview ? "1rem" : "1.5rem" }}>(М.П., подпись)</p>
+              {/* Линия для ФИО */}
+              <div className="mb-1">
                 <div className="border-b border-black inline-block" style={{ minWidth: "150px", height: "1px" }}></div>
-                <p className="mt-1">{formData.lastName} {formData.firstName} {formData.middleName}</p>
               </div>
-              <p className="mt-1">(Ф.И.О.)</p>
+              {/* ФИО под линией */}
+              <p className="mt-0" style={{ marginTop: "0.25rem" }}>{formData.lastName} {formData.firstName} {formData.middleName}</p>
+              <p className="mt-0">(Ф.И.О.)</p>
             </div>
           </div>
         </div>

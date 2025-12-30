@@ -70,6 +70,42 @@ export default async function AdminApplicationsPage() {
     const totalCount = await withRetry(() => prisma.application.count());
     console.log("📊 Total applications in database:", totalCount);
 
+    if (totalCount === 0) {
+      console.warn("⚠️ WARNING: No applications found in database!");
+      console.warn("Checking database connection...");
+      
+      // Проверяем подключение к базе данных
+      try {
+        const testQuery = await prisma.user.count();
+        console.log("✅ Database connection OK, user count:", testQuery);
+        
+        // Проверяем, есть ли сервис для технических условий
+        const techService = await prisma.service.findUnique({
+          where: { id: "tehnologicheskoe-prisoedinenie" },
+        });
+        console.log("🔍 Technical conditions service:", techService ? "exists" : "NOT FOUND");
+      } catch (dbError) {
+        console.error("❌ Database connection error:", dbError);
+      }
+    } else {
+      // Если заявки есть, проверяем их детали
+      console.log("✅ Found applications in database, checking details...");
+      const sampleApp = await prisma.application.findFirst({
+        include: {
+          service: { select: { id: true, title: true } },
+          user: { select: { email: true } },
+        },
+      });
+      console.log("📋 Sample application:", {
+        id: sampleApp?.id,
+        status: sampleApp?.status,
+        serviceId: sampleApp?.service?.id,
+        serviceTitle: sampleApp?.service?.title,
+        userEmail: sampleApp?.user?.email,
+        hasDescription: !!sampleApp?.description,
+      });
+    }
+
     const rawApplications = await withRetry(() =>
       prisma.application.findMany({
         include: {

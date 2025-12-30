@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
 import { prisma, withRetry } from "@/lib/prisma";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
-import { existsSync } from "fs";
+import { put } from "@vercel/blob";
 
 export const maxDuration = 30;
 
@@ -55,27 +53,23 @@ export async function POST(
       );
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
     const timestamp = Date.now();
     const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
     const fileName = `${params.id}_${timestamp}_${originalName}`;
-    const uploadDir = join(process.cwd(), "public", "uploads", "applications");
+    const blobPath = `applications/${fileName}`;
 
-    if (!existsSync(uploadDir)) {
-      await mkdir(uploadDir, { recursive: true });
-    }
-
-    const filePath = join(uploadDir, fileName);
-    await writeFile(filePath, buffer);
+    // Загружаем файл в Vercel Blob Storage
+    const blob = await put(blobPath, file, {
+      access: 'public',
+      contentType: file.type || 'application/octet-stream',
+    });
 
     const applicationFile = await withRetry(() =>
       prisma.applicationFile.create({
         data: {
           applicationId: params.id,
           fileName: file.name,
-          filePath: `/uploads/applications/${fileName}`,
+          filePath: blob.url, // Сохраняем URL из Blob Storage
           fileSize: file.size,
           mimeType: file.type || "application/octet-stream",
           uploadedBy: session.user.id,

@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
 import { prisma, withRetry } from "@/lib/prisma";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
-import { existsSync } from "fs";
+import { put } from "@vercel/blob";
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // Увеличиваем время выполнения до 60 секунд для больших файлов
@@ -59,15 +57,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Заявка не найдена" }, { status: 404 });
     }
 
-    // Используем ту же структуру, что и в /api/admin/applications/[id]/upload
-    // Сохраняем файлы в public/uploads/applications без поддиректорий
-    const uploadsDir = join(process.cwd(), "public", "uploads", "applications");
-    
-    // Создаем директорию для файлов, если её нет
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true });
-    }
-
     // Проверяем общий размер всех файлов (макс. 50 МБ)
     const totalSize = files.reduce((sum, file) => sum + file.size, 0);
     const maxTotalSize = 50 * 1024 * 1024; // 50 МБ
@@ -78,7 +67,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Сохраняем файлы
+    // Сохраняем файлы в Vercel Blob Storage
     const savedFiles = [];
     try {
       for (const file of files) {
@@ -93,17 +82,17 @@ export async function POST(request: NextRequest) {
         }
 
         try {
-          const bytes = await file.arrayBuffer();
-          const buffer = Buffer.from(bytes);
           const timestamp = Date.now();
           const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
           // Используем тот же формат имени файла, что и в /api/admin/applications/[id]/upload
           const fileName = `${applicationId}_${timestamp}_${originalName}`;
-          const filePath = join(uploadsDir, fileName);
-          const publicPath = `/uploads/applications/${fileName}`;
+          const blobPath = `applications/${fileName}`;
 
-          // Сохраняем файл на диск
-          await writeFile(filePath, buffer);
+          // Загружаем файл в Vercel Blob Storage
+          const blob = await put(blobPath, file, {
+            access: 'public',
+            contentType: file.type || 'application/octet-stream',
+          });
 
           // Сохраняем информацию о файле в базу данных
           const applicationFile = await withRetry(() =>
@@ -111,7 +100,7 @@ export async function POST(request: NextRequest) {
               data: {
                 applicationId: applicationId,
                 fileName: file.name,
-                filePath: publicPath,
+                filePath: blob.url, // Сохраняем URL из Blob Storage
                 fileSize: file.size,
                 mimeType: file.type || "application/octet-stream",
                 uploadedBy: session.user.id,

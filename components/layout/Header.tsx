@@ -204,15 +204,15 @@ export function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
           </nav>
-
-          {/* Поиск */}
-          <div className="hidden xl:block ml-2">
-            <Search />
-          </div>
         </div>
 
         {/* Правая часть: Кнопки и пользователь */}
         <div className="flex items-center flex-shrink-0 w-1/3 justify-end gap-1 sm:gap-2">
+          {/* Поиск */}
+          <div className="hidden xl:block">
+            <Search />
+          </div>
+          
           {/* Кнопка версии для слабовидящих */}
           <div className="hidden xl:block">
             <BVIButton />

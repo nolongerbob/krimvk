@@ -99,6 +99,13 @@ export function CompleteApplicationForm({
 
       if (!response.ok) {
         let errorMessage = "Ошибка при завершении заявки";
+        
+        // Специальная обработка ошибки 413 (Payload Too Large)
+        if (response.status === 413) {
+          errorMessage = "Файл слишком большой. Максимальный размер одного файла: 10 МБ. Общий размер всех файлов не должен превышать 50 МБ. Пожалуйста, уменьшите размер файлов или загрузите их по одному.";
+          throw new Error(errorMessage);
+        }
+        
         try {
           const data = await response.json();
           errorMessage = data.error || errorMessage;

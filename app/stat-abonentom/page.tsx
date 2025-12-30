@@ -289,11 +289,11 @@ export default function BecomeSubscriberPage() {
       const realHeightPx = imgHeight / scale;
       
       // Масштабируем под ширину страницы A4, сохраняя пропорции
-      // Добавляем минимальные отступы
-      const paddingTop = 5; // мм - минимальный отступ сверху
+      // Минимальные отступы
+      const paddingTop = 0; // мм - без отступа сверху
       const paddingLeft = 20; // мм
       const paddingRight = 20; // мм
-      const paddingBottom = 10; // мм
+      const paddingBottom = 0; // мм
       const availableWidth = pdfWidth - paddingLeft - paddingRight;
       const availableHeight = pdfHeight - paddingTop - paddingBottom;
       
@@ -310,7 +310,7 @@ export default function BecomeSubscriberPage() {
       // Если изображение больше одной страницы, разбиваем на страницы
       if (finalHeight <= availableHeight) {
         // Помещается на одну страницу
-        pdf.addImage(imgData, "PNG", paddingLeft, paddingTop, finalWidth, finalHeight);
+        pdf.addImage(imgData, "JPEG", paddingLeft, paddingTop, finalWidth, finalHeight);
       } else {
         // Разбиваем на несколько страниц
         const pageHeightMm = availableHeight;
@@ -358,7 +358,7 @@ export default function BecomeSubscriberPage() {
               ? Math.min(currentPageHeightMm + paddingBottom, pdfHeight - yPosition)
               : Math.min(currentPageHeightMm, pdfHeight - yPosition);
             
-            pdf.addImage(pageImgData, "PNG", paddingLeft, yPosition, finalWidth, pageHeightWithPadding);
+            pdf.addImage(pageImgData, "JPEG", paddingLeft, yPosition, finalWidth, pageHeightWithPadding);
           }
           
           sourceY += pageHeightPx;

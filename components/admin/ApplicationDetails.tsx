@@ -50,9 +50,12 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
       const tempDiv = document.createElement('div');
       tempDiv.style.position = 'absolute';
       tempDiv.style.left = '-9999px';
+      tempDiv.style.top = '0';
       tempDiv.style.width = '210mm';
       tempDiv.style.maxWidth = '210mm';
+      tempDiv.style.minWidth = '210mm';
       tempDiv.style.padding = '0';
+      tempDiv.style.margin = '0';
       tempDiv.style.fontFamily = 'Times New Roman, serif';
       tempDiv.style.fontSize = '11pt';
       tempDiv.style.lineHeight = '1.5';
@@ -109,10 +112,10 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
       const imgWidthMm = realWidthPx * pxToMm;
       const imgHeightMm = realHeightPx * pxToMm;
 
-      const paddingTop = 5; // мм - минимальный отступ сверху
+      const paddingTop = 0; // мм - без отступа сверху
       const paddingLeft = 20;
       const paddingRight = 20;
-      const paddingBottom = 10;
+      const paddingBottom = 0;
       const availableWidth = pdfWidth - paddingLeft - paddingRight;
       const availableHeight = pdfHeight - paddingTop - paddingBottom;
 
@@ -151,7 +154,7 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
             }
 
             const currentPageHeightMm = (currentPageHeightPx / scale) * pxToMm * widthRatio;
-            pdf.addImage(pageImgData, "PNG", paddingLeft, (pageNumber === 0 ? paddingTop : 0), finalWidth, currentPageHeightMm);
+            pdf.addImage(pageImgData, "JPEG", paddingLeft, (pageNumber === 0 ? paddingTop : 0), finalWidth, currentPageHeightMm);
           }
 
           sourceY += pageHeightPx;

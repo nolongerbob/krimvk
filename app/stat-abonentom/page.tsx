@@ -589,12 +589,20 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                   id="birthDate"
                   type="text"
                   value={formData.birthDate}
-                  onChange={(e) =>
-                    setFormData({ ...formData, birthDate: e.target.value })
-                  }
-                  placeholder="день месяц год (например: 15 января 1990)"
+                  onChange={(e) => {
+                    let value = e.target.value.replace(/[^0-9.]/g, ''); // Только цифры и точки
+                    // Автоматически добавляем точки
+                    if (value.length === 2 && !value.includes('.')) {
+                      value = value + '.';
+                    } else if (value.length === 5 && value.split('.').length === 2) {
+                      value = value + '.';
+                    }
+                    setFormData({ ...formData, birthDate: value });
+                  }}
+                  placeholder="16.04.2006"
+                  maxLength={10}
                 />
-                <p className="text-xs text-gray-500">Формат: день месяц год (например: 15 января 1990)</p>
+                <p className="text-xs text-gray-500">Формат: дд.мм.гггг (например: 16.04.2006)</p>
               </div>
 
               <div className="space-y-2">
@@ -667,13 +675,21 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                               id="passportIssueDate"
                               type="text"
                               value={formData.passportIssueDate}
-                              onChange={(e) =>
-                                setFormData({ ...formData, passportIssueDate: e.target.value })
-                              }
-                              placeholder="день месяц год (например: 20 марта 2015)"
+                              onChange={(e) => {
+                                let value = e.target.value.replace(/[^0-9.]/g, ''); // Только цифры и точки
+                                // Автоматически добавляем точки
+                                if (value.length === 2 && !value.includes('.')) {
+                                  value = value + '.';
+                                } else if (value.length === 5 && value.split('.').length === 2) {
+                                  value = value + '.';
+                                }
+                                setFormData({ ...formData, passportIssueDate: value });
+                              }}
+                              placeholder="20.03.2015"
+                              maxLength={10}
                               required
                             />
-                            <p className="text-xs text-gray-500">Формат: день месяц год (например: 20 марта 2015)</p>
+                            <p className="text-xs text-gray-500">Формат: дд.мм.гггг (например: 20.03.2015)</p>
                           </div>
                   <div className="space-y-2">
                     <Label htmlFor="passportDivisionCode">Код подразделения</Label>

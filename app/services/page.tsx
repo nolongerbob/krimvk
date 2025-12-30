@@ -4,13 +4,28 @@ import Link from "next/link";
 import { Droplet, Wrench, FileText, Phone, Plug, Settings, MessageSquare, Truck } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 const iconMap: { [key: string]: any } = {
   подключение: Plug,
+  "подключение": Plug,
+  "Подключение": Plug,
   ремонт: Wrench,
+  "ремонт": Wrench,
+  "Ремонт": Wrench,
   установка: Settings,
+  "установка": Settings,
+  "Установка": Settings,
   консультация: Phone,
+  "консультация": Phone,
+  "Консультация": Phone,
   документы: FileText,
+  "документы": FileText,
+  "Документы": FileText,
   анализ: Droplet,
+  "анализ": Droplet,
+  "Анализ": Droplet,
 };
 
 // Специальная обработка для услуги откачки
@@ -18,7 +33,8 @@ const getServiceIcon = (service: { title: string; category: string }) => {
   if (service.title.toLowerCase().includes("откачка") || service.title.toLowerCase().includes("сточных вод")) {
     return Truck;
   }
-  return iconMap[service.category] || Plug;
+  const categoryLower = service.category.toLowerCase();
+  return iconMap[categoryLower] || iconMap[service.category] || Plug;
 };
 
 export default async function ServicesPage() {

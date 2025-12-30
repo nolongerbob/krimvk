@@ -136,16 +136,29 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
       try {
         if (app.description) {
           const data = JSON.parse(app.description);
-          if (data.type === "technical_conditions") {
+          if (data && data.type === "technical_conditions") {
             techApps.push(app);
             return;
           }
         }
       } catch (e) {
         // Не JSON, значит обычная заявка
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Failed to parse description for app:', app.id, e);
+        }
       }
       regular.push(app);
     });
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Applications split:', {
+        total: applications.length,
+        technical: techApps.length,
+        regular: regular.length,
+        techAppIds: techApps.map(a => a.id),
+        techAppStatuses: techApps.map(a => a.status),
+      });
+    }
 
     return { technicalConditionsApps: techApps, regularApps: regular };
   }, [applications]);
@@ -179,11 +192,24 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
 
     // Фильтр по статусу
     if (activeFilter === "ALL") {
+      // Показываем все технические условия, кроме завершенных (они в отдельном разделе)
       filtered = filtered.filter((app) => app.status !== "COMPLETED");
     } else if (activeFilter === "COMPLETED") {
+      // Завершенные технические условия показываются в разделе completedApplications
       filtered = [];
     } else {
+      // Показываем только заявки с выбранным статусом
       filtered = filtered.filter((app) => app.status === activeFilter);
+    }
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Filtered technical conditions:', {
+        total: technicalConditionsApps.length,
+        filtered: filtered.length,
+        activeFilter,
+        statuses: technicalConditionsApps.map(a => a.status),
+        filteredStatuses: filtered.map(a => a.status),
+      });
     }
 
     return filtered;
@@ -204,6 +230,29 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
     
     return completed;
   }, [applications, activeFilter, activeCategory]);
+
+  // Разделяем завершенные заявки на технические условия и обычные
+  const { completedTechnicalConditions, completedRegular } = useMemo(() => {
+    const tech: Application[] = [];
+    const regular: Application[] = [];
+
+    completedApplications.forEach((app) => {
+      try {
+        if (app.description) {
+          const data = JSON.parse(app.description);
+          if (data && data.type === "technical_conditions") {
+            tech.push(app);
+            return;
+          }
+        }
+      } catch (e) {
+        // Не JSON, значит обычная заявка
+      }
+      regular.push(app);
+    });
+
+    return { completedTechnicalConditions: tech, completedRegular: regular };
+  }, [completedApplications]);
 
   const renderApplication = (app: Application) => {
     const status = statusConfig[app.status as keyof typeof statusConfig];
@@ -302,7 +351,7 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
               Заявки на технические условия
             </h2>
             <p className="text-gray-600 text-sm">
-              Всего: {filteredTechnicalConditions.length}
+              Всего: {filteredTechnicalConditions.length} (из {technicalConditionsApps.length} всего)
             </p>
           </div>
           <div className="space-y-4">
@@ -310,6 +359,17 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
               <TechnicalConditionsApplication key={app.id} application={app} />
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Отладочная информация - показываем, если есть технические условия, но они не отображаются */}
+      {technicalConditionsApps.length > 0 && filteredTechnicalConditions.length === 0 && (
+        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded">
+          <p className="text-sm text-yellow-800">
+            ⚠️ Есть {technicalConditionsApps.length} заявок на технические условия, но они не отображаются из-за фильтров.
+            Статусы: {technicalConditionsApps.map(a => a.status).join(", ")}
+            Текущий фильтр: {activeFilter}
+          </p>
         </div>
       )}
 
@@ -328,7 +388,28 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
       {/* Завершенные заявки в отдельном разделе */}
       {activeFilter === "COMPLETED" && completedApplications.length > 0 && (
         <div className="space-y-4">
-          {completedApplications.map(renderApplication)}
+          {/* Завершенные технические условия */}
+          {completedTechnicalConditions.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-xl font-bold mb-3">Завершенные заявки на технические условия</h3>
+              <div className="space-y-4">
+                {completedTechnicalConditions.map((app) => (
+                  <TechnicalConditionsApplication key={app.id} application={app} />
+                ))}
+              </div>
+            </div>
+          )}
+          {/* Завершенные обычные заявки */}
+          {completedRegular.length > 0 && (
+            <div>
+              {completedTechnicalConditions.length > 0 && (
+                <h3 className="text-xl font-bold mb-3">Остальные завершенные заявки</h3>
+              )}
+              <div className="space-y-4">
+                {completedRegular.map(renderApplication)}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -345,23 +426,58 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
             </p>
           </div>
           <div className="space-y-4">
-            {completedApplications.map(renderApplication)}
+            {/* Завершенные технические условия */}
+            {completedTechnicalConditions.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-xl font-bold mb-3">Завершенные заявки на технические условия</h3>
+                <div className="space-y-4">
+                  {completedTechnicalConditions.map((app) => (
+                    <TechnicalConditionsApplication key={app.id} application={app} />
+                  ))}
+                </div>
+              </div>
+            )}
+            {/* Завершенные обычные заявки */}
+            {completedRegular.length > 0 && (
+              <div>
+                {completedTechnicalConditions.length > 0 && (
+                  <h3 className="text-xl font-bold mb-3">Остальные завершенные заявки</h3>
+                )}
+                <div className="space-y-4">
+                  {completedRegular.map(renderApplication)}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
 
       {/* Пустое состояние */}
-      {filteredApplications.length === 0 && completedApplications.length === 0 && (
+      {filteredApplications.length === 0 && 
+       filteredTechnicalConditions.length === 0 && 
+       completedApplications.length === 0 && (
         <Card>
           <CardContent className="py-12 text-center">
             <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-500">Нет заявок</p>
+            {/* Отладочная информация */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="mt-4 text-xs text-gray-400">
+                Всего заявок: {applications.length} | 
+                Тех. условия: {technicalConditionsApps.length} | 
+                Обычные: {regularApps.length} | 
+                Фильтр: {activeFilter}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
 
       {/* Пустое состояние для активного фильтра */}
-      {filteredApplications.length === 0 && completedApplications.length > 0 && activeFilter !== "COMPLETED" && (
+      {filteredApplications.length === 0 && 
+       filteredTechnicalConditions.length === 0 && 
+       completedApplications.length > 0 && 
+       activeFilter !== "COMPLETED" && (
         <Card>
           <CardContent className="py-12 text-center">
             <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />

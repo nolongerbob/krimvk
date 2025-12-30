@@ -316,11 +316,11 @@ export default function BecomeSubscriberPage() {
 
 Информация об абоненте:
 - ФИО: ${formData.lastName} ${formData.firstName} ${formData.middleName}
-- Дата рождения: ${formData.birthDate}
+- Дата рождения: ${formData.birthDate || "не указано"}
 - Адрес регистрации: ${formData.registrationAddress}
 - Паспорт: ${formData.passportSeries} ${formData.passportNumber}
 - Выдан: ${formData.passportIssuedBy}
-- Дата выдачи: ${formData.passportIssueDate}
+- Дата выдачи: ${formData.passportIssueDate || "не указано"}
 - Код подразделения: ${formData.passportDivisionCode}
 - Телефон: ${formData.phone}
 
@@ -656,21 +656,23 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                   />
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-4 mt-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="passportIssueDate">
-                      Дата выдачи <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      id="passportIssueDate"
-                      type="date"
-                      value={formData.passportIssueDate}
-                      onChange={(e) =>
-                        setFormData({ ...formData, passportIssueDate: e.target.value })
-                      }
-                      required
-                    />
-                  </div>
+                        <div className="grid md:grid-cols-2 gap-4 mt-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="passportIssueDate">
+                              Дата выдачи <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                              id="passportIssueDate"
+                              type="text"
+                              value={formData.passportIssueDate}
+                              onChange={(e) =>
+                                setFormData({ ...formData, passportIssueDate: e.target.value })
+                              }
+                              placeholder="день месяц год (например: 20 марта 2015)"
+                              required
+                            />
+                            <p className="text-xs text-gray-500">Формат: день месяц год (например: 20 марта 2015)</p>
+                          </div>
                   <div className="space-y-2">
                     <Label htmlFor="passportDivisionCode">Код подразделения</Label>
                     <Input
@@ -1072,10 +1074,10 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                           <p className="mb-1"><strong>2. Сведения о лице, обратившемся с запросом</strong></p>
                           <p className="ml-4 border-b border-black min-h-[60px]">
                             {formData.lastName} {formData.firstName} {formData.middleName}
-                            {formData.birthDate && `, дата рождения: ${new Date(formData.birthDate).toLocaleDateString("ru-RU")}`}
+                            {formData.birthDate && `, дата рождения: ${formData.birthDate}`}
                             {formData.passportSeries && formData.passportNumber && `, паспорт серия ${formData.passportSeries} № ${formData.passportNumber}`}
                             {formData.passportIssuedBy && `, выдан ${formData.passportIssuedBy}`}
-                            {formData.passportIssueDate && `, дата выдачи ${new Date(formData.passportIssueDate).toLocaleDateString("ru-RU")}`}
+                            {formData.passportIssueDate && `, дата выдачи ${formData.passportIssueDate}`}
                             {formData.passportDivisionCode && `, код подразделения ${formData.passportDivisionCode}`}
                             {formData.inn && `, ИНН ${formData.inn}`}
                             {formData.snils && `, СНИЛС ${formData.snils}`}
@@ -1217,10 +1219,10 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                           </p>
                           <p className="ml-4 border-b border-gray-400 min-h-[20px] py-1">
                             {formData.lastName} {formData.firstName} {formData.middleName}
-                            {formData.birthDate && `, дата рождения: ${new Date(formData.birthDate).toLocaleDateString("ru-RU")}`}
+                            {formData.birthDate && `, дата рождения: ${formData.birthDate}`}
                             {formData.passportSeries && formData.passportNumber && `, паспорт серия ${formData.passportSeries} № ${formData.passportNumber}`}
                             {formData.passportIssuedBy && `, выдан ${formData.passportIssuedBy}`}
-                            {formData.passportIssueDate && `, дата выдачи ${new Date(formData.passportIssueDate).toLocaleDateString("ru-RU")}`}
+                            {formData.passportIssueDate && `, дата выдачи ${formData.passportIssueDate}`}
                             {formData.passportDivisionCode && `, код подразделения ${formData.passportDivisionCode}`}
                             {formData.inn && `, ИНН ${formData.inn}`}
                             {formData.snils && `, СНИЛС ${formData.snils}`}

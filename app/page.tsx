@@ -53,7 +53,7 @@ export default async function HomePage() {
           />
           <div className="absolute inset-0 bg-gradient-to-br from-blue-200/70 via-blue-100/60 to-cyan-100/70 z-10"></div>
         </div>
-        <div className="relative z-20 w-full max-w-7xl mx-auto">
+        <div className="relative z-20 w-full px-2 sm:px-4 md:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-8 min-h-[300px] lg:min-h-[280px]">
             <div className="flex-1 animate-fade-in">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
@@ -75,7 +75,7 @@ export default async function HomePage() {
 
       {/* Quick Actions */}
       <section className="pt-8 pb-12 bg-gray-100 rounded-t-2xl rounded-b-2xl mt-4">
-        <div className="max-w-7xl mx-auto">
+        <div className="px-2 sm:px-4 md:px-6 lg:px-8">
           <h2 className="text-4xl font-semibold text-center mb-8 tracking-tight animate-fade-in">Быстрые действия</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 pb-0">
             <QuickActionCard

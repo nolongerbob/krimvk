@@ -87,6 +87,10 @@ export default async function AdminApplicationsPage() {
       count: rawApplications.length,
       expected: totalCount,
       match: rawApplications.length === totalCount,
+      firstAppId: rawApplications[0]?.id || "none",
+      firstAppStatus: rawApplications[0]?.status || "none",
+      firstAppHasService: !!rawApplications[0]?.service,
+      firstAppServiceId: rawApplications[0]?.service?.id || "none",
     });
 
     console.log("📋 Admin: Loaded applications:", {
@@ -109,25 +113,52 @@ export default async function AdminApplicationsPage() {
     });
 
     // Сериализуем даты для передачи в клиентский компонент
-    applications = rawApplications.map((app) => ({
-      ...app,
-      createdAt: app.createdAt instanceof Date ? app.createdAt.toISOString() : app.createdAt,
-      files: app.files?.map((file: any) => ({
-        ...file,
-        uploadedAt: file.uploadedAt instanceof Date ? file.uploadedAt.toISOString() : file.uploadedAt,
-      })) || [],
-    })) as unknown as ApplicationWithRelations[];
+    // Важно: Next.js требует, чтобы все данные были сериализуемы (без Date объектов)
+    applications = rawApplications.map((app) => {
+      try {
+        return {
+          id: app.id,
+          status: app.status,
+          description: app.description,
+          address: app.address,
+          phone: app.phone,
+          createdAt: app.createdAt instanceof Date ? app.createdAt.toISOString() : String(app.createdAt),
+          user: app.user,
+          service: app.service,
+          files: app.files?.map((file: any) => ({
+            id: file.id,
+            fileName: file.fileName,
+            filePath: file.filePath,
+            fileSize: file.fileSize,
+            mimeType: file.mimeType,
+            uploadedAt: file.uploadedAt instanceof Date ? file.uploadedAt.toISOString() : String(file.uploadedAt),
+          })) || [],
+        } as ApplicationWithRelations;
+      } catch (error) {
+        console.error("❌ Error serializing application:", app.id, error);
+        return null;
+      }
+    }).filter((app): app is ApplicationWithRelations => app !== null);
 
     console.log("📤 Admin: Sending to client:", {
       total: applications.length,
+      rawCount: rawApplications.length,
+      match: applications.length === rawApplications.length,
       applications: applications.map(a => ({
         id: a.id,
         status: a.status,
         serviceTitle: a.service?.title || "no service",
         hasDescription: !!a.description,
-        createdAt: a.createdAt,
+        createdAt: typeof a.createdAt === 'string' ? a.createdAt.substring(0, 10) : 'not string',
       })),
     });
+
+    // Проверяем, что данные правильно сериализованы
+    if (rawApplications.length > 0 && applications.length === 0) {
+      console.error("❌ CRITICAL: Data serialization failed!");
+      console.error("Raw applications:", rawApplications.length);
+      console.error("Serialized applications:", applications.length);
+    }
 
     // Получаем уникальные категории услуг
     categories = await withRetry(() =>
@@ -172,6 +203,16 @@ export default async function AdminApplicationsPage() {
           </Button>
         </div>
       </div>
+
+      {/* Отладочная информация на сервере */}
+      {applications.length === 0 && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded">
+          <p className="text-red-800 font-semibold">⚠️ НЕТ ЗАЯВОК НА СЕРВЕРЕ!</p>
+          <p className="text-red-600 text-xs mt-1">
+            Проверьте логи Vercel для деталей. Возможно, проблема с подключением к базе данных.
+          </p>
+        </div>
+      )}
 
       <ApplicationsClient applications={applications} categories={categories.map(c => c.category)} />
     </div>

@@ -91,8 +91,15 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
         createdAt: a.createdAt,
         userEmail: a.user?.email || "no user",
       })),
-      rawApplications: applications, // Полные данные для отладки
     });
+    
+    if (applications.length === 0) {
+      console.warn("⚠️ WARNING: ApplicationsClient received 0 applications!");
+      console.warn("This could mean:");
+      console.warn("1. No applications in database");
+      console.warn("2. Database query failed");
+      console.warn("3. Data serialization issue");
+    }
   }, [applications]);
   
   // Читаем фильтры из URL параметров при загрузке

@@ -69,7 +69,7 @@ export function Header() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-gradient-to-br from-blue-200 via-blue-100 to-cyan-100">
+    <header className="sticky top-0 z-50 w-full border-b bg-gradient-to-br from-blue-200 via-blue-100 to-cyan-100 rounded-b-2xl">
       <div className="w-full flex h-20 lg:h-24 items-center justify-between px-3 sm:px-4 md:px-6 lg:px-14">
         {/* Левая часть: Логотип + Навигация */}
         <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-8 flex-1 min-w-0">

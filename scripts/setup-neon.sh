@@ -58,3 +58,4 @@ echo "2. Проверьте базу данных: DATABASE_URL='$DATABASE_URL' 
 echo "3. Добавьте DATABASE_URL в Vercel Environment Variables"
 echo ""
 
+

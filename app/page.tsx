@@ -40,7 +40,7 @@ export default async function HomePage() {
   return (
     <div className="flex flex-col">
       {/* Hero Section */}
-      <section className="relative text-gray-900 py-16 md:py-24 overflow-hidden">
+      <section className="relative text-gray-900 py-16 md:py-24 overflow-hidden rounded-b-3xl">
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <Image
@@ -74,7 +74,7 @@ export default async function HomePage() {
       </section>
 
       {/* Quick Actions */}
-      <section className="pt-16 pb-24 bg-gray-50">
+      <section className="pt-16 pb-24 bg-gray-50 rounded-t-3xl">
         <div className="container mx-auto px-4">
           <h2 className="text-4xl font-semibold text-center mb-16 tracking-tight animate-fade-in">Быстрые действия</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 pb-0">

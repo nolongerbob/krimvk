@@ -1180,7 +1180,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                   <ApplicationForm formData={formData} isPreview={true} />
 
                   {/* Скрытое заявление для генерации PDF */}
-                  <div ref={applicationRef} className="hidden">
+                  <div ref={applicationRef} style={{ display: 'none' }}>
                     <ApplicationForm formData={formData} isPreview={false} />
                   </div>
 

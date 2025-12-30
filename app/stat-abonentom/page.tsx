@@ -1081,7 +1081,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
 
                   {/* Скрытое заявление для генерации PDF */}
                   <div ref={applicationRef} className="hidden">
-                    <div className="p-8" style={{ fontFamily: "Times New Roman, serif", fontSize: "11pt", lineHeight: "1.5", width: "210mm", minHeight: "297mm", pageSize: "A4" }}>
+                    <div className="p-8" style={{ fontFamily: "Times New Roman, serif", fontSize: "11pt", lineHeight: "1.5", width: "210mm", minHeight: "297mm" }}>
                       <ApplicationForm formData={formData} isPreview={false} />
                     </div>
                   </div>

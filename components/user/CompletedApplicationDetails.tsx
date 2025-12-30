@@ -59,7 +59,8 @@ export function CompletedApplicationDetails({ application, isTechnicalConditions
   };
 
   const { data: applicationData, comment: completionComment } = getApplicationData();
-  const isTechnicalConditions = applicationData && applicationData.type === "technical_conditions";
+  const isTechConditions = applicationData && applicationData.type === "technical_conditions";
+  const actualIsTechnicalConditions = isTechnicalConditions || isTechConditions;
   const hasFiles = application.files && application.files.length > 0;
   const files = application.files || [];
 
@@ -74,7 +75,7 @@ export function CompletedApplicationDetails({ application, isTechnicalConditions
         <DialogHeader>
           <DialogTitle>Детали завершенной заявки</DialogTitle>
           <DialogDescription>
-            {isTechnicalConditions 
+            {actualIsTechnicalConditions 
               ? "Информация о завершенной заявке на технические условия"
               : "Информация о завершенной заявке"}
           </DialogDescription>
@@ -82,7 +83,7 @@ export function CompletedApplicationDetails({ application, isTechnicalConditions
 
         <div className="space-y-6">
           {/* Данные заявки на технические условия */}
-          {isTechnicalConditions && applicationData && applicationData.type === "technical_conditions" && (
+          {actualIsTechnicalConditions && applicationData && applicationData.type === "technical_conditions" && (
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
               <h3 className="font-semibold text-gray-900 mb-4">Данные заявки</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">

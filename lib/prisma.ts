@@ -12,13 +12,13 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient({
     },
   },
   // Увеличиваем timeout для пула соединений в локальной разработке
-  ...(process.env.NODE_ENV === 'development' && {
-    __internal: {
-      engine: {
-        connectTimeout: 30000, // 30 секунд вместо 10
-      },
-    },
-  }),
+  // ...(process.env.NODE_ENV === 'development' && {
+  //   __internal: {
+  //     engine: {
+  //       connectTimeout: 30000, // 30 секунд вместо 10
+  //     },
+  //   },
+  // }),
 })
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma

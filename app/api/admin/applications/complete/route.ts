@@ -82,6 +82,13 @@ export async function POST(request: NextRequest) {
         }
 
         try {
+          const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
+          
+          if (!blobToken) {
+            console.error("BLOB_READ_WRITE_TOKEN is not set in environment variables");
+            throw new Error("BLOB_READ_WRITE_TOKEN environment variable is not configured");
+          }
+
           const timestamp = Date.now();
           const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
           // Используем тот же формат имени файла, что и в /api/admin/applications/[id]/upload
@@ -92,7 +99,7 @@ export async function POST(request: NextRequest) {
           const blob = await put(blobPath, file, {
             access: 'public',
             contentType: file.type || 'application/octet-stream',
-            token: process.env.BLOB_READ_WRITE_TOKEN,
+            token: blobToken,
           });
 
           // Сохраняем информацию о файле в базу данных

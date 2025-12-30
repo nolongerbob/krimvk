@@ -374,9 +374,9 @@ export default function BecomeSubscriberPage() {
             // Только на последней странице можем использовать реальную высоту с запасом
             let pageHeightForPdf: number;
             if (isLastPage) {
-              // На последней странице используем реальную высоту с запасом
-              const lastPageExtraMargin = 10; // мм - увеличенный запас для последней страницы
-              pageHeightForPdf = Math.min(currentPageHeightMm, availableHeight + lastPageExtraMargin);
+              // На последней странице используем реальную высоту с увеличенным запасом снизу
+              const lastPageExtraMargin = 15; // мм - увеличенный запас для последней страницы, чтобы нижняя строка не перекрывалась
+              pageHeightForPdf = Math.min(currentPageHeightMm + (lastPageExtraMargin / pxToMm / widthRatio), availableHeight + lastPageExtraMargin + safetyMargin);
             } else {
               // На всех остальных страницах используем фиксированную высоту для одинакового масштабирования
               pageHeightForPdf = availableHeight;

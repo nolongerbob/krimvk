@@ -7,6 +7,7 @@ import { join } from "path";
 import { existsSync } from "fs";
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60; // Увеличиваем время выполнения до 60 секунд для больших файлов
 
 export async function POST(request: NextRequest) {
   try {

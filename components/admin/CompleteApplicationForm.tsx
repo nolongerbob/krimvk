@@ -30,7 +30,27 @@ export function CompleteApplicationForm({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files);
-      setFiles((prev) => [...prev, ...newFiles]);
+      
+      // Проверяем размер каждого файла перед добавлением
+      const validFiles: File[] = [];
+      const maxSize = 10 * 1024 * 1024; // 10 МБ
+      
+      for (const file of newFiles) {
+        if (file.size > maxSize) {
+          setError(`Файл "${file.name}" слишком большой (${(file.size / 1024 / 1024).toFixed(2)} МБ). Максимальный размер: 10 МБ`);
+          continue;
+        }
+        if (file.size === 0) {
+          setError(`Файл "${file.name}" пустой`);
+          continue;
+        }
+        validFiles.push(file);
+      }
+      
+      if (validFiles.length > 0) {
+        setFiles((prev) => [...prev, ...validFiles]);
+        setError(null);
+      }
     }
   };
 

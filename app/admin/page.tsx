@@ -1,6 +1,6 @@
 import { getSession } from "@/lib/get-session";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { prisma, withRetry } from "@/lib/prisma";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -19,31 +19,23 @@ export default async function AdminPage() {
   // Проверяем, что пользователь - администратор
   let user;
   try {
-    user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { role: true },
-    });
-  } catch (error) {
-    console.error("Database connection error:", error);
-    // Если ошибка подключения, пробуем переподключиться
-    try {
-      await prisma.$connect();
-      user = await prisma.user.findUnique({
+    user = await withRetry(() =>
+      prisma.user.findUnique({
         where: { id: session.user.id },
         select: { role: true },
-      });
-    } catch (retryError) {
-      console.error("Failed to reconnect to database:", retryError);
-      // Возвращаем ошибку подключения
-      return (
-        <div className="container py-8 px-4">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-            <h1 className="text-2xl font-bold text-red-800 mb-2">Ошибка подключения к базе данных</h1>
-            <p className="text-red-600">Не удалось подключиться к базе данных. Пожалуйста, попробуйте позже.</p>
-          </div>
+      })
+    );
+  } catch (error) {
+    console.error("Failed to fetch user:", error);
+    // Возвращаем ошибку подключения
+    return (
+      <div className="container py-8 px-4">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+          <h1 className="text-2xl font-bold text-red-800 mb-2">Ошибка подключения к базе данных</h1>
+          <p className="text-red-600">Не удалось подключиться к базе данных. Пожалуйста, попробуйте позже.</p>
         </div>
-      );
-    }
+      </div>
+    );
   }
 
   if (user?.role !== "ADMIN") {
@@ -58,9 +50,9 @@ export default async function AdminPage() {
     unpublishedNews,
     totalUsers,
   ] = await Promise.allSettled([
-    prisma.application.count({ where: { status: "PENDING" } }),
-    prisma.application.count({ where: { status: "IN_PROGRESS" } }),
-    prisma.question.count({ 
+    withRetry(() => prisma.application.count({ where: { status: "PENDING" } })),
+    withRetry(() => prisma.application.count({ where: { status: "IN_PROGRESS" } })),
+    withRetry(() => prisma.question.count({ 
       where: { 
         status: "PENDING",
         messages: {
@@ -72,9 +64,9 @@ export default async function AdminPage() {
           },
         },
       },
-    }),
-    prisma.news.count({ where: { published: false } }),
-    prisma.user.count({ where: { role: "USER" } }),
+    })),
+    withRetry(() => prisma.news.count({ where: { published: false } })),
+    withRetry(() => prisma.user.count({ where: { role: "USER" } })),
   ]).then((results) => {
     return results.map((result) => {
       if (result.status === "fulfilled") {

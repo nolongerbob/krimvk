@@ -315,11 +315,12 @@ export default function BecomeSubscriberPage() {
         pdf.addImage(imgData, "JPEG", paddingLeft, paddingTop, finalWidth, finalHeight);
       } else {
         // Разбиваем на несколько страниц
+        // Высота одной страницы в мм (с учетом отступов)
         const pageHeightMm = availableHeight;
-        // Вычисляем сколько пикселей canvas соответствует одной странице
-        const pxToMm = 25.4 / 96;
-        // Высота одной страницы в реальных пикселях
+        // Вычисляем сколько пикселей исходного canvas соответствует одной странице
+        // Сначала переводим высоту страницы в мм обратно в реальные пиксели
         const pageHeightRealPx = pageHeightMm / pxToMm / widthRatio;
+        // Учитываем scale
         const pageHeightPx = pageHeightRealPx * scale;
         
         let sourceY = 0;
@@ -327,6 +328,7 @@ export default function BecomeSubscriberPage() {
         
         while (sourceY < imgHeight) {
           const remainingHeight = imgHeight - sourceY;
+          // Берем высоту страницы или оставшуюся высоту, что меньше
           const currentPageHeightPx = Math.min(pageHeightPx, remainingHeight);
           
           // Создаем временный canvas для текущей страницы
@@ -348,16 +350,19 @@ export default function BecomeSubscriberPage() {
               pdf.addPage();
             }
             
-            // Вычисляем высоту страницы в мм
-            const pxToMm = 25.4 / 96;
+            // Вычисляем высоту страницы в мм для добавления в PDF
             const currentPageHeightRealPx = currentPageHeightPx / scale;
             const currentPageHeightMm = currentPageHeightRealPx * pxToMm * widthRatio;
+            
             // На каждой странице добавляем верхний отступ
             const yPosition = paddingTop;
-            // Высота страницы с учетом отступов
-            const pageHeightWithPadding = Math.min(currentPageHeightMm, availableHeight);
+            // Высота страницы должна быть точно равна availableHeight для всех страниц кроме последней
+            const isLastPage = sourceY + pageHeightPx >= imgHeight;
+            const pageHeightForPdf = isLastPage 
+              ? Math.min(currentPageHeightMm, availableHeight) // На последней странице используем реальную высоту
+              : availableHeight; // На всех остальных - фиксированная высота
             
-            pdf.addImage(pageImgData, "JPEG", paddingLeft, yPosition, finalWidth, pageHeightWithPadding);
+            pdf.addImage(pageImgData, "JPEG", paddingLeft, yPosition, finalWidth, pageHeightForPdf);
           }
           
           sourceY += pageHeightPx;

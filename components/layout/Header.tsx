@@ -69,8 +69,9 @@ export function Header() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-gradient-to-br from-blue-200/90 via-blue-100/90 to-cyan-100/90 backdrop-blur-sm rounded-t-2xl rounded-b-2xl mt-2">
-      <div className="container mx-auto px-4">
+    <div className="px-2 sm:px-4 md:px-6 lg:px-8">
+      <header className="sticky top-0 z-50 w-full border-b bg-gradient-to-br from-blue-200/90 via-blue-100/90 to-cyan-100/90 backdrop-blur-sm rounded-t-2xl rounded-b-2xl mt-2">
+        <div className="container mx-auto px-4">
         <div className="w-full flex h-20 lg:h-24 items-center justify-between">
         {/* Левая часть: Логотип + Навигация */}
         <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-8 flex-1 min-w-0">

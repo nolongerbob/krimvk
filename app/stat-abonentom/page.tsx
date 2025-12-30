@@ -587,12 +587,14 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                 <Label htmlFor="birthDate">Дата рождения</Label>
                 <Input
                   id="birthDate"
-                  type="date"
+                  type="text"
                   value={formData.birthDate}
                   onChange={(e) =>
                     setFormData({ ...formData, birthDate: e.target.value })
                   }
+                  placeholder="день месяц год (например: 15 января 1990)"
                 />
+                <p className="text-xs text-gray-500">Формат: день месяц год (например: 15 января 1990)</p>
               </div>
 
               <div className="space-y-2">

@@ -348,14 +348,6 @@ export default function PodklyucheniePage() {
                   <span className="font-medium">Тел:</span>
                   <a href="tel:98180" className="text-blue-600 hover:underline">98-180</a>
                 </div>
-                <div className="pt-2">
-                  <Button asChild size="sm" className="gap-2 bg-blue-600 hover:bg-blue-700 w-full">
-                    <Link href="/stat-abonentom">
-                      <ArrowRight className="h-4 w-4" />
-                      Заполнить заявление онлайн
-                    </Link>
-                  </Button>
-                </div>
                 <div className="flex items-center gap-2 text-gray-700">
                   <Calendar className="h-4 w-4 text-blue-600" />
                   <span className="text-sm">
@@ -396,14 +388,6 @@ export default function PodklyucheniePage() {
                   <Clock className="h-4 w-4 text-orange-500" />
                   <span className="text-sm">Обед: 12:00 – 13:00</span>
                 </div>
-                <div className="pt-2">
-                  <Button asChild size="sm" className="gap-2 bg-green-600 hover:bg-green-700 w-full">
-                    <Link href="/stat-abonentom">
-                      <ArrowRight className="h-4 w-4" />
-                      Заполнить заявление онлайн
-                    </Link>
-                  </Button>
-                </div>
                 <div className="bg-amber-50 border border-amber-200 rounded p-2 mt-3">
                   <div className="flex items-start gap-2">
                     <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
@@ -418,9 +402,9 @@ export default function PodklyucheniePage() {
         </CardContent>
       </Card>
 
-      {/* Кнопка скачивания оригинального документа */}
-      <div className="text-center mt-12 mb-8 animate-fade-in animate-delay-800">
-        <Card className="inline-block border-2 border-dashed border-gray-300 bg-gray-50">
+      {/* Кнопки скачивания и онлайн заявления */}
+      <div className="grid md:grid-cols-2 gap-6 mt-12 mb-8 animate-fade-in animate-delay-800">
+        <Card className="border-2 border-dashed border-gray-300 bg-gray-50">
           <CardContent className="p-6">
             <div className="flex flex-col items-center gap-4">
               <FileText className="h-12 w-12 text-gray-600" />
@@ -434,6 +418,26 @@ export default function PodklyucheniePage() {
                 <Link href="/documents/poryadok-podklyucheniya-k-setyam-vodosnabzheniya-i-vodootvedeniya.pdf">
                   <Download className="h-5 w-5" />
                   Скачать оригинальный PDF
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 border-dashed border-blue-300 bg-blue-50">
+          <CardContent className="p-6">
+            <div className="flex flex-col items-center gap-4">
+              <User className="h-12 w-12 text-blue-600" />
+              <div>
+                <h3 className="font-semibold text-lg mb-1">Заполнить заявление онлайн</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Подайте заявление на подключение через удобную онлайн-форму
+                </p>
+              </div>
+              <Button asChild size="lg" className="gap-2 bg-blue-600 hover:bg-blue-700">
+                <Link href="/stat-abonentom">
+                  <ArrowRight className="h-5 w-5" />
+                  Заполнить заявление онлайн
                 </Link>
               </Button>
             </div>

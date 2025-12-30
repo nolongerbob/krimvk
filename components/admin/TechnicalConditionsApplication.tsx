@@ -256,7 +256,11 @@ export function TechnicalConditionsApplication({ application }: TechnicalConditi
       <CardContent>
         <div className="flex gap-2 items-center">
           <ApplicationDetails application={application} />
-          <ApplicationActions applicationId={application.id} currentStatus={application.status} />
+          <ApplicationActions 
+            applicationId={application.id} 
+            currentStatus={application.status}
+            isTechnicalConditions={true}
+          />
         </div>
       </CardContent>
     </Card>

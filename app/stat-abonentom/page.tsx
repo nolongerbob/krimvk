@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { AddressInput } from "@/components/AddressInput";
 import { ApplicationForm } from "./application-form";
+import Link from "next/link";
 
 type PersonType = "individual" | "legal" | null;
 type Step = "type" | "abonent" | "object" | "params" | "documents";

@@ -1,0 +1,131 @@
+"use client";
+
+import { useState } from "react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { FileText, Download, MessageSquare } from "lucide-react";
+
+interface CompletedApplicationDetailsProps {
+  application: {
+    id: string;
+    status: string;
+    description: string | null;
+    files?: Array<{
+      id: string;
+      fileName: string;
+      filePath: string;
+      fileSize: number;
+      mimeType: string;
+      uploadedAt: Date | string;
+    }>;
+  };
+  isTechnicalConditions?: boolean;
+}
+
+export function CompletedApplicationDetails({ application, isTechnicalConditions = false }: CompletedApplicationDetailsProps) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  // Извлекаем комментарий из description
+  const getCompletionComment = () => {
+    if (!application.description) return null;
+    
+    // Ищем комментарий при завершении
+    const commentMatch = application.description.match(/Комментарий при завершении:\s*(.+)/);
+    if (commentMatch) {
+      return commentMatch[1].trim();
+    }
+    
+    // Если description содержит только комментарий (для новых заявок)
+    if (application.description.includes("Комментарий при завершении:")) {
+      return application.description.split("Комментарий при завершении:")[1]?.trim() || null;
+    }
+    
+    return null;
+  };
+
+  const completionComment = getCompletionComment();
+  const hasFiles = application.files && application.files.length > 0;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm">
+          Подробнее
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Детали завершенной заявки</DialogTitle>
+          <DialogDescription>
+            {isTechnicalConditions 
+              ? "Информация о завершенной заявке на технические условия"
+              : "Информация о завершенной заявке"}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-6">
+          {/* Комментарий администратора */}
+          {completionComment && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <MessageSquare className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-blue-900 mb-2">Комментарий администратора</h3>
+                  <p className="text-blue-800 whitespace-pre-wrap">{completionComment}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Документы от администратора */}
+          {hasFiles ? (
+            <div className="border rounded-lg p-4">
+              <h3 className="font-semibold mb-3 flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Документы от администратора ({application.files.length})
+              </h3>
+              <div className="space-y-2">
+                {application.files.map((file) => (
+                  <a
+                    key={file.id}
+                    href={file.filePath}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg border transition-colors"
+                  >
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <FileText className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-900 truncate">{file.fileName}</p>
+                        <p className="text-xs text-gray-500">
+                          {(file.fileSize / 1024).toFixed(1)} KB • 
+                          Загружено {new Date(file.uploadedAt).toLocaleDateString("ru-RU")}
+                        </p>
+                      </div>
+                    </div>
+                    <Button variant="outline" size="sm" className="ml-3 flex-shrink-0">
+                      <Download className="h-4 w-4 mr-2" />
+                      Скачать
+                    </Button>
+                  </a>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="border border-dashed border-gray-300 rounded-lg p-6 text-center">
+              <FileText className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+              <p className="text-gray-500">Документы не загружены</p>
+            </div>
+          )}
+
+          {!completionComment && !hasFiles && (
+            <div className="text-center text-gray-500 py-8">
+              <p>Дополнительная информация отсутствует</p>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+

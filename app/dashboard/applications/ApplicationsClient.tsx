@@ -4,8 +4,9 @@ import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Clock, CheckCircle, XCircle, AlertCircle, X, Download } from "lucide-react";
+import { FileText, Clock, CheckCircle, XCircle, AlertCircle, X, Download, Eye } from "lucide-react";
 import Link from "next/link";
+import { CompletedApplicationDetails } from "@/components/user/CompletedApplicationDetails";
 
 const statusConfig = {
   PENDING: {
@@ -303,7 +304,7 @@ export function ApplicationsClient({ applications: initialApplications }: Applic
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="flex gap-4">
+                  <div className="flex gap-4 flex-wrap">
                     {isTechnicalConditions && (
                       <Button 
                         variant="outline" 
@@ -322,6 +323,12 @@ export function ApplicationsClient({ applications: initialApplications }: Applic
                         <Download className="h-4 w-4 mr-2" />
                         Скачать заявление
                       </Button>
+                    )}
+                    {app.status === "COMPLETED" && (
+                      <CompletedApplicationDetails 
+                        application={app}
+                        isTechnicalConditions={isTechnicalConditions}
+                      />
                     )}
                     {app.status === "PENDING" && (
                       <Button

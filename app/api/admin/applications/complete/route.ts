@@ -52,39 +52,47 @@ export async function POST(request: NextRequest) {
 
     // Сохраняем файлы
     const savedFiles = [];
-    for (const file of files) {
-      if (file.size === 0) continue;
+    try {
+      for (const file of files) {
+        if (file.size === 0) continue;
 
-      // Проверяем размер файла (макс. 10 МБ)
-      if (file.size > 10 * 1024 * 1024) {
-        return NextResponse.json(
-          { error: `Файл ${file.name} слишком большой (макс. 10 МБ)` },
-          { status: 400 }
-        );
+        // Проверяем размер файла (макс. 10 МБ)
+        if (file.size > 10 * 1024 * 1024) {
+          return NextResponse.json(
+            { error: `Файл ${file.name} слишком большой (макс. 10 МБ)` },
+            { status: 400 }
+          );
+        }
+
+        const bytes = await file.arrayBuffer();
+        const buffer = Buffer.from(bytes);
+        const timestamp = Date.now();
+        const fileName = `${timestamp}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+        const filePath = join(uploadsDir, fileName);
+        const publicPath = `/uploads/applications/${applicationId}/${fileName}`;
+
+        await writeFile(filePath, buffer);
+
+        // Сохраняем информацию о файле в базу данных
+        const applicationFile = await prisma.applicationFile.create({
+          data: {
+            applicationId: applicationId,
+            fileName: file.name,
+            filePath: publicPath,
+            fileSize: file.size,
+            mimeType: file.type || "application/octet-stream",
+            uploadedBy: session.user.id,
+          },
+        });
+
+        savedFiles.push(applicationFile);
       }
-
-      const bytes = await file.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-      const timestamp = Date.now();
-      const fileName = `${timestamp}_${file.name}`;
-      const filePath = join(uploadsDir, fileName);
-      const publicPath = `/uploads/applications/${applicationId}/${fileName}`;
-
-      await writeFile(filePath, buffer);
-
-      // Сохраняем информацию о файле в базу данных
-      const applicationFile = await prisma.applicationFile.create({
-        data: {
-          applicationId: applicationId,
-          fileName: file.name,
-          filePath: publicPath,
-          fileSize: file.size,
-          mimeType: file.type || "application/octet-stream",
-          uploadedBy: session.user.id,
-        },
-      });
-
-      savedFiles.push(applicationFile);
+    } catch (fileError) {
+      console.error("Error saving files:", fileError);
+      return NextResponse.json(
+        { error: "Ошибка при сохранении файлов" },
+        { status: 500 }
+      );
     }
 
     // Обновляем статус заявки

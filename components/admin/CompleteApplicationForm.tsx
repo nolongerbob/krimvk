@@ -69,8 +69,16 @@ export function CompleteApplicationForm({
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Ошибка при завершении заявки");
+        let errorMessage = "Ошибка при завершении заявки";
+        try {
+          const data = await response.json();
+          errorMessage = data.error || errorMessage;
+        } catch (jsonError) {
+          // Если ответ не JSON, читаем как текст
+          const text = await response.text();
+          errorMessage = text || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
 
       // Закрываем форму и обновляем страницу

@@ -122,7 +122,9 @@ export function CompleteApplicationForm({
 
           {/* Загрузка файлов */}
           <div className="space-y-2">
-            <Label>Документы</Label>
+            <Label>
+              Документы {isTechnicalConditions && <span className="text-red-500">*</span>}
+            </Label>
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
               <div className="flex flex-col items-center justify-center space-y-4">
                 <Upload className="h-8 w-8 text-gray-400" />
@@ -143,6 +145,11 @@ export function CompleteApplicationForm({
                   />
                   <p className="text-xs text-gray-500 mt-1">
                     PDF, DOC, DOCX, JPG, PNG (макс. 10 МБ на файл)
+                    {isTechnicalConditions && (
+                      <span className="block text-red-600 font-medium mt-1">
+                        * Обязательно для завершения заявки на технические условия
+                      </span>
+                    )}
                   </p>
                 </div>
               </div>
@@ -195,7 +202,10 @@ export function CompleteApplicationForm({
             >
               Отмена
             </Button>
-            <Button type="submit" disabled={isSubmitting || files.length === 0}>
+            <Button 
+              type="submit" 
+              disabled={isSubmitting}
+            >
               {isSubmitting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />

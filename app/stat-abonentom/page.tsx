@@ -840,6 +840,38 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                 </div>
               </div>
 
+              <div className="border-t pt-4">
+                <h3 className="font-semibold text-lg mb-4">Дополнительные данные</h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="inn">ИНН</Label>
+                    <Input
+                      id="inn"
+                      value={formData.inn}
+                      onChange={(e) =>
+                        setFormData({ ...formData, inn: e.target.value })
+                      }
+                      maxLength={12}
+                      placeholder="123456789012"
+                    />
+                    <p className="text-xs text-gray-500">Идентификационный номер налогоплательщика</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="snils">СНИЛС</Label>
+                    <Input
+                      id="snils"
+                      value={formData.snils}
+                      onChange={(e) =>
+                        setFormData({ ...formData, snils: e.target.value })
+                      }
+                      maxLength={11}
+                      placeholder="123-456-789 01"
+                    />
+                    <p className="text-xs text-gray-500">Страховой номер индивидуального лицевого счета</p>
+                  </div>
+                </div>
+              </div>
+
               <div className="space-y-2 border-t pt-4">
                 <Label htmlFor="phone">
                   Телефон для связи <span className="text-red-500">*</span>

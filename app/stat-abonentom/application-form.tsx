@@ -162,14 +162,14 @@ export function ApplicationForm({ formData, isPreview = false }: { formData: any
       <p style={{ margin: 0, textAlign: "justify", textIndent: 0, fontSize: fontSize }}>
         <span>{underlineField(formData.lastName ? "Правообладатель земельного участка" : "", 70)}</span>
       </p>
-      <p style={{ margin: 0, textAlign: "justify", textIndent: 0 }}>
+      <p style={{ margin: 0, textAlign: "justify", textIndent: 0, fontSize: isPreview ? "9px" : "8.5pt", lineHeight: "1.3" }}>
         <span>  </span><span>(указание, кем именно из перечня лиц, имеющих  право  обратиться  с запросом о выдаче технических условий, указанных в </span>
         <span>пунктах 9</span>
         <span>  и </span>
         <span>11</span>
         <span> Правил подключения  (технологического  присоединения)  объектов  капитального строительства  к  централизованным  системам  горячего  водоснабжения, холодного  водоснабжения  и (или)  водоотведения,  утвержденных</span>
       </p>
-      <p style={{ margin: 0, textAlign: "justify", textIndent: 0 }}>
+      <p style={{ margin: 0, textAlign: "justify", textIndent: 0, fontSize: isPreview ? "9px" : "8.5pt", lineHeight: "1.3" }}>
         <span>постановлением</span>
         <span> Правительства Российской Федерации от 30 ноября  2021  г. № 2130 является данное лицо, а для  правообладателя  земельного  участка также информация о праве лица на земельный участок, на который расположен подключаемый объект основания возникновения такого права)</span>
       </p>
@@ -332,7 +332,7 @@ export function ApplicationForm({ formData, isPreview = false }: { formData: any
       </p>
       
       {/* Примечание */}
-      <p style={{ margin: 0, textAlign: "justify", textIndent: "36pt", fontSize: isPreview ? "13px" : "12pt", lineHeight: "1.4" }}>
+      <p style={{ margin: 0, textAlign: "justify", textIndent: "36pt", fontSize: isPreview ? "10px" : "9pt", lineHeight: "1.3" }}>
         <span><span>Примечание</span></span>
         <span>. К настоящему запросу прилагаются документы,</span>
         <span> предусмотренные  </span>

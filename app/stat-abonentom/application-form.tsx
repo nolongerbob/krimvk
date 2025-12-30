@@ -10,23 +10,24 @@ export function ApplicationForm({ formData, isPreview = false }: { formData: any
   const borderClass = isPreview ? "border-gray-400" : "border-black";
 
   return (
-    <div className={containerClass} style={{ fontFamily: "Times New Roman, serif", lineHeight: "1.5" }}>
-      <div className={textClass}>
-        {/* Приложение №1 справа */}
-        <div className="text-right mb-2">
-          <p>Приложение №1</p>
-        </div>
+    <div className={containerClass} style={{ fontFamily: "Times New Roman, serif", lineHeight: "1.5", fontSize: isPreview ? "12px" : "11pt" }}>
+      {/* Приложение №1 справа */}
+      <div className="text-right mb-3" style={{ fontSize: isPreview ? "10px" : "10pt" }}>
+        <p>Приложение №1</p>
+      </div>
 
-        {/* Заголовок */}
-        <div className="text-center mb-4">
-          <p className="mb-2 leading-relaxed">
-            к Правилам подключения (технологического присоединения) объектов капитального строительства к централизованным системам горячего водоснабжения, холодного водоснабжения и (или) водоотведения
-          </p>
-          <h2 className="text-base font-bold mb-1 mt-3">ЗАПРОС</h2>
-          <p>о выдаче технических условий на подключение</p>
-          <p>(технологическое присоединение) к централизованным системам</p>
-          <p>холодного водоснабжения и (или) водоотведения</p>
-        </div>
+      {/* Заголовок */}
+      <div className="text-center mb-6" style={{ fontSize: isPreview ? "10px" : "10pt" }}>
+        <p className="mb-2" style={{ lineHeight: "1.4" }}>
+          к Правилам подключения (технологического присоединения) объектов капитального строительства к централизованным системам горячего водоснабжения, холодного водоснабжения и (или) водоотведения
+        </p>
+        <h2 className="font-bold mb-2 mt-4" style={{ fontSize: isPreview ? "14px" : "12pt" }}>ЗАПРОС</h2>
+        <p style={{ fontSize: isPreview ? "11px" : "10pt" }}>о выдаче технических условий на подключение</p>
+        <p style={{ fontSize: isPreview ? "11px" : "10pt" }}>(технологическое присоединение) к централизованным системам</p>
+        <p style={{ fontSize: isPreview ? "11px" : "10pt" }}>холодного водоснабжения и (или) водоотведения</p>
+      </div>
+
+      <div className={textClass} style={{ fontSize: isPreview ? "11px" : "10pt" }}>
 
         <div className="space-y-4">
           {/* Пункт 1 */}
@@ -176,15 +177,20 @@ export function ApplicationForm({ formData, isPreview = false }: { formData: any
           </div>
 
           {/* Дата и подпись */}
-          <div className="mt-6 flex justify-between items-end">
-            <div>
-              <p className="text-xs">«____»_____________20__ г.</p>
+          <div className="mt-8 flex justify-between items-start" style={{ marginTop: isPreview ? "2rem" : "3rem" }}>
+            <div style={{ fontSize: isPreview ? "10px" : "10pt" }}>
+              <p>«____»_____________20__ г.</p>
             </div>
-            <div className="text-right">
-              <p className="text-xs mb-8 border-b border-black inline-block min-w-[150px]"></p>
-              <p className="text-xs">(М.П., подпись)</p>
-              <p className="text-xs mt-2 border-b border-black inline-block min-w-[150px]">{formData.lastName} {formData.firstName} {formData.middleName}</p>
-              <p className="text-xs">(Ф.И.О.)</p>
+            <div className="text-right" style={{ fontSize: isPreview ? "10px" : "10pt" }}>
+              <div className="mb-12" style={{ marginBottom: isPreview ? "2rem" : "3rem" }}>
+                <div className="border-b border-black inline-block" style={{ minWidth: "150px", height: "1px" }}></div>
+              </div>
+              <p className="mb-1">(М.П., подпись)</p>
+              <div className="mt-2">
+                <div className="border-b border-black inline-block" style={{ minWidth: "150px", height: "1px" }}></div>
+                <p className="mt-1">{formData.lastName} {formData.firstName} {formData.middleName}</p>
+              </div>
+              <p className="mt-1">(Ф.И.О.)</p>
             </div>
           </div>
         </div>

@@ -92,6 +92,7 @@ export async function POST(request: NextRequest) {
           const blob = await put(blobPath, file, {
             access: 'public',
             contentType: file.type || 'application/octet-stream',
+            token: process.env.BLOB_READ_WRITE_TOKEN,
           });
 
           // Сохраняем информацию о файле в базу данных

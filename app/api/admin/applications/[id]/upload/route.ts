@@ -62,6 +62,7 @@ export async function POST(
     const blob = await put(blobPath, file, {
       access: 'public',
       contentType: file.type || 'application/octet-stream',
+      token: process.env.BLOB_READ_WRITE_TOKEN,
     });
 
     const applicationFile = await withRetry(() =>

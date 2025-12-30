@@ -38,9 +38,38 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Для технических условий разрешаем создавать несколько заявок
-    // (пользователь может подавать заявки на разные объекты)
-    // Проверка на активные заявки не нужна
+    // Проверяем, есть ли уже активная заявка на технические условия
+    const existingApplication = await prisma.application.findFirst({
+      where: {
+        userId: session.user.id,
+        serviceId: service.id,
+        status: {
+          in: ["PENDING", "IN_PROGRESS"], // Активные статусы
+        },
+        description: {
+          contains: '"type":"technical_conditions"', // Проверяем, что это заявка на технические условия
+        },
+      },
+      include: {
+        service: { select: { title: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (existingApplication) {
+      return NextResponse.json(
+        {
+          error: "У вас уже есть активная заявка на технологическое присоединение",
+          existingApplication: {
+            id: existingApplication.id,
+            status: existingApplication.status,
+            createdAt: existingApplication.createdAt.toISOString(),
+            serviceTitle: existingApplication.service.title,
+          },
+        },
+        { status: 400 }
+      );
+    }
 
     // Создаем заявку на технические условия
     // Используем существующую модель Application, но сохраняем все данные в description как JSON

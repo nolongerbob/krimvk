@@ -64,10 +64,9 @@ export default async function ApplicationsPage() {
         where: { userId: session.user.id },
         include: { 
           service: true,
-          // Временно отключено до применения миграции
-          // files: {
-          //   orderBy: { uploadedAt: "desc" },
-          // },
+          files: {
+            orderBy: { uploadedAt: "desc" },
+          },
         },
         orderBy: { createdAt: "desc" },
       })

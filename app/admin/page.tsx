@@ -15,23 +15,47 @@ export default async function AdminPage() {
   }
 
   // Проверяем, что пользователь - администратор
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { role: true },
-  });
+  let user;
+  try {
+    user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true },
+    });
+  } catch (error) {
+    console.error("Database connection error:", error);
+    // Если ошибка подключения, пробуем переподключиться
+    try {
+      await prisma.$connect();
+      user = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { role: true },
+      });
+    } catch (retryError) {
+      console.error("Failed to reconnect to database:", retryError);
+      // Возвращаем ошибку подключения
+      return (
+        <div className="container py-8 px-4">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+            <h1 className="text-2xl font-bold text-red-800 mb-2">Ошибка подключения к базе данных</h1>
+            <p className="text-red-600">Не удалось подключиться к базе данных. Пожалуйста, попробуйте позже.</p>
+          </div>
+        </div>
+      );
+    }
+  }
 
   if (user?.role !== "ADMIN") {
     redirect("/dashboard");
   }
 
-  // Загружаем статистику
+  // Загружаем статистику с обработкой ошибок
   const [
     pendingApplications,
     inProgressApplications,
     unansweredQuestionsCount,
     unpublishedNews,
     totalUsers,
-  ] = await Promise.all([
+  ] = await Promise.allSettled([
     prisma.application.count({ where: { status: "PENDING" } }),
     prisma.application.count({ where: { status: "IN_PROGRESS" } }),
     prisma.question.count({ 
@@ -49,7 +73,16 @@ export default async function AdminPage() {
     }),
     prisma.news.count({ where: { published: false } }),
     prisma.user.count({ where: { role: "USER" } }),
-  ]);
+  ]).then((results) => {
+    return results.map((result) => {
+      if (result.status === "fulfilled") {
+        return result.value;
+      } else {
+        console.error("Error loading statistics:", result.reason);
+        return 0;
+      }
+    });
+  });
 
   return (
     <div className="container py-8 px-4">

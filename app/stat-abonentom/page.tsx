@@ -21,7 +21,6 @@ import {
   FileText,
   Upload,
   Download,
-  Printer,
 } from "lucide-react";
 import { AddressInput } from "@/components/AddressInput";
 import { ApplicationForm } from "./application-form";
@@ -214,65 +213,164 @@ export default function BecomeSubscriberPage() {
       const hiddenElement = applicationRef.current;
       const originalClasses = hiddenElement.className;
       const originalStyle = hiddenElement.style.cssText;
+      const originalDisplay = hiddenElement.style.display;
+      const originalPosition = hiddenElement.style.position;
+      const originalLeft = hiddenElement.style.left;
+      const originalTop = hiddenElement.style.top;
+      const originalZIndex = hiddenElement.style.zIndex;
       
-      // Устанавливаем стили для правильной генерации
-      hiddenElement.className = "block bg-white";
+      // Устанавливаем стили для правильной генерации A4
+      // Временно показываем элемент вне экрана для правильного рендеринга
+      hiddenElement.className = "bg-white";
+      hiddenElement.style.display = "block";
+      hiddenElement.style.position = "absolute";
+      hiddenElement.style.left = "-9999px";
+      hiddenElement.style.top = "0";
+      hiddenElement.style.zIndex = "-1";
       hiddenElement.style.width = "210mm";
-      hiddenElement.style.minHeight = "297mm";
-      hiddenElement.style.padding = "20mm";
+      hiddenElement.style.maxWidth = "210mm";
+      hiddenElement.style.padding = "0";
+      hiddenElement.style.margin = "0";
       hiddenElement.style.fontFamily = "Times New Roman, serif";
       hiddenElement.style.fontSize = "11pt";
       hiddenElement.style.lineHeight = "1.5";
       hiddenElement.style.color = "#000000";
+      hiddenElement.style.boxSizing = "border-box";
+      hiddenElement.style.overflow = "visible";
+      hiddenElement.style.height = "auto";
 
-      // Ждем немного, чтобы стили применились
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Ждем, чтобы стили применились и контент отрендерился
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // Получаем реальные размеры контента
+      const scrollWidth = hiddenElement.scrollWidth;
+      const scrollHeight = hiddenElement.scrollHeight;
 
       const canvas = await html2canvas(hiddenElement, {
         scale: 2,
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
-        width: hiddenElement.scrollWidth,
-        height: hiddenElement.scrollHeight,
-        windowWidth: hiddenElement.scrollWidth,
-        windowHeight: hiddenElement.scrollHeight,
+        allowTaint: true,
+        removeContainer: false,
+        width: scrollWidth,
+        height: scrollHeight,
+        windowWidth: scrollWidth,
+        windowHeight: scrollHeight,
+        scrollX: 0,
+        scrollY: 0,
       });
 
       // Восстанавливаем оригинальные стили
       hiddenElement.className = originalClasses;
       hiddenElement.style.cssText = originalStyle;
+      hiddenElement.style.display = originalDisplay;
+      hiddenElement.style.position = originalPosition;
+      hiddenElement.style.left = originalLeft;
+      hiddenElement.style.top = originalTop;
+      hiddenElement.style.zIndex = originalZIndex;
 
       const pdf = new jsPDF("p", "mm", "a4");
       const imgData = canvas.toDataURL("image/png", 1.0);
       
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const pdfWidth = pdf.internal.pageSize.getWidth(); // 210mm
+      const pdfHeight = pdf.internal.pageSize.getHeight(); // 297mm
+      
+      // Размеры canvas в пикселях (при scale=2)
       const imgWidth = canvas.width;
       const imgHeight = canvas.height;
       
-      // Вычисляем соотношение для масштабирования
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-      const imgScaledWidth = imgWidth * ratio;
-      const imgScaledHeight = imgHeight * ratio;
+      // Реальный размер в пикселях (делим на scale)
+      const scale = 2;
+      const realWidthPx = imgWidth / scale;
+      const realHeightPx = imgHeight / scale;
       
-      // Центрируем изображение
-      const xOffset = (pdfWidth - imgScaledWidth) / 2;
-      const yOffset = (pdfHeight - imgScaledHeight) / 2;
-
-      pdf.addImage(imgData, "PNG", xOffset, yOffset, imgScaledWidth, imgScaledHeight);
+      // Масштабируем под ширину страницы A4, сохраняя пропорции
+      // Добавляем отступы: 15mm сверху, 20mm по бокам, 20mm снизу
+      const paddingTop = 15; // мм
+      const paddingLeft = 20; // мм
+      const paddingRight = 20; // мм
+      const paddingBottom = 20; // мм
+      const availableWidth = pdfWidth - paddingLeft - paddingRight;
+      const availableHeight = pdfHeight - paddingTop - paddingBottom;
+      
+      // Конвертируем пиксели в мм (96 DPI: 1px = 25.4/96 mm)
+      const pxToMm = 25.4 / 96;
+      const imgWidthMm = realWidthPx * pxToMm;
+      const imgHeightMm = realHeightPx * pxToMm;
+      
+      // Масштабируем под доступную ширину, сохраняя пропорции
+      const widthRatio = availableWidth / imgWidthMm;
+      const finalWidth = availableWidth;
+      const finalHeight = imgHeightMm * widthRatio;
+      
+      // Если изображение больше одной страницы, разбиваем на страницы
+      if (finalHeight <= availableHeight) {
+        // Помещается на одну страницу
+        pdf.addImage(imgData, "PNG", paddingLeft, paddingTop, finalWidth, finalHeight);
+      } else {
+        // Разбиваем на несколько страниц
+        const pageHeightMm = availableHeight;
+        // Вычисляем сколько пикселей canvas соответствует одной странице
+        const pxToMm = 25.4 / 96;
+        // Высота одной страницы в реальных пикселях
+        const pageHeightRealPx = pageHeightMm / pxToMm / widthRatio;
+        const pageHeightPx = pageHeightRealPx * scale;
+        
+        let sourceY = 0;
+        let pageNumber = 0;
+        
+        while (sourceY < imgHeight) {
+          const remainingHeight = imgHeight - sourceY;
+          const currentPageHeightPx = Math.min(pageHeightPx, remainingHeight);
+          
+          // Создаем временный canvas для текущей страницы
+          const pageCanvas = document.createElement('canvas');
+          pageCanvas.width = imgWidth;
+          pageCanvas.height = currentPageHeightPx;
+          const pageCtx = pageCanvas.getContext('2d');
+          
+          if (pageCtx) {
+            // Копируем часть исходного canvas
+            pageCtx.drawImage(
+              canvas, 
+              0, sourceY, imgWidth, currentPageHeightPx,
+              0, 0, imgWidth, currentPageHeightPx
+            );
+            const pageImgData = pageCanvas.toDataURL("image/png", 1.0);
+            
+            if (pageNumber > 0) {
+              pdf.addPage();
+            }
+            
+            // Вычисляем высоту страницы в мм
+            const pxToMm = 25.4 / 96;
+            const currentPageHeightRealPx = currentPageHeightPx / scale;
+            const currentPageHeightMm = currentPageHeightRealPx * pxToMm * widthRatio;
+            // На первой странице добавляем верхний отступ, на остальных - нет
+            const yPosition = pageNumber === 0 ? paddingTop : 0;
+            // На последней странице добавляем нижний отступ
+            const isLastPage = sourceY + pageHeightPx >= imgHeight;
+            const pageHeightWithPadding = isLastPage 
+              ? Math.min(currentPageHeightMm + paddingBottom, pdfHeight - yPosition)
+              : Math.min(currentPageHeightMm, pdfHeight - yPosition);
+            
+            pdf.addImage(pageImgData, "PNG", paddingLeft, yPosition, finalWidth, pageHeightWithPadding);
+          }
+          
+          sourceY += pageHeightPx;
+          pageNumber++;
+        }
+      }
       
       const fileName = `zayavlenie_TU_${formData.lastName}_${new Date().toISOString().split("T")[0]}.pdf`;
       pdf.save(fileName);
     } catch (error) {
       console.error("Error generating PDF:", error);
-      setError(error instanceof Error ? error.message : "Ошибка при генерации PDF. Попробуйте использовать кнопку 'Печать'.");
+      setError(error instanceof Error ? error.message : "Ошибка при генерации PDF.");
     }
   };
 
-  const handlePrintApplication = () => {
-    window.print();
-  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -348,14 +446,13 @@ ${formData.connectionMethod === "with-well" ? `- Тип колодца: ${formDa
 ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
 `;
 
-      const response = await fetch("/api/applications/create", {
+      const response = await fetch("/api/applications/technical-conditions/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          serviceId: "tehnologicheskoe-prisoedinenie",
-          address: formData.objectAddress,
-          phone: formData.phone,
-          description: description,
+          personType: personType,
+          ...formData,
+          uploadedFiles: fileUrls,
         }),
       });
 
@@ -1094,15 +1191,6 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                     >
                       <Download className="h-4 w-4" />
                       Скачать заявление (PDF)
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={handlePrintApplication}
-                      className="gap-2"
-                    >
-                      <Printer className="h-4 w-4" />
-                      Печать
                     </Button>
                     <Button
                       type="button"

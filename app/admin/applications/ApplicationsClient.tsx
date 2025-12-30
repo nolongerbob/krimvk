@@ -7,6 +7,7 @@ import { FileText, Clock, CheckCircle, XCircle, AlertCircle, User, Phone, MapPin
 import { ApplicationActions } from "@/components/admin/ApplicationActions";
 import { ApplicationFilters } from "@/components/admin/ApplicationFilters";
 import { ServiceCategoryFilters } from "@/components/admin/ServiceCategoryFilters";
+import { TechnicalConditionsApplication } from "@/components/admin/TechnicalConditionsApplication";
 
 type FilterStatus = "ALL" | "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
 
@@ -115,9 +116,32 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
     return counts;
   }, [applications, categories]);
 
+  // Разделяем заявки на технические условия и обычные
+  const { technicalConditionsApps, regularApps } = useMemo(() => {
+    const techApps: Application[] = [];
+    const regular: Application[] = [];
+
+    applications.forEach((app) => {
+      try {
+        if (app.description) {
+          const data = JSON.parse(app.description);
+          if (data.type === "technical_conditions") {
+            techApps.push(app);
+            return;
+          }
+        }
+      } catch (e) {
+        // Не JSON, значит обычная заявка
+      }
+      regular.push(app);
+    });
+
+    return { technicalConditionsApps: techApps, regularApps: regular };
+  }, [applications]);
+
   // Фильтруем заявки по статусу и категории
   const filteredApplications = useMemo(() => {
-    let filtered = applications;
+    let filtered = regularApps;
 
     // Фильтр по статусу
     if (activeFilter === "ALL") {
@@ -136,7 +160,23 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
     }
 
     return filtered;
-  }, [applications, activeFilter, activeCategory]);
+  }, [regularApps, activeFilter, activeCategory]);
+
+  // Фильтруем заявки на технические условия
+  const filteredTechnicalConditions = useMemo(() => {
+    let filtered = technicalConditionsApps;
+
+    // Фильтр по статусу
+    if (activeFilter === "ALL") {
+      filtered = filtered.filter((app) => app.status !== "COMPLETED");
+    } else if (activeFilter === "COMPLETED") {
+      filtered = [];
+    } else {
+      filtered = filtered.filter((app) => app.status === activeFilter);
+    }
+
+    return filtered;
+  }, [technicalConditionsApps, activeFilter]);
 
   // Завершенные заявки отдельно (показываются всегда, кроме когда выбран другой фильтр)
   const completedApplications = useMemo(() => {
@@ -221,9 +261,34 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
         />
       </div>
 
-      {/* Активные заявки */}
+      {/* Заявки на технические условия */}
+      {filteredTechnicalConditions.length > 0 && (
+        <div className="mb-8">
+          <div className="mb-4">
+            <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
+              <FileText className="h-6 w-6 text-blue-500" />
+              Заявки на технические условия
+            </h2>
+            <p className="text-gray-600 text-sm">
+              Всего: {filteredTechnicalConditions.length}
+            </p>
+          </div>
+          <div className="space-y-4">
+            {filteredTechnicalConditions.map((app) => (
+              <TechnicalConditionsApplication key={app.id} application={app} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Обычные заявки */}
       {filteredApplications.length > 0 && (
         <div className="space-y-4 mb-8">
+          {filteredTechnicalConditions.length > 0 && (
+            <div className="mb-4">
+              <h2 className="text-2xl font-bold mb-2">Остальные заявки</h2>
+            </div>
+          )}
           {filteredApplications.map(renderApplication)}
         </div>
       )}

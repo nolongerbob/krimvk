@@ -369,9 +369,9 @@ export default function BecomeSubscriberPage() {
             // Высота страницы должна быть точно равна availableHeight для всех страниц кроме последней
             const isLastPage = sourceY + currentPageHeightPx >= imgHeight - 1; // -1 для учета погрешности
             // На последней странице добавляем дополнительный запас снизу
-            const lastPageExtraMargin = isLastPage ? 5 : 0; // мм - дополнительный запас для последней страницы
+            const lastPageExtraMargin = isLastPage ? 10 : 0; // мм - увеличенный запас для последней страницы
             const pageHeightForPdf = isLastPage 
-              ? Math.min(currentPageHeightMm + (lastPageExtraMargin / pxToMm / widthRatio), availableHeight + lastPageExtraMargin) // На последней странице используем реальную высоту + запас
+              ? Math.min(currentPageHeightMm + (lastPageExtraMargin / pxToMm / widthRatio), availableHeight + lastPageExtraMargin + safetyMargin) // На последней странице используем реальную высоту + увеличенный запас
               : availableHeight; // На всех остальных - фиксированная высота
             
             pdf.addImage(pageImgData, "JPEG", paddingLeft, yPosition, finalWidth, pageHeightForPdf);

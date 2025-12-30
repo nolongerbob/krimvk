@@ -49,7 +49,7 @@ export function CompletedApplicationDetails({ application, isTechnicalConditions
     } catch (e) {
       // Не JSON, значит это обычная заявка
       // Проверяем, есть ли комментарий в обычном тексте
-      const commentMatch = application.description.match(/Комментарий при завершении:\s*(.+)/s);
+      const commentMatch = application.description.match(/Комментарий при завершении:\s*([\s\S]+)/);
       if (commentMatch) {
         comment = commentMatch[1].trim();
       }

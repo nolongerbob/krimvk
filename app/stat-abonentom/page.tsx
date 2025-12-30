@@ -228,8 +228,10 @@ export default function BecomeSubscriberPage() {
       hiddenElement.style.top = "0";
       hiddenElement.style.zIndex = "-1";
       // Устанавливаем точную ширину A4, padding будет добавлен при добавлении в PDF
-      hiddenElement.style.width = "210mm";
-      hiddenElement.style.maxWidth = "210mm";
+      // Устанавливаем ширину с учетом боковых отступов (210mm - 40mm = 170mm)
+      hiddenElement.style.width = "170mm";
+      hiddenElement.style.maxWidth = "170mm";
+      hiddenElement.style.minWidth = "170mm";
       hiddenElement.style.padding = "0";
       hiddenElement.style.margin = "0";
       hiddenElement.style.boxSizing = "border-box";

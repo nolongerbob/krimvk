@@ -39,6 +39,12 @@ export default function BecomeSubscriberPage() {
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const applicationRef = useRef<HTMLDivElement>(null);
+  const [existingApplication, setExistingApplication] = useState<{
+    id: string;
+    status: string;
+    createdAt: string;
+    serviceTitle: string;
+  } | null>(null);
 
   // Данные формы
   const [formData, setFormData] = useState({
@@ -490,6 +496,10 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
           router.push("/dashboard/applications?created=true");
         }, 2000);
       } else {
+        // Если есть информация о существующей заявке, сохраняем её
+        if (data.existingApplication) {
+          setExistingApplication(data.existingApplication);
+        }
         setError(data.error || "Ошибка при отправке заявки");
         setIsSubmitting(false);
       }

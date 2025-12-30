@@ -296,8 +296,10 @@ export default function BecomeSubscriberPage() {
       const paddingLeft = 20; // мм
       const paddingRight = 20; // мм
       const paddingBottom = 15; // мм - отступ снизу на каждой странице
+      // Добавляем небольшой запас для предотвращения обрезания текста
+      const safetyMargin = 5; // мм - запас для предотвращения обрезания строк
       const availableWidth = pdfWidth - paddingLeft - paddingRight;
-      const availableHeight = pdfHeight - paddingTop - paddingBottom;
+      const availableHeight = pdfHeight - paddingTop - paddingBottom - safetyMargin;
       
       // Конвертируем пиксели в мм (96 DPI: 1px = 25.4/96 mm)
       const pxToMm = 25.4 / 96;
@@ -315,7 +317,7 @@ export default function BecomeSubscriberPage() {
         pdf.addImage(imgData, "JPEG", paddingLeft, paddingTop, finalWidth, finalHeight);
       } else {
         // Разбиваем на несколько страниц
-        // Высота одной страницы в мм (с учетом отступов)
+        // Высота одной страницы в мм (с учетом отступов и запаса)
         const pageHeightMm = availableHeight;
         // Вычисляем сколько пикселей исходного canvas соответствует одной странице
         // Сначала переводим высоту страницы в мм обратно в реальные пиксели
@@ -329,12 +331,20 @@ export default function BecomeSubscriberPage() {
         while (sourceY < imgHeight) {
           const remainingHeight = imgHeight - sourceY;
           // Берем высоту страницы или оставшуюся высоту, что меньше
-          const currentPageHeightPx = Math.min(pageHeightPx, remainingHeight);
+          // Вычитаем небольшой запас для предотвращения обрезания строк
+          const safetyMarginPx = (safetyMargin / pxToMm / widthRatio) * scale;
+          let currentPageHeightPx = Math.min(pageHeightPx - safetyMarginPx, remainingHeight);
+          
+          // Убеждаемся, что не берем меньше чем нужно
+          if (currentPageHeightPx < remainingHeight && pageNumber === 0 && sourceY === 0) {
+            // На первой странице можем взять чуть больше
+            currentPageHeightPx = Math.min(pageHeightPx, remainingHeight);
+          }
           
           // Создаем временный canvas для текущей страницы
           const pageCanvas = document.createElement('canvas');
           pageCanvas.width = imgWidth;
-          pageCanvas.height = currentPageHeightPx;
+          pageCanvas.height = Math.ceil(currentPageHeightPx);
           const pageCtx = pageCanvas.getContext('2d');
           
           if (pageCtx) {
@@ -357,7 +367,7 @@ export default function BecomeSubscriberPage() {
             // На каждой странице добавляем верхний отступ
             const yPosition = paddingTop;
             // Высота страницы должна быть точно равна availableHeight для всех страниц кроме последней
-            const isLastPage = sourceY + pageHeightPx >= imgHeight;
+            const isLastPage = sourceY + currentPageHeightPx >= imgHeight - 1; // -1 для учета погрешности
             const pageHeightForPdf = isLastPage 
               ? Math.min(currentPageHeightMm, availableHeight) // На последней странице используем реальную высоту
               : availableHeight; // На всех остальных - фиксированная высота
@@ -365,7 +375,7 @@ export default function BecomeSubscriberPage() {
             pdf.addImage(pageImgData, "JPEG", paddingLeft, yPosition, finalWidth, pageHeightForPdf);
           }
           
-          sourceY += pageHeightPx;
+          sourceY += currentPageHeightPx;
           pageNumber++;
         }
       }

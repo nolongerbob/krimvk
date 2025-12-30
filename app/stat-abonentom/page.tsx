@@ -200,88 +200,72 @@ export default function BecomeSubscriberPage() {
   };
 
   const handleDownloadApplication = async () => {
+    if (!applicationRef.current) {
+      setError("Ошибка: элемент заявления не найден");
+      return;
+    }
+
     try {
-      // Отправляем данные на сервер для заполнения PDF
-      const response = await fetch("/api/applications/fill-pdf", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
+      const html2canvas = (await import("html2canvas")).default;
+      const jsPDF = (await import("jspdf")).default;
+
+      // Показываем заявление для генерации
+      const hiddenElement = applicationRef.current;
+      const originalClasses = hiddenElement.className;
+      const originalStyle = hiddenElement.style.cssText;
+      
+      // Устанавливаем стили для правильной генерации
+      hiddenElement.className = "block bg-white";
+      hiddenElement.style.width = "210mm";
+      hiddenElement.style.minHeight = "297mm";
+      hiddenElement.style.padding = "20mm";
+      hiddenElement.style.fontFamily = "Times New Roman, serif";
+      hiddenElement.style.fontSize = "11pt";
+      hiddenElement.style.lineHeight = "1.5";
+      hiddenElement.style.color = "#000000";
+
+      // Ждем немного, чтобы стили применились
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      const canvas = await html2canvas(hiddenElement, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
+        width: hiddenElement.scrollWidth,
+        height: hiddenElement.scrollHeight,
+        windowWidth: hiddenElement.scrollWidth,
+        windowHeight: hiddenElement.scrollHeight,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Ошибка при заполнении PDF");
-      }
+      // Восстанавливаем оригинальные стили
+      hiddenElement.className = originalClasses;
+      hiddenElement.style.cssText = originalStyle;
 
-      // Получаем PDF blob
-      const blob = await response.blob();
+      const pdf = new jsPDF("p", "mm", "a4");
+      const imgData = canvas.toDataURL("image/png", 1.0);
       
-      // Создаем ссылку для скачивания
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `zayavlenie_TU_${formData.lastName}_${new Date().toISOString().split("T")[0]}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      
+      // Вычисляем соотношение для масштабирования
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      const imgScaledWidth = imgWidth * ratio;
+      const imgScaledHeight = imgHeight * ratio;
+      
+      // Центрируем изображение
+      const xOffset = (pdfWidth - imgScaledWidth) / 2;
+      const yOffset = (pdfHeight - imgScaledHeight) / 2;
+
+      pdf.addImage(imgData, "PNG", xOffset, yOffset, imgScaledWidth, imgScaledHeight);
+      
+      const fileName = `zayavlenie_TU_${formData.lastName}_${new Date().toISOString().split("T")[0]}.pdf`;
+      pdf.save(fileName);
     } catch (error) {
-      console.error("Error downloading PDF:", error);
-      const errorMessage = error instanceof Error ? error.message : "Ошибка при скачивании PDF";
-      
-      // Fallback на старый метод через html2canvas
-      if (applicationRef.current) {
-        try {
-          const html2canvas = (await import("html2canvas")).default;
-          const jsPDF = (await import("jspdf")).default;
-
-          // Показываем заявление для генерации
-          const hiddenElement = applicationRef.current;
-          const originalClasses = hiddenElement.className;
-          hiddenElement.className = "block bg-white p-8";
-          hiddenElement.style.width = "210mm";
-          hiddenElement.style.minHeight = "297mm";
-
-          const canvas = await html2canvas(hiddenElement, {
-            scale: 2,
-            useCORS: true,
-            logging: false,
-            backgroundColor: "#ffffff",
-            width: hiddenElement.scrollWidth,
-            height: hiddenElement.scrollHeight,
-          });
-
-          // Восстанавливаем скрытие
-          hiddenElement.className = originalClasses;
-          hiddenElement.style.width = "";
-          hiddenElement.style.minHeight = "";
-
-          const pdf = new jsPDF("p", "mm", "a4");
-          const imgData = canvas.toDataURL("image/png");
-          
-          const pdfWidth = pdf.internal.pageSize.getWidth();
-          const pdfHeight = pdf.internal.pageSize.getHeight();
-          const imgWidth = canvas.width;
-          const imgHeight = canvas.height;
-          const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-          const imgScaledWidth = imgWidth * ratio;
-          const imgScaledHeight = imgHeight * ratio;
-          const xOffset = (pdfWidth - imgScaledWidth) / 2;
-          const yOffset = (pdfHeight - imgScaledHeight) / 2;
-
-          pdf.addImage(imgData, "PNG", xOffset, yOffset, imgScaledWidth, imgScaledHeight);
-          
-          const fileName = `zayavlenie_TU_${formData.lastName}_${new Date().toISOString().split("T")[0]}.pdf`;
-          pdf.save(fileName);
-        } catch (fallbackError) {
-          console.error("Fallback error:", fallbackError);
-          setError(`Ошибка: ${errorMessage}. Попробуйте использовать кнопку "Печать" для сохранения заявления.`);
-        }
-      } else {
-        setError(errorMessage);
-      }
+      console.error("Error generating PDF:", error);
+      setError(error instanceof Error ? error.message : "Ошибка при генерации PDF. Попробуйте использовать кнопку 'Печать'.");
     }
   };
 

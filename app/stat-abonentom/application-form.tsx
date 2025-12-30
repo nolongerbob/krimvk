@@ -1,3 +1,5 @@
+"use client";
+
 // Компонент для отображения заявления в формате, соответствующем оригинальному PDF
 export function ApplicationForm({ formData, isPreview = false }: { formData: any; isPreview?: boolean }) {
   const containerClass = isPreview 

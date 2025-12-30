@@ -162,14 +162,7 @@ export default async function AdminApplicationsPage() {
           createdAt: app.createdAt instanceof Date ? app.createdAt.toISOString() : String(app.createdAt),
           user: app.user,
           service: app.service,
-          files: app.files?.map((file: any) => ({
-            id: file.id,
-            fileName: file.fileName,
-            filePath: file.filePath,
-            fileSize: file.fileSize,
-            mimeType: file.mimeType,
-            uploadedAt: file.uploadedAt instanceof Date ? file.uploadedAt.toISOString() : String(file.uploadedAt),
-          })) || [],
+          files: [], // Временно отключено до применения миграции на Vercel
         } as ApplicationWithRelations;
       } catch (error) {
         console.error("❌ Error serializing application:", app.id, error);

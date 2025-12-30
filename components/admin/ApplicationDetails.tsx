@@ -218,7 +218,7 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
                   <div>
                     <span className="text-gray-600">ФИО:</span>{" "}
                     <span className="font-medium">
-                      {data.lastName} {data.firstName} {data.middleName}
+                      {data.lastName || "-"} {data.firstName || "-"} {data.middleName || ""}
                     </span>
                   </div>
                   {data.birthDate && (
@@ -241,6 +241,24 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
                       </span>
                     </div>
                   )}
+                  {data.passportIssuedBy && (
+                    <div>
+                      <span className="text-gray-600">Выдан:</span>{" "}
+                      <span className="font-medium">{data.passportIssuedBy}</span>
+                    </div>
+                  )}
+                  {data.passportIssueDate && (
+                    <div>
+                      <span className="text-gray-600">Дата выдачи паспорта:</span>{" "}
+                      <span className="font-medium">{data.passportIssueDate}</span>
+                    </div>
+                  )}
+                  {data.passportDivisionCode && (
+                    <div>
+                      <span className="text-gray-600">Код подразделения:</span>{" "}
+                      <span className="font-medium">{data.passportDivisionCode}</span>
+                    </div>
+                  )}
                   {data.inn && (
                     <div>
                       <span className="text-gray-600">ИНН:</span>{" "}
@@ -253,10 +271,10 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
                       <span className="font-medium">{data.snils}</span>
                     </div>
                   )}
-                  {application.user.phone && (
+                  {(application.user.phone || data.phone) && (
                     <div>
                       <span className="text-gray-600">Телефон:</span>{" "}
-                      <span className="font-medium">{application.user.phone}</span>
+                      <span className="font-medium">{application.user.phone || data.phone}</span>
                     </div>
                   )}
                 </CardContent>
@@ -277,10 +295,28 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
                       <span className="font-medium">{data.objectType}</span>
                     </div>
                   )}
+                  {data.objectPurpose && (
+                    <div>
+                      <span className="text-gray-600">Назначение:</span>{" "}
+                      <span className="font-medium">{data.objectPurpose}</span>
+                    </div>
+                  )}
+                  {data.cadastralNumber && (
+                    <div>
+                      <span className="text-gray-600">Кадастровый номер:</span>{" "}
+                      <span className="font-medium">{data.cadastralNumber}</span>
+                    </div>
+                  )}
                   {data.objectAddress && (
                     <div>
                       <span className="text-gray-600">Адрес объекта:</span>{" "}
                       <span className="font-medium">{data.objectAddress}</span>
+                    </div>
+                  )}
+                  {data.area && (
+                    <div>
+                      <span className="text-gray-600">Площадь:</span>{" "}
+                      <span className="font-medium">{data.area} кв.м</span>
                     </div>
                   )}
                   {data.constructionType && (
@@ -299,6 +335,12 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
                     <div>
                       <span className="text-gray-600">Этажность:</span>{" "}
                       <span className="font-medium">{data.objectFloors}</span>
+                    </div>
+                  )}
+                  {data.networkLength && (
+                    <div>
+                      <span className="text-gray-600">Протяженность сети:</span>{" "}
+                      <span className="font-medium">{data.networkLength} м</span>
                     </div>
                   )}
                 </CardContent>
@@ -326,24 +368,161 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
                     {data.connectionTypeSewerage ? "Да" : "Нет"}
                   </Badge>
                 </div>
-                {data.maxWaterConsumptionLps && (
+                {data.connectionMethod && (
                   <div>
-                    <span className="text-gray-600">Макс. потребление воды:</span>{" "}
+                    <span className="text-gray-600">Тип подключения:</span>{" "}
                     <span className="font-medium">
-                      {data.maxWaterConsumptionLps} л/с
-                      {data.maxWaterConsumptionM3h && `, ${data.maxWaterConsumptionM3h} м³/ч`}
-                      {data.maxWaterConsumptionM3day && `, ${data.maxWaterConsumptionM3day} м³/сут`}
+                      {data.connectionMethod === "with-well" ? "С колодцем" : "По протяженности"}
                     </span>
                   </div>
                 )}
-                {data.plannedCommissioningDate && (
+                {data.wellType && (
                   <div>
-                    <span className="text-gray-600">Планируемый срок ввода:</span>{" "}
-                    <span className="font-medium">{data.plannedCommissioningDate}</span>
+                    <span className="text-gray-600">Тип колодца:</span>{" "}
+                    <span className="font-medium">
+                      {data.wellType === "existing" ? "Существующий" : "Проектируемый"}
+                    </span>
                   </div>
                 )}
+                {data.requestedLoad && (
+                  <div>
+                    <span className="text-gray-600">Запрошенная нагрузка:</span>{" "}
+                    <span className="font-medium">{data.requestedLoad} м³</span>
+                  </div>
+                )}
+                {data.connectionPointLocation && (
+                  <div>
+                    <span className="text-gray-600">Расположение точки подключения:</span>{" "}
+                    <span className="font-medium">{data.connectionPointLocation}</span>
+                  </div>
+                )}
+                {data.pipeDiameter && (
+                  <div>
+                    <span className="text-gray-600">Диаметр водопровода:</span>{" "}
+                    <span className="font-medium">{data.pipeDiameter} мм</span>
+                  </div>
+                )}
+                {data.pipeMaterial && (
+                  <div>
+                    <span className="text-gray-600">Материал труб:</span>{" "}
+                    <span className="font-medium">{data.pipeMaterial}</span>
+                  </div>
+                )}
+                <div className="flex items-center gap-4">
+                  <span className="text-gray-600">Ограничение водоснабжения:</span>
+                  <Badge variant={data.waterSupplyRestriction ? "default" : "secondary"}>
+                    {data.waterSupplyRestriction ? "Да" : "Нет"}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-gray-600">Разрешение на подключение к частным сетям:</span>
+                  <Badge variant={data.privateNetworkPermission ? "default" : "secondary"}>
+                    {data.privateNetworkPermission ? "Да" : "Нет"}
+                  </Badge>
+                </div>
               </CardContent>
             </Card>
+
+            {/* Параметры потребления */}
+            {(data.maxWaterConsumptionLps || data.maxWaterConsumptionM3h || data.maxWaterConsumptionM3day || 
+              data.fireExtinguishingExternal || data.fireExtinguishingInternal || data.fireHydrantsCount ||
+              data.fireExtinguishingAutomatic || data.wastewaterLps || data.wastewaterM3h || data.wastewaterM3day) && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Settings className="h-5 w-5" />
+                    Параметры потребления
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                  {(data.maxWaterConsumptionLps || data.maxWaterConsumptionM3h || data.maxWaterConsumptionM3day) && (
+                    <div>
+                      <span className="text-gray-600">Макс. потребление холодной воды:</span>{" "}
+                      <span className="font-medium">
+                        {data.maxWaterConsumptionLps && `${data.maxWaterConsumptionLps} л/с`}
+                        {data.maxWaterConsumptionLps && (data.maxWaterConsumptionM3h || data.maxWaterConsumptionM3day) && ", "}
+                        {data.maxWaterConsumptionM3h && `${data.maxWaterConsumptionM3h} м³/ч`}
+                        {data.maxWaterConsumptionM3h && data.maxWaterConsumptionM3day && ", "}
+                        {data.maxWaterConsumptionM3day && `${data.maxWaterConsumptionM3day} м³/сут`}
+                      </span>
+                    </div>
+                  )}
+                  {(data.fireExtinguishingExternal || data.fireExtinguishingInternal || data.fireHydrantsCount || data.fireExtinguishingAutomatic) && (
+                    <div className="mt-2 pt-2 border-t">
+                      <span className="text-gray-600 font-medium">Пожаротушение:</span>
+                      {data.fireExtinguishingExternal && (
+                        <div className="ml-4">
+                          <span className="text-gray-600">Наружное:</span>{" "}
+                          <span className="font-medium">{data.fireExtinguishingExternal} л/сек</span>
+                        </div>
+                      )}
+                      {data.fireExtinguishingInternal && (
+                        <div className="ml-4">
+                          <span className="text-gray-600">Внутреннее:</span>{" "}
+                          <span className="font-medium">{data.fireExtinguishingInternal} л/сек</span>
+                        </div>
+                      )}
+                      {data.fireHydrantsCount && (
+                        <div className="ml-4">
+                          <span className="text-gray-600">Количество пожарных кранов:</span>{" "}
+                          <span className="font-medium">{data.fireHydrantsCount} шт</span>
+                        </div>
+                      )}
+                      {data.fireExtinguishingAutomatic && (
+                        <div className="ml-4">
+                          <span className="text-gray-600">Автоматическое:</span>{" "}
+                          <span className="font-medium">{data.fireExtinguishingAutomatic} л/сек</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {(data.wastewaterLps || data.wastewaterM3h || data.wastewaterM3day) && (
+                    <div>
+                      <span className="text-gray-600">Водоотведение:</span>{" "}
+                      <span className="font-medium">
+                        {data.wastewaterLps && `${data.wastewaterLps} л/с`}
+                        {data.wastewaterLps && (data.wastewaterM3h || data.wastewaterM3day) && " "}
+                        {data.wastewaterM3h && `${data.wastewaterM3h} м³/ч`}
+                        {data.wastewaterM3h && data.wastewaterM3day && ", "}
+                        {data.wastewaterM3day && `${data.wastewaterM3day} м³/сут`}
+                      </span>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Дополнительная информация */}
+            {(data.resourceType || data.plannedCommissioningDate || data.notificationMethod) && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Calendar className="h-5 w-5" />
+                    Дополнительная информация
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                  {data.resourceType && (
+                    <div>
+                      <span className="text-gray-600">Виды ресурсов или услуг:</span>{" "}
+                      <span className="font-medium">{data.resourceType}</span>
+                    </div>
+                  )}
+                  {data.plannedCommissioningDate && (
+                    <div>
+                      <span className="text-gray-600">Планируемый срок ввода в эксплуатацию:</span>{" "}
+                      <span className="font-medium">{data.plannedCommissioningDate}</span>
+                    </div>
+                  )}
+                  {data.notificationMethod && (
+                    <div>
+                      <span className="text-gray-600">Способ уведомления:</span>{" "}
+                      <span className="font-medium">{data.notificationMethod}</span>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Приложенные документы */}
             {data.uploadedFiles && data.uploadedFiles.length > 0 && (

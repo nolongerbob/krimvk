@@ -205,7 +205,7 @@ export function Header() {
         </div>
 
         {/* Правая часть: Поиск и кнопки входа/регистрации */}
-        <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4 flex-shrink-0">
+        <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
           {/* Поиск */}
           <div className="hidden xl:block">
             <Search />
@@ -219,7 +219,7 @@ export function Header() {
           {/* Позвоните нам - выпадающее меню */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="hidden xl:flex items-center gap-1.5 text-xs xl:text-sm px-2 xl:px-3 focus:outline-none focus-visible:outline-none active:outline-none">
+              <Button variant="ghost" size="sm" className="hidden xl:flex items-center gap-1.5 text-xs xl:text-sm px-1.5 xl:px-2 focus:outline-none focus-visible:outline-none active:outline-none">
                 <Phone className="h-3 w-3 xl:h-4 xl:w-4" />
                 <span className="whitespace-nowrap">Позвоните нам</span>
               </Button>

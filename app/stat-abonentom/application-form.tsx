@@ -184,16 +184,13 @@ export function ApplicationForm({ formData, isPreview = false }: { formData: any
         <span>                                                                     (новым строительством, реконструкцией, модернизацией - указать нужное)</span>
       </p>
       <p style={{ margin: 0, textAlign: "justify", textIndent: 0 }}>
-        <span>прошу выдать технические условия  на  подключение  (технологическое присоединение) объекта капитального строительства, водопроводных и (или) канализационных  сетей,  иного  объекта,  не  относящегося  к   объектам капитального строительства (указать нужное):</span>
-      </p>
-      <p style={{ margin: 0, textAlign: "justify", textIndent: 0, fontSize: fontSize }}>
-        <span>{underlineField(
+        <span>прошу выдать технические условия  на  подключение  (технологическое присоединение) объекта капитального строительства, водопроводных и (или) канализационных  сетей,  иного  объекта,  не  относящегося  к   объектам капитального строительства {underlineField(
           formData.objectType === "residential" ? "Жилой дом" : 
           formData.objectType === "apartment" ? "Квартира" : 
           formData.objectType === "commercial" ? "Коммерческий объект" : 
           formData.objectType === "industrial" ? "Промышленный объект" : "", 
-          70
-        )}</span>
+          30
+        )} (указать нужное):</span>
       </p>
       <p style={{ margin: 0, textAlign: "center", fontSize: isPreview ? "13px" : "12pt" }}>
         <span>(наименование объекта или сетей)</span>

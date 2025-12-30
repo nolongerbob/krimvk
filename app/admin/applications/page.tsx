@@ -31,8 +31,31 @@ export default async function AdminApplicationsPage() {
   }
 
   // Загружаем все заявки с обработкой ошибок
-  let applications = [];
-  let categories = [];
+  type ApplicationWithRelations = {
+    id: string;
+    status: string;
+    description: string | null;
+    address: string | null;
+    phone: string | null;
+    createdAt: Date;
+    user: {
+      name: string | null;
+      email: string;
+      phone: string | null;
+    };
+    service: {
+      id: string;
+      title: string;
+      category: string;
+    };
+  };
+
+  type CategoryResult = {
+    category: string;
+  };
+
+  let applications: ApplicationWithRelations[] = [];
+  let categories: CategoryResult[] = [];
   
   try {
     applications = await withRetry(() =>

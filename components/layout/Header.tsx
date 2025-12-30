@@ -209,7 +209,10 @@ export function Header() {
           <div className="hidden xl:block ml-4">
             <Search />
           </div>
-          
+        </div>
+
+        {/* Правая часть: Кнопки и пользователь */}
+        <div className="flex items-center flex-shrink-0 w-1/3 justify-end gap-1 sm:gap-2">
           {/* Кнопка версии для слабовидящих */}
           <div className="hidden xl:block">
             <BVIButton />
@@ -261,10 +264,6 @@ export function Header() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
-
-        {/* Правая часть: Пользователь */}
-        <div className="flex items-center flex-shrink-0 w-1/3 justify-end">
           {status === "loading" ? (
             <div className="hidden xl:block w-20 h-9 bg-gray-200 animate-pulse rounded"></div>
           ) : session ? (

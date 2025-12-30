@@ -558,6 +558,37 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
         </p>
       </div>
 
+      {/* Сообщение о существующей заявке */}
+      {existingApplication && (
+        <Card className="mb-6 border-blue-200 bg-blue-50">
+          <CardContent className="p-6">
+            <div className="flex items-start gap-4">
+              <AlertCircle className="h-6 w-6 text-blue-600 flex-shrink-0 mt-1" />
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-blue-900 mb-2">
+                  У вас уже есть активная заявка
+                </h3>
+                <p className="text-blue-800 mb-4">
+                  Статус: <span className="font-medium">
+                    {existingApplication.status === "PENDING" ? "Ожидает обработки" : 
+                     existingApplication.status === "IN_PROGRESS" ? "В работе" : 
+                     existingApplication.status}
+                  </span>
+                  <br />
+                  Создана: {new Date(existingApplication.createdAt).toLocaleDateString("ru-RU")}
+                </p>
+                <Button asChild>
+                  <Link href="/dashboard/applications">
+                    Перейти к заявкам
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Прогресс-бар */}
       <Card className="mb-6">
         <CardContent className="p-6">

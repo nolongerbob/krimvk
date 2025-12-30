@@ -236,7 +236,7 @@ export default function BecomeSubscriberPage() {
       hiddenElement.style.margin = "0";
       hiddenElement.style.boxSizing = "border-box";
       hiddenElement.style.fontFamily = "Times New Roman, serif";
-      hiddenElement.style.fontSize = "10.5pt"; // Уменьшили для умещения на 2 листа
+      hiddenElement.style.fontSize = "10pt"; // Уменьшили еще для умещения на 2 листа
       hiddenElement.style.lineHeight = "1.5";
       hiddenElement.style.color = "#000000";
       hiddenElement.style.boxSizing = "border-box";

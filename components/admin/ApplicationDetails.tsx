@@ -57,7 +57,7 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
       tempDiv.style.padding = '0';
       tempDiv.style.margin = '0';
       tempDiv.style.fontFamily = 'Times New Roman, serif';
-      tempDiv.style.fontSize = '10.5pt'; // Уменьшили для умещения на 2 листа
+      tempDiv.style.fontSize = '10pt'; // Уменьшили еще для умещения на 2 листа
       tempDiv.style.lineHeight = '1.5';
       tempDiv.style.color = '#000000';
       tempDiv.style.backgroundColor = '#ffffff';
@@ -172,8 +172,10 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
             const yPosition = paddingTop;
             // Высота страницы должна быть точно равна availableHeight для всех страниц кроме последней
             const isLastPage = sourceY + currentPageHeightPx >= imgHeight - 1; // -1 для учета погрешности
+            // На последней странице добавляем дополнительный запас снизу
+            const lastPageExtraMargin = isLastPage ? 5 : 0; // мм - дополнительный запас для последней страницы
             const pageHeightForPdf = isLastPage 
-              ? Math.min(currentPageHeightMm, availableHeight) // На последней странице используем реальную высоту
+              ? Math.min(currentPageHeightMm + (lastPageExtraMargin / pxToMm / widthRatio), availableHeight + lastPageExtraMargin) // На последней странице используем реальную высоту + запас
               : availableHeight; // На всех остальных - фиксированная высота
             pdf.addImage(pageImgData, "JPEG", paddingLeft, yPosition, finalWidth, pageHeightForPdf);
           }

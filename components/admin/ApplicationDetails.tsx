@@ -167,24 +167,23 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
             }
 
             // Вычисляем высоту страницы в мм для добавления в PDF
-            // Используем одинаковое масштабирование для всех страниц
+            // Используем реальную высоту изображения для каждой страницы, чтобы избежать растягивания
             const currentPageHeightRealPx = currentPageHeightPx / scale;
             const currentPageHeightMm = currentPageHeightRealPx * pxToMm * widthRatio;
             // На каждой странице добавляем верхний отступ
             const yPosition = paddingTop;
-            // Высота страницы должна быть точно равна availableHeight для всех страниц кроме последней
             const isLastPage = sourceY + currentPageHeightPx >= imgHeight - 1; // -1 для учета погрешности
             
-            // Для всех страниц используем одинаковую высоту (availableHeight), чтобы масштабирование было одинаковым
-            // Только на последней странице можем использовать реальную высоту с запасом
+            // Используем реальную высоту изображения для каждой страницы
+            // Это обеспечивает одинаковое масштабирование без растягивания
             let pageHeightForPdf: number;
             if (isLastPage) {
-              // На последней странице используем реальную высоту с увеличенным запасом снизу
-              const lastPageExtraMargin = 15; // мм - увеличенный запас для последней страницы, чтобы нижняя строка не перекрывалась
-              pageHeightForPdf = Math.min(currentPageHeightMm + (lastPageExtraMargin / pxToMm / widthRatio), availableHeight + lastPageExtraMargin + safetyMargin);
+              // На последней странице добавляем дополнительный запас снизу
+              const lastPageExtraMargin = 15; // мм - увеличенный запас для последней страницы
+              pageHeightForPdf = currentPageHeightMm + (lastPageExtraMargin / pxToMm / widthRatio);
             } else {
-              // На всех остальных страницах используем фиксированную высоту для одинакового масштабирования
-              pageHeightForPdf = availableHeight;
+              // На всех остальных страницах используем реальную высоту изображения
+              pageHeightForPdf = currentPageHeightMm;
             }
             
             pdf.addImage(pageImgData, "JPEG", paddingLeft, yPosition, finalWidth, pageHeightForPdf);

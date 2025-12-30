@@ -295,7 +295,7 @@ export default function BecomeSubscriberPage() {
       const paddingTop = 15; // мм - отступ сверху на каждой странице
       const paddingLeft = 20; // мм
       const paddingRight = 20; // мм
-      const paddingBottom = 15; // мм - отступ снизу на каждой странице
+      const paddingBottom = 20; // мм - увеличен отступ снизу для предотвращения обрезания последней строки
       // Добавляем небольшой запас для предотвращения обрезания текста
       const safetyMargin = 5; // мм - запас для предотвращения обрезания строк
       const availableWidth = pdfWidth - paddingLeft - paddingRight;
@@ -368,8 +368,10 @@ export default function BecomeSubscriberPage() {
             const yPosition = paddingTop;
             // Высота страницы должна быть точно равна availableHeight для всех страниц кроме последней
             const isLastPage = sourceY + currentPageHeightPx >= imgHeight - 1; // -1 для учета погрешности
+            // На последней странице добавляем дополнительный запас снизу
+            const lastPageExtraMargin = isLastPage ? 5 : 0; // мм - дополнительный запас для последней страницы
             const pageHeightForPdf = isLastPage 
-              ? Math.min(currentPageHeightMm, availableHeight) // На последней странице используем реальную высоту
+              ? Math.min(currentPageHeightMm + (lastPageExtraMargin / pxToMm / widthRatio), availableHeight + lastPageExtraMargin) // На последней странице используем реальную высоту + запас
               : availableHeight; // На всех остальных - фиксированная высота
             
             pdf.addImage(pageImgData, "JPEG", paddingLeft, yPosition, finalWidth, pageHeightForPdf);

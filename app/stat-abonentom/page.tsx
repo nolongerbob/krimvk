@@ -24,6 +24,7 @@ import {
   Printer,
 } from "lucide-react";
 import { AddressInput } from "@/components/AddressInput";
+import { ApplicationForm } from "./application-form";
 
 type PersonType = "individual" | "legal" | null;
 type Step = "type" | "abonent" | "object" | "params" | "documents";

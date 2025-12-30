@@ -8,6 +8,7 @@ import { ApplicationActions } from "@/components/admin/ApplicationActions";
 import { ApplicationFilters } from "@/components/admin/ApplicationFilters";
 import { ServiceCategoryFilters } from "@/components/admin/ServiceCategoryFilters";
 import { TechnicalConditionsApplication } from "@/components/admin/TechnicalConditionsApplication";
+import { ApplicationDetails } from "@/components/admin/ApplicationDetails";
 
 type FilterStatus = "ALL" | "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
 
@@ -234,7 +235,10 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
           </div>
         </CardHeader>
         <CardContent>
-          <ApplicationActions applicationId={app.id} currentStatus={app.status} />
+          <div className="flex gap-2 items-center">
+            <ApplicationDetails application={app} />
+            <ApplicationActions applicationId={app.id} currentStatus={app.status} />
+          </div>
         </CardContent>
       </Card>
     );

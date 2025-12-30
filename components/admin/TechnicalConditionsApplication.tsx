@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { User, Phone, MapPin, FileText, Building, Settings, Calendar } from "lucide-react";
 import { ApplicationActions } from "@/components/admin/ApplicationActions";
+import { ApplicationDetails } from "@/components/admin/ApplicationDetails";
 
 interface TechnicalConditionsData {
   type: string;
@@ -245,7 +246,10 @@ export function TechnicalConditionsApplication({ application }: TechnicalConditi
         </div>
       </CardHeader>
       <CardContent>
-        <ApplicationActions applicationId={application.id} currentStatus={application.status} />
+        <div className="flex gap-2 items-center">
+          <ApplicationDetails application={application} />
+          <ApplicationActions applicationId={application.id} currentStatus={application.status} />
+        </div>
       </CardContent>
     </Card>
   );

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Clock, CheckCircle, XCircle, AlertCircle, X } from "lucide-react";
+import { FileText, Clock, CheckCircle, XCircle, AlertCircle, X, Download } from "lucide-react";
 import Link from "next/link";
 
 const statusConfig = {
@@ -216,15 +216,60 @@ export function ApplicationsClient({ applications: initialApplications }: Applic
         {applications.map((app) => {
           const status = statusConfig[app.status];
           const StatusIcon = status.icon;
+          
+          // Проверяем, является ли это заявкой на технические условия
+          let isTechnicalConditions = false;
+          let techData: any = null;
+          try {
+            if (app.description) {
+              const parsed = JSON.parse(app.description);
+              if (parsed.type === "technical_conditions") {
+                isTechnicalConditions = true;
+                techData = parsed;
+              }
+            }
+          } catch (e) {
+            // Не JSON, значит обычная заявка
+          }
 
           return (
             <Card key={app.id} className={`${status.bgClassName} border-2`}>
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <CardTitle className="mb-2">{app.service.title}</CardTitle>
+                    <CardTitle className="mb-2">
+                      {isTechnicalConditions ? "Заявка на технические условия" : app.service.title}
+                    </CardTitle>
                     <CardDescription className="mb-2">
-                      {app.description || "Без описания"}
+                      {isTechnicalConditions ? (
+                        <div className="space-y-1">
+                          <div>
+                            <strong>ФИО:</strong> {techData?.lastName} {techData?.firstName} {techData?.middleName}
+                          </div>
+                          {techData?.objectAddress && (
+                            <div>
+                              <strong>Адрес объекта:</strong> {techData.objectAddress}
+                            </div>
+                          )}
+                          {techData?.connectionTypeWater && techData?.connectionTypeSewerage && (
+                            <div>
+                              <strong>Подключение:</strong> Водоснабжение и водоотведение
+                            </div>
+                          )}
+                          {techData?.connectionTypeWater && !techData?.connectionTypeSewerage && (
+                            <div>
+                              <strong>Подключение:</strong> Водоснабжение
+                            </div>
+                          )}
+                          {!techData?.connectionTypeWater && techData?.connectionTypeSewerage && (
+                            <div>
+                              <strong>Подключение:</strong> Водоотведение
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        app.description || "Без описания"
+                      )}
                     </CardDescription>
                     <div className="flex items-center gap-4 text-sm text-gray-600">
                       <span>
@@ -241,9 +286,25 @@ export function ApplicationsClient({ applications: initialApplications }: Applic
               </CardHeader>
               <CardContent>
                 <div className="flex gap-4">
-                  <Button variant="outline" size="sm">
-                    Подробнее
-                  </Button>
+                  {isTechnicalConditions && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        // Генерируем и скачиваем PDF
+                        const params = new URLSearchParams();
+                        Object.keys(techData).forEach(key => {
+                          if (techData[key] !== null && techData[key] !== undefined) {
+                            params.append(key, String(techData[key]));
+                          }
+                        });
+                        window.open(`/stat-abonentom/download?${params.toString()}`, '_blank');
+                      }}
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Скачать заявление
+                    </Button>
+                  )}
                   {app.status === "PENDING" && (
                     <Button
                       variant="outline"

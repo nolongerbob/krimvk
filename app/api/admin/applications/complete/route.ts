@@ -75,51 +75,68 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        const bytes = await file.arrayBuffer();
-        const buffer = Buffer.from(bytes);
-        const timestamp = Date.now();
-        const fileName = `${timestamp}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-        const filePath = join(uploadsDir, fileName);
-        const publicPath = `/uploads/applications/${applicationId}/${fileName}`;
+        try {
+          const bytes = await file.arrayBuffer();
+          const buffer = Buffer.from(bytes);
+          const timestamp = Date.now();
+          const fileName = `${timestamp}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+          const filePath = join(uploadsDir, fileName);
+          const publicPath = `/uploads/applications/${applicationId}/${fileName}`;
 
-        await writeFile(filePath, buffer);
+          // Сохраняем файл на диск
+          await writeFile(filePath, buffer);
 
-        // Сохраняем информацию о файле в базу данных
-        const applicationFile = await prisma.applicationFile.create({
-          data: {
-            applicationId: applicationId,
-            fileName: file.name,
-            filePath: publicPath,
-            fileSize: file.size,
-            mimeType: file.type || "application/octet-stream",
-            uploadedBy: session.user.id,
-          },
-        });
+          // Сохраняем информацию о файле в базу данных
+          const applicationFile = await prisma.applicationFile.create({
+            data: {
+              applicationId: applicationId,
+              fileName: file.name,
+              filePath: publicPath,
+              fileSize: file.size,
+              mimeType: file.type || "application/octet-stream",
+              uploadedBy: session.user.id,
+            },
+          });
 
-        savedFiles.push(applicationFile);
+          savedFiles.push(applicationFile);
+        } catch (fileError: any) {
+          console.error(`Error processing file ${file.name}:`, fileError);
+          // Если ошибка при сохранении одного файла, продолжаем с остальными
+          // но возвращаем ошибку, если это критично
+          throw new Error(`Ошибка при сохранении файла ${file.name}: ${fileError.message || fileError}`);
+        }
       }
-    } catch (fileError) {
+    } catch (fileError: any) {
       console.error("Error saving files:", fileError);
       return NextResponse.json(
-        { error: "Ошибка при сохранении файлов" },
+        { error: fileError.message || "Ошибка при сохранении файлов" },
         { status: 500 }
       );
     }
 
     // Обновляем статус заявки
-    const updatedApplication = await prisma.application.update({
-      where: { id: applicationId },
-      data: { 
-        status: "COMPLETED",
-        // Если есть комментарий, можно сохранить его в description или создать отдельное поле
-        // Пока сохраняем в description, добавив к существующим данным
-        description: comment 
-          ? (application.description 
-              ? `${application.description}\n\nКомментарий при завершении: ${comment}`
-              : `Комментарий при завершении: ${comment}`)
-          : application.description,
-      },
-    });
+    let updatedApplication;
+    try {
+      updatedApplication = await prisma.application.update({
+        where: { id: applicationId },
+        data: { 
+          status: "COMPLETED",
+          // Если есть комментарий, можно сохранить его в description или создать отдельное поле
+          // Пока сохраняем в description, добавив к существующим данным
+          description: comment 
+            ? (application.description 
+                ? `${application.description}\n\nКомментарий при завершении: ${comment}`
+                : `Комментарий при завершении: ${comment}`)
+            : application.description,
+        },
+      });
+    } catch (updateError: any) {
+      console.error("Error updating application:", updateError);
+      return NextResponse.json(
+        { error: `Ошибка при обновлении заявки: ${updateError.message || updateError}` },
+        { status: 500 }
+      );
+    }
 
     // Возвращаем только сериализуемые данные
     return NextResponse.json({ 
@@ -142,10 +159,16 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json',
       },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error completing application:", error);
+    console.error("Error stack:", error?.stack);
+    console.error("Error details:", {
+      message: error?.message,
+      name: error?.name,
+      code: error?.code,
+    });
     return NextResponse.json(
-      { error: "Ошибка при завершении заявки" },
+      { error: error?.message || "Ошибка при завершении заявки" },
       { status: 500 }
     );
   }

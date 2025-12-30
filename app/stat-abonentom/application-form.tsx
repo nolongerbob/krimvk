@@ -345,27 +345,38 @@ export function ApplicationForm({ formData, isPreview = false }: { formData: any
         <span>  Правительства Российской Федерации от 30 ноября 2021 г. №2130 «Об утверждении Правил подключения (технологического присоединения) объектов капитального строительства к централизованным системам горячего водоснабжения, холодного водоснабжения и (или) водоотведения и о внесении изменений и признании утратившими силу некоторых актов Правительства Российской Федерации».</span>
       </p>
       
-      <p style={{ margin: 0 }}> </p>
-      <p style={{ margin: 0 }}> </p>
-      <p style={{ margin: 0 }}> </p>
-      <p style={{ margin: 0 }}> </p>
+      <div style={{ marginTop: "20pt", marginBottom: "10pt" }}></div>
       
       {/* Дата и подпись */}
-      <p style={{ margin: 0, textAlign: "justify", textIndent: 0, fontSize: fontSize, display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-        <span>«____»_____________20__ г.</span>
-        <span>{underlineField("", 15)}</span>
-        <span>{underlineField(
-          formData.lastName && formData.firstName 
-            ? `${formData.lastName} ${formData.firstName} ${formData.middleName || ""}`.trim()
-            : "", 
-          20
-        )}</span>
-      </p>
-      <p style={{ margin: 0, textAlign: "justify", textIndent: 0, fontSize: fontSize, display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-        <span></span>
-        <span>(М.П., подпись)</span>
-        <span>(Ф.И.О.)</span>
-      </p>
+      <div style={{ margin: 0, textAlign: "justify", textIndent: 0, fontSize: fontSize, display: "table", width: "100%", tableLayout: "fixed" }}>
+        <div style={{ display: "table-row" }}>
+          <div style={{ display: "table-cell", width: "33%", textAlign: "left", verticalAlign: "bottom" }}>
+            <span>«____»_____________20__ г.</span>
+          </div>
+          <div style={{ display: "table-cell", width: "33%", textAlign: "center", verticalAlign: "bottom" }}>
+            <span>{underlineField("", 15)}</span>
+          </div>
+          <div style={{ display: "table-cell", width: "34%", textAlign: "right", verticalAlign: "bottom" }}>
+            <span>{underlineField(
+              formData.lastName && formData.firstName 
+                ? `${formData.lastName} ${formData.firstName} ${formData.middleName || ""}`.trim()
+                : "", 
+              20
+            )}</span>
+          </div>
+        </div>
+        <div style={{ display: "table-row", marginTop: "5pt" }}>
+          <div style={{ display: "table-cell", width: "33%", textAlign: "left", verticalAlign: "top", paddingTop: "3pt" }}>
+            <span></span>
+          </div>
+          <div style={{ display: "table-cell", width: "33%", textAlign: "center", verticalAlign: "top", paddingTop: "3pt" }}>
+            <span>(М.П., подпись)</span>
+          </div>
+          <div style={{ display: "table-cell", width: "34%", textAlign: "right", verticalAlign: "top", paddingTop: "3pt" }}>
+            <span>(Ф.И.О.)</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

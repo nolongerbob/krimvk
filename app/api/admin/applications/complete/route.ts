@@ -44,10 +44,6 @@ export async function POST(request: NextRequest) {
     const comment = formData.get("comment") as string | null;
     const files = formData.getAll("files") as File[];
 
-    console.log("Files received:", files.length);
-    console.log("Application ID:", applicationId);
-    console.log("Comment:", comment ? "present" : "none");
-
     if (!applicationId) {
       return NextResponse.json({ error: "Не указан ID заявки" }, { status: 400 });
     }

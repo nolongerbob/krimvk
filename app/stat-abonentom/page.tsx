@@ -606,13 +606,20 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="registrationAddress">Адрес регистрации</Label>
-                <AddressInput
+                <Label htmlFor="registrationAddress">
+                  Адрес регистрации <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="registrationAddress"
+                  type="text"
                   value={formData.registrationAddress}
-                  onChange={(value: string) =>
-                    setFormData({ ...formData, registrationAddress: value })
+                  onChange={(e) =>
+                    setFormData({ ...formData, registrationAddress: e.target.value })
                   }
+                  placeholder="Введите адрес регистрации как указано в паспорте"
+                  required
                 />
+                <p className="text-xs text-gray-500">Укажите адрес регистрации точно как в паспорте</p>
               </div>
 
               <div className="border-t pt-4">

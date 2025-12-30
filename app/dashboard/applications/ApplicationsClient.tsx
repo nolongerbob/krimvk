@@ -40,7 +40,7 @@ interface ApplicationFile {
   filePath: string;
   fileSize: number;
   mimeType: string;
-  uploadedAt: Date;
+  uploadedAt: Date | string;
 }
 
 interface Application {
@@ -51,7 +51,7 @@ interface Application {
   description: string | null;
   address: string | null;
   status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
-  createdAt: Date;
+  createdAt: Date | string;
   files?: ApplicationFile[];
 }
 

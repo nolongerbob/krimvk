@@ -4,7 +4,7 @@ import { FileText, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react
 import Link from "next/link";
 import { getSession } from "@/lib/get-session";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { prisma, withRetry } from "@/lib/prisma";
 import { ApplicationsClient } from "./ApplicationsClient";
 
 const statusConfig = {
@@ -42,21 +42,40 @@ export default async function ApplicationsPage() {
   }
 
   // Загружаем реальные данные из базы
-  const applications = await prisma.application.findMany({
-    where: { userId: session.user.id },
-    include: { 
-      service: true,
-      files: {
-        orderBy: { uploadedAt: "desc" },
-      },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  type ApplicationWithRelations = Awaited<ReturnType<typeof prisma.application.findMany<{
+    include: {
+      service: true;
+      files: true;
+    };
+  }>>>;
+
+  let applications: ApplicationWithRelations = [];
+  try {
+    applications = await withRetry(() =>
+      prisma.application.findMany({
+        where: { userId: session.user.id },
+        include: { 
+          service: true,
+          files: {
+            orderBy: { uploadedAt: "desc" },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      })
+    );
+  } catch (error) {
+    console.error("Error fetching applications:", error);
+    applications = [];
+  }
 
   // Преобразуем даты в строки для сериализации
   const serializedApplications = applications.map((app) => ({
     ...app,
-    createdAt: app.createdAt.toISOString(),
+    createdAt: app.createdAt instanceof Date ? app.createdAt.toISOString() : app.createdAt,
+    files: app.files?.map((file) => ({
+      ...file,
+      uploadedAt: file.uploadedAt instanceof Date ? file.uploadedAt.toISOString() : file.uploadedAt,
+    })) || [],
   }));
 
   return (

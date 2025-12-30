@@ -48,6 +48,14 @@ export default async function AdminApplicationsPage() {
       title: string;
       category: string;
     };
+    files?: Array<{
+      id: string;
+      fileName: string;
+      filePath: string;
+      fileSize: number;
+      mimeType: string;
+      uploadedAt: Date;
+    }>;
   };
 
   type CategoryResult = {
@@ -58,7 +66,7 @@ export default async function AdminApplicationsPage() {
   let categories: CategoryResult[] = [];
   
   try {
-    applications = await withRetry(() =>
+    const rawApplications = await withRetry(() =>
       prisma.application.findMany({
         include: {
           user: { select: { name: true, email: true, phone: true } },
@@ -70,6 +78,15 @@ export default async function AdminApplicationsPage() {
         orderBy: { createdAt: "desc" },
       })
     );
+
+    // Сериализуем даты для передачи в клиентский компонент
+    applications = rawApplications.map((app) => ({
+      ...app,
+      files: app.files?.map((file: any) => ({
+        ...file,
+        uploadedAt: file.uploadedAt,
+      })) || [],
+    })) as ApplicationWithRelations[];
 
     // Получаем уникальные категории услуг
     categories = await withRetry(() =>

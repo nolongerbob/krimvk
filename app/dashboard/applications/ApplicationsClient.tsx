@@ -222,6 +222,35 @@ export function ApplicationsClient({ applications: initialApplications }: Applic
         </div>
       )}
 
+      {/* Отладочная информация */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="mb-4 p-4 bg-gray-50 border border-gray-200 rounded text-xs">
+          <p className="font-semibold mb-2">Отладочная информация:</p>
+          <p>Всего заявок: {applications.length}</p>
+          {applications.length > 0 && (
+            <details className="mt-2">
+              <summary className="cursor-pointer">Показать все заявки</summary>
+              <pre className="mt-2 text-xs overflow-auto max-h-40">
+                {JSON.stringify(applications.map(a => ({
+                  id: a.id,
+                  status: a.status,
+                  hasDescription: !!a.description,
+                  descriptionType: a.description ? (() => {
+                    try {
+                      const parsed = JSON.parse(a.description);
+                      return parsed.type || "not technical_conditions";
+                    } catch {
+                      return "not JSON";
+                    }
+                  })() : "no description",
+                  serviceTitle: a.service.title,
+                })), null, 2)}
+              </pre>
+            </details>
+          )}
+        </div>
+      )}
+
       <div className="space-y-4">
         {applications.map((app) => {
           const status = statusConfig[app.status];

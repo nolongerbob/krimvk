@@ -373,6 +373,42 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
         </div>
       )}
 
+      {/* Отладочная информация - показываем общую статистику */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="mb-4 p-4 bg-gray-50 border border-gray-200 rounded text-xs">
+          <p className="font-semibold mb-2">Отладочная информация:</p>
+          <p>Всего заявок: {applications.length}</p>
+          <p>Технические условия: {technicalConditionsApps.length}</p>
+          <p>Обычные заявки: {regularApps.length}</p>
+          <p>Отфильтровано тех. условий: {filteredTechnicalConditions.length}</p>
+          <p>Отфильтровано обычных: {filteredApplications.length}</p>
+          <p>Завершенные: {completedApplications.length}</p>
+          <p>Активный фильтр: {activeFilter}</p>
+          <p>Активная категория: {activeCategory || "нет"}</p>
+          {applications.length > 0 && (
+            <details className="mt-2">
+              <summary className="cursor-pointer">Показать все заявки</summary>
+              <pre className="mt-2 text-xs overflow-auto max-h-40">
+                {JSON.stringify(applications.map(a => ({
+                  id: a.id,
+                  status: a.status,
+                  hasDescription: !!a.description,
+                  descriptionType: a.description ? (() => {
+                    try {
+                      const parsed = JSON.parse(a.description);
+                      return parsed.type || "not JSON";
+                    } catch {
+                      return "not JSON";
+                    }
+                  })() : "no description",
+                  serviceTitle: a.service.title,
+                })), null, 2)}
+              </pre>
+            </details>
+          )}
+        </div>
+      )}
+
       {/* Обычные заявки */}
       {filteredApplications.length > 0 && (
         <div className="space-y-4 mb-8">

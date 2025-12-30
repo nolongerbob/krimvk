@@ -57,7 +57,7 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
       tempDiv.style.padding = '0';
       tempDiv.style.margin = '0';
       tempDiv.style.fontFamily = 'Times New Roman, serif';
-      tempDiv.style.fontSize = '11pt';
+      tempDiv.style.fontSize = '12pt'; // Увеличили размер шрифта
       tempDiv.style.lineHeight = '1.5';
       tempDiv.style.color = '#000000';
       tempDiv.style.backgroundColor = '#ffffff';

@@ -14,7 +14,7 @@ export function ApplicationForm({ formData, isPreview = false }: { formData: any
     boxSizing: "border-box" as const,
   };
   
-  const fontSize = isPreview ? "11px" : "10pt";
+  const fontSize = isPreview ? "11px" : "12pt"; // Увеличили с 10pt до 12pt
   const fontSizeLarge = isPreview ? "19px" : "19pt";
 
   // Функция для создания строки подчеркивания с данными
@@ -126,12 +126,21 @@ export function ApplicationForm({ formData, isPreview = false }: { formData: any
       <p style={{ margin: 0, textAlign: "justify", textIndent: "35.4pt" }}>
         <span>3. Контактные данные лица, обратившегося  за  выдачей   технических условий</span>
       </p>
-      <p style={{ margin: 0, textAlign: "justify", textIndent: 0, fontSize: fontSize }}>
-        <span>{underlineField(contactData, 140)}</span>
-      </p>
-      <p style={{ margin: 0, textAlign: "justify", textIndent: 0, fontSize: fontSizeLarge }}>
-        <span> </span>
-      </p>
+      {formData.registrationAddress && (
+        <p style={{ margin: 0, textAlign: "justify", textIndent: 0, fontSize: fontSize }}>
+          <span>{underlineField(`Адрес регистрации: ${formData.registrationAddress}`, 70)}</span>
+        </p>
+      )}
+      {formData.phone && (
+        <p style={{ margin: 0, textAlign: "justify", textIndent: 0, fontSize: fontSize }}>
+          <span>{underlineField(`телефон: ${formData.phone}`, 70)}</span>
+        </p>
+      )}
+      {!formData.registrationAddress && !formData.phone && (
+        <p style={{ margin: 0, textAlign: "justify", textIndent: 0, fontSize: fontSize }}>
+          <span>{underlineField("", 70)}</span>
+        </p>
+      )}
       <p style={{ margin: 0, textAlign: "justify", textIndent: "35.4pt" }}>
         <span>(<strong>для органов государственной власти  и  местного  самоуправления</strong> - место нахождения, почтовый адрес, контактный телефон, адрес   электронной почты, для юридических лиц - место нахождения и адрес, указанные в Едином государственном реестре юридических  лиц,  почтовый  адрес,   фактический адрес, контактный телефон, адрес электронной почты; </span>
       </p>

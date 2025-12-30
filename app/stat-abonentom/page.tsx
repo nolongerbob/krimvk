@@ -236,7 +236,7 @@ export default function BecomeSubscriberPage() {
       hiddenElement.style.margin = "0";
       hiddenElement.style.boxSizing = "border-box";
       hiddenElement.style.fontFamily = "Times New Roman, serif";
-      hiddenElement.style.fontSize = "11pt";
+      hiddenElement.style.fontSize = "12pt"; // Увеличили размер шрифта
       hiddenElement.style.lineHeight = "1.5";
       hiddenElement.style.color = "#000000";
       hiddenElement.style.boxSizing = "border-box";

@@ -7,8 +7,8 @@ export function ApplicationForm({ formData, isPreview = false }: { formData: any
     : "bg-white";
   
   const containerStyle = isPreview ? {} : {
-    width: "210mm",
-    maxWidth: "210mm",
+    width: "170mm", // 210mm - 40mm (20mm слева + 20mm справа)
+    maxWidth: "170mm",
     margin: "0",
     padding: "0",
     boxSizing: "border-box" as const,

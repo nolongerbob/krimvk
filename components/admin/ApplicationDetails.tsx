@@ -51,9 +51,9 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
       tempDiv.style.position = 'absolute';
       tempDiv.style.left = '-9999px';
       tempDiv.style.top = '0';
-      tempDiv.style.width = '210mm';
-      tempDiv.style.maxWidth = '210mm';
-      tempDiv.style.minWidth = '210mm';
+      tempDiv.style.width = '170mm'; // 210mm - 40mm (20mm слева + 20mm справа)
+      tempDiv.style.maxWidth = '170mm';
+      tempDiv.style.minWidth = '170mm';
       tempDiv.style.padding = '0';
       tempDiv.style.margin = '0';
       tempDiv.style.fontFamily = 'Times New Roman, serif';

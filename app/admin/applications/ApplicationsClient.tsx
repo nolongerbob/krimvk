@@ -76,6 +76,20 @@ const statusConfig = {
 export function ApplicationsClient({ applications, categories }: ApplicationsClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  // Отладочная информация при загрузке
+  useEffect(() => {
+    console.log("🔍 ApplicationsClient received:", {
+      totalApplications: applications.length,
+      applications: applications.map(a => ({
+        id: a.id,
+        status: a.status,
+        serviceTitle: a.service.title,
+        hasDescription: !!a.description,
+        descriptionPreview: a.description ? a.description.substring(0, 100) : null,
+      })),
+    });
+  }, [applications]);
   
   // Читаем фильтры из URL параметров при загрузке
   const statusFromUrl = searchParams.get("status") as FilterStatus | null;
@@ -374,40 +388,48 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
       )}
 
       {/* Отладочная информация - показываем общую статистику */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="mb-4 p-4 bg-gray-50 border border-gray-200 rounded text-xs">
-          <p className="font-semibold mb-2">Отладочная информация:</p>
-          <p>Всего заявок: {applications.length}</p>
-          <p>Технические условия: {technicalConditionsApps.length}</p>
-          <p>Обычные заявки: {regularApps.length}</p>
-          <p>Отфильтровано тех. условий: {filteredTechnicalConditions.length}</p>
-          <p>Отфильтровано обычных: {filteredApplications.length}</p>
-          <p>Завершенные: {completedApplications.length}</p>
-          <p>Активный фильтр: {activeFilter}</p>
-          <p>Активная категория: {activeCategory || "нет"}</p>
-          {applications.length > 0 && (
-            <details className="mt-2">
-              <summary className="cursor-pointer">Показать все заявки</summary>
-              <pre className="mt-2 text-xs overflow-auto max-h-40">
-                {JSON.stringify(applications.map(a => ({
-                  id: a.id,
-                  status: a.status,
-                  hasDescription: !!a.description,
-                  descriptionType: a.description ? (() => {
-                    try {
-                      const parsed = JSON.parse(a.description);
-                      return parsed.type || "not JSON";
-                    } catch {
-                      return "not JSON";
-                    }
-                  })() : "no description",
-                  serviceTitle: a.service.title,
-                })), null, 2)}
-              </pre>
-            </details>
-          )}
-        </div>
-      )}
+      <div className="mb-4 p-4 bg-gray-50 border border-gray-200 rounded text-xs">
+        <p className="font-semibold mb-2">Отладочная информация:</p>
+        <p>Всего заявок получено: {applications.length}</p>
+        <p>Технические условия: {technicalConditionsApps.length}</p>
+        <p>Обычные заявки: {regularApps.length}</p>
+        <p>Отфильтровано тех. условий: {filteredTechnicalConditions.length}</p>
+        <p>Отфильтровано обычных: {filteredApplications.length}</p>
+        <p>Завершенные: {completedApplications.length}</p>
+        <p>Активный фильтр: {activeFilter}</p>
+        <p>Активная категория: {activeCategory || "нет"}</p>
+        {applications.length === 0 && (
+          <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded">
+            <p className="text-red-800 font-semibold">⚠️ НЕТ ЗАЯВОК В БАЗЕ ДАННЫХ!</p>
+            <p className="text-red-600 text-xs mt-1">
+              Это означает, что либо заявки не создаются, либо не загружаются из базы данных.
+              Проверьте логи сервера на Vercel.
+            </p>
+          </div>
+        )}
+        {applications.length > 0 && (
+          <details className="mt-2">
+            <summary className="cursor-pointer">Показать все заявки</summary>
+            <pre className="mt-2 text-xs overflow-auto max-h-40">
+              {JSON.stringify(applications.map(a => ({
+                id: a.id,
+                status: a.status,
+                hasDescription: !!a.description,
+                descriptionType: a.description ? (() => {
+                  try {
+                    const parsed = JSON.parse(a.description);
+                    return parsed.type || "not technical_conditions";
+                  } catch {
+                    return "not JSON";
+                  }
+                })() : "no description",
+                serviceTitle: a.service.title,
+                serviceCategory: a.service.category,
+              })), null, 2)}
+            </pre>
+          </details>
+        )}
+      </div>
 
       {/* Обычные заявки */}
       {filteredApplications.length > 0 && (

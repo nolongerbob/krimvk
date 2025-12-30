@@ -29,15 +29,22 @@ export function CompletedApplicationDetails({ application, isTechnicalConditions
   const getCompletionComment = () => {
     if (!application.description) return null;
     
-    // Ищем комментарий при завершении
-    const commentMatch = application.description.match(/Комментарий при завершении:\s*(.+)/);
-    if (commentMatch) {
-      return commentMatch[1].trim();
+    // Ищем комментарий при завершении (может быть в конце или в середине)
+    const lines = application.description.split('\n');
+    let commentStartIndex = -1;
+    
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].includes('Комментарий при завершении:')) {
+        commentStartIndex = i;
+        break;
+      }
     }
     
-    // Если description содержит только комментарий (для новых заявок)
-    if (application.description.includes("Комментарий при завершении:")) {
-      return application.description.split("Комментарий при завершении:")[1]?.trim() || null;
+    if (commentStartIndex !== -1) {
+      // Берем все строки после "Комментарий при завершении:"
+      const commentLines = lines.slice(commentStartIndex);
+      const commentText = commentLines.join('\n').replace(/^.*?Комментарий при завершении:\s*/, '');
+      return commentText.trim() || null;
     }
     
     return null;

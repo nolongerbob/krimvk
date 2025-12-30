@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
-import { prisma } from "@/lib/prisma";
+import { prisma, withRetry } from "@/lib/prisma";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { existsSync } from "fs";
@@ -18,28 +18,46 @@ export async function POST(request: NextRequest) {
     }
 
     // Проверяем, что пользователь - администратор
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { role: true },
-    });
+    const user = await withRetry(() =>
+      prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { role: true },
+      })
+    );
 
     if (user?.role !== "ADMIN") {
       return NextResponse.json({ error: "Доступ запрещен" }, { status: 403 });
     }
 
-    const formData = await request.formData();
+    let formData: FormData;
+    try {
+      formData = await request.formData();
+    } catch (error: any) {
+      console.error("Error parsing form data:", error);
+      return NextResponse.json(
+        { error: "Ошибка при обработке данных формы" },
+        { status: 400 }
+      );
+    }
+
     const applicationId = formData.get("applicationId") as string;
     const comment = formData.get("comment") as string | null;
     const files = formData.getAll("files") as File[];
+
+    console.log("Files received:", files.length);
+    console.log("Application ID:", applicationId);
+    console.log("Comment:", comment ? "present" : "none");
 
     if (!applicationId) {
       return NextResponse.json({ error: "Не указан ID заявки" }, { status: 400 });
     }
 
     // Проверяем, что заявка существует
-    const application = await prisma.application.findUnique({
-      where: { id: applicationId },
-    });
+    const application = await withRetry(() =>
+      prisma.application.findUnique({
+        where: { id: applicationId },
+      })
+    );
 
     if (!application) {
       return NextResponse.json({ error: "Заявка не найдена" }, { status: 404 });
@@ -87,16 +105,18 @@ export async function POST(request: NextRequest) {
           await writeFile(filePath, buffer);
 
           // Сохраняем информацию о файле в базу данных
-          const applicationFile = await prisma.applicationFile.create({
-            data: {
-              applicationId: applicationId,
-              fileName: file.name,
-              filePath: publicPath,
-              fileSize: file.size,
-              mimeType: file.type || "application/octet-stream",
-              uploadedBy: session.user.id,
-            },
-          });
+          const applicationFile = await withRetry(() =>
+            prisma.applicationFile.create({
+              data: {
+                applicationId: applicationId,
+                fileName: file.name,
+                filePath: publicPath,
+                fileSize: file.size,
+                mimeType: file.type || "application/octet-stream",
+                uploadedBy: session.user.id,
+              },
+            })
+          );
 
           savedFiles.push(applicationFile);
         } catch (fileError: any) {
@@ -117,19 +137,21 @@ export async function POST(request: NextRequest) {
     // Обновляем статус заявки
     let updatedApplication;
     try {
-      updatedApplication = await prisma.application.update({
-        where: { id: applicationId },
-        data: { 
-          status: "COMPLETED",
-          // Если есть комментарий, можно сохранить его в description или создать отдельное поле
-          // Пока сохраняем в description, добавив к существующим данным
-          description: comment 
-            ? (application.description 
-                ? `${application.description}\n\nКомментарий при завершении: ${comment}`
-                : `Комментарий при завершении: ${comment}`)
-            : application.description,
-        },
-      });
+      updatedApplication = await withRetry(() =>
+        prisma.application.update({
+          where: { id: applicationId },
+          data: { 
+            status: "COMPLETED",
+            // Если есть комментарий, можно сохранить его в description или создать отдельное поле
+            // Пока сохраняем в description, добавив к существующим данным
+            description: comment 
+              ? (application.description 
+                  ? `${application.description}\n\nКомментарий при завершении: ${comment}`
+                  : `Комментарий при завершении: ${comment}`)
+              : application.description,
+          },
+        })
+      );
     } catch (updateError: any) {
       console.error("Error updating application:", updateError);
       return NextResponse.json(

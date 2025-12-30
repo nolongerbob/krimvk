@@ -348,7 +348,7 @@ export function ApplicationForm({ formData, isPreview = false }: { formData: any
       <p style={{ margin: "15pt 0 5pt 0", textAlign: "justify", textIndent: 0 }}></p>
       
       {/* Дата и подпись */}
-      <div style={{ margin: 0, textAlign: "justify", textIndent: 0, fontSize: fontSize, lineHeight: "1.5" }}>
+      <div style={{ margin: "0 0 10pt 0", textAlign: "justify", textIndent: 0, fontSize: fontSize, lineHeight: "1.5" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "3pt" }}>
           <span style={{ whiteSpace: "nowrap" }}>«____»_____________20__ г.</span>
           <span style={{ whiteSpace: "nowrap" }}>{underlineField("", 15)}</span>

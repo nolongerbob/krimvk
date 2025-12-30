@@ -64,9 +64,10 @@ export default async function ApplicationsPage() {
         where: { userId: session.user.id },
         include: { 
           service: true,
-          files: {
-            orderBy: { uploadedAt: "desc" },
-          },
+          // Временно отключено до применения миграции
+          // files: {
+          //   orderBy: { uploadedAt: "desc" },
+          // },
         },
         orderBy: { createdAt: "desc" },
       })
@@ -123,14 +124,7 @@ export default async function ApplicationsPage() {
           title: app.service.title,
           category: app.service.category || null,
         } : null,
-        files: app.files?.map((file) => ({
-          id: file.id,
-          fileName: file.fileName,
-          filePath: file.filePath,
-          fileSize: file.fileSize,
-          mimeType: file.mimeType,
-          uploadedAt: file.uploadedAt instanceof Date ? file.uploadedAt.toISOString() : String(file.uploadedAt),
-        })) || [],
+        files: [], // Временно отключено до применения миграции на Vercel
       };
     } catch (error) {
       console.error("❌ Error serializing application:", app.id, error);

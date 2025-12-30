@@ -111,9 +111,10 @@ export default async function AdminApplicationsPage() {
         include: {
           user: { select: { name: true, email: true, phone: true } },
           service: { select: { id: true, title: true, category: true } },
-          files: {
-            orderBy: { uploadedAt: "desc" },
-          },
+          // Временно отключено до применения миграции
+          // files: {
+          //   orderBy: { uploadedAt: "desc" },
+          // },
         },
         orderBy: { createdAt: "desc" },
       })

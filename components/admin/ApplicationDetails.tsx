@@ -52,6 +52,82 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
 
   const isTechnicalConditions = data && data.type === "technical_conditions";
 
+  // Загружаем файлы, загруженные админом
+  useEffect(() => {
+    if (isOpen) {
+      fetchAdminFiles();
+    }
+  }, [isOpen, application.id]);
+
+  const fetchAdminFiles = async () => {
+    try {
+      const response = await fetch(`/api/admin/applications/${application.id}/files`);
+      if (response.ok) {
+        const result = await response.json();
+        setAdminFiles(result.files || []);
+      }
+    } catch (error) {
+      console.error("Error fetching admin files:", error);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch(`/api/admin/applications/${application.id}/upload`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setAdminFiles([...adminFiles, result.file]);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      } else {
+        const error = await response.json();
+        alert(error.error || "Ошибка при загрузке файла");
+      }
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      alert("Ошибка при загрузке файла");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDeleteFile = async (fileId: string) => {
+    if (!confirm("Вы уверены, что хотите удалить этот файл?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `/api/admin/applications/${application.id}/files?fileId=${fileId}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (response.ok) {
+        setAdminFiles(adminFiles.filter((f) => f.id !== fileId));
+      } else {
+        const error = await response.json();
+        alert(error.error || "Ошибка при удалении файла");
+      }
+    } catch (error) {
+      console.error("Error deleting file:", error);
+      alert("Ошибка при удалении файла");
+    }
+  };
+
   const handleDownloadPDF = async () => {
     if (!isTechnicalConditions) return;
     

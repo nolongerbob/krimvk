@@ -66,6 +66,10 @@ export default async function AdminApplicationsPage() {
   let categories: CategoryResult[] = [];
   
   try {
+    // Сначала проверяем, есть ли вообще заявки в базе
+    const totalCount = await withRetry(() => prisma.application.count());
+    console.log("📊 Total applications in database:", totalCount);
+
     const rawApplications = await withRetry(() =>
       prisma.application.findMany({
         include: {
@@ -78,6 +82,12 @@ export default async function AdminApplicationsPage() {
         orderBy: { createdAt: "desc" },
       })
     );
+
+    console.log("📋 Raw applications from database:", {
+      count: rawApplications.length,
+      expected: totalCount,
+      match: rawApplications.length === totalCount,
+    });
 
     console.log("📋 Admin: Loaded applications:", {
       total: rawApplications.length,

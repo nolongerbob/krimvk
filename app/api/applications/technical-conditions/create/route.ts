@@ -149,6 +149,25 @@ export async function POST(request: NextRequest) {
       serviceId: application.serviceId,
       status: application.status,
       hasDescription: !!application.description,
+      descriptionLength: application.description?.length || 0,
+      createdAt: application.createdAt.toISOString(),
+    });
+
+    // Проверяем, что заявка действительно сохранена в базе
+    const verifyApplication = await prisma.application.findUnique({
+      where: { id: application.id },
+      select: { id: true, status: true, createdAt: true },
+    });
+
+    if (!verifyApplication) {
+      console.error("❌ CRITICAL: Application was not saved to database!");
+      throw new Error("Failed to save application to database");
+    }
+
+    console.log("✅ Verified application in database:", {
+      id: verifyApplication.id,
+      status: verifyApplication.status,
+      createdAt: verifyApplication.createdAt.toISOString(),
     });
 
     // Обновляем кэш страниц

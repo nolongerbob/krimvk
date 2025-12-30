@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/prisma";
 import { get1CUserData } from "@/lib/1c-api";
 
+export const dynamic = 'force-dynamic';
+
 /**
  * GET - получить данные пользователя из 1С
  * Проксирует запрос к 1С API

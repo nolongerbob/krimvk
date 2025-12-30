@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/prisma";
 import { get1CUserData } from "@/lib/1c-api";
 
+export const dynamic = 'force-dynamic';
+
 /**
  * GET - получить список счетчиков из 1С для лицевого счета
  */

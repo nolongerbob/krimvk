@@ -74,9 +74,9 @@ export default async function HomePage() {
       </section>
 
       {/* Quick Actions */}
-      <section className="pt-16 pb-24 bg-gray-50 rounded-t-2xl rounded-b-2xl mt-4">
-        <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-semibold text-center mb-16 tracking-tight animate-fade-in">Быстрые действия</h2>
+      <section className="pt-8 pb-12 bg-gray-50 rounded-t-2xl rounded-b-2xl mt-4">
+        <div className="px-2 sm:px-4 md:px-6 lg:px-8">
+          <h2 className="text-4xl font-semibold text-center mb-8 tracking-tight animate-fade-in">Быстрые действия</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 pb-0">
             <QuickActionCard
               iconName="Droplet"

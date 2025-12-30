@@ -34,6 +34,15 @@ const statusConfig = {
   },
 };
 
+interface ApplicationFile {
+  id: string;
+  fileName: string;
+  filePath: string;
+  fileSize: number;
+  mimeType: string;
+  uploadedAt: Date;
+}
+
 interface Application {
   id: string;
   service: {
@@ -43,6 +52,7 @@ interface Application {
   address: string | null;
   status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
   createdAt: Date;
+  files?: ApplicationFile[];
 }
 
 interface ApplicationsClientProps {
@@ -285,36 +295,65 @@ export function ApplicationsClient({ applications: initialApplications }: Applic
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="flex gap-4">
-                  {isTechnicalConditions && (
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => {
-                        // Генерируем и скачиваем PDF
-                        const params = new URLSearchParams();
-                        Object.keys(techData).forEach(key => {
-                          if (techData[key] !== null && techData[key] !== undefined) {
-                            params.append(key, String(techData[key]));
-                          }
-                        });
-                        window.open(`/stat-abonentom/download?${params.toString()}`, '_blank');
-                      }}
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      Скачать заявление
-                    </Button>
-                  )}
-                  {app.status === "PENDING" && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-red-600 hover:bg-red-50"
-                      onClick={() => handleCancel(app.id)}
-                      disabled={cancellingId === app.id}
-                    >
-                      {cancellingId === app.id ? "Отмена..." : "Отменить"}
-                    </Button>
+                <div className="space-y-4">
+                  <div className="flex gap-4">
+                    {isTechnicalConditions && (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          // Генерируем и скачиваем PDF
+                          const params = new URLSearchParams();
+                          Object.keys(techData).forEach(key => {
+                            if (techData[key] !== null && techData[key] !== undefined) {
+                              params.append(key, String(techData[key]));
+                            }
+                          });
+                          window.open(`/stat-abonentom/download?${params.toString()}`, '_blank');
+                        }}
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Скачать заявление
+                      </Button>
+                    )}
+                    {app.status === "PENDING" && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-red-600 hover:bg-red-50"
+                        onClick={() => handleCancel(app.id)}
+                        disabled={cancellingId === app.id}
+                      >
+                        {cancellingId === app.id ? "Отмена..." : "Отменить"}
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Документы, загруженные администратором */}
+                  {app.files && app.files.length > 0 && (
+                    <div className="border-t pt-4">
+                      <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                        <FileText className="h-4 w-4" />
+                        Документы от администратора ({app.files.length})
+                      </h4>
+                      <div className="space-y-2">
+                        {app.files.map((file) => (
+                          <a
+                            key={file.id}
+                            href={file.filePath}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 text-blue-600 hover:underline text-sm"
+                          >
+                            <FileText className="h-4 w-4" />
+                            <span>{file.fileName}</span>
+                            <span className="text-xs text-gray-500">
+                              ({(file.fileSize / 1024).toFixed(1)} KB)
+                            </span>
+                          </a>
+                        ))}
+                      </div>
+                    </div>
                   )}
                 </div>
               </CardContent>

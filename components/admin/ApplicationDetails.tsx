@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { User, Phone, MapPin, FileText, Building, Settings, Calendar, Download, Eye } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { User, Phone, MapPin, FileText, Building, Settings, Calendar, Download, Eye, Upload, X } from "lucide-react";
 import { ApplicationForm } from "@/app/stat-abonentom/application-form";
 
 interface ApplicationDetailsProps {
@@ -24,8 +25,21 @@ interface ApplicationDetailsProps {
   };
 }
 
+interface ApplicationFile {
+  id: string;
+  fileName: string;
+  filePath: string;
+  fileSize: number;
+  mimeType: string;
+  uploadedAt: Date;
+}
+
 export function ApplicationDetails({ application }: ApplicationDetailsProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [adminFiles, setAdminFiles] = useState<ApplicationFile[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   let data: any = null;
   
   try {
@@ -562,13 +576,13 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
               </Card>
             )}
 
-            {/* Приложенные документы */}
+            {/* Приложенные документы пользователем */}
             {data.uploadedFiles && data.uploadedFiles.length > 0 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <FileText className="h-5 w-5" />
-                    Приложенные документы ({data.uploadedFiles.length})
+                    Приложенные документы пользователем ({data.uploadedFiles.length})
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -589,6 +603,74 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
                 </CardContent>
               </Card>
             )}
+
+            {/* Документы, загруженные админом */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Документы, загруженные администратором ({adminFiles.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {/* Кнопка загрузки файла */}
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileUpload}
+                      disabled={uploading}
+                      className="hidden"
+                      id={`file-upload-${application.id}`}
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                      className="flex items-center gap-2"
+                    >
+                      <Upload className="h-4 w-4" />
+                      {uploading ? "Загрузка..." : "Загрузить документ"}
+                    </Button>
+                  </div>
+
+                  {/* Список загруженных файлов */}
+                  {adminFiles.length > 0 && (
+                    <div className="space-y-2">
+                      {adminFiles.map((file) => (
+                        <div
+                          key={file.id}
+                          className="flex items-center justify-between p-2 border rounded-lg hover:bg-gray-50"
+                        >
+                          <a
+                            href={file.filePath}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 text-blue-600 hover:underline flex-1"
+                          >
+                            <FileText className="h-4 w-4" />
+                            <span>{file.fileName}</span>
+                            <span className="text-xs text-gray-500">
+                              ({(file.fileSize / 1024).toFixed(1)} KB)
+                            </span>
+                          </a>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteFile(file.id)}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         ) : (
           <div className="space-y-4">

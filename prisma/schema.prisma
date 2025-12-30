@@ -111,8 +111,25 @@ model Application {
 
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  files   ApplicationFile[] // Документы, загруженные админом
 
   @@map("applications")
+}
+
+// Документы, загруженные админом к заявке
+model ApplicationFile {
+  id            String      @id @default(cuid())
+  applicationId String
+  fileName      String // Оригинальное имя файла
+  filePath      String // Путь к файлу в public/uploads/applications
+  fileSize      Int // Размер файла в байтах
+  mimeType      String // MIME тип файла
+  uploadedBy    String? // ID админа, который загрузил файл
+  uploadedAt    DateTime    @default(now())
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@map("application_files")
 }
 
 enum ApplicationStatus {

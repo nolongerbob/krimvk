@@ -44,7 +44,12 @@ export default async function ApplicationsPage() {
   // Загружаем реальные данные из базы
   const applications = await prisma.application.findMany({
     where: { userId: session.user.id },
-    include: { service: true },
+    include: { 
+      service: true,
+      files: {
+        orderBy: { uploadedAt: "desc" },
+      },
+    },
     orderBy: { createdAt: "desc" },
   });
 

@@ -12,6 +12,15 @@ import { ApplicationDetails } from "@/components/admin/ApplicationDetails";
 
 type FilterStatus = "ALL" | "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
 
+interface ApplicationFile {
+  id: string;
+  fileName: string;
+  filePath: string;
+  fileSize: number;
+  mimeType: string;
+  uploadedAt: Date;
+}
+
 interface Application {
   id: string;
   status: string;
@@ -29,6 +38,7 @@ interface Application {
     title: string;
     category: string;
   };
+  files?: ApplicationFile[];
 }
 
 interface ApplicationsClientProps {

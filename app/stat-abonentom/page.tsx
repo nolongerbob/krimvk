@@ -365,18 +365,20 @@ export default function BecomeSubscriberPage() {
             // На каждой странице добавляем верхний отступ
             const yPosition = paddingTop;
             
-            // Для всех страниц кроме последней используем фиксированную высоту availableHeight
+            // Вычисляем реальную высоту изображения в мм для каждой страницы
             // Это обеспечивает одинаковое масштабирование без растягивания
+            const currentPageHeightRealPx = currentPageHeightPx / scale;
+            const currentPageHeightMm = currentPageHeightRealPx * pxToMm * widthRatio;
+            
             let pageHeightForPdf: number;
             if (isLastPage) {
-              // На последней странице используем реальную высоту с дополнительным запасом снизу
-              const currentPageHeightRealPx = currentPageHeightPx / scale;
-              const currentPageHeightMm = currentPageHeightRealPx * pxToMm * widthRatio;
+              // На последней странице добавляем дополнительный запас снизу
               const lastPageExtraMargin = 15; // мм - увеличенный запас для последней страницы
               pageHeightForPdf = currentPageHeightMm + (lastPageExtraMargin / pxToMm / widthRatio);
             } else {
-              // На всех остальных страницах используем фиксированную высоту для одинакового масштабирования
-              pageHeightForPdf = availableHeight;
+              // На всех остальных страницах используем реальную высоту изображения
+              // Это гарантирует одинаковое масштабирование без растягивания
+              pageHeightForPdf = currentPageHeightMm;
             }
             
             pdf.addImage(pageImgData, "JPEG", paddingLeft, yPosition, finalWidth, pageHeightForPdf);

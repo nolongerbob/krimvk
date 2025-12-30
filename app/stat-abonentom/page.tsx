@@ -291,7 +291,7 @@ export default function BecomeSubscriberPage() {
       const realHeightPx = imgHeight / scale;
       
       // Масштабируем под ширину страницы A4, сохраняя пропорции
-      // Отступы для каждой страницы
+      // Отступы для каждой страницы (PDF generation)
       const paddingTop = 15; // мм - отступ сверху на каждой странице
       const paddingLeft = 20; // мм
       const paddingRight = 20; // мм

@@ -19,7 +19,10 @@ export function ApplicationForm({ formData, isPreview = false }: { formData: any
       {/* Заголовок */}
       <div className="text-center mb-6" style={{ fontSize: isPreview ? "10px" : "10pt" }}>
         <p className="mb-2" style={{ lineHeight: "1.4" }}>
-          к Правилам подключения (технологического присоединения) объектов капитального строительства к централизованным системам горячего водоснабжения, холодного водоснабжения и (или) водоотведения
+          к Правилам подключения (технологического присоединения)<br/>
+          объектов капитального строительства к централизованным<br/>
+          системам горячего водоснабжения, холодного водоснабжения<br/>
+          и (или) водоотведения
         </p>
         <h2 className="font-bold mb-2 mt-4" style={{ fontSize: isPreview ? "14px" : "12pt" }}>ЗАПРОС</h2>
         <p style={{ fontSize: isPreview ? "11px" : "10pt" }}>о выдаче технических условий на подключение</p>
@@ -39,13 +42,7 @@ export function ApplicationForm({ formData, isPreview = false }: { formData: any
           {/* Пункт 2 */}
           <div>
             <p className="mb-1 font-semibold">2. Сведения о лице, обратившемся с запросом</p>
-            <p className="ml-4 text-[9px] leading-tight mb-2 text-gray-600">
-              (для органов государственной власти и местного самоуправления - полное и сокращенное наименование органа, реквизиты нормативного правового акта, в соответствии с которым осуществляется деятельность этого органа;<br/>
-              для юридических лиц - полное и сокращенное наименования, основной государственный регистрационный номер записи в Едином государственном реестре юридических лиц, идентификационный номер налогоплательщика;<br/>
-              для индивидуальных предпринимателей - наименование, основной государственный регистрационный номер записи в Едином государственном реестре индивидуальных предпринимателей, идентификационный номер налогоплательщика;<br/>
-              для физических лиц - фамилия, имя, отчество (последнее - при наличии), дата рождения, данные паспорта или иного документа, удостоверяющего личность, идентификационный номер налогоплательщика, страховой номер индивидуального лицевого счета)
-            </p>
-            <div className={`ml-4 border-b ${borderClass} min-h-[60px] py-1`}>
+            <div className={`ml-4 border-b ${borderClass} min-h-[60px] py-1 mb-2`}>
               {formData.lastName} {formData.firstName} {formData.middleName}
               {formData.birthDate && `, дата рождения: ${formData.birthDate}`}
               {formData.passportSeries && formData.passportNumber && `, паспорт серия ${formData.passportSeries} № ${formData.passportNumber}`}
@@ -55,31 +52,37 @@ export function ApplicationForm({ formData, isPreview = false }: { formData: any
               {formData.inn && `, ИНН ${formData.inn}`}
               {formData.snils && `, СНИЛС ${formData.snils}`}
             </div>
+            <p className="ml-4 text-[9px] leading-tight text-gray-600">
+              (для органов государственной власти и местного самоуправления - полное и сокращенное наименование органа, реквизиты нормативного правового акта, в соответствии с которым осуществляется деятельность этого органа;<br/>
+              для юридических лиц - полное и сокращенное наименования, основной государственный регистрационный номер записи в Едином государственном реестре юридических лиц, идентификационный номер налогоплательщика;<br/>
+              для индивидуальных предпринимателей - наименование, основной государственный регистрационный номер записи в Едином государственном реестре индивидуальных предпринимателей, идентификационный номер налогоплательщика;<br/>
+              для физических лиц - фамилия, имя, отчество (последнее - при наличии), дата рождения, данные паспорта или иного документа, удостоверяющего личность, идентификационный номер налогоплательщика, страховой номер индивидуального лицевого счета)
+            </p>
           </div>
 
           {/* Пункт 3 */}
           <div>
             <p className="mb-1 font-semibold">3. Контактные данные лица, обратившегося за выдачей технических условий</p>
-            <p className="ml-4 text-[9px] leading-tight mb-2 text-gray-600">
+            <div className={`ml-4 border-b ${borderClass} min-h-[40px] py-1 mb-2`}>
+              Адрес регистрации: {formData.registrationAddress || "_________________"}
+              {formData.phone && `, телефон: ${formData.phone}`}
+            </div>
+            <p className="ml-4 text-[9px] leading-tight text-gray-600">
               (для органов государственной власти и местного самоуправления - место нахождения, почтовый адрес, контактный телефон, адрес электронной почты, для юридических лиц - место нахождения и адрес, указанные в Едином государственном реестре юридических лиц, почтовый адрес, фактический адрес, контактный телефон, адрес электронной почты;<br/>
               для индивидуальных предпринимателей - адрес регистрации по месту жительства, почтовый адрес, контактный телефон, адрес электронной почты;<br/>
               для физических лиц - адрес регистрации по месту жительства, почтовый адрес, контактный телефон, адрес электронной почты)
             </p>
-            <div className={`ml-4 border-b ${borderClass} min-h-[40px] py-1`}>
-              Адрес регистрации: {formData.registrationAddress || "_________________"}
-              {formData.phone && `, телефон: ${formData.phone}`}
-            </div>
           </div>
 
           {/* Пункт 4 */}
           <div>
             <p className="mb-1 font-semibold">4. Основания обращения с запросом о выдаче технических условий:</p>
-            <p className="ml-4 text-[9px] leading-tight mb-2 text-gray-600">
-              (указание, кем именно из перечня лиц, имеющих право обратиться с запросом о выдаче технических условий, указанных в пунктах 9 и 11 Правил подключения (технологического присоединения) объектов капитального строительства к централизованным системам горячего водоснабжения, холодного водоснабжения и (или) водоотведения, утвержденных постановлением Правительства Российской Федерации от 30 ноября 2021 г. № 2130 является данное лицо, а для правообладателя земельного участка также информация о праве лица на земельный участок, на который расположен подключаемый объект основания возникновения такого права)
-            </p>
-            <div className={`ml-4 border-b ${borderClass} min-h-[40px] py-1`}>
+            <div className={`ml-4 border-b ${borderClass} min-h-[40px] py-1 mb-2`}>
               Правообладатель земельного участка
             </div>
+            <p className="ml-4 text-[9px] leading-tight text-gray-600">
+              (указание, кем именно из перечня лиц, имеющих право обратиться с запросом о выдаче технических условий, указанных в пунктах 9 и 11 Правил подключения (технологического присоединения) объектов капитального строительства к централизованным системам горячего водоснабжения, холодного водоснабжения и (или) водоотведения, утвержденных постановлением Правительства Российской Федерации от 30 ноября 2021 г. № 2130 является данное лицо, а для правообладателя земельного участка также информация о праве лица на земельный участок, на который расположен подключаемый объект основания возникновения такого права)
+            </p>
           </div>
 
           {/* Пункт 5 */}
@@ -87,12 +90,12 @@ export function ApplicationForm({ formData, isPreview = false }: { formData: any
             <p className="mb-1 font-semibold">
               5. В связи с <span className={`border-b ${borderClass} inline-block min-w-[200px] px-1`}>{formData.constructionType || "_________________"}</span> прошу выдать технические условия на подключение (технологическое присоединение)
             </p>
-            <p className="ml-4 text-[9px] leading-tight mb-1 text-gray-600">(новым строительством, реконструкцией, модернизацией - указать нужное)</p>
             <p className="ml-4 mb-1">объекта капитального строительства, водопроводных и (или) канализационных сетей, иного объекта, не относящегося к объектам капитального строительства (указать нужное):</p>
             <div className={`ml-4 border-b ${borderClass} min-h-[30px] mb-1 py-1`}>
               {formData.objectType === "residential" ? "Жилой дом" : formData.objectType === "apartment" ? "Квартира" : formData.objectType === "commercial" ? "Коммерческий объект" : formData.objectType === "industrial" ? "Промышленный объект" : "_________________"}
             </div>
             <p className="ml-4 text-[9px] leading-tight mb-1 text-gray-600">(наименование объекта или сетей)</p>
+            <p className="ml-4 text-[9px] leading-tight mb-1 text-gray-600">(новым строительством, реконструкцией, модернизацией - указать нужное)</p>
             <p className="ml-4 mt-1">расположенного (проектируемого) по адресу:</p>
             <div className={`ml-4 border-b ${borderClass} min-h-[30px] mb-1 py-1`}>
               {formData.objectAddress || "_________________"}
@@ -103,26 +106,25 @@ export function ApplicationForm({ formData, isPreview = false }: { formData: any
           {/* Пункт 6 */}
           <div>
             <p className="mb-1 font-semibold">6. Требуется подключение к централизованной системе</p>
-            <p className="ml-4 text-[9px] leading-tight mb-1 text-gray-600">(холодного водоснабжения, водоотведения – указать нужное)</p>
             <div className={`ml-4 border-b ${borderClass} min-h-[30px] mb-1 py-1`}>
               {formData.connectionTypeWater && "холодного водоснабжения"} {formData.connectionTypeWater && formData.connectionTypeSewerage && ", "} {formData.connectionTypeSewerage && "водоотведения"}
               {!formData.connectionTypeWater && !formData.connectionTypeSewerage && "_________________"}
             </div>
+            <p className="ml-4 text-[9px] leading-tight text-gray-600">(холодного водоснабжения, водоотведения – указать нужное)</p>
           </div>
 
           {/* Пункт 7 */}
           <div>
             <p className="mb-1 font-semibold">7. Необходимые виды ресурсов или услуг, планируемых к получению через централизованную систему</p>
-            <p className="ml-4 text-[9px] leading-tight mb-1 text-gray-600">(получение питьевой или технической воды, сброс хозяйственно-бытовых, сточных вод)</p>
             <div className={`ml-4 border-b ${borderClass} min-h-[30px] mb-1 py-1`}>
               {formData.resourceType || "получение питьевой воды, сброс хозяйственно-бытовых сточных вод"}
             </div>
+            <p className="ml-4 text-[9px] leading-tight text-gray-600">(получение питьевой или технической воды, сброс хозяйственно-бытовых, сточных вод)</p>
           </div>
 
           {/* Пункт 8 */}
           <div>
             <p className="mb-1 font-semibold">8. Информация о предельных параметрах разрешенного строительства (реконструкции) подключаемых объектов, соответствующих указанному земельному участку</p>
-            <p className="ml-4 text-[9px] leading-tight mb-1 text-gray-600">(высота объекта, этажность, протяженность и диаметр сети)</p>
             <div className={`ml-4 border-b ${borderClass} min-h-[30px] mb-1 py-1`}>
               {formData.objectHeight && `Высота: ${formData.objectHeight} м, `}
               {formData.objectFloors && `Этажность: ${formData.objectFloors}, `}
@@ -130,15 +132,16 @@ export function ApplicationForm({ formData, isPreview = false }: { formData: any
               {formData.pipeDiameter && `Диаметр: ${formData.pipeDiameter} мм`}
               {!formData.objectHeight && !formData.objectFloors && !formData.networkLength && !formData.pipeDiameter && "_________________"}
             </div>
+            <p className="ml-4 text-[9px] leading-tight text-gray-600">(высота объекта, этажность, протяженность и диаметр сети)</p>
           </div>
 
           {/* Пункт 9 */}
           <div>
             <p className="mb-1 font-semibold">9. Планируемый срок ввода в эксплуатацию подключаемого объекта</p>
-            <p className="ml-4 text-[9px] leading-tight mb-1 text-gray-600">(указывается при наличии соответствующей информации)</p>
             <div className={`ml-4 border-b ${borderClass} min-h-[30px] mb-1 py-1`}>
               {formData.plannedCommissioningDate || "_________________"}
             </div>
+            <p className="ml-4 text-[9px] leading-tight text-gray-600">(указывается при наличии соответствующей информации)</p>
           </div>
 
           {/* Пункт 10 */}
@@ -158,10 +161,10 @@ export function ApplicationForm({ formData, isPreview = false }: { formData: any
           {/* Пункт 11 */}
           <div>
             <p className="mb-1 font-semibold">11. Результаты рассмотрения запроса прошу направить (выбрать один из способов уведомления)</p>
-            <p className="ml-4 text-[9px] leading-tight mb-1 text-gray-600">(на адрес электронной почты, письмом посредством почтовой связи по адресу, иной способ)</p>
             <div className={`ml-4 border-b ${borderClass} min-h-[30px] mb-1 py-1`}>
               {formData.notificationMethod || "на адрес электронной почты"}
             </div>
+            <p className="ml-4 text-[9px] leading-tight text-gray-600">(на адрес электронной почты, письмом посредством почтовой связи по адресу, иной способ)</p>
           </div>
 
           {/* Согласие */}
@@ -177,23 +180,14 @@ export function ApplicationForm({ formData, isPreview = false }: { formData: any
           </div>
 
           {/* Дата и подпись */}
-          <div className="mt-8 flex justify-between items-start" style={{ marginTop: isPreview ? "2rem" : "3rem" }}>
-            <div style={{ fontSize: isPreview ? "10px" : "10pt" }}>
-              <p>«____»_____________20__ г.</p>
-            </div>
-            <div className="text-right" style={{ fontSize: isPreview ? "10px" : "10pt" }}>
-              {/* Линия для подписи */}
-              <div className="mb-2" style={{ marginBottom: isPreview ? "0.5rem" : "0.5rem" }}>
-                <div className="border-b border-black inline-block" style={{ minWidth: "150px", height: "1px" }}></div>
-              </div>
-              <p className="mb-4" style={{ marginBottom: isPreview ? "1rem" : "1.5rem" }}>(М.П., подпись)</p>
-              {/* Линия для ФИО */}
-              <div className="mb-1">
-                <div className="border-b border-black inline-block" style={{ minWidth: "150px", height: "1px" }}></div>
-              </div>
-              {/* ФИО под линией */}
-              <p className="mt-0" style={{ marginTop: "0.25rem" }}>{formData.lastName} {formData.firstName} {formData.middleName}</p>
-              <p className="mt-0">(Ф.И.О.)</p>
+          <div className="mt-8 flex justify-between items-center" style={{ marginTop: isPreview ? "2rem" : "3rem", fontSize: isPreview ? "10px" : "10pt" }}>
+            <span>«____»_____________20__ г.</span>
+            <div className="flex items-center gap-4">
+              <span className="border-b border-black inline-block" style={{ minWidth: "120px", height: "1px" }}></span>
+              <span>(М.П., подпись)</span>
+              <span className="border-b border-black inline-block" style={{ minWidth: "120px", height: "1px" }}></span>
+              <span>{formData.lastName} {formData.firstName} {formData.middleName}</span>
+              <span>(Ф.И.О.)</span>
             </div>
           </div>
         </div>

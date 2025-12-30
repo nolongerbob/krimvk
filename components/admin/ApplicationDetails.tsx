@@ -115,7 +115,7 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
       const paddingTop = 15; // мм - отступ сверху на каждой странице
       const paddingLeft = 20;
       const paddingRight = 20;
-      const paddingBottom = 15; // мм - отступ снизу на каждой странице
+      const paddingBottom = 20; // мм - увеличен отступ снизу для предотвращения обрезания последней строки
       // Добавляем небольшой запас для предотвращения обрезания текста
       const safetyMargin = 5; // мм
       const availableHeight = pdfHeight - paddingTop - paddingBottom - safetyMargin;

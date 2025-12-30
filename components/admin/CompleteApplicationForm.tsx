@@ -43,6 +43,13 @@ export function CompleteApplicationForm({
     setIsSubmitting(true);
     setError(null);
 
+    // Валидация: для технических условий файлы обязательны
+    if (isTechnicalConditions && files.length === 0) {
+      setError("Для завершения заявки на технические условия необходимо загрузить хотя бы один документ");
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       const formData = new FormData();
       formData.append("applicationId", applicationId);

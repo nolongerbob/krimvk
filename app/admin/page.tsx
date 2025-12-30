@@ -7,6 +7,8 @@ import Link from "next/link";
 import { FileText, MessageSquare, Newspaper, Users, AlertCircle, CheckCircle, Clock, Folder, BookOpen } from "lucide-react";
 import { AdminNotificationsBadge } from "@/components/admin/AdminNotificationsBadge";
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminPage() {
   const session = await getSession();
   

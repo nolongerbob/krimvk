@@ -166,7 +166,7 @@ export async function POST(request: NextRequest) {
     const filledPdfBytes = await pdfDoc.save();
 
     // Возвращаем PDF
-    return new NextResponse(filledPdfBytes, {
+    return new NextResponse(Buffer.from(filledPdfBytes), {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="zayavlenie_TU_${formData.lastName}_${today.toISOString().split("T")[0]}.pdf"`,

@@ -291,11 +291,11 @@ export default function BecomeSubscriberPage() {
       const realHeightPx = imgHeight / scale;
       
       // Масштабируем под ширину страницы A4, сохраняя пропорции
-      // Минимальные отступы
-      const paddingTop = 0; // мм - без отступа сверху
+      // Отступы для каждой страницы
+      const paddingTop = 15; // мм - отступ сверху на каждой странице
       const paddingLeft = 20; // мм
       const paddingRight = 20; // мм
-      const paddingBottom = 0; // мм
+      const paddingBottom = 15; // мм - отступ снизу на каждой странице
       const availableWidth = pdfWidth - paddingLeft - paddingRight;
       const availableHeight = pdfHeight - paddingTop - paddingBottom;
       
@@ -352,13 +352,10 @@ export default function BecomeSubscriberPage() {
             const pxToMm = 25.4 / 96;
             const currentPageHeightRealPx = currentPageHeightPx / scale;
             const currentPageHeightMm = currentPageHeightRealPx * pxToMm * widthRatio;
-            // На первой странице добавляем верхний отступ, на остальных - нет
-            const yPosition = pageNumber === 0 ? paddingTop : 0;
-            // На последней странице добавляем нижний отступ
-            const isLastPage = sourceY + pageHeightPx >= imgHeight;
-            const pageHeightWithPadding = isLastPage 
-              ? Math.min(currentPageHeightMm + paddingBottom, pdfHeight - yPosition)
-              : Math.min(currentPageHeightMm, pdfHeight - yPosition);
+            // На каждой странице добавляем верхний отступ
+            const yPosition = paddingTop;
+            // Высота страницы с учетом отступов
+            const pageHeightWithPadding = Math.min(currentPageHeightMm, availableHeight);
             
             pdf.addImage(pageImgData, "JPEG", paddingLeft, yPosition, finalWidth, pageHeightWithPadding);
           }

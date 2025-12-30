@@ -112,19 +112,19 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
       const imgWidthMm = realWidthPx * pxToMm;
       const imgHeightMm = realHeightPx * pxToMm;
 
-      const paddingTop = 0; // мм - без отступа сверху
+      const paddingTop = 15; // мм - отступ сверху на каждой странице
       const paddingLeft = 20;
       const paddingRight = 20;
-      const paddingBottom = 0;
-      const availableWidth = pdfWidth - paddingLeft - paddingRight;
+      const paddingBottom = 15; // мм - отступ снизу на каждой странице
       const availableHeight = pdfHeight - paddingTop - paddingBottom;
+      const availableWidth = pdfWidth - paddingLeft - paddingRight;
 
       const widthRatio = availableWidth / imgWidthMm;
       const finalWidth = availableWidth;
       const finalHeight = imgHeightMm * widthRatio;
 
       if (finalHeight <= availableHeight) {
-        pdf.addImage(imgData, "PNG", paddingLeft, paddingTop, finalWidth, finalHeight);
+        pdf.addImage(imgData, "JPEG", paddingLeft, paddingTop, finalWidth, finalHeight);
       } else {
         const pageHeightMm = availableHeight;
         const pageHeightPx = (pageHeightMm / widthRatio / pxToMm) * scale;
@@ -154,7 +154,10 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
             }
 
             const currentPageHeightMm = (currentPageHeightPx / scale) * pxToMm * widthRatio;
-            pdf.addImage(pageImgData, "JPEG", paddingLeft, (pageNumber === 0 ? paddingTop : 0), finalWidth, currentPageHeightMm);
+            // На каждой странице добавляем верхний отступ
+            const yPosition = paddingTop;
+            const pageHeightWithPadding = Math.min(currentPageHeightMm, availableHeight);
+            pdf.addImage(pageImgData, "JPEG", paddingLeft, yPosition, finalWidth, pageHeightWithPadding);
           }
 
           sourceY += pageHeightPx;

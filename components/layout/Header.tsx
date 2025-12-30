@@ -206,7 +206,7 @@ export function Header() {
           </nav>
 
           {/* Поиск */}
-          <div className="hidden xl:block ml-4">
+          <div className="hidden xl:block ml-2">
             <Search />
           </div>
         </div>

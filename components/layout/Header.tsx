@@ -71,9 +71,9 @@ export function Header() {
   return (
     <div className="px-2 sm:px-4 md:px-6 lg:px-8">
       <header className="sticky top-0 z-50 w-full border-b bg-gradient-to-br from-blue-200/90 via-blue-100/90 to-cyan-100/90 backdrop-blur-sm rounded-t-2xl rounded-b-2xl mt-2">
-        <div className="w-full flex h-20 lg:h-24 items-center justify-between px-3 sm:px-4 md:px-6 lg:px-8">
+        <div className="w-full flex h-20 lg:h-24 items-center px-3 sm:px-4 md:px-6 lg:px-8">
         {/* Левая часть: Логотип */}
-        <div className="flex items-center flex-shrink-0">
+        <div className="flex items-center flex-shrink-0 w-1/3">
           <Link href="/" className="flex items-center space-x-2 sm:space-x-3">
             <Image
               src="/images/logo.png"
@@ -264,7 +264,7 @@ export function Header() {
         </div>
 
         {/* Правая часть: Пользователь */}
-        <div className="flex items-center flex-shrink-0">
+        <div className="flex items-center flex-shrink-0 w-1/3 justify-end">
           {status === "loading" ? (
             <div className="hidden xl:block w-20 h-9 bg-gray-200 animate-pulse rounded"></div>
           ) : session ? (

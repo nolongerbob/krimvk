@@ -91,16 +91,33 @@ export default async function AdminApplicationsPage() {
         } catch {}
         return false;
       }).length,
+      firstApp: rawApplications[0] ? {
+        id: rawApplications[0].id,
+        status: rawApplications[0].status,
+        hasDescription: !!rawApplications[0].description,
+      } : null,
     });
 
     // Сериализуем даты для передачи в клиентский компонент
     applications = rawApplications.map((app) => ({
       ...app,
+      createdAt: app.createdAt instanceof Date ? app.createdAt.toISOString() : app.createdAt,
       files: app.files?.map((file: any) => ({
         ...file,
-        uploadedAt: file.uploadedAt,
+        uploadedAt: file.uploadedAt instanceof Date ? file.uploadedAt.toISOString() : file.uploadedAt,
       })) || [],
     })) as ApplicationWithRelations[];
+
+    console.log("📤 Admin: Sending to client:", {
+      total: applications.length,
+      applications: applications.map(a => ({
+        id: a.id,
+        status: a.status,
+        serviceTitle: a.service?.title || "no service",
+        hasDescription: !!a.description,
+        createdAt: a.createdAt,
+      })),
+    });
 
     // Получаем уникальные категории услуг
     categories = await withRetry(() =>

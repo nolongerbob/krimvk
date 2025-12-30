@@ -27,7 +27,7 @@ interface Application {
   description: string | null;
   address: string | null;
   phone: string | null;
-  createdAt: Date;
+  createdAt: Date | string;
   user: {
     name: string | null;
     email: string;

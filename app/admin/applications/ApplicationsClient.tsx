@@ -18,7 +18,7 @@ interface ApplicationFile {
   filePath: string;
   fileSize: number;
   mimeType: string;
-  uploadedAt: Date;
+  uploadedAt: Date | string;
 }
 
 interface Application {

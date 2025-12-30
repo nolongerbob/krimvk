@@ -37,7 +37,7 @@ export default async function AdminApplicationsPage() {
     description: string | null;
     address: string | null;
     phone: string | null;
-    createdAt: Date;
+    createdAt: Date | string;
     user: {
       name: string | null;
       email: string;
@@ -54,7 +54,7 @@ export default async function AdminApplicationsPage() {
       filePath: string;
       fileSize: number;
       mimeType: string;
-      uploadedAt: Date;
+      uploadedAt: Date | string;
     }>;
   };
 
@@ -116,7 +116,7 @@ export default async function AdminApplicationsPage() {
         ...file,
         uploadedAt: file.uploadedAt instanceof Date ? file.uploadedAt.toISOString() : file.uploadedAt,
       })) || [],
-    })) as ApplicationWithRelations[];
+    })) as unknown as ApplicationWithRelations[];
 
     console.log("📤 Admin: Sending to client:", {
       total: applications.length,

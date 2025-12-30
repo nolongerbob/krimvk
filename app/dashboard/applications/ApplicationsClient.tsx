@@ -46,6 +46,7 @@ interface ApplicationFile {
 interface Application {
   id: string;
   service: {
+    id?: string;
     title: string;
   };
   description: string | null;
@@ -264,8 +265,8 @@ export function ApplicationsClient({ applications: initialApplications }: Applic
                     return "not JSON";
                   }
                 })() : "no description",
-                serviceTitle: a.service.title,
-                serviceId: a.service.id,
+                  serviceTitle: a.service?.title || "no service",
+                  serviceId: a.service?.id || "no service id",
               })), null, 2)}
             </pre>
           </details>

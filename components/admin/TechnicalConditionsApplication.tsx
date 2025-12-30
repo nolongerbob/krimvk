@@ -37,12 +37,20 @@ interface TechnicalConditionsApplicationProps {
     description: string | null;
     address: string | null;
     phone: string | null;
-    createdAt: Date;
+    createdAt: Date | string;
     user: {
       name: string | null;
       email: string;
       phone: string | null;
     };
+    adminFiles?: Array<{
+      id: string;
+      fileName: string;
+      filePath: string;
+      fileSize: number;
+      mimeType: string;
+      uploadedAt: Date | string;
+    }>;
   };
 }
 

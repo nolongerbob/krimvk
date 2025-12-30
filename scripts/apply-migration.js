@@ -1,6 +1,4 @@
 const { PrismaClient } = require('@prisma/client');
-const fs = require('fs');
-const path = require('path');
 
 const prisma = new PrismaClient();
 
@@ -8,37 +6,63 @@ async function applyMigration() {
   try {
     console.log('📦 Applying migration for application_files table...');
     
-    // Читаем SQL из миграции
-    const migrationPath = path.join(__dirname, '../prisma/migrations/20241230_add_application_files/migration.sql');
-    const sql = fs.readFileSync(migrationPath, 'utf-8');
+    // Проверяем, существует ли таблица
+    const tableExists = await prisma.$queryRaw`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'application_files'
+      );
+    `;
     
-    // Разбиваем SQL на отдельные команды
-    const commands = sql
-      .split(';')
-      .map(cmd => cmd.trim())
-      .filter(cmd => cmd.length > 0 && !cmd.startsWith('--'));
-    
-    // Выполняем каждую команду
-    for (const command of commands) {
-      if (command) {
-        try {
-          await prisma.$executeRawUnsafe(command);
-          console.log(`✅ Executed: ${command.substring(0, 50)}...`);
-        } catch (error) {
-          // Игнорируем ошибки, если таблица уже существует
-          if (error.message.includes('already exists') || error.message.includes('duplicate')) {
-            console.log(`⚠️  Skipped (already exists): ${command.substring(0, 50)}...`);
-          } else {
-            throw error;
-          }
-        }
-      }
+    if (tableExists[0]?.exists) {
+      console.log('✅ Table application_files already exists, skipping migration');
+      return;
     }
+    
+    // Создаем таблицу
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE "application_files" (
+        "id" TEXT NOT NULL,
+        "applicationId" TEXT NOT NULL,
+        "fileName" TEXT NOT NULL,
+        "filePath" TEXT NOT NULL,
+        "fileSize" INTEGER NOT NULL,
+        "mimeType" TEXT NOT NULL,
+        "uploadedBy" TEXT,
+        "uploadedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT "application_files_pkey" PRIMARY KEY ("id")
+      );
+    `);
+    console.log('✅ Created table application_files');
+    
+    // Создаем индекс
+    await prisma.$executeRawUnsafe(`
+      CREATE INDEX "application_files_applicationId_idx" ON "application_files"("applicationId");
+    `);
+    console.log('✅ Created index application_files_applicationId_idx');
+    
+    // Добавляем внешний ключ
+    await prisma.$executeRawUnsafe(`
+      ALTER TABLE "application_files" 
+      ADD CONSTRAINT "application_files_applicationId_fkey" 
+      FOREIGN KEY ("applicationId") 
+      REFERENCES "applications"("id") 
+      ON DELETE CASCADE ON UPDATE CASCADE;
+    `);
+    console.log('✅ Added foreign key constraint');
     
     console.log('✅ Migration applied successfully!');
   } catch (error) {
-    console.error('❌ Error applying migration:', error);
-    process.exit(1);
+    // Игнорируем ошибки, если таблица уже существует
+    if (error.message.includes('already exists') || 
+        error.message.includes('duplicate') ||
+        error.message.includes('relation') && error.message.includes('already exists')) {
+      console.log('⚠️  Table or constraint already exists, skipping...');
+    } else {
+      console.error('❌ Error applying migration:', error);
+      process.exit(1);
+    }
   } finally {
     await prisma.$disconnect();
   }

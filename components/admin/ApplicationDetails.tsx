@@ -109,10 +109,10 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
       const imgWidthMm = realWidthPx * pxToMm;
       const imgHeightMm = realHeightPx * pxToMm;
 
-      const paddingTop = 15;
+      const paddingTop = 5; // мм - минимальный отступ сверху
       const paddingLeft = 20;
       const paddingRight = 20;
-      const paddingBottom = 20;
+      const paddingBottom = 10;
       const availableWidth = pdfWidth - paddingLeft - paddingRight;
       const availableHeight = pdfHeight - paddingTop - paddingBottom;
 

@@ -9,8 +9,8 @@ export function ApplicationForm({ formData, isPreview = false }: { formData: any
   const containerStyle = isPreview ? {} : {
     width: "210mm",
     maxWidth: "210mm",
-    margin: "0 auto",
-    padding: "20mm",
+    margin: "0",
+    padding: "0",
     boxSizing: "border-box" as const,
   };
   

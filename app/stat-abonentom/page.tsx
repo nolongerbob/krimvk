@@ -289,11 +289,11 @@ export default function BecomeSubscriberPage() {
       const realHeightPx = imgHeight / scale;
       
       // Масштабируем под ширину страницы A4, сохраняя пропорции
-      // Добавляем отступы: 15mm сверху, 20mm по бокам, 20mm снизу
-      const paddingTop = 15; // мм
+      // Добавляем минимальные отступы
+      const paddingTop = 5; // мм - минимальный отступ сверху
       const paddingLeft = 20; // мм
       const paddingRight = 20; // мм
-      const paddingBottom = 20; // мм
+      const paddingBottom = 10; // мм
       const availableWidth = pdfWidth - paddingLeft - paddingRight;
       const availableHeight = pdfHeight - paddingTop - paddingBottom;
       
@@ -1181,9 +1181,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
 
                   {/* Скрытое заявление для генерации PDF */}
                   <div ref={applicationRef} className="hidden">
-                    <div className="p-8" style={{ fontFamily: "Times New Roman, serif", fontSize: "11pt", lineHeight: "1.5", width: "210mm", minHeight: "297mm" }}>
-                      <ApplicationForm formData={formData} isPreview={false} />
-                    </div>
+                    <ApplicationForm formData={formData} isPreview={false} />
                   </div>
 
                   <div className="flex flex-wrap gap-3">

@@ -51,6 +51,16 @@ export async function POST(request: NextRequest) {
       await mkdir(uploadsDir, { recursive: true });
     }
 
+    // Проверяем общий размер всех файлов (макс. 50 МБ)
+    const totalSize = files.reduce((sum, file) => sum + file.size, 0);
+    const maxTotalSize = 50 * 1024 * 1024; // 50 МБ
+    if (totalSize > maxTotalSize) {
+      return NextResponse.json(
+        { error: `Общий размер всех файлов (${(totalSize / 1024 / 1024).toFixed(2)} МБ) превышает максимальный лимит 50 МБ` },
+        { status: 400 }
+      );
+    }
+
     // Сохраняем файлы
     const savedFiles = [];
     try {
@@ -60,7 +70,7 @@ export async function POST(request: NextRequest) {
         // Проверяем размер файла (макс. 10 МБ)
         if (file.size > 10 * 1024 * 1024) {
           return NextResponse.json(
-            { error: `Файл ${file.name} слишком большой (макс. 10 МБ)` },
+            { error: `Файл ${file.name} слишком большой (${(file.size / 1024 / 1024).toFixed(2)} МБ, макс. 10 МБ)` },
             { status: 400 }
           );
         }

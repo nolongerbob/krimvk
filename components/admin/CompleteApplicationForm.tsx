@@ -70,6 +70,15 @@ export function CompleteApplicationForm({
       return;
     }
 
+    // Проверяем общий размер всех файлов (макс. 50 МБ)
+    const totalSize = files.reduce((sum, file) => sum + file.size, 0);
+    const maxTotalSize = 50 * 1024 * 1024; // 50 МБ
+    if (totalSize > maxTotalSize) {
+      setError(`Общий размер всех файлов (${(totalSize / 1024 / 1024).toFixed(2)} МБ) превышает максимальный лимит 50 МБ`);
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       const formData = new FormData();
       formData.append("applicationId", applicationId);

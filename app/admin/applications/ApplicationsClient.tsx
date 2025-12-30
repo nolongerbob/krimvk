@@ -77,30 +77,6 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Отладочная информация при загрузке
-  useEffect(() => {
-    console.log("🔍 ApplicationsClient received:", {
-      totalApplications: applications.length,
-      applications: applications.map(a => ({
-        id: a.id,
-        status: a.status,
-        serviceTitle: a.service?.title || "no service",
-        serviceId: a.service?.id || "no service id",
-        hasDescription: !!a.description,
-        descriptionPreview: a.description ? a.description.substring(0, 100) : null,
-        createdAt: a.createdAt,
-        userEmail: a.user?.email || "no user",
-      })),
-    });
-    
-    if (applications.length === 0) {
-      console.warn("⚠️ WARNING: ApplicationsClient received 0 applications!");
-      console.warn("This could mean:");
-      console.warn("1. No applications in database");
-      console.warn("2. Database query failed");
-      console.warn("3. Data serialization issue");
-    }
-  }, [applications]);
   
   // Читаем фильтры из URL параметров при загрузке
   const statusFromUrl = searchParams.get("status") as FilterStatus | null;
@@ -387,60 +363,6 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
         </div>
       )}
 
-      {/* Отладочная информация - показываем, если есть технические условия, но они не отображаются */}
-      {technicalConditionsApps.length > 0 && filteredTechnicalConditions.length === 0 && (
-        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded">
-          <p className="text-sm text-yellow-800">
-            ⚠️ Есть {technicalConditionsApps.length} заявок на технические условия, но они не отображаются из-за фильтров.
-            Статусы: {technicalConditionsApps.map(a => a.status).join(", ")}
-            Текущий фильтр: {activeFilter}
-          </p>
-        </div>
-      )}
-
-      {/* Отладочная информация - показываем общую статистику */}
-      <div className="mb-4 p-4 bg-gray-50 border border-gray-200 rounded text-xs">
-        <p className="font-semibold mb-2">Отладочная информация:</p>
-        <p>Всего заявок получено: {applications.length}</p>
-        <p>Технические условия: {technicalConditionsApps.length}</p>
-        <p>Обычные заявки: {regularApps.length}</p>
-        <p>Отфильтровано тех. условий: {filteredTechnicalConditions.length}</p>
-        <p>Отфильтровано обычных: {filteredApplications.length}</p>
-        <p>Завершенные: {completedApplications.length}</p>
-        <p>Активный фильтр: {activeFilter}</p>
-        <p>Активная категория: {activeCategory || "нет"}</p>
-        {applications.length === 0 && (
-          <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded">
-            <p className="text-red-800 font-semibold">⚠️ НЕТ ЗАЯВОК В БАЗЕ ДАННЫХ!</p>
-            <p className="text-red-600 text-xs mt-1">
-              Это означает, что либо заявки не создаются, либо не загружаются из базы данных.
-              Проверьте логи сервера на Vercel.
-            </p>
-          </div>
-        )}
-        {applications.length > 0 && (
-          <details className="mt-2">
-            <summary className="cursor-pointer">Показать все заявки</summary>
-            <pre className="mt-2 text-xs overflow-auto max-h-40">
-              {JSON.stringify(applications.map(a => ({
-                id: a.id,
-                status: a.status,
-                hasDescription: !!a.description,
-                descriptionType: a.description ? (() => {
-                  try {
-                    const parsed = JSON.parse(a.description);
-                    return parsed.type || "not technical_conditions";
-                  } catch {
-                    return "not JSON";
-                  }
-                })() : "no description",
-                serviceTitle: a.service.title,
-                serviceCategory: a.service.category,
-              })), null, 2)}
-            </pre>
-          </details>
-        )}
-      </div>
 
       {/* Обычные заявки */}
       {filteredApplications.length > 0 && (
@@ -529,15 +451,6 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
           <CardContent className="py-12 text-center">
             <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-500">Нет заявок</p>
-            {/* Отладочная информация */}
-            {process.env.NODE_ENV === 'development' && (
-              <div className="mt-4 text-xs text-gray-400">
-                Всего заявок: {applications.length} | 
-                Тех. условия: {technicalConditionsApps.length} | 
-                Обычные: {regularApps.length} | 
-                Фильтр: {activeFilter}
-              </div>
-            )}
           </CardContent>
         </Card>
       )}

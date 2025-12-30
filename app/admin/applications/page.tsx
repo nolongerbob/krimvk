@@ -66,45 +66,7 @@ export default async function AdminApplicationsPage() {
   let categories: CategoryResult[] = [];
   
   try {
-    // Сначала проверяем, есть ли вообще заявки в базе
-    const totalCount = await withRetry(() => prisma.application.count());
-    console.log("📊 Total applications in database:", totalCount);
-
-    if (totalCount === 0) {
-      console.warn("⚠️ WARNING: No applications found in database!");
-      console.warn("Checking database connection...");
-      
-      // Проверяем подключение к базе данных
-      try {
-        const testQuery = await prisma.user.count();
-        console.log("✅ Database connection OK, user count:", testQuery);
-        
-        // Проверяем, есть ли сервис для технических условий
-        const techService = await prisma.service.findUnique({
-          where: { id: "tehnologicheskoe-prisoedinenie" },
-        });
-        console.log("🔍 Technical conditions service:", techService ? "exists" : "NOT FOUND");
-      } catch (dbError) {
-        console.error("❌ Database connection error:", dbError);
-      }
-    } else {
-      // Если заявки есть, проверяем их детали
-      console.log("✅ Found applications in database, checking details...");
-      const sampleApp = await prisma.application.findFirst({
-        include: {
-          service: { select: { id: true, title: true } },
-          user: { select: { email: true } },
-        },
-      });
-      console.log("📋 Sample application:", {
-        id: sampleApp?.id,
-        status: sampleApp?.status,
-        serviceId: sampleApp?.service?.id,
-        serviceTitle: sampleApp?.service?.title,
-        userEmail: sampleApp?.user?.email,
-        hasDescription: !!sampleApp?.description,
-      });
-    }
+    // Загружаем заявки из базы данных
 
     const rawApplications = await withRetry(() =>
       prisma.application.findMany({
@@ -119,34 +81,6 @@ export default async function AdminApplicationsPage() {
       })
     );
 
-    console.log("📋 Raw applications from database:", {
-      count: rawApplications.length,
-      expected: totalCount,
-      match: rawApplications.length === totalCount,
-      firstAppId: rawApplications[0]?.id || "none",
-      firstAppStatus: rawApplications[0]?.status || "none",
-      firstAppHasService: !!rawApplications[0]?.service,
-      firstAppServiceId: rawApplications[0]?.service?.id || "none",
-    });
-
-    console.log("📋 Admin: Loaded applications:", {
-      total: rawApplications.length,
-      withDescription: rawApplications.filter(a => a.description).length,
-      technicalConditions: rawApplications.filter(a => {
-        try {
-          if (a.description) {
-            const parsed = JSON.parse(a.description);
-            return parsed.type === "technical_conditions";
-          }
-        } catch {}
-        return false;
-      }).length,
-      firstApp: rawApplications[0] ? {
-        id: rawApplications[0].id,
-        status: rawApplications[0].status,
-        hasDescription: !!rawApplications[0].description,
-      } : null,
-    });
 
     // Сериализуем даты для передачи в клиентский компонент
     // Важно: Next.js требует, чтобы все данные были сериализуемы (без Date объектов)
@@ -176,25 +110,6 @@ export default async function AdminApplicationsPage() {
       }
     }).filter((app): app is ApplicationWithRelations => app !== null);
 
-    console.log("📤 Admin: Sending to client:", {
-      total: applications.length,
-      rawCount: rawApplications.length,
-      match: applications.length === rawApplications.length,
-      applications: applications.map(a => ({
-        id: a.id,
-        status: a.status,
-        serviceTitle: a.service?.title || "no service",
-        hasDescription: !!a.description,
-        createdAt: typeof a.createdAt === 'string' ? a.createdAt.substring(0, 10) : 'not string',
-      })),
-    });
-
-    // Проверяем, что данные правильно сериализованы
-    if (rawApplications.length > 0 && applications.length === 0) {
-      console.error("❌ CRITICAL: Data serialization failed!");
-      console.error("Raw applications:", rawApplications.length);
-      console.error("Serialized applications:", applications.length);
-    }
 
     // Получаем уникальные категории услуг
     categories = await withRetry(() =>
@@ -205,25 +120,12 @@ export default async function AdminApplicationsPage() {
       })
     );
   } catch (error) {
-    console.error("❌ Failed to fetch applications:", error);
-    if (error instanceof Error) {
-      console.error("Error message:", error.message);
-      console.error("Error stack:", error.stack);
-    }
+    console.error("Failed to fetch applications:", error);
     // Возвращаем пустые массивы, чтобы страница не упала
     applications = [];
     categories = [];
   }
 
-  console.log("📤 Admin: Final applications before sending:", {
-    total: applications.length,
-    applications: applications.map(a => ({
-      id: a.id,
-      status: a.status,
-      serviceTitle: a.service?.title || "no service",
-      hasDescription: !!a.description,
-    })),
-  });
 
   return (
     <div className="container py-8 px-4">
@@ -240,15 +142,6 @@ export default async function AdminApplicationsPage() {
         </div>
       </div>
 
-      {/* Отладочная информация на сервере */}
-      {applications.length === 0 && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded">
-          <p className="text-red-800 font-semibold">⚠️ НЕТ ЗАЯВОК НА СЕРВЕРЕ!</p>
-          <p className="text-red-600 text-xs mt-1">
-            Проверьте логи Vercel для деталей. Возможно, проблема с подключением к базе данных.
-          </p>
-        </div>
-      )}
 
       <ApplicationsClient applications={applications} categories={categories.map(c => c.category)} />
     </div>

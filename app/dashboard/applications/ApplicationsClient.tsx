@@ -65,31 +65,8 @@ export function ApplicationsClient({ applications: initialApplications }: Applic
   const searchParams = useSearchParams();
   const [applications, setApplications] = useState(initialApplications);
 
-  // Отладочная информация при получении данных
+  // Обновляем состояние при изменении initialApplications
   useEffect(() => {
-    console.log("🔍 ApplicationsClient received:", {
-      totalApplications: initialApplications.length,
-      applications: initialApplications.map(a => ({
-        id: a.id,
-        status: a.status,
-        serviceTitle: a.service?.title || "no service",
-        serviceId: a.service?.id || "no service id",
-        hasDescription: !!a.description,
-        descriptionPreview: a.description ? a.description.substring(0, 100) : null,
-        createdAt: a.createdAt,
-      })),
-      rawData: initialApplications, // Полные данные для отладки
-    });
-
-    if (initialApplications.length === 0) {
-      console.warn("⚠️ WARNING: ApplicationsClient received 0 applications!");
-      console.warn("This could mean:");
-      console.warn("1. No applications in database for this user");
-      console.warn("2. Data serialization issue");
-      console.warn("3. Applications were filtered out");
-    }
-
-    // Обновляем состояние при изменении initialApplications
     setApplications(initialApplications);
   }, [initialApplications]);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
@@ -251,41 +228,6 @@ export function ApplicationsClient({ applications: initialApplications }: Applic
         </div>
       )}
 
-      {/* Отладочная информация - всегда показываем для диагностики */}
-      <div className="mb-4 p-4 bg-gray-50 border border-gray-200 rounded text-xs">
-        <p className="font-semibold mb-2">Отладочная информация:</p>
-        <p>Всего заявок получено: {applications.length}</p>
-        {applications.length === 0 && (
-          <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded">
-            <p className="text-red-800 font-semibold">⚠️ НЕТ ЗАЯВОК!</p>
-            <p className="text-red-600 text-xs mt-1">
-              Заявки не загружены из базы данных. Проверьте логи сервера на Vercel.
-            </p>
-          </div>
-        )}
-        {applications.length > 0 && (
-          <details className="mt-2">
-            <summary className="cursor-pointer">Показать все заявки</summary>
-            <pre className="mt-2 text-xs overflow-auto max-h-40">
-              {JSON.stringify(applications.map(a => ({
-                id: a.id,
-                status: a.status,
-                hasDescription: !!a.description,
-                descriptionType: a.description ? (() => {
-                  try {
-                    const parsed = JSON.parse(a.description);
-                    return parsed.type || "not technical_conditions";
-                  } catch {
-                    return "not JSON";
-                  }
-                })() : "no description",
-                  serviceTitle: a.service?.title || "no service",
-                  serviceId: a.service?.id || "no service id",
-              })), null, 2)}
-            </pre>
-          </details>
-        )}
-      </div>
 
       <div className="space-y-4">
         {applications.map((app) => {

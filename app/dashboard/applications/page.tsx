@@ -72,32 +72,6 @@ export default async function ApplicationsPage() {
       })
     );
 
-    console.log("📋 User: Loaded applications:", {
-      userId: session.user.id,
-      expected: userAppCount,
-      loaded: applications.length,
-      match: applications.length === userAppCount,
-      withDescription: applications.filter(a => a.description).length,
-      technicalConditions: applications.filter(a => {
-        try {
-          if (a.description) {
-            const parsed = JSON.parse(a.description);
-            return parsed.type === "technical_conditions";
-          }
-        } catch {}
-        return false;
-      }).length,
-      firstApp: applications[0] ? {
-        id: applications[0].id,
-        status: applications[0].status,
-        serviceId: applications[0].service?.id,
-        serviceTitle: applications[0].service?.title,
-      } : null,
-    });
-
-    if (userAppCount > 0 && applications.length === 0) {
-      console.error("❌ CRITICAL: Applications exist in database but were not loaded!");
-    }
   } catch (error) {
     console.error("❌ Error fetching applications:", error);
     if (error instanceof Error) {
@@ -138,16 +112,6 @@ export default async function ApplicationsPage() {
     }
   }).filter((app): app is NonNullable<typeof app> => app !== null);
 
-  console.log("📤 Sending to client:", {
-    userId: session.user.id,
-    total: serializedApplications.length,
-    applications: serializedApplications.map(a => ({
-      id: a.id,
-      status: a.status,
-      serviceTitle: a.service?.title || "no service",
-      hasDescription: !!a.description,
-    })),
-  });
 
   return (
     <div className="container py-8 px-4">

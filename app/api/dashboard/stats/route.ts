@@ -239,6 +239,58 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    // Логируем детали для отладки
+    console.log("📊 Dashboard stats - Active applications count:", {
+      userId: session.user.id,
+      activeCount: activeApplications,
+      statusFilter: ["PENDING", "IN_PROGRESS"],
+    });
+
+    // Проверяем, сколько всего заявок у пользователя
+    const totalUserApplications = await prisma.application.count({
+      where: {
+        userId: session.user.id,
+      },
+    });
+
+    console.log("📊 Dashboard stats - Total user applications:", {
+      userId: session.user.id,
+      totalCount: totalUserApplications,
+      activeCount: activeApplications,
+    });
+
+    // Если есть расхождение, логируем детали
+    if (totalUserApplications > 0) {
+      const allUserApps = await prisma.application.findMany({
+        where: {
+          userId: session.user.id,
+        },
+        select: {
+          id: true,
+          status: true,
+          createdAt: true,
+          service: {
+            select: {
+              id: true,
+              title: true,
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+
+      console.log("📊 Dashboard stats - All user applications:", {
+        userId: session.user.id,
+        applications: allUserApps.map(a => ({
+          id: a.id,
+          status: a.status,
+          serviceId: a.service?.id,
+          serviceTitle: a.service?.title,
+          createdAt: a.createdAt.toISOString(),
+        })),
+      });
+    }
+
     // Логируем итоговую статистику
     if (process.env.NODE_ENV === "development") {
       console.log("=== Dashboard stats final ===");

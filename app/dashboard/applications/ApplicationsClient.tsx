@@ -73,10 +73,24 @@ export function ApplicationsClient({ applications: initialApplications }: Applic
         id: a.id,
         status: a.status,
         serviceTitle: a.service?.title || "no service",
+        serviceId: a.service?.id || "no service id",
         hasDescription: !!a.description,
         descriptionPreview: a.description ? a.description.substring(0, 100) : null,
+        createdAt: a.createdAt,
       })),
+      rawData: initialApplications, // Полные данные для отладки
     });
+
+    if (initialApplications.length === 0) {
+      console.warn("⚠️ WARNING: ApplicationsClient received 0 applications!");
+      console.warn("This could mean:");
+      console.warn("1. No applications in database for this user");
+      console.warn("2. Data serialization issue");
+      console.warn("3. Applications were filtered out");
+    }
+
+    // Обновляем состояние при изменении initialApplications
+    setApplications(initialApplications);
   }, [initialApplications]);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [statusChangeNotification, setStatusChangeNotification] = useState<{

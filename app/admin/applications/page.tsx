@@ -111,10 +111,9 @@ export default async function AdminApplicationsPage() {
         include: {
           user: { select: { name: true, email: true, phone: true } },
           service: { select: { id: true, title: true, category: true } },
-          // Временно отключено до применения миграции
-          // files: {
-          //   orderBy: { uploadedAt: "desc" },
-          // },
+          files: {
+            orderBy: { uploadedAt: "desc" },
+          },
         },
         orderBy: { createdAt: "desc" },
       })
@@ -162,7 +161,14 @@ export default async function AdminApplicationsPage() {
           createdAt: app.createdAt instanceof Date ? app.createdAt.toISOString() : String(app.createdAt),
           user: app.user,
           service: app.service,
-          files: [], // Временно отключено до применения миграции на Vercel
+          files: app.files?.map((file: any) => ({
+            id: file.id,
+            fileName: file.fileName,
+            filePath: file.filePath,
+            fileSize: file.fileSize,
+            mimeType: file.mimeType,
+            uploadedAt: file.uploadedAt instanceof Date ? file.uploadedAt.toISOString() : String(file.uploadedAt),
+          })) || [],
         } as ApplicationWithRelations;
       } catch (error) {
         console.error("❌ Error serializing application:", app.id, error);

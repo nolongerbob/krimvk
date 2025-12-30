@@ -110,17 +110,27 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    console.log("✅ Technical conditions application created:", {
+      id: application.id,
+      userId: application.userId,
+      serviceId: application.serviceId,
+      status: application.status,
+      hasDescription: !!application.description,
+    });
+
     // Обновляем кэш страниц
     revalidatePath("/dashboard/applications");
     revalidatePath("/admin/applications");
 
     return NextResponse.json({ success: true, application }, { status: 201 });
   } catch (error) {
-    if (process.env.NODE_ENV === "development") {
-      console.error("Error creating technical conditions application:", error);
+    console.error("❌ Error creating technical conditions application:", error);
+    if (error instanceof Error) {
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
     }
     return NextResponse.json(
-      { error: "Ошибка при создании заявки" },
+      { error: "Ошибка при создании заявки", details: process.env.NODE_ENV === "development" ? (error instanceof Error ? error.message : String(error)) : undefined },
       { status: 500 }
     );
   }

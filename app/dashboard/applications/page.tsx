@@ -63,8 +63,23 @@ export default async function ApplicationsPage() {
         orderBy: { createdAt: "desc" },
       })
     );
+
+    console.log("📋 User: Loaded applications:", {
+      userId: session.user.id,
+      total: applications.length,
+      withDescription: applications.filter(a => a.description).length,
+      technicalConditions: applications.filter(a => {
+        try {
+          if (a.description) {
+            const parsed = JSON.parse(a.description);
+            return parsed.type === "technical_conditions";
+          }
+        } catch {}
+        return false;
+      }).length,
+    });
   } catch (error) {
-    console.error("Error fetching applications:", error);
+    console.error("❌ Error fetching applications:", error);
     applications = [];
   }
 

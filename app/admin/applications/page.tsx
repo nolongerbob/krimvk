@@ -79,6 +79,20 @@ export default async function AdminApplicationsPage() {
       })
     );
 
+    console.log("📋 Admin: Loaded applications:", {
+      total: rawApplications.length,
+      withDescription: rawApplications.filter(a => a.description).length,
+      technicalConditions: rawApplications.filter(a => {
+        try {
+          if (a.description) {
+            const parsed = JSON.parse(a.description);
+            return parsed.type === "technical_conditions";
+          }
+        } catch {}
+        return false;
+      }).length,
+    });
+
     // Сериализуем даты для передачи в клиентский компонент
     applications = rawApplications.map((app) => ({
       ...app,

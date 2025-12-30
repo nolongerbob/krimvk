@@ -746,6 +746,22 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                 <p className="text-xs text-gray-500">Укажите адрес регистрации точно как в паспорте</p>
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="objectAddress">
+                  Адрес объекта
+                </Label>
+                <Input
+                  id="objectAddress"
+                  type="text"
+                  value={formData.objectAddress}
+                  onChange={(e) =>
+                    setFormData({ ...formData, objectAddress: e.target.value })
+                  }
+                  placeholder="Введите адрес объекта (если отличается от адреса регистрации)"
+                />
+                <p className="text-xs text-gray-500">Адрес объекта для подключения (если отличается от адреса регистрации)</p>
+              </div>
+
               <div className="border-t pt-4">
                 <h3 className="font-semibold text-lg mb-4">Паспортные данные</h3>
                 <div className="grid md:grid-cols-2 gap-4">

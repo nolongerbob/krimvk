@@ -181,7 +181,7 @@ export function CompleteApplicationForm({
                     accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    PDF, DOC, DOCX, JPG, PNG (макс. 10 МБ на файл)
+                    PDF, DOC, DOCX, JPG, PNG (макс. 10 МБ на файл, общий размер до 50 МБ)
                     {isTechnicalConditions && (
                       <span className="block text-red-600 font-medium mt-1">
                         * Обязательно для завершения заявки на технические условия

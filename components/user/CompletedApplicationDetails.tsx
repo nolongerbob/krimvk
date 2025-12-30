@@ -45,6 +45,7 @@ export function CompletedApplicationDetails({ application, isTechnicalConditions
 
   const completionComment = getCompletionComment();
   const hasFiles = application.files && application.files.length > 0;
+  const files = application.files || [];
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -82,10 +83,10 @@ export function CompletedApplicationDetails({ application, isTechnicalConditions
             <div className="border rounded-lg p-4">
               <h3 className="font-semibold mb-3 flex items-center gap-2">
                 <FileText className="h-5 w-5" />
-                Документы от администратора ({application.files.length})
+                Документы от администратора ({files.length})
               </h3>
               <div className="space-y-2">
-                {application.files.map((file) => (
+                {files.map((file) => (
                   <a
                     key={file.id}
                     href={file.filePath}

@@ -345,24 +345,26 @@ export function ApplicationForm({ formData, isPreview = false }: { formData: any
         <span>  Правительства Российской Федерации от 30 ноября 2021 г. №2130 «Об утверждении Правил подключения (технологического присоединения) объектов капитального строительства к централизованным системам горячего водоснабжения, холодного водоснабжения и (или) водоотведения и о внесении изменений и признании утратившими силу некоторых актов Правительства Российской Федерации».</span>
       </p>
       
-      <p style={{ margin: "20pt 0 10pt 0", textAlign: "justify", textIndent: 0 }}></p>
+      <p style={{ margin: "15pt 0 5pt 0", textAlign: "justify", textIndent: 0 }}></p>
       
       {/* Дата и подпись */}
-      <p style={{ margin: 0, textAlign: "justify", textIndent: 0, fontSize: fontSize }}>
-        <span style={{ display: "inline-block", width: "30%" }}>«____»_____________20__ г.</span>
-        <span style={{ display: "inline-block", width: "35%", textAlign: "center" }}>{underlineField("", 15)}</span>
-        <span style={{ display: "inline-block", width: "35%", textAlign: "right" }}>{underlineField(
-          formData.lastName && formData.firstName 
-            ? `${formData.lastName} ${formData.firstName} ${formData.middleName || ""}`.trim()
-            : "", 
-          20
-        )}</span>
-      </p>
-      <p style={{ margin: "3pt 0 0 0", textAlign: "justify", textIndent: 0, fontSize: fontSize }}>
-        <span style={{ display: "inline-block", width: "30%" }}></span>
-        <span style={{ display: "inline-block", width: "35%", textAlign: "center" }}>(М.П., подпись)</span>
-        <span style={{ display: "inline-block", width: "35%", textAlign: "right" }}>(Ф.И.О.)</span>
-      </p>
+      <div style={{ margin: 0, textAlign: "justify", textIndent: 0, fontSize: fontSize, lineHeight: "1.5" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "3pt" }}>
+          <span style={{ whiteSpace: "nowrap" }}>«____»_____________20__ г.</span>
+          <span style={{ whiteSpace: "nowrap" }}>{underlineField("", 15)}</span>
+          <span style={{ whiteSpace: "nowrap" }}>{underlineField(
+            formData.lastName && formData.firstName 
+              ? `${formData.lastName} ${formData.firstName} ${formData.middleName || ""}`.trim()
+              : "", 
+            20
+          )}</span>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "top" }}>
+          <span style={{ width: "30%" }}></span>
+          <span style={{ textAlign: "center", width: "35%" }}>(М.П., подпись)</span>
+          <span style={{ textAlign: "right", width: "35%" }}>(Ф.И.О.)</span>
+        </div>
+      </div>
     </div>
   );
 }

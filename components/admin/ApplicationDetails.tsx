@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { User, Phone, MapPin, FileText, Building, Settings, Calendar, Download, Eye, Upload, X } from "lucide-react";
+import { User, Phone, MapPin, FileText, Building, Settings, Calendar, Download, Eye, Upload, X, AlertCircle } from "lucide-react";
 import { ApplicationForm } from "@/app/stat-abonentom/application-form";
 
 interface ApplicationDetailsProps {
@@ -59,6 +59,11 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
         jsonPart = application.description.substring(0, commentIndex).trim();
       }
       data = JSON.parse(jsonPart);
+      
+      // Логируем для отладки
+      if (data.uploadedFiles) {
+        console.log("Found uploadedFiles:", data.uploadedFiles);
+      }
     }
   } catch (e) {
     // Если не JSON, значит это старая заявка

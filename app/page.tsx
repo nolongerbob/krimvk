@@ -77,46 +77,11 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Trust Markers - Гос-доверие */}
-      <section className="py-12 bg-white border-b border-gray-200">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            <div className="flex items-center gap-4 text-center md:text-left">
-              <div className="flex-shrink-0 w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                <Shield className="h-8 w-8 text-blue-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg mb-1">Официальная организация</h3>
-                <p className="text-sm text-gray-600">Лицензированная деятельность</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4 text-center md:text-left">
-              <div className="flex-shrink-0 w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                <Award className="h-8 w-8 text-green-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg mb-1">Надежный партнер</h3>
-                <p className="text-sm text-gray-600">Многолетний опыт работы</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4 text-center md:text-left">
-              <div className="flex-shrink-0 w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center">
-                <Building2 className="h-8 w-8 text-purple-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg mb-1">Стабильная работа</h3>
-                <p className="text-sm text-gray-600">Гарантия качества услуг</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Quick Actions */}
       <section className="pt-16 pb-24 bg-gray-50">
         <div className="container mx-auto px-4">
           <h2 className="text-4xl font-semibold text-center mb-16 tracking-tight animate-fade-in">Быстрые действия</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pb-0">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-4 pb-0">
             <QuickActionCard
               iconName="Droplet"
               title="Передать показания"

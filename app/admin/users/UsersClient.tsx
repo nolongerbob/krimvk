@@ -48,6 +48,15 @@ interface Application {
   createdAt: string;
 }
 
+interface Bill {
+  id: string;
+  amount: number;
+  period: string;
+  status: string;
+  dueDate: string;
+  paidAt: string | null;
+}
+
 interface User {
   id: string;
   email: string;
@@ -58,6 +67,7 @@ interface User {
   createdAt: string;
   userAccounts: UserAccount[];
   applications: Application[];
+  bills: Bill[];
   totalDebt: number;
   unpaidBillsCount: number;
 }

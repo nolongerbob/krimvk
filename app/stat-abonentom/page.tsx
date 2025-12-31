@@ -686,13 +686,29 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
             {steps.find((s) => s.id === currentStep)?.label}
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          {error && (
-            <Alert variant="destructive" className="mb-6">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+            <CardContent>
+              {error && (
+                <Alert variant="destructive" className="mb-6">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    {error}
+                    {error.includes("войти в систему") && (
+                      <div className="mt-4 flex gap-3">
+                        <Button asChild size="sm">
+                          <Link href={`/login?callbackUrl=${encodeURIComponent('/stat-abonentom')}`}>
+                            Войти
+                          </Link>
+                        </Button>
+                        <Button asChild size="sm" variant="outline">
+                          <Link href={`/register?callbackUrl=${encodeURIComponent('/stat-abonentom')}`}>
+                            Зарегистрироваться
+                          </Link>
+                        </Button>
+                      </div>
+                    )}
+                  </AlertDescription>
+                </Alert>
+              )}
 
           {/* Шаг 0: Этапы подключения */}
           {currentStep === "stages" && (

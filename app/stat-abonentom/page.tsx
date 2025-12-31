@@ -554,7 +554,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
       <div className="mb-8 text-center">
         <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
           Стать абонентом
@@ -597,8 +597,8 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
 
       {/* Прогресс-бар */}
       <Card className="mb-6">
-        <CardContent className="p-4 md:p-6">
-          <div className="flex items-center gap-1 md:gap-2 overflow-x-auto pb-2">
+        <CardContent className="p-6">
+          <div className="flex items-start justify-between gap-2">
             {steps.map((step, index) => {
               const StepIcon = step.icon;
               const isActive = step.id === currentStep;
@@ -616,7 +616,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                         }
                       }}
                       disabled={!isAccessible}
-                      className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all flex-shrink-0 ${
+                      className={`w-12 h-12 rounded-full flex items-center justify-center transition-all flex-shrink-0 ${
                         isActive
                           ? "bg-blue-600 text-white scale-110"
                           : isCompleted
@@ -626,10 +626,10 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                           : "bg-gray-100 text-gray-400 cursor-not-allowed"
                       }`}
                     >
-                      <StepIcon className="h-4 w-4 md:h-5 md:w-5" />
+                      <StepIcon className="h-5 w-5" />
                     </button>
                     <span
-                      className={`mt-1 md:mt-2 text-[10px] md:text-xs font-medium text-center break-words max-w-[60px] md:max-w-none ${
+                      className={`mt-2 text-xs font-medium text-center leading-tight ${
                         isActive ? "text-blue-600" : "text-gray-600"
                       }`}
                     >
@@ -638,7 +638,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                   </div>
                   {index < steps.length - 1 && (
                     <div
-                      className={`flex-1 h-1 mx-1 md:mx-2 min-w-[8px] ${
+                      className={`flex-1 h-1 mx-2 mt-6 ${
                         isCompleted ? "bg-green-500" : "bg-gray-200"
                       }`}
                     />

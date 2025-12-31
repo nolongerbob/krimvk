@@ -31,11 +31,14 @@ interface UserAccount {
   name: string | null;
   phone: string | null;
   isActive: boolean;
+  region: string | null;
+  createdAt: string;
   meters: Array<{
     id: string;
     serialNumber: string;
     type: string;
     lastReading: number | null;
+    address: string;
   }>;
 }
 

@@ -306,26 +306,35 @@ export default function DashboardPage() {
                     <Wallet className="h-8 w-8 text-blue-600" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm text-gray-600 mb-2">Баланс</p>
-                    {loadingData ? (
-                      <div className="h-10 w-40 bg-gray-200 animate-pulse rounded mb-4"></div>
-                    ) : (
-                      <p className={`text-4xl font-bold mb-4 ${
-                        accountData?.balance !== undefined
-                          ? accountData.balance < 0
-                            ? "text-red-600" // Отрицательный баланс (долг) - красный
-                            : accountData.balance === 0
-                            ? "text-green-600" // Нулевой баланс - зеленый
-                            : accountData.balance > 0
-                            ? "text-red-600" // Положительный баланс (тоже долг в 1С) - красный
-                            : "text-gray-900"
-                          : "text-gray-900"
-                      }`}>
-                        {accountData?.balance !== undefined 
-                          ? `${accountData.balance.toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₽`
-                          : "— ₽"}
-                      </p>
-                    )}
+                    <div className="flex items-start justify-between gap-4 mb-4">
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-600 mb-2">Баланс</p>
+                        {loadingData ? (
+                          <div className="h-10 w-40 bg-gray-200 animate-pulse rounded mb-4"></div>
+                        ) : (
+                          <p className={`text-4xl font-bold ${
+                            accountData?.balance !== undefined
+                              ? accountData.balance < 0
+                                ? "text-red-600" // Отрицательный баланс (долг) - красный
+                                : accountData.balance === 0
+                                ? "text-green-600" // Нулевой баланс - зеленый
+                                : accountData.balance > 0
+                                ? "text-red-600" // Положительный баланс (тоже долг в 1С) - красный
+                                : "text-gray-900"
+                              : "text-gray-900"
+                          }`}>
+                            {accountData?.balance !== undefined 
+                              ? `${accountData.balance.toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₽`
+                              : "— ₽"}
+                          </p>
+                        )}
+                      </div>
+                      {accountData && (accountData.balance < 0 || accountData.balance > 0) && (
+                        <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700 text-white whitespace-nowrap">
+                          <Link href="/dashboard/bills">Оплатить</Link>
+                        </Button>
+                      )}
+                    </div>
                     
                     {accountData && (
                       <>

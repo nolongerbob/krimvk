@@ -1,10 +1,87 @@
 import { getSession } from "@/lib/get-session";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { prisma, withRetry } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
-import { Users, Mail, Phone, Calendar, Shield } from "lucide-react";
 import Link from "next/link";
+import { UsersClient } from "./UsersClient";
+import { get1CUserData } from "@/lib/1c-api";
+
+export const dynamic = 'force-dynamic';
+
+// Функция для парсинга суммы
+const parseAmount = (value: string | number): number => {
+  if (typeof value === "number") return value;
+  if (!value) return 0;
+  const normalized = String(value).replace(/,/g, ".").replace(/\s/g, "");
+  const parsed = parseFloat(normalized);
+  return isNaN(parsed) ? 0 : parsed;
+};
+
+// Функция для расчета задолженности пользователя
+async function calculateUserDebt(userId: string): Promise<{ totalDebt: number; unpaidBillsCount: number }> {
+  try {
+    // Получаем лицевые счета пользователя
+    const userAccounts = await withRetry(() =>
+      prisma.userAccount.findMany({
+        where: {
+          userId: userId,
+          isActive: true,
+        },
+      })
+    );
+
+    let totalDebt = 0;
+    let unpaidBillsCount = 0;
+
+    // Для каждого лицевого счета получаем данные из 1С
+    for (const account of userAccounts) {
+      try {
+        const responseData = await get1CUserData(
+          account.accountNumber,
+          account.password1c || "",
+          account.region || "prog"
+        );
+
+        if (responseData) {
+          // Получаем задолженность из CommonDuty
+          const commonDutyAmount = parseAmount(responseData.CommonDuty || responseData.commonDuty || "0");
+          const debtAmount = Math.abs(commonDutyAmount);
+
+          if (debtAmount > 0.01) {
+            totalDebt += debtAmount;
+            unpaidBillsCount += 1; // Учитываем как минимум один неоплаченный счет
+          }
+        }
+      } catch (error) {
+        console.error(`Error fetching 1C data for account ${account.accountNumber}:`, error);
+        // Продолжаем обработку других счетов
+      }
+    }
+
+    // Также считаем неоплаченные счета из локальной БД
+    const localBills = await withRetry(() =>
+      prisma.bill.findMany({
+        where: {
+          userId: userId,
+          status: {
+            in: ["UNPAID", "OVERDUE"],
+          },
+        },
+      })
+    );
+
+    const localDebt = localBills.reduce((sum, bill) => sum + bill.amount, 0);
+    if (localDebt > totalDebt) {
+      totalDebt = localDebt;
+    }
+    unpaidBillsCount = Math.max(unpaidBillsCount, localBills.length);
+
+    return { totalDebt, unpaidBillsCount };
+  } catch (error) {
+    console.error("Error calculating user debt:", error);
+    return { totalDebt: 0, unpaidBillsCount: 0 };
+  }
+}
 
 export default async function AdminUsersPage() {
   const session = await getSession();
@@ -13,104 +90,118 @@ export default async function AdminUsersPage() {
     redirect("/login?callbackUrl=/admin/users");
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { role: true },
-  });
+  const user = await withRetry(() =>
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true },
+    })
+  );
 
   if (user?.role !== "ADMIN") {
     redirect("/dashboard");
   }
 
-  // Загружаем всех пользователей
-  const users = await prisma.user.findMany({
-    select: {
-      id: true,
-      email: true,
-      name: true,
-      phone: true,
-      role: true,
-      createdAt: true,
-      _count: {
-        select: {
-          applications: true,
-          bills: true,
-          meters: true,
+  // Загружаем всех пользователей с полными данными
+  const rawUsers = await withRetry(() =>
+    prisma.user.findMany({
+      include: {
+        userAccounts: {
+          include: {
+            meters: {
+              select: {
+                id: true,
+                serialNumber: true,
+                type: true,
+                lastReading: true,
+                address: true,
+              },
+            },
+          },
+        },
+        applications: {
+          include: {
+            service: {
+              select: {
+                title: true,
+                category: true,
+              },
+            },
+          },
+          orderBy: { createdAt: "desc" },
+        },
+        bills: {
+          orderBy: { createdAt: "desc" },
+          take: 50, // Ограничиваем количество для производительности
         },
       },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+      orderBy: { createdAt: "desc" },
+    })
+  );
+
+  // Рассчитываем задолженность для каждого пользователя
+  const usersWithDebt = await Promise.all(
+    rawUsers.map(async (user) => {
+      const { totalDebt, unpaidBillsCount } = await calculateUserDebt(user.id);
+      
+      return {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        phone: user.phone,
+        address: user.address,
+        role: user.role,
+        createdAt: user.createdAt.toISOString(),
+        userAccounts: user.userAccounts.map((acc) => ({
+          id: acc.id,
+          accountNumber: acc.accountNumber,
+          address: acc.address,
+          name: acc.name,
+          phone: acc.phone,
+          isActive: acc.isActive,
+          region: acc.region,
+          createdAt: acc.createdAt.toISOString(),
+          meters: acc.meters.map((meter) => ({
+            id: meter.id,
+            serialNumber: meter.serialNumber,
+            type: meter.type,
+            lastReading: meter.lastReading,
+            address: meter.address,
+          })),
+        })),
+        applications: user.applications.map((app) => ({
+          id: app.id,
+          status: app.status,
+          service: app.service,
+          createdAt: app.createdAt.toISOString(),
+          address: app.address,
+        })),
+        bills: user.bills.map((bill) => ({
+          id: bill.id,
+          amount: bill.amount,
+          period: bill.period,
+          status: bill.status,
+          dueDate: bill.dueDate.toISOString(),
+          paidAt: bill.paidAt?.toISOString() || null,
+        })),
+        totalDebt,
+        unpaidBillsCount,
+      };
+    })
+  );
 
   return (
-    <div className="container py-8 px-4">
+    <div className="container py-8 px-4 max-w-7xl">
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold mb-2">Управление пользователями</h1>
-          <p className="text-gray-600">Список всех пользователей системы</p>
+          <p className="text-gray-600">База пользователей со всеми данными, лицевыми счетами и задолженностью</p>
         </div>
         <Button asChild variant="outline">
           <Link href="/admin">Назад</Link>
         </Button>
       </div>
 
-      <div className="space-y-4">
-        {users.map((user) => (
-          <Card key={user.id}>
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <CardTitle>{user.name || user.email}</CardTitle>
-                    {user.role === "ADMIN" && (
-                      <Shield className="h-4 w-4 text-blue-500" />
-                    )}
-                  </div>
-                  <div className="space-y-2 text-sm text-gray-600">
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4" />
-                      <span>{user.email}</span>
-                    </div>
-                    {user.phone && (
-                      <div className="flex items-center gap-2">
-                        <Phone className="h-4 w-4" />
-                        <span>{user.phone}</span>
-                      </div>
-                    )}
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      <span>Регистрация: {new Date(user.createdAt).toLocaleDateString("ru-RU")}</span>
-                    </div>
-                    <div className="flex items-center gap-4 mt-2">
-                      <span>Заявок: {user._count.applications}</span>
-                      <span>Счетов: {user._count.bills}</span>
-                      <span>Счетчиков: {user._count.meters}</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    user.role === "ADMIN" 
-                      ? "bg-blue-100 text-blue-700" 
-                      : "bg-gray-100 text-gray-700"
-                  }`}>
-                    {user.role === "ADMIN" ? "Администратор" : "Пользователь"}
-                  </span>
-                </div>
-              </div>
-            </CardHeader>
-          </Card>
-        ))}
-      </div>
-
-      {users.length === 0 && (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">Нет пользователей</p>
-          </CardContent>
-        </Card>
-      )}
+      <UsersClient users={usersWithDebt} />
     </div>
   );
 }

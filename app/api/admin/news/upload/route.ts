@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/prisma";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
-import { existsSync } from "fs";
+import { put } from "@vercel/blob";
 
 // Увеличиваем лимит времени выполнения для больших файлов
 export const maxDuration = 30;
@@ -49,27 +47,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
+    if (!blobToken) {
+      console.error("BLOB_READ_WRITE_TOKEN is not set in environment variables");
+      return NextResponse.json(
+        { error: "Ошибка конфигурации сервера: токен хранилища не найден" },
+        { status: 500 }
+      );
+    }
 
     // Генерируем уникальное имя файла
     const timestamp = Date.now();
     const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
     const fileName = `${timestamp}_${originalName}`;
-    const uploadDir = join(process.cwd(), "public", "uploads", "news");
+    const blobPath = `news/${fileName}`;
 
-    // Создаем директорию, если её нет
-    if (!existsSync(uploadDir)) {
-      await mkdir(uploadDir, { recursive: true });
-    }
+    // Загружаем файл в Vercel Blob Storage
+    const blob = await put(blobPath, file, {
+      access: 'public',
+      contentType: file.type || 'image/jpeg',
+      token: blobToken,
+    });
 
-    const filePath = join(uploadDir, fileName);
-    await writeFile(filePath, buffer);
-
-    // Возвращаем URL изображения
-    const imageUrl = `/uploads/news/${fileName}`;
-
-    return NextResponse.json({ success: true, imageUrl });
+    // Возвращаем URL изображения из Blob Storage
+    return NextResponse.json({ success: true, imageUrl: blob.url });
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
       console.error("Error uploading image:", error);

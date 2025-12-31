@@ -668,7 +668,7 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
             )}
 
             {/* Приложенные документы пользователем */}
-            {data.uploadedFiles && data.uploadedFiles.length > 0 && (
+            {data && data.uploadedFiles && Array.isArray(data.uploadedFiles) && data.uploadedFiles.length > 0 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
@@ -678,18 +678,26 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {data.uploadedFiles.map((file: string, index: number) => (
-                      <a
-                        key={index}
-                        href={file}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-blue-600 hover:underline"
-                      >
-                        <FileText className="h-4 w-4" />
-                        {file.split("/").pop()}
-                      </a>
-                    ))}
+                    {data.uploadedFiles.map((file: string, index: number) => {
+                      // Обрабатываем как URL или путь к файлу
+                      const fileUrl = file.startsWith('http') || file.startsWith('/') 
+                        ? file 
+                        : `/uploads/applications/${file}`;
+                      const fileName = file.includes('/') ? file.split("/").pop() : file;
+                      
+                      return (
+                        <a
+                          key={index}
+                          href={fileUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-blue-600 hover:underline"
+                        >
+                          <FileText className="h-4 w-4" />
+                          {fileName || `Документ ${index + 1}`}
+                        </a>
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>

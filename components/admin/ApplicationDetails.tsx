@@ -61,9 +61,14 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
       data = JSON.parse(jsonPart);
       
       // Логируем для отладки
-      if (data.uploadedFiles) {
-        console.log("Found uploadedFiles:", data.uploadedFiles);
-      }
+      console.log("Parsed application data:", {
+        type: data.type,
+        hasUploadedFiles: !!data.uploadedFiles,
+        uploadedFiles: data.uploadedFiles,
+        uploadedFilesType: typeof data.uploadedFiles,
+        uploadedFilesIsArray: Array.isArray(data.uploadedFiles),
+        uploadedFilesLength: data.uploadedFiles?.length
+      });
     }
   } catch (e) {
     // Если не JSON, значит это старая заявка

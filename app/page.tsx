@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Wrench, FileText, CreditCard, Phone, CheckCircle, Droplet, AlertTriangle, Mail } from "lucide-react";
+import { Wrench, FileText, CreditCard, Phone, CheckCircle, Droplet, AlertTriangle, Mail, Shield, Award, Building2 } from "lucide-react";
 import { QuickActionCard } from "@/components/QuickActionCard";
 import { AboutCompany } from "@/components/AboutCompany";
 import { NewsSection } from "@/components/NewsSection";
@@ -54,20 +54,59 @@ export default async function HomePage() {
           <div className="absolute inset-0 bg-gradient-to-br from-blue-200/70 via-blue-100/60 to-cyan-100/70 z-10"></div>
         </div>
         <div className="relative z-20 w-full px-2 sm:px-4 md:px-6 lg:px-8">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-8 min-h-[300px] lg:min-h-[280px]">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 min-h-[300px] lg:min-h-[280px] max-w-7xl mx-auto">
             <div className="flex-1 animate-fade-in">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="h-1 w-16 bg-blue-600 rounded-full"></div>
+                <span className="text-sm font-semibold text-blue-700 uppercase tracking-wide">Официальный сайт</span>
+              </div>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
                 ООО &quot;Крымская Водная Компания&quot;
               </h1>
-              <p className="text-lg md:text-xl lg:text-2xl text-gray-700">
+              <p className="text-lg md:text-xl lg:text-2xl text-gray-700 mb-8">
                 Надежное водоснабжение и водоотведение для жителей Крыма
               </p>
+              <div className="flex flex-col sm:flex-row gap-4 mt-6">
+                <BecomeSubscriberButton className="bg-blue-600 hover:bg-blue-700 text-white text-lg px-8 py-6 shadow-lg" />
+                <Button asChild size="lg" variant="outline" className="bg-white/90 border-2 border-blue-300 text-blue-600 hover:bg-blue-50 text-lg px-8 py-6">
+                  <Link href="/login">Личный кабинет</Link>
+                </Button>
+              </div>
             </div>
-            <div className="flex flex-col gap-4 animate-fade-in animate-delay-200">
-              <Button asChild size="lg" variant="outline" className="bg-white border-blue-300 text-blue-600 hover:bg-blue-50 text-lg px-8 py-10">
-                <Link href="/login">Личный кабинет</Link>
-              </Button>
-              <BecomeSubscriberButton className="bg-blue-600 hover:bg-blue-700 text-white text-lg px-20 py-10" />
+          </div>
+        </div>
+      </section>
+
+      {/* Trust Markers - Гос-доверие */}
+      <section className="py-12 bg-white border-b border-gray-200">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            <div className="flex items-center gap-4 text-center md:text-left">
+              <div className="flex-shrink-0 w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                <Shield className="h-8 w-8 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg mb-1">Официальная организация</h3>
+                <p className="text-sm text-gray-600">Лицензированная деятельность</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4 text-center md:text-left">
+              <div className="flex-shrink-0 w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                <Award className="h-8 w-8 text-green-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg mb-1">Надежный партнер</h3>
+                <p className="text-sm text-gray-600">Многолетний опыт работы</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4 text-center md:text-left">
+              <div className="flex-shrink-0 w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center">
+                <Building2 className="h-8 w-8 text-purple-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg mb-1">Стабильная работа</h3>
+                <p className="text-sm text-gray-600">Гарантия качества услуг</p>
+              </div>
             </div>
           </div>
         </div>
@@ -77,13 +116,23 @@ export default async function HomePage() {
       <section className="pt-16 pb-24 bg-gray-50">
         <div className="container mx-auto px-4">
           <h2 className="text-4xl font-semibold text-center mb-16 tracking-tight animate-fade-in">Быстрые действия</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 pb-0">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pb-0">
             <QuickActionCard
               iconName="Droplet"
               title="Передать показания"
               description="Передать показания счетчиков воды"
               href="/dashboard/meters"
               iconColor="text-blue-500"
+              isPrimary={true}
+            />
+            <QuickActionCard
+              iconName="AlertTriangle"
+              title="Сообщение об аварии"
+              description="Сообщить об аварийной ситуации"
+              href="/emergency"
+              iconColor="text-red-500"
+              publicAccess={true}
+              isEmergency={true}
             />
             <QuickActionCard
               iconName="CreditCard"
@@ -98,21 +147,6 @@ export default async function HomePage() {
               description="Просмотр статуса заявок"
               href="/dashboard/applications"
               iconColor="text-purple-500"
-            />
-            <QuickActionCard
-              iconName="Wrench"
-              title="Заказать услугу"
-              description="Подать заявку на услуги"
-              href="/services"
-              iconColor="text-orange-500"
-            />
-            <QuickActionCard
-              iconName="AlertTriangle"
-              title="Сообщение об аварии"
-              description="Сообщить об аварийной ситуации"
-              href="/emergency"
-              iconColor="text-red-500"
-              publicAccess={true}
             />
           </div>
         </div>

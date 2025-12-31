@@ -84,14 +84,14 @@ export function Header() {
             <span className="text-lg sm:text-xl lg:text-2xl font-bold hidden sm:inline lg:inline">КрымВК</span>
           </Link>
 
-          <nav className="hidden xl:flex items-center space-x-4">
+          <nav className="hidden xl:flex items-center space-x-6">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`text-xs xl:text-sm font-medium transition-colors whitespace-nowrap ${
+                className={`text-sm font-medium transition-colors whitespace-nowrap ${
                   isActive(link.href)
-                    ? "text-primary"
+                    ? "text-primary font-semibold"
                     : "hover:text-primary"
                 }`}
               >
@@ -99,61 +99,45 @@ export function Header() {
               </Link>
             ))}
             
-            {/* Абонентам */}
+            {/* Абонентам - объединяем все разделы для абонентов */}
             <DropdownMenu>
-              <DropdownMenuTrigger className={`text-xs xl:text-sm font-medium transition-colors flex items-center gap-1 whitespace-nowrap ${
-                pathname.startsWith("/abonenty")
-                  ? "text-primary"
+              <DropdownMenuTrigger className={`text-sm font-medium transition-colors flex items-center gap-1 whitespace-nowrap ${
+                pathname.startsWith("/abonenty") || pathname.startsWith("/o-kompanii")
+                  ? "text-primary font-semibold"
                   : "hover:text-primary"
               }`}>
                 Абонентам
-                <ChevronDown className="h-3 w-3 xl:h-4 xl:w-4" />
+                <ChevronDown className="h-4 w-4" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-64">
+              <DropdownMenuContent align="start" className="w-72">
+                <DropdownMenuLabel className="text-xs font-semibold">Услуги и подключение</DropdownMenuLabel>
                 <DropdownMenuItem asChild>
                   <Link href="/abonenty/platy-uslugi/otkachka">Заявка на откачку сточных вод</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/abonenty/platy-uslugi/podklyuchenie">Подключение</Link>
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href="/abonenty/tarify-podklyuchenie">Тарифы на подключение и расчет стоимости</Link>
+                  <Link href="/abonenty/tehnologicheskoe-prisoedinenie">Технологическое присоединение</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel className="text-xs font-semibold">Тарифы</DropdownMenuLabel>
+                <DropdownMenuItem asChild>
+                  <Link href="/abonenty/tarify-podklyuchenie">Тарифы на подключение</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/abonenty/tarify-proektirovanie">Тарифы на проектирование</Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/abonenty/tehnologicheskoe-prisoedinenie">Технологическое присоединение</Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* О компании */}
-            <DropdownMenu>
-              <DropdownMenuTrigger className={`text-xs xl:text-sm font-medium transition-colors flex items-center gap-1 whitespace-nowrap ${
-                pathname.startsWith("/o-kompanii")
-                  ? "text-primary"
-                  : "hover:text-primary"
-              }`}>
-                О компании
-                <ChevronDown className="h-3 w-3 xl:h-4 xl:w-4" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-72">
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel className="text-xs font-semibold">О компании</DropdownMenuLabel>
                 <DropdownMenuItem asChild>
                   <Link href="/o-kompanii/rukovodstvo">Руководство</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/o-kompanii/vakansii">Вакансии</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/o-kompanii/istoriya">История предприятия</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/o-kompanii/licenzii">Лицензии и заключения</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/o-kompanii/razvitie">Развитие</Link>
+                  <Link href="/o-kompanii/istoriya">История предприятия</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger>Раскрытие информации</DropdownMenuSubTrigger>
@@ -175,25 +159,6 @@ export function Header() {
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link href="/o-kompanii/raskrytie/investicionnaya-programma">Инвестиционная программа</Link>
-                    </DropdownMenuItem>
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>Водоснабжение</DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent>
-                    <DropdownMenuItem asChild>
-                      <Link href="/o-kompanii/vodosnabzhenie/struktura">Структура водоснабжения</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/o-kompanii/vodosnabzhenie/kachestvo-vody">Качество воды</Link>
-                    </DropdownMenuItem>
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>Водоотведение</DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent>
-                    <DropdownMenuItem asChild>
-                      <Link href="/o-kompanii/kanalizovanie/struktura">Структура водоотведения</Link>
                     </DropdownMenuItem>
                   </DropdownMenuSubContent>
                 </DropdownMenuSub>

@@ -254,7 +254,13 @@ ${formData.description || "не указано"}`;
                 </div>
               </div>
 
-              <div className="pt-4 border-t">
+              <div className="pt-4 border-t space-y-2">
+                <Link href="/stat-abonentom">
+                  <Button className="w-full bg-blue-600 hover:bg-blue-700" size="sm">
+                    <User className="h-4 w-4 mr-2" />
+                    Стать абонентом
+                  </Button>
+                </Link>
                 <Link href="/abonenty/platy-uslugi/podklyuchenie">
                   <Button variant="outline" className="w-full" size="sm">
                     <FileText className="h-4 w-4 mr-2" />

@@ -202,6 +202,14 @@ export default function BecomeSubscriberPage() {
     const currentIndex = getCurrentStepIndex();
     if (currentIndex < steps.length - 1) {
       setCurrentStep(steps[currentIndex + 1].id as Step);
+      // Прокручиваем к началу формы
+      setTimeout(() => {
+        if (formRef.current) {
+          formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }, 100);
     }
   };
 
@@ -209,6 +217,14 @@ export default function BecomeSubscriberPage() {
     const currentIndex = getCurrentStepIndex();
     if (currentIndex > 0) {
       setCurrentStep(steps[currentIndex - 1].id as Step);
+      // Прокручиваем к началу формы
+      setTimeout(() => {
+        if (formRef.current) {
+          formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }, 100);
     }
   };
 

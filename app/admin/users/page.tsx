@@ -185,9 +185,11 @@ export default async function AdminUsersPage() {
         applications: user.applications.map((app) => ({
           id: app.id,
           status: app.status,
+          description: app.description,
           service: app.service,
           createdAt: app.createdAt.toISOString(),
           address: app.address,
+          phone: app.phone,
         })),
         bills: user.bills.map((bill) => ({
           id: bill.id,

@@ -44,6 +44,7 @@ export default function BecomeSubscriberPage() {
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const applicationRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLDivElement>(null);
   const [existingApplication, setExistingApplication] = useState<{
     id: string;
     status: string;

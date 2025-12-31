@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Droplet, Wrench, FileText, Phone, Plug, Settings, MessageSquare, Truck } from "lucide-react";
-import { prisma } from "@/lib/prisma";
+import { prisma, withRetry } from "@/lib/prisma";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -38,10 +38,29 @@ const getServiceIcon = (service: { title: string; category: string }) => {
 };
 
 export default async function ServicesPage() {
-  const services = await prisma.service.findMany({
-    where: { isActive: true },
-    orderBy: { createdAt: "asc" },
-  });
+  let services = [];
+  
+  try {
+    services = await withRetry(() =>
+      prisma.service.findMany({
+        where: { isActive: true },
+        orderBy: { createdAt: "asc" },
+      })
+    );
+    
+    // Логируем для отладки
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[ServicesPage] Найдено услуг: ${services.length}`);
+      services.forEach((s, i) => {
+        console.log(`  ${i + 1}. ${s.title} (ID: ${s.id}, активна: ${s.isActive})`);
+      });
+    }
+  } catch (error) {
+    console.error('[ServicesPage] Ошибка при загрузке услуг:', error);
+    // В случае ошибки показываем пустой массив, чтобы страница не упала
+    services = [];
+  }
+  
   return (
     <div className="container py-12 px-4">
       <div className="text-center mb-12 animate-fade-in">
@@ -51,27 +70,38 @@ export default async function ServicesPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-        {services.map((service) => {
-          const Icon = getServiceIcon(service);
-          return (
-            <Card key={service.id} className="hover:shadow-lg transition-shadow flex flex-col">
-              <CardHeader>
-                <div className="flex items-center space-x-3 mb-2">
-                  <Icon className="h-8 w-8 text-blue-500" />
-                  <CardTitle className="text-xl">{service.title}</CardTitle>
-                </div>
-                <CardDescription>{service.description}</CardDescription>
-              </CardHeader>
-              <CardContent className="flex-1 flex flex-col justify-end">
-                <Button asChild className="w-full">
-                  <Link href={`/services/${service.id}/apply`}>Подать заявку</Link>
-                </Button>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+      {services.length === 0 ? (
+        <Card className="mb-12">
+          <CardContent className="py-12 text-center">
+            <p className="text-gray-500 mb-4">Услуги временно недоступны. Пожалуйста, попробуйте позже.</p>
+            <Button asChild>
+              <Link href="/">Вернуться на главную</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+          {services.map((service) => {
+            const Icon = getServiceIcon(service);
+            return (
+              <Card key={service.id} className="hover:shadow-lg transition-shadow flex flex-col">
+                <CardHeader>
+                  <div className="flex items-center space-x-3 mb-2">
+                    <Icon className="h-8 w-8 text-blue-500" />
+                    <CardTitle className="text-xl">{service.title}</CardTitle>
+                  </div>
+                  <CardDescription>{service.description}</CardDescription>
+                </CardHeader>
+                <CardContent className="flex-1 flex flex-col justify-end">
+                  <Button asChild className="w-full">
+                    <Link href={`/services/${service.id}/apply`}>Подать заявку</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
       <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-8 md:p-12 text-center shadow-soft">
         <h2 className="text-3xl font-semibold mb-4 tracking-tight">Нужна консультация?</h2>

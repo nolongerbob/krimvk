@@ -48,6 +48,119 @@ export default async function ServicesPage() {
       })
     );
     
+    // Если услуг нет, пытаемся создать базовые услуги
+    if (services.length === 0) {
+      console.log('[ServicesPage] Услуги не найдены, создаю базовые услуги...');
+      try {
+        const basicServices = [
+          {
+            title: "Стать абонентом",
+            description: "Техническое подключение к системе централизованного водоснабжения. Включает проектирование, монтаж и пусконаладочные работы.",
+            category: "подключение",
+            price: 15000,
+            isActive: true,
+          },
+          {
+            title: "Ремонт водопроводных сетей",
+            description: "Аварийный и плановый ремонт водопроводных сетей, замена труб, устранение протечек.",
+            category: "ремонт",
+            price: null,
+            isActive: true,
+          },
+          {
+            title: "Установка счетчиков воды",
+            description: "Установка и поверка счетчиков холодной и горячей воды. Официальная регистрация приборов учета.",
+            category: "установка",
+            price: 5000,
+            isActive: true,
+          },
+          {
+            title: "Консультации специалистов",
+            description: "Консультации по вопросам водоснабжения, водоотведения, тарифам и правилам пользования.",
+            category: "консультация",
+            price: null,
+            isActive: true,
+          },
+          {
+            title: "Переоформление договора",
+            description: "Переоформление договора на водоснабжение при смене собственника или других обстоятельствах.",
+            category: "документы",
+            price: null,
+            isActive: true,
+          },
+          {
+            title: "Проверка качества воды",
+            description: "Лабораторный анализ качества воды на соответствие санитарным нормам и стандартам.",
+            category: "анализ",
+            price: 3000,
+            isActive: true,
+          },
+          {
+            title: "Откачка и вывоз сточных вод",
+            description: "Услуги ассенизатора по специальным социальным тарифам для домов, не подключенных к центральной канализации. Работаем официально, быстро и аккуратно.",
+            category: "ремонт",
+            price: null,
+            isActive: true,
+          },
+        ];
+
+        for (const serviceData of basicServices) {
+          const existing = await prisma.service.findFirst({
+            where: { title: serviceData.title },
+          });
+          
+          if (existing) {
+            await prisma.service.update({
+              where: { id: existing.id },
+              data: { isActive: true },
+            });
+          } else {
+            await prisma.service.create({
+              data: serviceData,
+            });
+          }
+        }
+
+        // Создаем услугу "Технологическое присоединение"
+        const techService = await prisma.service.findFirst({
+          where: {
+            OR: [
+              { id: "tehnologicheskoe-prisoedinenie" },
+              { title: { contains: "Технологическое присоединение", mode: "insensitive" } },
+            ],
+          },
+        });
+
+        if (techService) {
+          await prisma.service.update({
+            where: { id: techService.id },
+            data: { isActive: true },
+          });
+        } else {
+          await prisma.service.create({
+            data: {
+              id: "tehnologicheskoe-prisoedinenie",
+              title: "Технологическое присоединение",
+              description: "Заявка на выдачу технических условий на подключение (технологическое присоединение) к централизованным системам холодного водоснабжения и (или) водоотведения",
+              category: "подключение",
+              isActive: true,
+            },
+          });
+        }
+
+        // Загружаем услуги снова
+        services = await withRetry(() =>
+          prisma.service.findMany({
+            where: { isActive: true },
+            orderBy: { createdAt: "asc" },
+          })
+        );
+        console.log(`[ServicesPage] Создано услуг: ${services.length}`);
+      } catch (seedError) {
+        console.error('[ServicesPage] Ошибка при создании услуг:', seedError);
+      }
+    }
+    
     // Логируем для отладки
     if (process.env.NODE_ENV === 'development') {
       console.log(`[ServicesPage] Найдено услуг: ${services.length}`);

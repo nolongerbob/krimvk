@@ -19,7 +19,10 @@ import {
   CheckCircle,
   XCircle,
   Clock,
+  Eye,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ApplicationDetails } from "@/components/admin/ApplicationDetails";
 
 interface UserAccount {
   id: string;

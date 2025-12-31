@@ -21,6 +21,10 @@ import {
   FileText,
   Upload,
   Download,
+  Clock,
+  Lightbulb,
+  Wrench,
+  FileCheck,
 } from "lucide-react";
 import { AddressInput } from "@/components/AddressInput";
 import { ApplicationForm } from "./application-form";
@@ -557,6 +561,111 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
           Заполните форму для подключения к системам водоснабжения и водоотведения
         </p>
       </div>
+
+      {/* Этапы подключения */}
+      <Card className="mb-8 border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50">
+        <CardHeader>
+          <CardTitle className="text-2xl flex items-center gap-2">
+            <Settings className="h-6 w-6 text-blue-600" />
+            Этапы подключения к системам водоснабжения и водоотведения
+          </CardTitle>
+          <CardDescription className="text-base">
+            Ознакомьтесь с процессом подключения перед заполнением заявки
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Этап 1 */}
+          <div className="bg-white rounded-lg p-4 border-l-4 border-l-blue-500 shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <span className="text-sm font-bold text-blue-600">1</span>
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-lg mb-1">Получение Технических Условий (ТУ)</h3>
+                <p className="text-sm text-gray-600 mb-2">Подача заявления в производственно-технический отдел (ПТО)</p>
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <Clock className="h-3 w-3" />
+                  <span>Срок выдачи: 14 рабочих дней</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Этап 2 */}
+          <div className="bg-white rounded-lg p-4 border-l-4 border-l-green-500 shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                <span className="text-sm font-bold text-green-600">2</span>
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-lg mb-1">Заключение договора о подключении</h3>
+                <p className="text-sm text-gray-600">У вас есть 1 год с момента получения ТУ для заключения договора</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Этап 3 */}
+          <div className="bg-white rounded-lg p-4 border-l-4 border-l-purple-500 shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                <span className="text-sm font-bold text-purple-600">3</span>
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-lg mb-1">Проектирование</h3>
+                <p className="text-sm text-gray-600">Разработка проектно-сметной документации на строительство сетей</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Этап 4 */}
+          <div className="bg-white rounded-lg p-4 border-l-4 border-l-orange-500 shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                <span className="text-sm font-bold text-orange-600">4</span>
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-lg mb-1">Строительство сетей</h3>
+                <p className="text-sm text-gray-600">Прокладка труб водопровода/канализации согласно согласованному проекту</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Этап 5 */}
+          <div className="bg-white rounded-lg p-4 border-l-4 border-l-red-500 shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                <span className="text-sm font-bold text-red-600">5</span>
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-lg mb-1">Врезка и пуск</h3>
+                <p className="text-sm text-gray-600">Получение разрешения на врезку и подключение к сетям</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Этап 6 */}
+          <div className="bg-white rounded-lg p-4 border-l-4 border-l-cyan-500 shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-8 h-8 bg-cyan-100 rounded-full flex items-center justify-center">
+                <span className="text-sm font-bold text-cyan-600">6</span>
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-lg mb-1">Заключение абонентского договора</h3>
+                <p className="text-sm text-gray-600">Оформление договора на водоснабжение и водоотведение</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 pt-4 border-t border-blue-200">
+            <Button asChild variant="outline" size="sm" className="w-full">
+              <Link href="/abonenty/platy-uslugi/podklyuchenie">
+                <FileText className="h-4 w-4 mr-2" />
+                Подробная информация о каждом этапе
+              </Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Сообщение о существующей заявке */}
       {existingApplication && (

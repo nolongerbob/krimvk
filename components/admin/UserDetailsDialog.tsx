@@ -360,7 +360,7 @@ export function UserDetailsDialog({ user, open, onOpenChange }: UserDetailsDialo
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-4">
                         <div>
                           <p className="text-gray-500 mb-1">Категория</p>
                           <p className="font-medium">{application.service.category}</p>
@@ -377,6 +377,23 @@ export function UserDetailsDialog({ user, open, onOpenChange }: UserDetailsDialo
                             {new Date(application.createdAt).toLocaleDateString("ru-RU")}
                           </p>
                         </div>
+                      </div>
+                      <div className="flex justify-end">
+                        <ApplicationDetails
+                          application={{
+                            id: application.id,
+                            status: application.status,
+                            description: null,
+                            address: application.address,
+                            phone: null,
+                            createdAt: application.createdAt,
+                            user: {
+                              name: user.name,
+                              email: user.email,
+                              phone: user.phone,
+                            },
+                          }}
+                        />
                       </div>
                     </CardContent>
                   </Card>

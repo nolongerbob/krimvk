@@ -52,10 +52,17 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
   
   try {
     if (application.description) {
-      data = JSON.parse(application.description);
+      // Пытаемся извлечь JSON часть, если есть комментарий администратора
+      let jsonPart = application.description;
+      const commentIndex = application.description.indexOf('\n\nКомментарий при завершении:');
+      if (commentIndex !== -1) {
+        jsonPart = application.description.substring(0, commentIndex).trim();
+      }
+      data = JSON.parse(jsonPart);
     }
   } catch (e) {
     // Если не JSON, значит это старая заявка
+    console.error("Error parsing application description:", e);
   }
 
   const isTechnicalConditions = data && data.type === "technical_conditions";

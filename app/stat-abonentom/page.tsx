@@ -106,15 +106,14 @@ export default function BecomeSubscriberPage() {
   });
 
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login?callbackUrl=/stat-abonentom");
-      return;
-    }
-
+    // Загружаем профиль только если пользователь авторизован
     if (status === "authenticated" && session?.user) {
       loadUserProfile();
+    } else if (status === "unauthenticated") {
+      // Если не авторизован, просто завершаем загрузку профиля
+      setLoadingProfile(false);
     }
-  }, [status, session, router]);
+  }, [status, session]);
 
   const loadUserProfile = async () => {
     try {
@@ -199,6 +198,21 @@ export default function BecomeSubscriberPage() {
       setError("Заполните все обязательные поля");
       return;
     }
+    
+    // Проверяем авторизацию при переходе со страницы "Этапы подключения" на следующий шаг
+    if (currentStep === "stages" && status !== "authenticated") {
+      setError("Для продолжения необходимо войти в систему или зарегистрироваться");
+      // Прокручиваем к началу формы, чтобы пользователь увидел сообщение
+      setTimeout(() => {
+        if (formRef.current) {
+          formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }, 100);
+      return;
+    }
+    
     setError(null);
     const currentIndex = getCurrentStepIndex();
     if (currentIndex < steps.length - 1) {
@@ -542,9 +556,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
     );
   }
 
-  if (status === "unauthenticated") {
-    return null;
-  }
+  // Разрешаем показывать страницу даже неавторизованным пользователям для просмотра этапов
 
   if (success) {
     return (

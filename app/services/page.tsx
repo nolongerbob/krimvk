@@ -36,7 +36,14 @@ const getServiceIcon = (service: { title: string; category: string }) => {
 };
 
 export default async function ServicesPage() {
-  let services = [];
+  let services: Array<{
+    id: string;
+    title: string;
+    description: string;
+    category: string;
+    price: number | null;
+    isActive: boolean;
+  }> = [];
   
   try {
     services = await withRetry(() =>

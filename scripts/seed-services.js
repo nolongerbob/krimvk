@@ -52,13 +52,6 @@ async function seedServices() {
       price: null,
       isActive: true,
     },
-    {
-      title: "Откачка сточных вод",
-      description: "Услуга по откачке сточных вод из выгребных ям и септиков. Быстрое и качественное обслуживание для частных домов и дач.",
-      category: "ремонт",
-      price: null,
-      isActive: true,
-    },
   ];
 
   try {
@@ -75,8 +68,47 @@ async function seedServices() {
         });
         console.log(`✅ Создана услуга: ${service.title}`);
       } else {
-        console.log(`ℹ️ Услуга уже существует: ${service.title}`);
+        // Обновляем существующую услугу, чтобы убедиться, что она активна
+        await prisma.service.update({
+          where: { id: existing.id },
+          data: { 
+            isActive: true,
+            description: service.description,
+            category: service.category,
+            price: service.price,
+          },
+        });
+        console.log(`✅ Обновлена услуга: ${service.title} (активна: ${existing.isActive ? 'да' : 'теперь да'})`);
       }
+    }
+    
+    // Проверяем наличие услуги "Технологическое присоединение"
+    let techService = await prisma.service.findFirst({
+      where: {
+        OR: [
+          { id: "tehnologicheskoe-prisoedinenie" },
+          { title: { contains: "Технологическое присоединение", mode: "insensitive" } },
+        ],
+      },
+    });
+
+    if (!techService) {
+      techService = await prisma.service.create({
+        data: {
+          id: "tehnologicheskoe-prisoedinenie",
+          title: "Технологическое присоединение",
+          description: "Заявка на выдачу технических условий на подключение (технологическое присоединение) к централизованным системам холодного водоснабжения и (или) водоотведения",
+          category: "подключение",
+          isActive: true,
+        },
+      });
+      console.log(`✅ Создана услуга: ${techService.title}`);
+    } else if (!techService.isActive) {
+      await prisma.service.update({
+        where: { id: techService.id },
+        data: { isActive: true },
+      });
+      console.log(`✅ Активирована услуга: ${techService.title}`);
     }
 
     console.log('\n✅ Все услуги созданы!');

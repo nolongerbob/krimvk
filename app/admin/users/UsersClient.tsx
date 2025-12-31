@@ -45,12 +45,14 @@ interface UserAccount {
 interface Application {
   id: string;
   status: string;
+  description: string | null;
   service: {
     title: string;
     category: string;
   };
   createdAt: string;
   address: string | null;
+  phone: string | null;
 }
 
 interface Bill {

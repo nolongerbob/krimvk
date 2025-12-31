@@ -9,23 +9,17 @@ export const revalidate = 0;
 
 const iconMap: { [key: string]: any } = {
   подключение: Plug,
-  "подключение": Plug,
-  "Подключение": Plug,
+  Подключение: Plug,
   ремонт: Wrench,
-  "ремонт": Wrench,
-  "Ремонт": Wrench,
+  Ремонт: Wrench,
   установка: Settings,
-  "установка": Settings,
-  "Установка": Settings,
+  Установка: Settings,
   консультация: Phone,
-  "консультация": Phone,
-  "Консультация": Phone,
+  Консультация: Phone,
   документы: FileText,
-  "документы": FileText,
-  "Документы": FileText,
+  Документы: FileText,
   анализ: Droplet,
-  "анализ": Droplet,
-  "Анализ": Droplet,
+  Анализ: Droplet,
 };
 
 // Специальная обработка для услуги откачки
@@ -33,8 +27,12 @@ const getServiceIcon = (service: { title: string; category: string }) => {
   if (service.title.toLowerCase().includes("откачка") || service.title.toLowerCase().includes("сточных вод")) {
     return Truck;
   }
+  // Нормализуем категорию: приводим к нижнему регистру, но ищем в мапе с учетом регистра
   const categoryLower = service.category.toLowerCase();
-  return iconMap[categoryLower] || iconMap[service.category] || Plug;
+  const categoryKey = Object.keys(iconMap).find(
+    key => key.toLowerCase() === categoryLower
+  );
+  return categoryKey ? iconMap[categoryKey] : Plug;
 };
 
 export default async function ServicesPage() {

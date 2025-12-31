@@ -127,6 +127,20 @@ export default async function AdminUsersPage() {
               },
             },
           },
+          select: {
+            id: true,
+            status: true,
+            description: true,
+            address: true,
+            phone: true,
+            createdAt: true,
+            service: {
+              select: {
+                title: true,
+                category: true,
+              },
+            },
+          },
           orderBy: { createdAt: "desc" },
         },
         bills: {

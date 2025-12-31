@@ -45,12 +45,14 @@ interface UserAccount {
 interface Application {
   id: string;
   status: string;
+  description: string | null;
   service: {
     title: string;
     category: string;
   };
   createdAt: string;
   address: string | null;
+  phone: string | null;
 }
 
 interface Bill {
@@ -383,9 +385,9 @@ export function UserDetailsDialog({ user, open, onOpenChange }: UserDetailsDialo
                           application={{
                             id: application.id,
                             status: application.status,
-                            description: null,
+                            description: application.description,
                             address: application.address,
-                            phone: null,
+                            phone: application.phone,
                             createdAt: application.createdAt,
                             user: {
                               name: user.name,

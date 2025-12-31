@@ -673,7 +673,7 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
             )}
 
             {/* Приложенные документы пользователем */}
-            {data && data.uploadedFiles && Array.isArray(data.uploadedFiles) && data.uploadedFiles.length > 0 && (
+            {data && data.uploadedFiles && Array.isArray(data.uploadedFiles) && data.uploadedFiles.length > 0 ? (
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
@@ -685,10 +685,16 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
                   <div className="space-y-2">
                     {data.uploadedFiles.map((file: string, index: number) => {
                       // Обрабатываем как URL или путь к файлу
-                      const fileUrl = file.startsWith('http') || file.startsWith('/') 
-                        ? file 
-                        : `/uploads/applications/${file}`;
-                      const fileName = file.includes('/') ? file.split("/").pop() : file;
+                      let fileUrl = file;
+                      if (!file.startsWith('http') && !file.startsWith('/')) {
+                        fileUrl = `/uploads/applications/${file}`;
+                      }
+                      
+                      // Извлекаем имя файла
+                      let fileName = file;
+                      if (file.includes('/')) {
+                        fileName = file.split("/").pop() || `Документ ${index + 1}`;
+                      }
                       
                       return (
                         <a
@@ -696,13 +702,23 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
                           href={fileUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-blue-600 hover:underline"
+                          className="flex items-center gap-2 text-blue-600 hover:underline p-2 rounded hover:bg-gray-50 transition-colors"
                         >
-                          <FileText className="h-4 w-4" />
-                          {fileName || `Документ ${index + 1}`}
+                          <FileText className="h-4 w-4 flex-shrink-0" />
+                          <span className="flex-1">{fileName}</span>
+                          <Download className="h-3 w-3 ml-auto text-gray-400" />
                         </a>
                       );
                     })}
+                  </div>
+                </CardContent>
+              </Card>
+            ) : data && isTechnicalConditions && (
+              <Card className="border-gray-200">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <AlertCircle className="h-4 w-4" />
+                    <span>Пользователь не приложил документы</span>
                   </div>
                 </CardContent>
               </Card>

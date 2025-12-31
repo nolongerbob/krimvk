@@ -47,8 +47,10 @@ interface Application {
   status: string;
   service: {
     title: string;
+    category: string;
   };
   createdAt: string;
+  address: string | null;
 }
 
 interface Bill {

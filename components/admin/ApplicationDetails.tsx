@@ -678,7 +678,24 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
             )}
 
             {/* Приложенные документы пользователем */}
-            {data && data.uploadedFiles && Array.isArray(data.uploadedFiles) && data.uploadedFiles.length > 0 ? (
+            {(() => {
+              // Проверяем наличие файлов
+              const files = data?.uploadedFiles;
+              const hasFiles = files && Array.isArray(files) && files.length > 0;
+              
+              if (!hasFiles && data && isTechnicalConditions) {
+                console.log("No files found. Data:", {
+                  hasData: !!data,
+                  hasUploadedFiles: !!data.uploadedFiles,
+                  uploadedFiles: data.uploadedFiles,
+                  uploadedFilesType: typeof data.uploadedFiles,
+                  isArray: Array.isArray(data.uploadedFiles),
+                  length: data.uploadedFiles?.length
+                });
+              }
+              
+              return hasFiles;
+            })() ? (
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">

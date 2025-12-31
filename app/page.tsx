@@ -40,7 +40,7 @@ export default async function HomePage() {
   return (
     <div className="flex flex-col">
       {/* Hero Section */}
-      <section className="relative text-gray-900 py-16 md:py-24 overflow-hidden">
+      <section className="relative text-white py-16 md:py-24 overflow-hidden">
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <Image
@@ -51,26 +51,30 @@ export default async function HomePage() {
             priority
             quality={90}
           />
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-200/70 via-blue-100/60 to-cyan-100/70 z-10"></div>
+          {/* Затемнение фона для лучшей читабельности */}
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-900/80 via-blue-800/75 to-cyan-900/80 z-10"></div>
         </div>
         <div className="relative z-20 w-full px-2 sm:px-4 md:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 min-h-[300px] lg:min-h-[280px] max-w-7xl mx-auto">
             <div className="flex-1 animate-fade-in">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="h-1 w-16 bg-blue-600 rounded-full"></div>
-                <span className="text-sm font-semibold text-blue-700 uppercase tracking-wide">Официальный сайт</span>
-              </div>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
-                ООО &quot;Крымская Водная Компания&quot;
-              </h1>
-              <p className="text-lg md:text-xl lg:text-2xl text-gray-700 mb-8">
-                Надежное водоснабжение и водоотведение для жителей Крыма
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 mt-6">
-                <BecomeSubscriberButton className="bg-blue-600 hover:bg-blue-700 text-white text-lg px-8 py-6 shadow-lg" />
-                <Button asChild size="lg" variant="outline" className="bg-white/90 border-2 border-blue-300 text-blue-600 hover:bg-blue-50 text-lg px-8 py-6">
-                  <Link href="/login">Личный кабинет</Link>
-                </Button>
+              {/* Полупрозрачная плашка для дополнительного контраста */}
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 md:p-8 border border-white/20 shadow-xl">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-1 w-16 bg-white rounded-full"></div>
+                  <span className="text-sm font-semibold text-white uppercase tracking-wide">Официальный сайт</span>
+                </div>
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight text-white drop-shadow-lg">
+                  ООО &quot;Крымская Водная Компания&quot;
+                </h1>
+                <p className="text-lg md:text-xl lg:text-2xl text-white/95 mb-8 drop-shadow-md">
+                  Надежное водоснабжение и водоотведение для жителей Крыма
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 mt-6">
+                  <BecomeSubscriberButton className="bg-white text-blue-600 hover:bg-blue-50 text-lg px-8 py-6 shadow-lg font-semibold" />
+                  <Button asChild size="lg" variant="outline" className="bg-white/10 backdrop-blur-sm border-2 border-white text-white hover:bg-white/20 text-lg px-8 py-6">
+                    <Link href="/login">Личный кабинет</Link>
+                  </Button>
+                </div>
               </div>
             </div>
           </div>

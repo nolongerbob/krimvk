@@ -329,9 +329,9 @@ export default function DashboardPage() {
                           </p>
                         )}
                       </div>
-                      {accountData && (accountData.balance < 0 || accountData.balance > 0) && (
+                      {accountData && selectedAccountId && (accountData.balance < 0 || accountData.balance > 0) && (
                         <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700 text-white whitespace-nowrap">
-                          <Link href="/dashboard/bills">Оплатить</Link>
+                          <Link href={`/dashboard/receipts/view?accountId=${selectedAccountId}`}>Оплатить</Link>
                         </Button>
                       )}
                     </div>

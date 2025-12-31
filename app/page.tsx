@@ -9,6 +9,9 @@ import { NewsSection } from "@/components/NewsSection";
 import { BecomeSubscriberButton } from "@/components/BecomeSubscriberButton";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function HomePage() {
   // Загружаем последние опубликованные новости
   let news: Array<{

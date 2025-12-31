@@ -151,18 +151,26 @@ export default function CreateNewsPage() {
                 </div>
               )}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
               <input
                 id="published"
                 type="checkbox"
                 checked={published}
                 onChange={(e) => setPublished(e.target.checked)}
-                className="h-4 w-4"
+                className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
-              <label htmlFor="published" className="text-sm font-medium">
-                Опубликовать сразу
+              <label htmlFor="published" className="text-sm font-semibold text-blue-900 cursor-pointer">
+                Опубликовать сразу (новость будет видна на сайте)
               </label>
             </div>
+            {!published && (
+              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-sm text-yellow-800">
+                  ⚠️ Новость будет создана как черновик и не будет отображаться на сайте. 
+                  Вы сможете опубликовать её позже из списка новостей.
+                </p>
+              </div>
+            )}
             <div className="flex gap-4">
               <Button type="submit" disabled={isLoading}>
                 {isLoading ? "Создание..." : "Создать новость"}

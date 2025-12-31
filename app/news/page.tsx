@@ -4,6 +4,9 @@ import { Calendar, User, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function NewsPage() {
   // Загружаем только опубликованные новости
   const news = await prisma.news.findMany({

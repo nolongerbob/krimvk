@@ -24,18 +24,18 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { regionId, year, order } = body;
+    const { cityId, year, order } = body;
 
-    if (!regionId || !year) {
+    if (!cityId || !year) {
       return NextResponse.json(
-        { error: "ID региона и год обязательны" },
+        { error: "ID города и год обязательны" },
         { status: 400 }
       );
     }
 
     const yearRecord = await prisma.waterQualityYear.create({
       data: {
-        regionId,
+        cityId,
         year: parseInt(year),
         order: order || 0,
       },
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     console.error("Error creating year:", error);
     if (error.code === 'P2002') {
       return NextResponse.json(
-        { error: "Год для этого региона уже существует" },
+        { error: "Год для этого города уже существует" },
         { status: 400 }
       );
     }

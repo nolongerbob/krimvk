@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = 'force-dynamic';
 
-// GET - получить все регионы
+// GET - получить все города
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -23,8 +23,9 @@ export async function GET() {
       return NextResponse.json({ error: "Доступ запрещен" }, { status: 403 });
     }
 
-    const regions = await prisma.waterQualityRegion.findMany({
+    const cities = await prisma.waterQualityCity.findMany({
       include: {
+        district: { select: { id: true, name: true } },
         years: {
           include: {
             documents: true,
@@ -35,17 +36,17 @@ export async function GET() {
       orderBy: { name: "asc" },
     });
 
-    return NextResponse.json(regions);
+    return NextResponse.json(cities);
   } catch (error) {
-    console.error("Error fetching regions:", error);
+    console.error("Error fetching cities:", error);
     return NextResponse.json(
-      { error: "Ошибка при загрузке регионов" },
+      { error: "Ошибка при загрузке городов" },
       { status: 500 }
     );
   }
 }
 
-// POST - создать регион
+// POST - создать город
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -64,27 +65,38 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, order } = body;
+    const { name, districtId, order } = body;
 
     if (!name) {
       return NextResponse.json(
-        { error: "Название региона обязательно" },
+        { error: "Название города обязательно" },
         { status: 400 }
       );
     }
 
-    const region = await prisma.waterQualityRegion.create({
+    if (!districtId) {
+      return NextResponse.json(
+        { error: "ID района обязателен" },
+        { status: 400 }
+      );
+    }
+
+    const city = await prisma.waterQualityCity.create({
       data: {
         name,
+        districtId,
         order: order || 0,
+      },
+      include: {
+        district: { select: { id: true, name: true } },
       },
     });
 
-    return NextResponse.json(region);
+    return NextResponse.json(city);
   } catch (error) {
-    console.error("Error creating region:", error);
+    console.error("Error creating city:", error);
     return NextResponse.json(
-      { error: "Ошибка при создании региона" },
+      { error: "Ошибка при создании города" },
       { status: 500 }
     );
   }

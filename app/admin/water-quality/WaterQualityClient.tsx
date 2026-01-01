@@ -11,9 +11,8 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
-import { Droplet, Plus, Trash2, Edit, FileText, Calendar, MapPin, Upload, X } from "lucide-react";
+import { Droplet, Plus, Trash2, Edit, FileText, Calendar, MapPin, Upload, Building2 } from "lucide-react";
 import Link from "next/link";
 
 interface WaterQualityDocument {
@@ -33,16 +32,26 @@ interface WaterQualityYear {
   documents: WaterQualityDocument[];
 }
 
-interface WaterQualityRegion {
+interface WaterQualityCity {
   id: string;
+  districtId: string;
   name: string;
   order: number;
   isActive: boolean;
   years: WaterQualityYear[];
+  district?: { id: string; name: string };
+}
+
+interface WaterQualityDistrict {
+  id: string;
+  name: string;
+  order: number;
+  isActive: boolean;
+  cities: WaterQualityCity[];
 }
 
 interface WaterQualityClientProps {
-  initialRegions: WaterQualityRegion[];
+  initialDistricts: WaterQualityDistrict[];
 }
 
 function formatFileSize(bytes: number): string {
@@ -53,22 +62,27 @@ function formatFileSize(bytes: number): string {
   return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
 }
 
-export function WaterQualityClient({ initialRegions }: WaterQualityClientProps) {
-  const [regions, setRegions] = useState<WaterQualityRegion[]>(initialRegions);
+export function WaterQualityClient({ initialDistricts }: WaterQualityClientProps) {
+  const [districts, setDistricts] = useState<WaterQualityDistrict[]>(initialDistricts);
   const [loading, setLoading] = useState(false);
   const [selectedYearId, setSelectedYearId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
   // Диалоги
-  const [regionDialogOpen, setRegionDialogOpen] = useState(false);
+  const [districtDialogOpen, setDistrictDialogOpen] = useState(false);
+  const [cityDialogOpen, setCityDialogOpen] = useState(false);
   const [yearDialogOpen, setYearDialogOpen] = useState(false);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
-  const [editingRegion, setEditingRegion] = useState<WaterQualityRegion | null>(null);
-  const [editingYear, setEditingYear] = useState<{ yearId: string; regionId: string } | null>(null);
+  const [editingDistrict, setEditingDistrict] = useState<WaterQualityDistrict | null>(null);
+  const [editingCity, setEditingCity] = useState<WaterQualityCity | null>(null);
+  const [editingYear, setEditingYear] = useState<{ yearId: string; cityId: string } | null>(null);
 
   // Формы
-  const [regionName, setRegionName] = useState("");
-  const [regionOrder, setRegionOrder] = useState(0);
+  const [districtName, setDistrictName] = useState("");
+  const [districtOrder, setDistrictOrder] = useState(0);
+  const [cityName, setCityName] = useState("");
+  const [cityOrder, setCityOrder] = useState(0);
+  const [selectedDistrictId, setSelectedDistrictId] = useState<string>("");
   const [yearValue, setYearValue] = useState("");
   const [yearOrder, setYearOrder] = useState(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -76,10 +90,10 @@ export function WaterQualityClient({ initialRegions }: WaterQualityClientProps) 
   const refreshData = async () => {
     setLoading(true);
     try {
-      const response = await fetch("/api/admin/water-quality/regions");
+      const response = await fetch("/api/admin/water-quality/districts");
       if (response.ok) {
         const data = await response.json();
-        setRegions(data);
+        setDistricts(data);
       }
     } catch (error) {
       console.error("Error refreshing data:", error);
@@ -88,77 +102,77 @@ export function WaterQualityClient({ initialRegions }: WaterQualityClientProps) 
     }
   };
 
-  const handleCreateRegion = async () => {
-    if (!regionName.trim()) return;
+  const handleCreateDistrict = async () => {
+    if (!districtName.trim()) return;
 
     setLoading(true);
     try {
-      const response = await fetch("/api/admin/water-quality/regions", {
+      const response = await fetch("/api/admin/water-quality/districts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: regionName,
-          order: regionOrder,
+          name: districtName,
+          order: districtOrder,
         }),
       });
 
       if (response.ok) {
         await refreshData();
-        setRegionDialogOpen(false);
-        setRegionName("");
-        setRegionOrder(0);
+        setDistrictDialogOpen(false);
+        setDistrictName("");
+        setDistrictOrder(0);
       } else {
         const error = await response.json();
-        alert(error.error || "Ошибка при создании региона");
+        alert(error.error || "Ошибка при создании района");
       }
     } catch (error) {
-      console.error("Error creating region:", error);
-      alert("Ошибка при создании региона");
+      console.error("Error creating district:", error);
+      alert("Ошибка при создании района");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleUpdateRegion = async (regionId: string) => {
-    if (!regionName.trim()) return;
+  const handleUpdateDistrict = async (districtId: string) => {
+    if (!districtName.trim()) return;
 
     setLoading(true);
     try {
-      const response = await fetch(`/api/admin/water-quality/regions/${regionId}`, {
+      const response = await fetch(`/api/admin/water-quality/districts/${districtId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: regionName,
-          order: regionOrder,
+          name: districtName,
+          order: districtOrder,
         }),
       });
 
       if (response.ok) {
         await refreshData();
-        setRegionDialogOpen(false);
-        setEditingRegion(null);
-        setRegionName("");
-        setRegionOrder(0);
+        setDistrictDialogOpen(false);
+        setEditingDistrict(null);
+        setDistrictName("");
+        setDistrictOrder(0);
       } else {
         const error = await response.json();
-        alert(error.error || "Ошибка при обновлении региона");
+        alert(error.error || "Ошибка при обновлении района");
       }
     } catch (error) {
-      console.error("Error updating region:", error);
-      alert("Ошибка при обновлении региона");
+      console.error("Error updating district:", error);
+      alert("Ошибка при обновлении района");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDeleteRegion = async (regionId: string) => {
-    if (!confirm("Вы уверены, что хотите удалить этот регион? Все связанные годы и документы также будут удалены.")) {
+  const handleDeleteDistrict = async (districtId: string) => {
+    if (!confirm("Вы уверены, что хотите удалить этот район? Все связанные города, годы и документы также будут удалены.")) {
       return;
     }
 
     setLoading(true);
     try {
-      const response = await fetch(`/api/admin/water-quality/regions/${regionId}`, {
+      const response = await fetch(`/api/admin/water-quality/districts/${districtId}`, {
         method: "DELETE",
       });
 
@@ -166,11 +180,104 @@ export function WaterQualityClient({ initialRegions }: WaterQualityClientProps) 
         await refreshData();
       } else {
         const error = await response.json();
-        alert(error.error || "Ошибка при удалении региона");
+        alert(error.error || "Ошибка при удалении района");
       }
     } catch (error) {
-      console.error("Error deleting region:", error);
-      alert("Ошибка при удалении региона");
+      console.error("Error deleting district:", error);
+      alert("Ошибка при удалении района");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateCity = async () => {
+    if (!cityName.trim() || !selectedDistrictId) return;
+
+    setLoading(true);
+    try {
+      const response = await fetch("/api/admin/water-quality/regions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: cityName,
+          districtId: selectedDistrictId,
+          order: cityOrder,
+        }),
+      });
+
+      if (response.ok) {
+        await refreshData();
+        setCityDialogOpen(false);
+        setEditingCity(null);
+        setCityName("");
+        setCityOrder(0);
+        setSelectedDistrictId("");
+      } else {
+        const error = await response.json();
+        alert(error.error || "Ошибка при создании города");
+      }
+    } catch (error) {
+      console.error("Error creating city:", error);
+      alert("Ошибка при создании города");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateCity = async (cityId: string) => {
+    if (!cityName.trim() || !selectedDistrictId) return;
+
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/admin/water-quality/regions/${cityId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: cityName,
+          districtId: selectedDistrictId,
+          order: cityOrder,
+        }),
+      });
+
+      if (response.ok) {
+        await refreshData();
+        setCityDialogOpen(false);
+        setEditingCity(null);
+        setCityName("");
+        setCityOrder(0);
+        setSelectedDistrictId("");
+      } else {
+        const error = await response.json();
+        alert(error.error || "Ошибка при обновлении города");
+      }
+    } catch (error) {
+      console.error("Error updating city:", error);
+      alert("Ошибка при обновлении города");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteCity = async (cityId: string) => {
+    if (!confirm("Вы уверены, что хотите удалить этот город? Все связанные годы и документы также будут удалены.")) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/admin/water-quality/regions/${cityId}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        await refreshData();
+      } else {
+        const error = await response.json();
+        alert(error.error || "Ошибка при удалении города");
+      }
+    } catch (error) {
+      console.error("Error deleting city:", error);
+      alert("Ошибка при удалении города");
     } finally {
       setLoading(false);
     }
@@ -185,7 +292,7 @@ export function WaterQualityClient({ initialRegions }: WaterQualityClientProps) 
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          regionId: editingYear.regionId,
+          cityId: editingYear.cityId,
           year: parseInt(yearValue),
           order: yearOrder,
         }),
@@ -262,7 +369,6 @@ export function WaterQualityClient({ initialRegions }: WaterQualityClientProps) 
         setUploadDialogOpen(false);
         setSelectedFile(null);
         setSelectedYearId(null);
-        // Сброс input
         const fileInput = document.getElementById("file-upload") as HTMLInputElement;
         if (fileInput) fileInput.value = "";
       } else {
@@ -303,21 +409,36 @@ export function WaterQualityClient({ initialRegions }: WaterQualityClientProps) 
     }
   };
 
-  const openRegionDialog = (region?: WaterQualityRegion) => {
-    if (region) {
-      setEditingRegion(region);
-      setRegionName(region.name);
-      setRegionOrder(region.order);
+  const openDistrictDialog = (district?: WaterQualityDistrict) => {
+    if (district) {
+      setEditingDistrict(district);
+      setDistrictName(district.name);
+      setDistrictOrder(district.order);
     } else {
-      setEditingRegion(null);
-      setRegionName("");
-      setRegionOrder(0);
+      setEditingDistrict(null);
+      setDistrictName("");
+      setDistrictOrder(0);
     }
-    setRegionDialogOpen(true);
+    setDistrictDialogOpen(true);
   };
 
-  const openYearDialog = (regionId: string) => {
-    setEditingYear({ yearId: "", regionId });
+  const openCityDialog = (districtId: string, city?: WaterQualityCity) => {
+    if (city) {
+      setEditingCity(city);
+      setCityName(city.name);
+      setCityOrder(city.order);
+      setSelectedDistrictId(city.districtId);
+    } else {
+      setEditingCity(null);
+      setCityName("");
+      setCityOrder(0);
+      setSelectedDistrictId(districtId);
+    }
+    setCityDialogOpen(true);
+  };
+
+  const openYearDialog = (cityId: string) => {
+    setEditingYear({ yearId: "", cityId });
     setYearValue("");
     setYearOrder(0);
     setYearDialogOpen(true);
@@ -334,12 +455,12 @@ export function WaterQualityClient({ initialRegions }: WaterQualityClientProps) 
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold mb-2">Управление качеством питьевой воды</h1>
-          <p className="text-gray-600">Создание разделов (городов), годов и загрузка документов</p>
+          <p className="text-gray-600">Создание районов, городов, годов и загрузка документов</p>
         </div>
         <div className="flex gap-4">
-          <Button onClick={() => openRegionDialog()} disabled={loading}>
+          <Button onClick={() => openDistrictDialog()} disabled={loading}>
             <Plus className="h-4 w-4 mr-2" />
-            Создать регион
+            Создать район
           </Button>
           <Button asChild variant="outline">
             <Link href="/admin">Назад</Link>
@@ -347,32 +468,32 @@ export function WaterQualityClient({ initialRegions }: WaterQualityClientProps) 
         </div>
       </div>
 
-      {regions.length === 0 ? (
+      {districts.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
             <Droplet className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500 mb-4">Нет регионов</p>
-            <Button onClick={() => openRegionDialog()}>
+            <p className="text-gray-500 mb-4">Нет районов</p>
+            <Button onClick={() => openDistrictDialog()}>
               <Plus className="h-4 w-4 mr-2" />
-              Создать первый регион
+              Создать первый район
             </Button>
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-6">
-          {regions.map((region) => (
-            <Card key={region.id} className="shadow-lg">
+          {districts.map((district) => (
+            <Card key={district.id} className="shadow-lg">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <MapPin className="h-6 w-6 text-blue-600" />
-                    <CardTitle className="text-2xl">{region.name}</CardTitle>
+                    <Building2 className="h-6 w-6 text-blue-600" />
+                    <CardTitle className="text-2xl">{district.name}</CardTitle>
                   </div>
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => openRegionDialog(region)}
+                      onClick={() => openDistrictDialog(district)}
                       disabled={loading}
                     >
                       <Edit className="h-4 w-4 mr-2" />
@@ -381,16 +502,16 @@ export function WaterQualityClient({ initialRegions }: WaterQualityClientProps) 
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => openYearDialog(region.id)}
+                      onClick={() => openCityDialog(district.id)}
                       disabled={loading}
                     >
                       <Plus className="h-4 w-4 mr-2" />
-                      Добавить год
+                      Добавить город
                     </Button>
                     <Button
                       variant="destructive"
                       size="sm"
-                      onClick={() => handleDeleteRegion(region.id)}
+                      onClick={() => handleDeleteDistrict(district.id)}
                       disabled={loading}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -399,68 +520,112 @@ export function WaterQualityClient({ initialRegions }: WaterQualityClientProps) 
                 </div>
               </CardHeader>
               <CardContent>
-                {region.years.length === 0 ? (
-                  <p className="text-gray-500">Годы для этого региона пока не добавлены</p>
+                {district.cities.length === 0 ? (
+                  <p className="text-gray-500">Города для этого района пока не добавлены</p>
                 ) : (
                   <div className="space-y-4">
-                    {region.years.map((year) => (
-                      <div key={year.id} className="border-l-4 border-l-blue-500 pl-4">
+                    {district.cities.map((city) => (
+                      <div key={city.id} className="border-l-4 border-l-green-500 pl-4">
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
-                            <Calendar className="h-5 w-5 text-blue-600" />
-                            <h3 className="text-xl font-semibold">{year.year} год</h3>
+                            <MapPin className="h-5 w-5 text-green-600" />
+                            <h3 className="text-xl font-semibold">{city.name}</h3>
                           </div>
                           <div className="flex gap-2">
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => openUploadDialog(year.id)}
+                              onClick={() => openCityDialog(district.id, city)}
                               disabled={loading}
                             >
-                              <Upload className="h-4 w-4 mr-2" />
-                              Загрузить документ
+                              <Edit className="h-4 w-4 mr-2" />
+                              Редактировать
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openYearDialog(city.id)}
+                              disabled={loading}
+                            >
+                              <Plus className="h-4 w-4 mr-2" />
+                              Добавить год
                             </Button>
                             <Button
                               variant="destructive"
                               size="sm"
-                              onClick={() => handleDeleteYear(year.id)}
+                              onClick={() => handleDeleteCity(city.id)}
                               disabled={loading}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         </div>
-                        {year.documents.length === 0 ? (
-                          <p className="text-gray-500 text-sm">Документы для этого года пока не загружены</p>
+                        {city.years.length === 0 ? (
+                          <p className="text-gray-500 text-sm">Годы для этого города пока не добавлены</p>
                         ) : (
-                          <div className="grid gap-2 mt-3">
-                            {year.documents.map((doc) => (
-                              <div
-                                key={doc.id}
-                                className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
-                              >
-                                <FileText className="h-5 w-5 text-blue-600 flex-shrink-0" />
-                                <div className="flex-1 min-w-0">
-                                  <a
-                                    href={doc.fileUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="font-medium text-gray-900 hover:text-blue-600 truncate block"
-                                  >
-                                    {doc.fileName}
-                                  </a>
-                                  <p className="text-sm text-gray-500">
-                                    {formatFileSize(doc.fileSize)}
-                                  </p>
+                          <div className="space-y-3 mt-3">
+                            {city.years.map((year) => (
+                              <div key={year.id} className="border-l-4 border-l-blue-500 pl-4">
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center gap-2">
+                                    <Calendar className="h-4 w-4 text-blue-600" />
+                                    <h4 className="font-semibold">{year.year} год</h4>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => openUploadDialog(year.id)}
+                                      disabled={loading}
+                                    >
+                                      <Upload className="h-4 w-4 mr-2" />
+                                      Загрузить документ
+                                    </Button>
+                                    <Button
+                                      variant="destructive"
+                                      size="sm"
+                                      onClick={() => handleDeleteYear(year.id)}
+                                      disabled={loading}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
                                 </div>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleDeleteDocument(doc.id)}
-                                  disabled={loading}
-                                >
-                                  <Trash2 className="h-4 w-4 text-red-500" />
-                                </Button>
+                                {year.documents.length === 0 ? (
+                                  <p className="text-gray-500 text-xs">Документы для этого года пока не загружены</p>
+                                ) : (
+                                  <div className="grid gap-2 mt-2">
+                                    {year.documents.map((doc) => (
+                                      <div
+                                        key={doc.id}
+                                        className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg"
+                                      >
+                                        <FileText className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                                        <div className="flex-1 min-w-0">
+                                          <a
+                                            href={doc.fileUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="font-medium text-gray-900 hover:text-blue-600 truncate block text-sm"
+                                          >
+                                            {doc.fileName}
+                                          </a>
+                                          <p className="text-xs text-gray-500">
+                                            {formatFileSize(doc.fileSize)}
+                                          </p>
+                                        </div>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => handleDeleteDocument(doc.id)}
+                                          disabled={loading}
+                                        >
+                                          <Trash2 className="h-3 w-3 text-red-500" />
+                                        </Button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
                             ))}
                           </div>
@@ -475,61 +640,140 @@ export function WaterQualityClient({ initialRegions }: WaterQualityClientProps) 
         </div>
       )}
 
-      {/* Диалог создания/редактирования региона */}
-      <Dialog open={regionDialogOpen} onOpenChange={setRegionDialogOpen}>
+      {/* Диалог создания/редактирования района */}
+      <Dialog open={districtDialogOpen} onOpenChange={setDistrictDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingRegion ? "Редактировать регион" : "Создать регион"}
+              {editingDistrict ? "Редактировать район" : "Создать район"}
             </DialogTitle>
             <DialogDescription>
-              {editingRegion
-                ? "Измените данные региона"
-                : "Добавьте новый регион (город) для качества воды"}
+              {editingDistrict
+                ? "Измените данные района"
+                : "Добавьте новый район"}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="region-name">Название региона</Label>
+              <Label htmlFor="district-name">Название района</Label>
               <Input
-                id="region-name"
-                value={regionName}
-                onChange={(e) => setRegionName(e.target.value)}
-                placeholder="Например: Симферополь"
+                id="district-name"
+                value={districtName}
+                onChange={(e) => setDistrictName(e.target.value)}
+                placeholder="Например: Сакский район"
               />
             </div>
             <div>
-              <Label htmlFor="region-order">Порядок отображения</Label>
+              <Label htmlFor="district-order">Порядок отображения</Label>
               <Input
-                id="region-order"
+                id="district-order"
                 type="number"
-                value={regionOrder}
-                onChange={(e) => setRegionOrder(parseInt(e.target.value) || 0)}
+                value={districtOrder}
+                onChange={(e) => setDistrictOrder(parseInt(e.target.value) || 0)}
               />
             </div>
             <div className="flex justify-end gap-2">
               <Button
                 variant="outline"
                 onClick={() => {
-                  setRegionDialogOpen(false);
-                  setEditingRegion(null);
-                  setRegionName("");
-                  setRegionOrder(0);
+                  setDistrictDialogOpen(false);
+                  setEditingDistrict(null);
+                  setDistrictName("");
+                  setDistrictOrder(0);
                 }}
               >
                 Отмена
               </Button>
               <Button
                 onClick={() => {
-                  if (editingRegion) {
-                    handleUpdateRegion(editingRegion.id);
+                  if (editingDistrict) {
+                    handleUpdateDistrict(editingDistrict.id);
                   } else {
-                    handleCreateRegion();
+                    handleCreateDistrict();
                   }
                 }}
-                disabled={loading || !regionName.trim()}
+                disabled={loading || !districtName.trim()}
               >
-                {editingRegion ? "Сохранить" : "Создать"}
+                {editingDistrict ? "Сохранить" : "Создать"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Диалог создания/редактирования города */}
+      <Dialog open={cityDialogOpen} onOpenChange={setCityDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {editingCity ? "Редактировать город" : "Создать город"}
+            </DialogTitle>
+            <DialogDescription>
+              {editingCity
+                ? "Измените данные города"
+                : "Добавьте новый город в выбранный район"}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="city-district">Район</Label>
+              <select
+                id="city-district"
+                value={selectedDistrictId}
+                onChange={(e) => setSelectedDistrictId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                disabled={!!editingCity}
+              >
+                <option value="">Выберите район</option>
+                {districts.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <Label htmlFor="city-name">Название города</Label>
+              <Input
+                id="city-name"
+                value={cityName}
+                onChange={(e) => setCityName(e.target.value)}
+                placeholder="Например: Симферополь"
+              />
+            </div>
+            <div>
+              <Label htmlFor="city-order">Порядок отображения</Label>
+              <Input
+                id="city-order"
+                type="number"
+                value={cityOrder}
+                onChange={(e) => setCityOrder(parseInt(e.target.value) || 0)}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setCityDialogOpen(false);
+                  setEditingCity(null);
+                  setCityName("");
+                  setCityOrder(0);
+                  setSelectedDistrictId("");
+                }}
+              >
+                Отмена
+              </Button>
+              <Button
+                onClick={() => {
+                  if (editingCity) {
+                    handleUpdateCity(editingCity.id);
+                  } else {
+                    handleCreateCity();
+                  }
+                }}
+                disabled={loading || !cityName.trim() || !selectedDistrictId}
+              >
+                {editingCity ? "Сохранить" : "Создать"}
               </Button>
             </div>
           </div>
@@ -542,7 +786,7 @@ export function WaterQualityClient({ initialRegions }: WaterQualityClientProps) 
           <DialogHeader>
             <DialogTitle>Добавить год</DialogTitle>
             <DialogDescription>
-              Добавьте новый год для выбранного региона
+              Добавьте новый год для выбранного города
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -638,4 +882,3 @@ export function WaterQualityClient({ initialRegions }: WaterQualityClientProps) 
     </div>
   );
 }
-

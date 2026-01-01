@@ -5,11 +5,53 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = 'force-dynamic';
 
-// PUT - обновить регион
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+// GET - получить все районы
+export async function GET() {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session) {
+      return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true },
+    });
+
+    if (user?.role !== "ADMIN") {
+      return NextResponse.json({ error: "Доступ запрещен" }, { status: 403 });
+    }
+
+    const districts = await prisma.waterQualityDistrict.findMany({
+      include: {
+        cities: {
+          include: {
+            years: {
+              include: {
+                documents: true,
+              },
+              orderBy: { year: "desc" },
+            },
+          },
+          orderBy: { name: "asc" },
+        },
+      },
+      orderBy: { name: "asc" },
+    });
+
+    return NextResponse.json(districts);
+  } catch (error) {
+    console.error("Error fetching districts:", error);
+    return NextResponse.json(
+      { error: "Ошибка при загрузке районов" },
+      { status: 500 }
+    );
+  }
+}
+
+// POST - создать район
+export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -27,58 +69,27 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { name, order, isActive } = body;
+    const { name, order } = body;
 
-    const city = await prisma.waterQualityCity.update({
-      where: { id: params.id },
+    if (!name) {
+      return NextResponse.json(
+        { error: "Название района обязательно" },
+        { status: 400 }
+      );
+    }
+
+    const district = await prisma.waterQualityDistrict.create({
       data: {
-        ...(name !== undefined && { name }),
-        ...(order !== undefined && { order }),
-        ...(isActive !== undefined && { isActive }),
-        ...(body.districtId !== undefined && { districtId: body.districtId }),
+        name,
+        order: order || 0,
       },
     });
 
-    return NextResponse.json(city);
+    return NextResponse.json(district);
   } catch (error) {
-    console.error("Error updating region:", error);
+    console.error("Error creating district:", error);
     return NextResponse.json(
-      { error: "Ошибка при обновлении региона" },
-      { status: 500 }
-    );
-  }
-}
-
-// DELETE - удалить регион
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const session = await getServerSession(authOptions);
-
-    if (!session) {
-      return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { role: true },
-    });
-
-    if (user?.role !== "ADMIN") {
-      return NextResponse.json({ error: "Доступ запрещен" }, { status: 403 });
-    }
-
-    await prisma.waterQualityCity.delete({
-      where: { id: params.id },
-    });
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("Error deleting region:", error);
-    return NextResponse.json(
-      { error: "Ошибка при удалении региона" },
+      { error: "Ошибка при создании района" },
       { status: 500 }
     );
   }

@@ -42,6 +42,13 @@ export async function POST(request: NextRequest) {
     // Проверяем, что год существует
     const year = await prisma.waterQualityYear.findUnique({
       where: { id: yearId },
+      include: {
+        city: {
+          include: {
+            district: true,
+          },
+        },
+      },
     });
 
     if (!year) {

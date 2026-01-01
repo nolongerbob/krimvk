@@ -21,16 +21,21 @@ export default async function AdminWaterQualityPage() {
     redirect("/dashboard");
   }
 
-  // Загружаем все регионы с годами и документами
-  const regions = await prisma.waterQualityRegion.findMany({
+  // Загружаем все районы с городами, годами и документами
+  const districts = await prisma.waterQualityDistrict.findMany({
     include: {
-      years: {
+      cities: {
         include: {
-          documents: {
-            orderBy: { uploadedAt: "desc" },
+          years: {
+            include: {
+              documents: {
+                orderBy: { uploadedAt: "desc" },
+              },
+            },
+            orderBy: { year: "desc" },
           },
         },
-        orderBy: { year: "desc" },
+        orderBy: { name: "asc" },
       },
     },
     orderBy: { name: "asc" },
@@ -38,7 +43,7 @@ export default async function AdminWaterQualityPage() {
 
   return (
     <div className="container py-8 px-4">
-      <WaterQualityClient initialRegions={JSON.parse(JSON.stringify(regions))} />
+      <WaterQualityClient initialDistricts={JSON.parse(JSON.stringify(districts))} />
     </div>
   );
 }

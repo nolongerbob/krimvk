@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = 'force-dynamic';
 
-// PUT - обновить регион
+// PUT - обновить район
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -29,27 +29,26 @@ export async function PUT(
     const body = await request.json();
     const { name, order, isActive } = body;
 
-    const city = await prisma.waterQualityCity.update({
+    const district = await prisma.waterQualityDistrict.update({
       where: { id: params.id },
       data: {
         ...(name !== undefined && { name }),
         ...(order !== undefined && { order }),
         ...(isActive !== undefined && { isActive }),
-        ...(body.districtId !== undefined && { districtId: body.districtId }),
       },
     });
 
-    return NextResponse.json(city);
+    return NextResponse.json(district);
   } catch (error) {
-    console.error("Error updating region:", error);
+    console.error("Error updating district:", error);
     return NextResponse.json(
-      { error: "Ошибка при обновлении региона" },
+      { error: "Ошибка при обновлении района" },
       { status: 500 }
     );
   }
 }
 
-// DELETE - удалить регион
+// DELETE - удалить район
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -70,15 +69,15 @@ export async function DELETE(
       return NextResponse.json({ error: "Доступ запрещен" }, { status: 403 });
     }
 
-    await prisma.waterQualityCity.delete({
+    await prisma.waterQualityDistrict.delete({
       where: { id: params.id },
     });
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error deleting region:", error);
+    console.error("Error deleting district:", error);
     return NextResponse.json(
-      { error: "Ошибка при удалении региона" },
+      { error: "Ошибка при удалении района" },
       { status: 500 }
     );
   }

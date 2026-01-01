@@ -353,32 +353,47 @@ enum EmergencyStatus {
 }
 
 // Качество питьевой воды
-model WaterQualityRegion {
+model WaterQualityDistrict {
   id          String   @id @default(cuid())
-  name        String   // Название города/раздела
+  name        String   // Название района
   order       Int      @default(0) // Порядок отображения
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  years WaterQualityYear[]
+  cities WaterQualityCity[]
 
-  @@map("water_quality_regions")
+  @@map("water_quality_districts")
+}
+
+model WaterQualityCity {
+  id          String   @id @default(cuid())
+  districtId  String   // ID района
+  name        String   // Название города
+  order       Int      @default(0) // Порядок отображения
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  district WaterQualityDistrict @relation(fields: [districtId], references: [id], onDelete: Cascade)
+  years    WaterQualityYear[]
+
+  @@map("water_quality_cities")
 }
 
 model WaterQualityYear {
   id          String   @id @default(cuid())
-  regionId    String
+  cityId      String   // ID города (было regionId)
   year        Int      // Год (например, 2024)
   order       Int      @default(0) // Порядок отображения
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  region    WaterQualityRegion    @relation(fields: [regionId], references: [id], onDelete: Cascade)
+  city      WaterQualityCity     @relation(fields: [cityId], references: [id], onDelete: Cascade)
   documents WaterQualityDocument[]
 
-  @@unique([regionId, year])
+  @@unique([cityId, year])
   @@map("water_quality_years")
 }
 

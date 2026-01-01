@@ -4,30 +4,38 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-// GET - получить все регионы с годами и документами (публичный доступ)
+// GET - получить все районы с городами, годами и документами (публичный доступ)
 export async function GET() {
   try {
-    const regions = await prisma.waterQualityRegion.findMany({
+    const districts = await prisma.waterQualityDistrict.findMany({
       where: {
         isActive: true,
       },
       include: {
-        years: {
+        cities: {
           where: {
             isActive: true,
           },
           include: {
-            documents: {
-              orderBy: { uploadedAt: "desc" },
+            years: {
+              where: {
+                isActive: true,
+              },
+              include: {
+                documents: {
+                  orderBy: { uploadedAt: "desc" },
+                },
+              },
+              orderBy: { year: "desc" },
             },
           },
-          orderBy: { year: "desc" },
+          orderBy: { name: "asc" },
         },
       },
       orderBy: { name: "asc" },
     });
 
-    return NextResponse.json(regions);
+    return NextResponse.json(districts);
   } catch (error) {
     console.error("Error fetching water quality data:", error);
     return NextResponse.json(

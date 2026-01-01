@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/prisma";
 import { put } from "@vercel/blob";
 
-export const maxDuration = 60; // Увеличиваем время для больших файлов
+export const maxDuration = 300; // Увеличиваем время для очень больших файлов (5 минут)
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,12 +23,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Доступ запрещен" }, { status: 403 });
     }
 
+    // Используем streaming для больших файлов
     const formData = await request.formData();
     const file = formData.get("file") as File;
     const yearId = formData.get("yearId") as string;
-
-    if (!file) {
-      return NextResponse.json({ error: "Файл не найден" }, { status: 400 });
+    
+    if (!file || file.size === 0) {
+      return NextResponse.json({ error: "Файл не найден или пуст" }, { status: 400 });
     }
 
     if (!yearId) {

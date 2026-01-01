@@ -686,10 +686,10 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
             {steps.find((s) => s.id === currentStep)?.label}
           </CardTitle>
         </CardHeader>
-            <CardContent>
-              {error && (
-                <Alert variant="destructive" className="mb-6">
-                  <AlertCircle className="h-4 w-4" />
+        <CardContent>
+          {error && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
                     {error}
                     {error.includes("войти в систему") && (
@@ -707,7 +707,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                       </div>
                     )}
                   </AlertDescription>
-                </Alert>
+            </Alert>
               )}
 
           {/* Шаг 0: Этапы подключения */}

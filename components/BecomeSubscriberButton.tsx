@@ -13,17 +13,17 @@ export function BecomeSubscriberButton({ className }: BecomeSubscriberButtonProp
   const router = useRouter();
 
   const handleClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    router.push("/stat-abonentom");
+      e.preventDefault();
+      router.push("/stat-abonentom");
   };
 
-  return (
-    <Button
-      size="lg"
-      className={className}
-      onClick={handleClick}
-    >
-      Стать абонентом
+    return (
+      <Button
+        size="lg"
+        className={className}
+        onClick={handleClick}
+      >
+        Стать абонентом
     </Button>
   );
 }

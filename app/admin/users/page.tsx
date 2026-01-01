@@ -92,8 +92,8 @@ export default async function AdminUsersPage() {
 
   const user = await withRetry(() =>
     prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { role: true },
+    where: { id: session.user.id },
+    select: { role: true },
     })
   );
 
@@ -127,21 +127,21 @@ export default async function AdminUsersPage() {
               },
             },
           },
-          select: {
-            id: true,
+    select: {
+      id: true,
             status: true,
             description: true,
             address: true,
-            phone: true,
-            createdAt: true,
+      phone: true,
+      createdAt: true,
             service: {
-              select: {
+        select: {
                 title: true,
                 category: true,
-              },
-            },
-          },
-          orderBy: { createdAt: "desc" },
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
         },
         bills: {
           orderBy: { createdAt: "desc" },

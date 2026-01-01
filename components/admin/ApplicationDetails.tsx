@@ -719,13 +719,13 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
                       }
                       
                       return (
-                        <a
-                          key={index}
+                      <a
+                        key={index}
                           href={fileUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        target="_blank"
+                        rel="noopener noreferrer"
                           className="flex items-center gap-2 text-blue-600 hover:underline p-2 rounded hover:bg-gray-50 transition-colors"
-                        >
+                      >
                           <FileText className="h-4 w-4 flex-shrink-0" />
                           <span className="flex-1">{fileName}</span>
                           <Download className="h-3 w-3 ml-auto text-gray-400" />

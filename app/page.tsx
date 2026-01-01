@@ -67,16 +67,16 @@ export default async function HomePage() {
                   <span className="text-sm font-semibold text-white uppercase tracking-wide">Официальный сайт</span>
                 </div>
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight text-white drop-shadow-lg">
-                  ООО &quot;Крымская Водная Компания&quot;
-                </h1>
+                ООО &quot;Крымская Водная Компания&quot;
+              </h1>
                 <p className="text-lg md:text-xl lg:text-2xl text-white/95 mb-8 drop-shadow-md">
-                  Надежное водоснабжение и водоотведение для жителей Крыма
-                </p>
+                Надежное водоснабжение и водоотведение для жителей Крыма
+              </p>
                 <div className="flex flex-col sm:flex-row gap-4 mt-6">
                   <BecomeSubscriberButton className="bg-white text-blue-600 hover:bg-blue-50 text-lg px-8 py-6 shadow-lg font-semibold" />
                   <Button asChild size="lg" variant="outline" className="bg-white/10 backdrop-blur-sm border-2 border-white text-white hover:bg-white/20 text-lg px-8 py-6">
-                    <Link href="/login">Личный кабинет</Link>
-                  </Button>
+                <Link href="/login">Личный кабинет</Link>
+              </Button>
                 </div>
               </div>
             </div>

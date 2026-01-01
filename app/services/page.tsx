@@ -156,8 +156,8 @@ export default async function ServicesPage() {
         // Загружаем услуги снова
         services = await withRetry(() =>
           prisma.service.findMany({
-            where: { isActive: true },
-            orderBy: { createdAt: "asc" },
+    where: { isActive: true },
+    orderBy: { createdAt: "asc" },
           })
         );
         console.log(`[ServicesPage] Создано услуг: ${services.length}`);
@@ -198,27 +198,27 @@ export default async function ServicesPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {services.map((service) => {
-            const Icon = getServiceIcon(service);
-            return (
-              <Card key={service.id} className="hover:shadow-lg transition-shadow flex flex-col">
-                <CardHeader>
-                  <div className="flex items-center space-x-3 mb-2">
-                    <Icon className="h-8 w-8 text-blue-500" />
-                    <CardTitle className="text-xl">{service.title}</CardTitle>
-                  </div>
-                  <CardDescription>{service.description}</CardDescription>
-                </CardHeader>
-                <CardContent className="flex-1 flex flex-col justify-end">
-                  <Button asChild className="w-full">
-                    <Link href={`/services/${service.id}/apply`}>Подать заявку</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+        {services.map((service) => {
+          const Icon = getServiceIcon(service);
+          return (
+            <Card key={service.id} className="hover:shadow-lg transition-shadow flex flex-col">
+              <CardHeader>
+                <div className="flex items-center space-x-3 mb-2">
+                  <Icon className="h-8 w-8 text-blue-500" />
+                  <CardTitle className="text-xl">{service.title}</CardTitle>
+                </div>
+                <CardDescription>{service.description}</CardDescription>
+              </CardHeader>
+              <CardContent className="flex-1 flex flex-col justify-end">
+                <Button asChild className="w-full">
+                  <Link href={`/services/${service.id}/apply`}>Подать заявку</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
       )}
 
       <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-8 md:p-12 text-center shadow-soft">

@@ -37,6 +37,18 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
+  // Увеличиваем лимит размера тела запроса для больших файлов
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '0', // Без ограничений (0 = unlimited)
+    },
+  },
+  // Увеличиваем лимит размера для API routes
+  api: {
+    bodyParser: {
+      sizeLimit: '0', // Без ограничений
+    },
+  },
   // Явно указываем webpack для разрешения путей
   webpack: (config) => {
     config.resolve.alias = {

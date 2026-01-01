@@ -124,13 +124,13 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* About Company */}
-      <AboutCompany />
-
       {/* News Section */}
       <div className="pt-8">
         <NewsSection news={news} />
       </div>
+
+      {/* About Company */}
+      <AboutCompany />
 
       {/* Contact Info */}
       <section className="py-16 bg-white">

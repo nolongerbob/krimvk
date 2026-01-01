@@ -23,12 +23,23 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'blob.vercel-storage.com',
       },
+      // Yandex Object Storage
+      {
+        protocol: 'https',
+        hostname: 'storage.yandexcloud.net',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.storage.yandexcloud.net',
+      },
     ],
   },
   // Сжатие
   compress: true,
   // Оптимизация production сборки
   swcMinify: true,
+  // Standalone output для Docker
+  output: 'standalone',
   // Отключаем ESLint во время сборки для Vercel
   eslint: {
     ignoreDuringBuilds: true,

@@ -2,7 +2,17 @@
 
 ## 1. Создание инфраструктуры
 
-### Managed PostgreSQL
+### Managed PostgreSQL (или другой провайдер)
+
+**Варианты:**
+- Yandex Cloud Managed PostgreSQL (рекомендуется)
+- Selectel Managed PostgreSQL (дешевле)
+- Timeweb Managed PostgreSQL (проще)
+- VPS с PostgreSQL (бюджетный вариант)
+
+**Подробное сравнение:** см. `docs/DATABASE_HOSTING_OPTIONS.md`
+
+#### Yandex Cloud Managed PostgreSQL:
 
 1. Зайдите в Yandex Cloud Console
 2. Создайте Managed PostgreSQL кластер:

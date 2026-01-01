@@ -33,7 +33,7 @@ export default async function AdminWaterQualityPage() {
         orderBy: { year: "desc" },
       },
     },
-    orderBy: { order: "asc" },
+    orderBy: { name: "asc" },
   });
 
   return (

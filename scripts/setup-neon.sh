@@ -59,3 +59,5 @@ echo "3. Добавьте DATABASE_URL в Vercel Environment Variables"
 echo ""
 
 
+
+

@@ -32,7 +32,7 @@ export async function GET() {
           orderBy: { year: "desc" },
         },
       },
-      orderBy: { order: "asc" },
+      orderBy: { name: "asc" },
     });
 
     return NextResponse.json(regions);

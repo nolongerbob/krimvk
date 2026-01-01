@@ -97,10 +97,15 @@ export async function POST(request: NextRequest) {
         uploadedAt: document.uploadedAt,
       },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error uploading document:", error);
+    console.error("Error details:", {
+      message: error?.message,
+      stack: error?.stack,
+      name: error?.name,
+    });
     return NextResponse.json(
-      { error: "Ошибка при загрузке файла" },
+      { error: error?.message || "Ошибка при загрузке файла" },
       { status: 500 }
     );
   }

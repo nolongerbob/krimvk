@@ -256,6 +256,8 @@ export function WaterQualityClient({ initialRegions }: WaterQualityClientProps) 
       });
 
       if (response.ok) {
+        const data = await response.json();
+        console.log("File uploaded successfully:", data);
         await refreshData();
         setUploadDialogOpen(false);
         setSelectedFile(null);
@@ -265,6 +267,7 @@ export function WaterQualityClient({ initialRegions }: WaterQualityClientProps) 
         if (fileInput) fileInput.value = "";
       } else {
         const error = await response.json();
+        console.error("Upload error response:", error);
         alert(error.error || "Ошибка при загрузке файла");
       }
     } catch (error) {

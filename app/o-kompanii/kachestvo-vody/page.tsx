@@ -47,7 +47,23 @@ async function getWaterQualityData() {
       orderBy: { name: "asc" },
     });
 
-    return regions;
+    // Сериализуем данные для передачи в клиентский компонент
+    return regions.map((region) => ({
+      id: region.id,
+      name: region.name,
+      years: region.years.map((year) => ({
+        id: year.id,
+        year: year.year,
+        documents: year.documents.map((doc) => ({
+          id: doc.id,
+          fileName: doc.fileName,
+          fileUrl: doc.fileUrl,
+          fileSize: doc.fileSize,
+          mimeType: doc.mimeType,
+          uploadedAt: doc.uploadedAt.toISOString(),
+        })),
+      })),
+    }));
   } catch (error) {
     console.error("Error fetching water quality data:", error);
     return [];

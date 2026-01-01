@@ -139,6 +139,9 @@ export function Header() {
                 <DropdownMenuItem asChild>
                   <Link href="/o-kompanii/istoriya">История предприятия</Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/o-kompanii/kachestvo-vody">Качество питьевой воды</Link>
+                </DropdownMenuItem>
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger>Раскрытие информации</DropdownMenuSubTrigger>
                   <DropdownMenuSubContent>
@@ -465,6 +468,14 @@ export function Header() {
                           >
                             <History className="h-4 w-4 flex-shrink-0" />
                             <span className="text-sm">История предприятия</span>
+                          </Link>
+                          <Link
+                            href="/o-kompanii/kachestvo-vody"
+                            className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            <Droplet className="h-4 w-4 flex-shrink-0" />
+                            <span className="text-sm">Качество питьевой воды</span>
                           </Link>
                           <Link
                             href="/o-kompanii/licenzii"

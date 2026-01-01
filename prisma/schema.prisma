@@ -351,3 +351,47 @@ enum EmergencyStatus {
   RESOLVED
   CANCELLED
 }
+
+// Качество питьевой воды
+model WaterQualityRegion {
+  id          String   @id @default(cuid())
+  name        String   // Название города/раздела
+  order       Int      @default(0) // Порядок отображения
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  years WaterQualityYear[]
+
+  @@map("water_quality_regions")
+}
+
+model WaterQualityYear {
+  id          String   @id @default(cuid())
+  regionId    String
+  year        Int      // Год (например, 2024)
+  order       Int      @default(0) // Порядок отображения
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  region    WaterQualityRegion    @relation(fields: [regionId], references: [id], onDelete: Cascade)
+  documents WaterQualityDocument[]
+
+  @@unique([regionId, year])
+  @@map("water_quality_years")
+}
+
+model WaterQualityDocument {
+  id          String   @id @default(cuid())
+  yearId      String
+  fileName    String   // Оригинальное имя файла
+  fileUrl     String   // URL файла в Blob Storage
+  fileSize    Int      // Размер файла в байтах
+  mimeType    String   // MIME тип файла
+  uploadedAt  DateTime @default(now())
+
+  year WaterQualityYear @relation(fields: [yearId], references: [id], onDelete: Cascade)
+
+  @@map("water_quality_documents")
+}

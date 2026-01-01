@@ -12,8 +12,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Droplet, Plus, Trash2, Edit, FileText, Calendar, MapPin, Upload, Building2 } from "lucide-react";
+import { Droplet, Plus, Trash2, Edit, FileText, Calendar, MapPin, Upload, Building2, Search } from "lucide-react";
 import Link from "next/link";
+import { useMemo } from "react";
 
 interface WaterQualityDocument {
   id: string;
@@ -67,6 +68,8 @@ export function WaterQualityClient({ initialDistricts }: WaterQualityClientProps
   const [loading, setLoading] = useState(false);
   const [selectedYearId, setSelectedYearId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedDistrictFilter, setSelectedDistrictFilter] = useState<string>("");
 
   // Диалоги
   const [districtDialogOpen, setDistrictDialogOpen] = useState(false);
@@ -101,6 +104,64 @@ export function WaterQualityClient({ initialDistricts }: WaterQualityClientProps
       setLoading(false);
     }
   };
+
+  // Фильтрация данных по поисковому запросу и району
+  const filteredDistricts = useMemo(() => {
+    let filtered = districts;
+
+    // Фильтр по району
+    if (selectedDistrictFilter) {
+      filtered = filtered.filter((d) => d.id === selectedDistrictFilter);
+    }
+
+    // Поиск по районам, городам и годам
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered
+        .map((district) => {
+          // Проверяем, совпадает ли название района
+          const districtMatches = district.name.toLowerCase().includes(query);
+
+          // Фильтруем города
+          const filteredCities = district.cities
+            .map((city) => {
+              // Проверяем, совпадает ли название города
+              const cityMatches = city.name.toLowerCase().includes(query);
+
+              // Фильтруем годы
+              const filteredYears = city.years.filter((year) => {
+                // Проверяем, совпадает ли год
+                const yearMatches = year.year.toString().includes(query);
+                // Проверяем документы
+                const documentMatches = year.documents.some((doc) =>
+                  doc.fileName.toLowerCase().includes(query)
+                );
+                return yearMatches || documentMatches;
+              });
+
+              return {
+                ...city,
+                years: filteredYears,
+              };
+            })
+            .filter((city) => {
+              const cityMatches = city.name.toLowerCase().includes(query);
+              return cityMatches || city.years.length > 0;
+            });
+
+          return {
+            ...district,
+            cities: filteredCities,
+          };
+        })
+        .filter((district) => {
+          const districtMatches = district.name.toLowerCase().includes(query);
+          return districtMatches || district.cities.length > 0;
+        });
+    }
+
+    return filtered;
+  }, [districts, searchQuery, selectedDistrictFilter]);
 
   const handleCreateDistrict = async () => {
     if (!districtName.trim()) return;
@@ -468,20 +529,65 @@ export function WaterQualityClient({ initialDistricts }: WaterQualityClientProps
         </div>
       </div>
 
-      {districts.length === 0 ? (
+      {/* Поиск и фильтры */}
+      <div className="mb-6 space-y-4">
+        <div className="flex flex-col md:flex-row gap-4">
+          {/* Поиск */}
+          <div className="flex-1">
+            <Label htmlFor="search">Поиск</Label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <Input
+                id="search"
+                type="text"
+                placeholder="Поиск по районам, городам, годам, документам..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+
+          {/* Фильтр по району */}
+          <div className="flex-1">
+            <Label htmlFor="district-filter">Фильтр по району</Label>
+            <select
+              id="district-filter"
+              value={selectedDistrictFilter}
+              onChange={(e) => setSelectedDistrictFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">Все районы</option>
+              {districts.map((district) => (
+                <option key={district.id} value={district.id}>
+                  {district.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {filteredDistricts.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
             <Droplet className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500 mb-4">Нет районов</p>
-            <Button onClick={() => openDistrictDialog()}>
-              <Plus className="h-4 w-4 mr-2" />
-              Создать первый район
-            </Button>
+            <p className="text-gray-500 mb-4">
+              {searchQuery || selectedDistrictFilter
+                ? "По запросу ничего не найдено"
+                : "Нет районов"}
+            </p>
+            {!searchQuery && !selectedDistrictFilter && (
+              <Button onClick={() => openDistrictDialog()}>
+                <Plus className="h-4 w-4 mr-2" />
+                Создать первый район
+              </Button>
+            )}
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-6">
-          {districts.map((district) => (
+          {filteredDistricts.map((district) => (
             <Card key={district.id} className="shadow-lg">
               <CardHeader>
                 <div className="flex items-center justify-between">

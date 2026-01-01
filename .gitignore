@@ -38,6 +38,31 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# build outputs
+*.log
+*.cache
+.cache/
+dist/
+build/
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# temp files
+*.tmp
+*.temp
+temp/
+tmp/
+
 
 
 

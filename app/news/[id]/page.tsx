@@ -65,13 +65,13 @@ export default async function NewsDetailPage({
 
         {/* Изображение */}
         {news.imageUrl && (
-          <div className="relative w-full max-h-96 overflow-hidden bg-gray-100">
+          <div className="relative w-full max-h-96 overflow-hidden bg-gray-100 flex items-center justify-center">
             <Image
               src={news.imageUrl}
               alt={news.title}
               width={1200}
               height={600}
-              className="w-full h-auto object-cover"
+              className="max-w-full max-h-96 h-auto w-auto object-contain"
               unoptimized={news.imageUrl.includes('blob.vercel-storage.com')}
             />
           </div>

@@ -4,7 +4,7 @@
   "functions": {
     "app/api/admin/water-quality/documents/upload/route.ts": {
       "maxDuration": 300,
-      "memory": 3008
+      "memory": 2048
     }
   }
 }

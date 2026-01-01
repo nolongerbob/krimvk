@@ -40,13 +40,7 @@ const nextConfig = {
   // Увеличиваем лимит размера тела запроса для больших файлов
   experimental: {
     serverActions: {
-      bodySizeLimit: '0', // Без ограничений (0 = unlimited)
-    },
-  },
-  // Увеличиваем лимит размера для API routes
-  api: {
-    bodyParser: {
-      sizeLimit: '0', // Без ограничений
+      bodySizeLimit: '50mb', // 50MB для больших файлов
     },
   },
   // Явно указываем webpack для разрешения путей

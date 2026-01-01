@@ -17,19 +17,40 @@ async function migrateWaterQuality() {
     if (regionsTableExists[0]?.exists) {
       console.log('📦 Migrating from old structure...');
 
-      // Создаем дефолтный район, если его нет
-      let defaultDistrict = await prisma.waterQualityDistrict.findFirst({
-        where: { name: 'Общий район' },
-      });
+      // Проверяем, существует ли таблица districts
+      const districtsTableExists = await prisma.$queryRaw`
+        SELECT EXISTS (
+          SELECT FROM information_schema.tables 
+          WHERE table_schema = 'public' 
+          AND table_name = 'water_quality_districts'
+        ) as exists;
+      `;
 
-      if (!defaultDistrict) {
-        defaultDistrict = await prisma.waterQualityDistrict.create({
-          data: {
-            name: 'Общий район',
-            order: 0,
-          },
-        });
+      if (!districtsTableExists[0]?.exists) {
+        console.log('⚠️  Districts table does not exist yet, skipping data migration');
+        return;
+      }
+
+      // Создаем дефолтный район, если его нет (используем raw SQL)
+      const defaultDistrictResult = await prisma.$queryRaw`
+        SELECT id FROM water_quality_districts WHERE name = 'Общий район' LIMIT 1;
+      `;
+
+      let defaultDistrictId;
+      if (defaultDistrictResult.length === 0) {
+        const newDistrict = await prisma.$executeRawUnsafe(`
+          INSERT INTO water_quality_districts (id, name, "order", "isActive", "createdAt", "updatedAt")
+          VALUES (gen_random_uuid()::text, 'Общий район', 0, true, NOW(), NOW())
+          RETURNING id;
+        `);
+        const result = await prisma.$queryRawUnsafe(`
+          SELECT id FROM water_quality_districts WHERE name = 'Общий район' LIMIT 1;
+        `);
+        defaultDistrictId = result[0].id;
         console.log('✅ Created default district');
+      } else {
+        defaultDistrictId = defaultDistrictResult[0].id;
+        console.log('✅ Default district already exists');
       }
 
       // Получаем все регионы
@@ -43,7 +64,7 @@ async function migrateWaterQuality() {
           INSERT INTO water_quality_cities (id, "districtId", name, "order", "isActive", "createdAt", "updatedAt")
           VALUES ($1, $2, $3, $4, $5, $6, $7)
           ON CONFLICT (id) DO NOTHING;
-        `, region.id, defaultDistrict.id, region.name, region.order || 0, region.isActive !== false, region.createdAt || new Date(), region.updatedAt || new Date());
+        `, region.id, defaultDistrictId, region.name, region.order || 0, region.isActive !== false, region.createdAt || new Date(), region.updatedAt || new Date());
       }
       console.log(`✅ Migrated ${regions.length} regions to cities`);
 

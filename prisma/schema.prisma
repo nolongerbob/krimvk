@@ -383,14 +383,14 @@ model WaterQualityCity {
 
 model WaterQualityYear {
   id          String   @id @default(cuid())
-  cityId      String   // ID города (было regionId)
+  cityId      String?  // ID города (было regionId) - временно опционально для миграции
   year        Int      // Год (например, 2024)
   order       Int      @default(0) // Порядок отображения
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  city      WaterQualityCity     @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  city      WaterQualityCity?    @relation(fields: [cityId], references: [id], onDelete: Cascade)
   documents WaterQualityDocument[]
 
   @@unique([cityId, year])

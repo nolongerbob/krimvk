@@ -69,33 +69,53 @@ async function migrateWaterQuality() {
       console.log(`✅ Migrated ${regions.length} regions to cities`);
 
       // Обновляем years: regionId -> cityId
-      const yearsWithRegionId = await prisma.$queryRaw`
-        SELECT * FROM water_quality_years WHERE "regionId" IS NOT NULL;
+      // Проверяем, есть ли колонка regionId
+      const hasRegionId = await prisma.$queryRaw`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'water_quality_years' 
+        AND column_name = 'regionId';
       `;
 
-      if (yearsWithRegionId.length > 0) {
-        // Добавляем cityId колонку, если её нет
-        await prisma.$executeRawUnsafe(`
-          ALTER TABLE water_quality_years 
-          ADD COLUMN IF NOT EXISTS "cityId" TEXT;
-        `);
+      if (hasRegionId.length > 0) {
+        const yearsWithRegionId = await prisma.$queryRaw`
+          SELECT id, "regionId" FROM water_quality_years WHERE "regionId" IS NOT NULL;
+        `;
 
-        // Мигрируем данные
-        for (const year of yearsWithRegionId) {
+        if (yearsWithRegionId.length > 0) {
+          // Проверяем, есть ли колонка cityId
+          const hasCityId = await prisma.$queryRaw`
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'water_quality_years' 
+            AND column_name = 'cityId';
+          `;
+
+          if (hasCityId.length === 0) {
+            // Добавляем cityId колонку
+            await prisma.$executeRawUnsafe(`
+              ALTER TABLE water_quality_years 
+              ADD COLUMN "cityId" TEXT;
+            `);
+          }
+
+          // Мигрируем данные: regionId -> cityId (они имеют одинаковые ID)
+          for (const year of yearsWithRegionId) {
+            await prisma.$executeRawUnsafe(`
+              UPDATE water_quality_years 
+              SET "cityId" = $1 
+              WHERE id = $2;
+            `, year.regionId, year.id);
+          }
+          console.log(`✅ Migrated ${yearsWithRegionId.length} years from regionId to cityId`);
+
+          // Удаляем старую колонку regionId
           await prisma.$executeRawUnsafe(`
-            UPDATE water_quality_years 
-            SET "cityId" = $1 
-            WHERE id = $2;
-          `, year.regionId, year.id);
+            ALTER TABLE water_quality_years 
+            DROP COLUMN IF EXISTS "regionId";
+          `);
+          console.log('✅ Removed old regionId column');
         }
-        console.log(`✅ Migrated ${yearsWithRegionId.length} years from regionId to cityId`);
-
-        // Удаляем старую колонку regionId
-        await prisma.$executeRawUnsafe(`
-          ALTER TABLE water_quality_years 
-          DROP COLUMN IF EXISTS "regionId";
-        `);
-        console.log('✅ Removed old regionId column');
       }
     } else {
       console.log('✅ No old structure found, skipping migration');

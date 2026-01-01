@@ -1,5 +1,5 @@
 {
-  "buildCommand": "prisma generate && node scripts/migrate-water-quality.js && prisma db push --accept-data-loss && next build",
+  "buildCommand": "prisma generate && prisma db push --accept-data-loss && node scripts/migrate-water-quality.js && next build",
   "installCommand": "npm install",
   "functions": {
     "app/api/admin/water-quality/documents/upload/route.ts": {

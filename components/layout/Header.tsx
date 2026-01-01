@@ -99,74 +99,100 @@ export function Header() {
               </Link>
             ))}
             
-            {/* Абонентам - объединяем все разделы для абонентов */}
-            <DropdownMenu>
-              <DropdownMenuTrigger className={`text-sm font-medium transition-colors flex items-center gap-1 whitespace-nowrap ${
-                pathname.startsWith("/abonenty") || pathname.startsWith("/o-kompanii")
-                  ? "text-primary font-semibold"
-                  : "hover:text-primary"
-              }`}>
+            {/* Абонентам */}
+            <div className="group relative">
+              <button
+                className={`text-sm font-medium transition-colors flex items-center gap-1 whitespace-nowrap ${
+                  pathname.startsWith("/abonenty")
+                    ? "text-primary font-semibold"
+                    : "hover:text-primary"
+                }`}
+              >
                 Абонентам
                 <ChevronDown className="h-4 w-4" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-72">
-                <DropdownMenuLabel className="text-xs font-semibold">Услуги и подключение</DropdownMenuLabel>
-                <DropdownMenuItem asChild>
-                  <Link href="/abonenty/platy-uslugi/otkachka">Заявка на откачку сточных вод</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/abonenty/platy-uslugi/podklyuchenie">Подключение</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/abonenty/tehnologicheskoe-prisoedinenie">Технологическое присоединение</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuLabel className="text-xs font-semibold">Тарифы</DropdownMenuLabel>
-                <DropdownMenuItem asChild>
-                  <Link href="/abonenty/tarify-podklyuchenie">Тарифы на подключение</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/abonenty/tarify-proektirovanie">Тарифы на проектирование</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuLabel className="text-xs font-semibold">О компании</DropdownMenuLabel>
-                <DropdownMenuItem asChild>
-                  <Link href="/o-kompanii/rukovodstvo">Руководство</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/o-kompanii/licenzii">Лицензии и заключения</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/o-kompanii/istoriya">История предприятия</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/o-kompanii/kachestvo-vody">Качество питьевой воды</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger>Раскрытие информации</DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent>
-                    <DropdownMenuItem asChild>
-                      <Link href="/o-kompanii/raskrytie/uchreditelnye-dokumenty">Учредительные документы</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/o-kompanii/raskrytie/normativnye-dokumenty">Нормативные документы</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/o-kompanii/raskrytie/informaciya-raskrytie">Информация, подлежащая раскрытию</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/o-kompanii/raskrytie/zashchita-personalnyh-dannyh">Защита персональных данных</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/o-kompanii/raskrytie/antikorrupciya">Антикоррупционная политика</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/o-kompanii/raskrytie/investicionnaya-programma">Инвестиционная программа</Link>
-                    </DropdownMenuItem>
-                  </DropdownMenuSubContent>
-                </DropdownMenuSub>
-              </DropdownMenuContent>
-            </DropdownMenu>
+              </button>
+              <div className="absolute top-full left-0 mt-1 w-72 bg-white rounded-md shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                <div className="py-2">
+                  <div className="px-3 py-1.5 text-xs font-semibold text-gray-500">Услуги и подключение</div>
+                  <Link href="/abonenty/platy-uslugi/otkachka" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    Заявка на откачку сточных вод
+                  </Link>
+                  <Link href="/abonenty/platy-uslugi/podklyuchenie" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    Подключение
+                  </Link>
+                  <Link href="/abonenty/tehnologicheskoe-prisoedinenie" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    Технологическое присоединение
+                  </Link>
+                  <div className="border-t my-1"></div>
+                  <div className="px-3 py-1.5 text-xs font-semibold text-gray-500">Тарифы</div>
+                  <Link href="/abonenty/tarify-podklyuchenie" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    Тарифы на подключение
+                  </Link>
+                  <Link href="/abonenty/tarify-proektirovanie" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    Тарифы на проектирование
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* О компании */}
+            <div className="group relative">
+              <button
+                className={`text-sm font-medium transition-colors flex items-center gap-1 whitespace-nowrap ${
+                  pathname.startsWith("/o-kompanii")
+                    ? "text-primary font-semibold"
+                    : "hover:text-primary"
+                }`}
+              >
+                О компании
+                <ChevronDown className="h-4 w-4" />
+              </button>
+              <div className="absolute top-full left-0 mt-1 w-72 bg-white rounded-md shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                <div className="py-2">
+                  <Link href="/o-kompanii/rukovodstvo" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    Руководство
+                  </Link>
+                  <Link href="/o-kompanii/licenzii" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    Лицензии и заключения
+                  </Link>
+                  <Link href="/o-kompanii/istoriya" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    История предприятия
+                  </Link>
+                  <Link href="/o-kompanii/kachestvo-vody" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    Качество питьевой воды
+                  </Link>
+                  <div className="border-t my-1"></div>
+                  <div className="group/sub relative">
+                    <div className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center justify-between">
+                      Раскрытие информации
+                      <ChevronDown className="h-3 w-3 rotate-[-90deg]" />
+                    </div>
+                    <div className="absolute left-full top-0 ml-1 w-64 bg-white rounded-md shadow-lg border border-gray-200 opacity-0 invisible group-hover/sub:opacity-100 group-hover/sub:visible transition-all duration-200 z-50">
+                      <div className="py-2">
+                        <Link href="/o-kompanii/raskrytie/uchreditelnye-dokumenty" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                          Учредительные документы
+                        </Link>
+                        <Link href="/o-kompanii/raskrytie/normativnye-dokumenty" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                          Нормативные документы
+                        </Link>
+                        <Link href="/o-kompanii/raskrytie/informaciya-raskrytie" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                          Информация, подлежащая раскрытию
+                        </Link>
+                        <Link href="/o-kompanii/raskrytie/zashchita-personalnyh-dannyh" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                          Защита персональных данных
+                        </Link>
+                        <Link href="/o-kompanii/raskrytie/antikorrupciya" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                          Антикоррупционная политика
+                        </Link>
+                        <Link href="/o-kompanii/raskrytie/investicionnaya-programma" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                          Инвестиционная программа
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </nav>
         </div>
 
@@ -183,116 +209,97 @@ export function Header() {
           </div>
           
           {/* Позвоните нам - выпадающее меню */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="hidden xl:flex items-center gap-1.5 text-xs xl:text-sm px-2 xl:px-3 focus:outline-none focus-visible:outline-none active:outline-none">
-                <Phone className="h-3 w-3 xl:h-4 xl:w-4" />
-                <span className="whitespace-nowrap">Позвоните нам</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-72 lg:w-80">
-              <DropdownMenuLabel className="text-xs">Прием показаний водомеров ХВС</DropdownMenuLabel>
-              <DropdownMenuItem asChild className="py-2.5">
-                <a href="tel:+79780800366" className="cursor-pointer flex flex-col w-full">
-                  <span className="font-medium text-sm">+7 (978) 080-03-66</span>
-                  <span className="text-xs text-muted-foreground leading-relaxed">с 8:00 до 17:00 по будням, в пятницу c 8:00 до 16:00</span>
+          <div className="group relative hidden xl:block">
+            <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs xl:text-sm px-2 xl:px-3 focus:outline-none focus-visible:outline-none active:outline-none">
+              <Phone className="h-3 w-3 xl:h-4 xl:w-4" />
+              <span className="whitespace-nowrap">Позвоните нам</span>
+            </Button>
+            <div className="absolute top-full right-0 mt-1 w-72 lg:w-80 bg-white rounded-md shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+              <div className="py-2">
+                <div className="px-3 py-1.5 text-xs font-semibold text-gray-500">Прием показаний водомеров ХВС</div>
+                <a href="tel:+79780800366" className="block px-3 py-2.5 hover:bg-gray-100">
+                  <span className="font-medium text-sm block">+7 (978) 080-03-66</span>
+                  <span className="text-xs text-gray-500 leading-relaxed">с 8:00 до 17:00 по будням, в пятницу c 8:00 до 16:00</span>
                 </a>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild className="py-2.5">
-                <a href="tel:+79787415759" className="cursor-pointer flex flex-col w-full">
-                  <span className="font-medium text-sm">+7 (978) 741-57-59</span>
-                  <span className="text-xs text-muted-foreground leading-relaxed">с 8:00 до 17:00 по будням, в пятницу c 8:00 до 16:00</span>
+                <a href="tel:+79787415759" className="block px-3 py-2.5 hover:bg-gray-100">
+                  <span className="font-medium text-sm block">+7 (978) 741-57-59</span>
+                  <span className="text-xs text-gray-500 leading-relaxed">с 8:00 до 17:00 по будням, в пятницу c 8:00 до 16:00</span>
                 </a>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel className="text-xs text-red-600">Аварийно-диспетчерская служба</DropdownMenuLabel>
-              <DropdownMenuItem asChild className="py-2.5">
-                <a href="tel:+79787013050" className="cursor-pointer flex flex-col w-full">
-                  <span className="font-medium text-sm text-red-600">+7 (978) 701-30-50</span>
-                  <span className="text-xs text-muted-foreground">Круглосуточно</span>
+                <div className="border-t my-1"></div>
+                <div className="px-3 py-1.5 text-xs font-semibold text-red-600">Аварийно-диспетчерская служба</div>
+                <a href="tel:+79787013050" className="block px-3 py-2.5 hover:bg-gray-100">
+                  <span className="font-medium text-sm text-red-600 block">+7 (978) 701-30-50</span>
+                  <span className="text-xs text-gray-500">Круглосуточно</span>
                 </a>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild className="py-2.5">
-                <a href="tel:+79787460990" className="cursor-pointer flex flex-col w-full">
-                  <span className="font-medium text-sm text-red-600">+7 (978) 746-09-90</span>
-                  <span className="text-xs text-muted-foreground">Круглосуточно</span>
+                <a href="tel:+79787460990" className="block px-3 py-2.5 hover:bg-gray-100">
+                  <span className="font-medium text-sm text-red-600 block">+7 (978) 746-09-90</span>
+                  <span className="text-xs text-gray-500">Круглосуточно</span>
                 </a>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel className="text-xs">Онлайн-чат</DropdownMenuLabel>
-              <DropdownMenuItem asChild className="py-2.5">
-                <Link href={session ? "/dashboard/questions" : "/login?callbackUrl=/dashboard/questions"} className="cursor-pointer flex items-center gap-2 w-full">
+                <div className="border-t my-1"></div>
+                <div className="px-3 py-1.5 text-xs font-semibold text-gray-500">Онлайн-чат</div>
+                <Link href={session ? "/dashboard/questions" : "/login?callbackUrl=/dashboard/questions"} className="flex items-center gap-2 px-3 py-2.5 hover:bg-gray-100">
                   <MessageSquare className="h-4 w-4 text-blue-600" />
                   <span className="font-medium text-sm">Написать в чате</span>
                 </Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              </div>
+            </div>
+          </div>
 
           {status === "loading" ? (
             <div className="hidden xl:block w-20 h-9 bg-gray-200 animate-pulse rounded"></div>
           ) : session ? (
             <>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="hidden xl:flex items-center gap-2 text-xs xl:text-sm focus:outline-none focus-visible:outline-none active:outline-none">
-                    <User className="h-3 w-3 xl:h-4 xl:w-4" />
-                    <span className="max-w-[100px] xl:max-w-[150px] truncate">
-                      {session.user.name || session.user.email}
-                    </span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64 min-w-[240px]">
-                  <DropdownMenuLabel className="px-3 py-2.5">
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium">{session.user.name || "Пользователь"}</p>
-                      <p className="text-xs text-muted-foreground break-all">{session.user.email}</p>
+              <div className="group relative hidden xl:block">
+                <Button variant="ghost" size="sm" className="flex items-center gap-2 text-xs xl:text-sm focus:outline-none focus-visible:outline-none active:outline-none">
+                  <User className="h-3 w-3 xl:h-4 xl:w-4" />
+                  <span className="max-w-[100px] xl:max-w-[150px] truncate">
+                    {session.user.name || session.user.email}
+                  </span>
+                </Button>
+                <div className="absolute top-full right-0 mt-1 w-64 min-w-[240px] bg-white rounded-md shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                  <div className="py-2">
+                    <div className="px-3 py-2.5 border-b">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium">{session.user.name || "Пользователь"}</p>
+                        <p className="text-xs text-gray-500 break-all">{session.user.email}</p>
+                      </div>
                     </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild className="px-3 py-2.5">
-                    <Link href="/dashboard" className="cursor-pointer w-full">
+                    <Link href="/dashboard" className="block px-3 py-2.5 hover:bg-gray-100 text-sm">
                       Личный кабинет
                     </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="px-3 py-2.5">
-                    <Link href="/dashboard/settings" className="cursor-pointer w-full flex items-center gap-2">
+                    <Link href="/dashboard/settings" className="flex items-center gap-2 px-3 py-2.5 hover:bg-gray-100 text-sm">
                       <Settings className="h-4 w-4" />
                       Настройки
                     </Link>
-                  </DropdownMenuItem>
-                  {(session.user.role === "ADMIN" || session.user?.role === "ADMIN") && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild className="px-3 py-2.5">
-                        <Link href="/admin" className="cursor-pointer flex items-center justify-between w-full">
+                    {(session.user.role === "ADMIN" || session.user?.role === "ADMIN") && (
+                      <>
+                        <div className="border-t my-1"></div>
+                        <Link href="/admin" className="flex items-center justify-between px-3 py-2.5 hover:bg-gray-100 text-sm">
                           <span>Админ-панель</span>
                           <AdminNotifications />
                         </Link>
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                  {/* Временная отладка - показываем админку всегда для проверки */}
-                  {session.user.email === "admin@krimvk.ru" && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild className="px-3 py-2.5">
-                        <Link href="/admin" className="cursor-pointer w-full">
+                      </>
+                    )}
+                    {/* Временная отладка - показываем админку всегда для проверки */}
+                    {session.user.email === "admin@krimvk.ru" && (
+                      <>
+                        <div className="border-t my-1"></div>
+                        <Link href="/admin" className="block px-3 py-2.5 hover:bg-gray-100 text-sm">
                           Админ-панель (по email)
                         </Link>
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => signOut({ callbackUrl: "/" })}
-                    className="cursor-pointer text-red-600 px-3 py-2.5"
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Выйти
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                      </>
+                    )}
+                    <div className="border-t my-1"></div>
+                    <button
+                      onClick={() => signOut({ callbackUrl: "/" })}
+                      className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-gray-100 text-sm text-red-600"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Выйти
+                    </button>
+                  </div>
+                </div>
+              </div>
               <Button
                 variant="ghost"
                 size="icon"

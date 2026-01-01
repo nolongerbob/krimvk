@@ -70,3 +70,7 @@ tmp/
 
 .DS_Store
 water_reports_2025/
+
+# uploads (большие файлы должны быть в Blob Storage)
+public/uploads/
+!public/uploads/.gitkeep

@@ -26,7 +26,7 @@ export default async function NewsDetailPage({
   }
 
   return (
-    <div className="container py-8 px-4">
+    <div className="container py-8 px-4 max-w-4xl mx-auto">
       <div className="mb-6">
         <Button asChild variant="outline" size="sm">
           <Link href="/news">
@@ -36,21 +36,13 @@ export default async function NewsDetailPage({
         </Button>
       </div>
 
-      <Card>
-        {news.imageUrl && (
-          <div className="relative w-full aspect-video overflow-hidden rounded-t-lg bg-gray-100">
-            <Image
-              src={news.imageUrl}
-              alt={news.title}
-              fill
-              className="object-contain rounded-t-lg"
-              unoptimized={news.imageUrl.includes('blob.vercel-storage.com')}
-            />
-          </div>
-        )}
-        <CardHeader>
-          <CardTitle className="text-3xl mb-4">{news.title}</CardTitle>
-          <div className="flex items-center gap-4 text-sm text-gray-600">
+      <article className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        {/* Заголовок и метаданные */}
+        <div className="px-6 md:px-8 pt-8 pb-6 border-b border-gray-200">
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 leading-tight">
+            {news.title}
+          </h1>
+          <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
             <div className="flex items-center gap-2">
               <User className="h-4 w-4" />
               <span>{news.author.name || news.author.email}</span>
@@ -70,15 +62,40 @@ export default async function NewsDetailPage({
               </div>
             )}
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="prose max-w-none">
-            <div className="text-gray-700 whitespace-pre-line">
-              {news.content}
+        </div>
+
+        {/* Изображение */}
+        {news.imageUrl && (
+          <div className="relative w-full max-h-96 overflow-hidden bg-gray-100">
+            <Image
+              src={news.imageUrl}
+              alt={news.title}
+              width={1200}
+              height={600}
+              className="w-full h-auto object-cover"
+              unoptimized={news.imageUrl.includes('blob.vercel-storage.com')}
+            />
+          </div>
+        )}
+
+        {/* Содержание */}
+        <div className="px-6 md:px-8 py-8">
+          <div className="prose prose-lg max-w-none prose-headings:font-bold prose-headings:text-gray-900 prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-4 prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline prose-strong:text-gray-900 prose-ul:list-disc prose-ul:pl-6 prose-ol:list-decimal prose-ol:pl-6 prose-li:mb-2">
+            <div className="text-gray-700 whitespace-pre-line text-base leading-7">
+              {news.content.split('\n').map((paragraph, index) => {
+                if (paragraph.trim() === '') {
+                  return <br key={index} className="mb-4" />;
+                }
+                return (
+                  <p key={index} className="mb-4 last:mb-0">
+                    {paragraph}
+                  </p>
+                );
+              })}
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </article>
     </div>
   );
 }

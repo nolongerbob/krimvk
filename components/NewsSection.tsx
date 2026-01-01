@@ -49,12 +49,17 @@ export function NewsSection({ news }: NewsSectionProps) {
             <Link key={item.id} href={`/news/${item.id}`} className="block">
               <Card className="flex flex-col overflow-hidden group cursor-pointer h-full transition-[transform,box-shadow] duration-500 ease-out hover:shadow-lg hover:-translate-y-1">
                 {item.imageUrl && (
-                  <div className="relative w-full h-48 overflow-hidden">
+                  <div className="relative w-full h-48 overflow-hidden bg-gray-200">
                     <Image
                       src={item.imageUrl}
                       alt={item.title}
                       fill
                       className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                      unoptimized={item.imageUrl.includes('blob.vercel-storage.com')}
+                      onError={(e) => {
+                        console.error('Image load error:', item.imageUrl);
+                        e.currentTarget.style.display = 'none';
+                      }}
                     />
                   </div>
                 )}

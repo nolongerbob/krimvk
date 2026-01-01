@@ -44,6 +44,11 @@ export default async function NewsDetailPage({
               alt={news.title}
               fill
               className="object-contain rounded-t-lg"
+              unoptimized={news.imageUrl.includes('blob.vercel-storage.com')}
+              onError={(e) => {
+                console.error('Image load error:', news.imageUrl);
+                e.currentTarget.style.display = 'none';
+              }}
             />
           </div>
         )}

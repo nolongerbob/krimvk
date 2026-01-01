@@ -45,10 +45,6 @@ export default async function NewsPage() {
                       fill
                       className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                       unoptimized={item.imageUrl.includes('blob.vercel-storage.com')}
-                      onError={(e) => {
-                        console.error('Image load error:', item.imageUrl);
-                        e.currentTarget.style.display = 'none';
-                      }}
                     />
                   </div>
                 )}

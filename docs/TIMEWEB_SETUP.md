@@ -1,226 +1,296 @@
-# Настройка на Timeweb (Бюджетный вариант)
+# Настройка на Timeweb (бюджетный вариант)
 
-## 💰 Стоимость: ~1000₽/месяц
+## 💰 Стоимость: ~1100-1500₽/месяц
 
-Вместо 4000₽ на Yandex Cloud!
+## 📋 Шаг 1: Заказ VPS
 
-## 📋 Пошаговая инструкция
-
-### 1. Регистрация и создание VPS
-
-1. Зайдите на https://timeweb.com
-2. Зарегистрируйтесь
-3. Создайте VPS:
+1. Зайдите на timeweb.com
+2. Закажите VPS:
+   - **Тариф:** VPS-4 (4GB RAM, 2 CPU, 50GB SSD)
    - **ОС:** Ubuntu 22.04
-   - **CPU:** 2 ядра
-   - **RAM:** 4GB
-   - **Диск:** 40GB SSD
    - **Стоимость:** ~800₽/месяц
 
-### 2. Подключение к серверу
+3. Дождитесь активации (обычно 5-10 минут)
+
+## 📋 Шаг 2: Подключение к серверу
 
 ```bash
+# Подключитесь по SSH
 ssh root@ваш-ip-адрес
-```
 
-### 3. Установка Docker и Docker Compose
-
-```bash
-# Обновляем систему
+# Обновите систему
 apt update && apt upgrade -y
-
-# Устанавливаем Docker
-curl -fsSL https://get.docker.com -o get-docker.sh
-sh get-docker.sh
-
-# Устанавливаем Docker Compose
-apt install docker-compose -y
-
-# Проверяем установку
-docker --version
-docker-compose --version
 ```
 
-### 4. Клонирование проекта
+## 📋 Шаг 3: Установка PostgreSQL
 
 ```bash
-# Устанавливаем Git
-apt install git -y
+# Установка PostgreSQL
+apt install postgresql postgresql-contrib -y
 
-# Клонируем проект
-git clone https://github.com/ваш-репозиторий/krimvk.git
-cd krimvk
+# Проверка версии
+psql --version
+
+# Запуск и автозапуск
+systemctl start postgresql
+systemctl enable postgresql
 ```
 
-### 5. Настройка переменных окружения
+## 📋 Шаг 4: Настройка базы данных
 
 ```bash
-# Создаем .env файл
-cat > .env <<EOF
-# База данных (будет создана в Docker)
-DB_USER=krimvk
-DB_PASSWORD=ваш-надежный-пароль
-DB_NAME=krimvk
+# Переключитесь на пользователя postgres
+su - postgres
 
-# NextAuth
-NEXTAUTH_SECRET=сгенерируйте-случайную-строку
-NEXTAUTH_URL=https://yourdomain.ru
+# Создайте базу данных
+createdb krimvk
 
-# Хранилище (локальное на сервере)
-STORAGE_TYPE=local
-STORAGE_PATH=/app/uploads
-EOF
+# Создайте пользователя
+createuser -P krimvk_user
+# Введите пароль (сохраните его!)
 
-# Генерируем NEXTAUTH_SECRET
-openssl rand -base64 32
+# Дайте права пользователю
+psql -c "GRANT ALL PRIVILEGES ON DATABASE krimvk TO krimvk_user;"
+psql -d krimvk -c "GRANT ALL ON SCHEMA public TO krimvk_user;"
+
+# Выйдите
+exit
 ```
 
-### 6. Настройка PostgreSQL в Docker
-
-PostgreSQL будет запущен в Docker контейнере на том же сервере.
-
-### 7. Деплой приложения
+## 📋 Шаг 5: Настройка подключения
 
 ```bash
-# Запускаем через Docker Compose
-docker-compose -f docker/docker-compose-vps.yml up -d
+# Отредактируйте pg_hba.conf
+nano /etc/postgresql/15/main/pg_hba.conf
 
-# Проверяем логи
-docker-compose -f docker/docker-compose-vps.yml logs -f
+# Добавьте строку для локального подключения:
+# local   all             all                                     md5
+# host    all             all             127.0.0.1/32            md5
+
+# Отредактируйте postgresql.conf
+nano /etc/postgresql/15/main/postgresql.conf
+
+# Убедитесь, что:
+# listen_addresses = 'localhost'
+
+# Перезапустите PostgreSQL
+systemctl restart postgresql
 ```
 
-### 8. Настройка Nginx и SSL
+## 📋 Шаг 6: Установка Node.js и зависимостей
 
 ```bash
-# Устанавливаем Certbot
+# Установка Node.js 20
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+apt install -y nodejs
+
+# Проверка
+node --version
+npm --version
+
+# Установка PM2 для управления процессом
+npm install -g pm2
+```
+
+## 📋 Шаг 7: Установка Nginx
+
+```bash
+# Установка Nginx
+apt install nginx -y
+
+# Запуск и автозапуск
+systemctl start nginx
+systemctl enable nginx
+```
+
+## 📋 Шаг 8: Настройка Nginx
+
+```bash
+# Создайте конфигурацию
+nano /etc/nginx/sites-available/krimvk
+
+# Вставьте:
+server {
+    listen 80;
+    server_name krimvk.ru www.krimvk.ru;
+
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+
+# Активируйте конфигурацию
+ln -s /etc/nginx/sites-available/krimvk /etc/nginx/sites-enabled/
+
+# Проверьте конфигурацию
+nginx -t
+
+# Перезапустите Nginx
+systemctl restart nginx
+```
+
+## 📋 Шаг 9: Установка SSL (Let's Encrypt)
+
+```bash
+# Установка Certbot
 apt install certbot python3-certbot-nginx -y
 
-# Получаем SSL сертификат
-certbot certonly --standalone -d yourdomain.ru -d www.yourdomain.ru
+# Получение сертификата
+certbot --nginx -d krimvk.ru -d www.krimvk.ru
 
-# Копируем сертификаты в Docker volume
-mkdir -p docker/ssl
-cp /etc/letsencrypt/live/yourdomain.ru/fullchain.pem docker/ssl/
-cp /etc/letsencrypt/live/yourdomain.ru/privkey.pem docker/ssl/
-
-# Перезапускаем Nginx
-docker-compose -f docker/docker-compose-vps.yml restart nginx
+# Автоматическое обновление
+certbot renew --dry-run
 ```
 
-### 9. Настройка автообновления SSL
+## 📋 Шаг 10: Деплой приложения
 
 ```bash
-# Добавляем в crontab
-crontab -e
+# Создайте директорию для приложения
+mkdir -p /var/www/krimvk
+cd /var/www/krimvk
 
-# Добавляем строку (обновление каждые 2 месяца)
-0 0 1 */2 * certbot renew && cp /etc/letsencrypt/live/yourdomain.ru/*.pem docker/ssl/ && docker-compose -f docker/docker-compose-vps.yml restart nginx
+# Клонируйте репозиторий (или загрузите файлы)
+git clone https://github.com/your-repo/krimvk.git .
+
+# Установите зависимости
+npm install
+
+# Создайте .env файл
+nano .env
+
+# Добавьте:
+DATABASE_URL=postgresql://krimvk_user:ваш-пароль@localhost:5432/krimvk
+NEXTAUTH_SECRET=ваш-секретный-ключ
+NEXTAUTH_URL=https://krimvk.ru
+NODE_ENV=production
+
+# Сгенерируйте Prisma Client
+npx prisma generate
+
+# Примените миграции
+npx prisma migrate deploy
+
+# Соберите приложение
+npm run build
+
+# Запустите через PM2
+pm2 start npm --name "krimvk" -- start
+pm2 save
+pm2 startup
 ```
 
-### 10. Настройка DNS в nic.ru
-
-1. В nic.ru → DNS-записи
-2. Добавьте A запись:
-   ```
-   Имя: @
-   Тип: A
-   Значение: [IP вашего VPS]
-   TTL: 3600
-   ```
-3. Добавьте CNAME:
-   ```
-   Имя: www
-   Тип: CNAME
-   Значение: yourdomain.ru
-   ```
-
-### 11. Настройка бэкапов
+## 📋 Шаг 11: Настройка бэкапов
 
 ```bash
-# Создаем скрипт бэкапа
-cat > /root/backup.sh <<'EOF'
+# Создайте директорию для бэкапов
+mkdir -p /backups
+
+# Создайте скрипт бэкапа
+nano /usr/local/bin/backup-db.sh
+
+# Вставьте:
 #!/bin/bash
-BACKUP_DIR="/root/backups"
+BACKUP_DIR="/backups"
 DATE=$(date +%Y%m%d_%H%M%S)
+BACKUP_FILE="$BACKUP_DIR/krimvk_$DATE.sql"
 
-mkdir -p $BACKUP_DIR
+# Создайте бэкап
+PGPASSWORD='ваш-пароль' pg_dump -U krimvk_user -h localhost krimvk > $BACKUP_FILE
 
-# Бэкап базы данных
-docker exec krimvk-postgres pg_dump -U krimvk krimvk > $BACKUP_DIR/db_$DATE.sql
+# Сожмите бэкап
+gzip $BACKUP_FILE
 
-# Бэкап файлов
-tar -czf $BACKUP_DIR/uploads_$DATE.tar.gz /var/lib/docker/volumes/krimvk_uploads_data
+# Удалите старые бэкапы (старше 7 дней)
+find /backups -name "*.sql.gz" -mtime +7 -delete
 
-# Удаляем старые бэкапы (старше 7 дней)
-find $BACKUP_DIR -type f -mtime +7 -delete
-EOF
+# Сделайте скрипт исполняемым
+chmod +x /usr/local/bin/backup-db.sh
 
-chmod +x /root/backup.sh
-
-# Добавляем в crontab (каждый день в 3:00)
+# Добавьте в cron (каждый день в 2:00)
 crontab -e
-# Добавляем: 0 3 * * * /root/backup.sh
+# Добавьте:
+0 2 * * * /usr/local/bin/backup-db.sh
 ```
 
-## 🔧 Полезные команды
+## 📋 Шаг 12: Настройка мониторинга
 
 ```bash
-# Просмотр логов
-docker-compose -f docker/docker-compose-vps.yml logs -f app
+# Установка мониторинга диска
+apt install smartmontools -y
 
-# Перезапуск приложения
-docker-compose -f docker/docker-compose-vps.yml restart app
-
-# Обновление приложения
-git pull
-docker-compose -f docker/docker-compose-vps.yml build app
-docker-compose -f docker/docker-compose-vps.yml up -d app
-
-# Проверка статуса
-docker-compose -f docker/docker-compose-vps.yml ps
+# Настройка алертов (опционально)
+# Можно использовать UptimeRobot или аналогичные сервисы
 ```
+
+## ✅ Проверка
+
+1. Проверьте работу сайта: `https://krimvk.ru`
+2. Проверьте API: `https://krimvk.ru/api/health`
+3. Проверьте бэкапы: `ls -lh /backups`
 
 ## 💰 Итоговая стоимость
 
 - VPS Timeweb: ~800₽/месяц
-- Домен (если покупать): ~200₽/год
+- Домен (если нужен): ~200₽/год
 - **Итого: ~800₽/месяц** ✅
 
-Вместо 4000₽ на Yandex Cloud!
+## 🔧 Обслуживание
+
+### Обновление приложения:
+```bash
+cd /var/www/krimvk
+git pull
+npm install
+npm run build
+pm2 restart krimvk
+```
+
+### Просмотр логов:
+```bash
+pm2 logs krimvk
+# Или
+tail -f /var/log/nginx/error.log
+```
+
+### Перезапуск сервисов:
+```bash
+pm2 restart krimvk
+systemctl restart nginx
+systemctl restart postgresql
+```
 
 ## ⚠️ Важно
 
 1. **Бэкапы:** Настройте автоматические бэкапы
-2. **Мониторинг:** Настройте мониторинг (можно через UptimeRobot бесплатно)
-3. **Обновления:** Регулярно обновляйте систему и приложение
-4. **Безопасность:** Настройте firewall (ufw)
+2. **Мониторинг:** Настройте алерты на диск/память
+3. **Безопасность:** Регулярно обновляйте систему
+4. **Логи:** Проверяйте логи регулярно
 
 ## 🆘 Проблемы и решения
 
+### PostgreSQL не запускается:
+```bash
+systemctl status postgresql
+journalctl -u postgresql
+```
+
 ### Приложение не запускается:
 ```bash
-# Проверьте логи
-docker-compose -f docker/docker-compose-vps.yml logs app
-
-# Проверьте базу данных
-docker exec -it krimvk-postgres psql -U krimvk -d krimvk
+pm2 logs krimvk
+cd /var/www/krimvk && npm run build
 ```
 
-### SSL не работает:
+### Nginx ошибки:
 ```bash
-# Проверьте сертификаты
-ls -la docker/ssl/
-
-# Проверьте Nginx
-docker-compose -f docker/docker-compose-vps.yml logs nginx
-```
-
-### Не хватает места:
-```bash
-# Очистите старые Docker образы
-docker system prune -a
-
-# Очистите старые бэкапы
-find /root/backups -type f -mtime +7 -delete
+nginx -t
+tail -f /var/log/nginx/error.log
 ```
 

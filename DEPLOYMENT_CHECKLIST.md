@@ -83,12 +83,14 @@
 
 ## 📝 Переменные окружения для VPS
 
+### Если домен еще не привязан:
+
 ```env
 # База данных
 DATABASE_URL="postgresql://user:password@localhost:5432/krimvk"
 
-# NextAuth
-NEXTAUTH_URL="https://yourdomain.com"
+# NextAuth - используйте IP адрес VPS
+NEXTAUTH_URL="http://YOUR_VPS_IP:3000"
 NEXTAUTH_SECRET="your-secret-key"
 
 # Хранилище
@@ -99,5 +101,18 @@ STORAGE_BASE_URL=""  # Оставьте пустым для относитель
 # Остальные переменные
 NODE_ENV="production"
 PORT=3000
+```
+
+### После привязки домена:
+
+```env
+# Обновите NEXTAUTH_URL на домен
+NEXTAUTH_URL="https://yourdomain.com"
+# Остальное без изменений
+```
+
+**Как узнать IP VPS:**
+```bash
+curl ifconfig.me
 ```
 

@@ -31,9 +31,8 @@ yarn-error.log*
 *.mdf
 *.ldf
 
-# vercel (можно удалить при переносе на VPS)
+# vercel
 .vercel
-vercel.json
 
 # typescript
 *.tsbuildinfo

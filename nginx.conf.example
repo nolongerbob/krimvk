@@ -3,6 +3,9 @@
 
 server {
     listen 80;
+    # Если домен еще не привязан, используйте IP или _ (catch-all)
+    # server_name _;  # Для IP адреса
+    # Или после привязки домена:
     server_name yourdomain.com www.yourdomain.com;
 
     # Редирект на HTTPS (раскомментируйте после настройки SSL)

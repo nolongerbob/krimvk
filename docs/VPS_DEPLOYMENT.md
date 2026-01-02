@@ -120,7 +120,12 @@ npm install
 DATABASE_URL="postgresql://krimvk_user:your_secure_password@localhost:5432/krimvk?schema=public"
 
 # NextAuth
-NEXTAUTH_URL="https://yourdomain.com"
+# ⚠️ ВАЖНО: Если домен еще не привязан, используйте IP адрес VPS
+# Вариант 1: IP адрес (для начала, пока домен не настроен)
+NEXTAUTH_URL="http://YOUR_VPS_IP:3000"
+# Вариант 2: После привязки домена замените на:
+# NEXTAUTH_URL="https://yourdomain.com"
+
 NEXTAUTH_SECRET="your-secret-key-here"
 
 # Хранилище файлов
@@ -131,6 +136,14 @@ STORAGE_PATH="/var/www/krimvk/uploads"
 ONE_C_API_BASE_URL="http://your-1c-server:port"
 
 # Другие переменные из вашего .env
+```
+
+**Как узнать IP адрес VPS:**
+```bash
+# На VPS выполните:
+curl ifconfig.me
+# или
+hostname -I
 ```
 
 ### 5. Настройка хранилища файлов
@@ -238,20 +251,43 @@ sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-### 10. Настройка SSL (Let's Encrypt)
+### 10. Настройка домена
+
+**Если домен еще не привязан:**
+
+1. **Временно используйте IP адрес:**
+   - В `.env` установите: `NEXTAUTH_URL="http://YOUR_VPS_IP:3000"`
+   - В Nginx `server_name` укажите IP или `_` (catch-all)
+   - Запустите приложение и проверьте работу
+
+2. **После привязки домена:**
+   - Обновите `.env`: `NEXTAUTH_URL="https://yourdomain.com"`
+   - Обновите Nginx конфигурацию: `server_name yourdomain.com www.yourdomain.com;`
+   - Перезапустите приложение: `pm2 restart krimvk`
+
+**Настройка DNS:**
+
+В DNS провайдере (где купили домен) добавьте A-запись:
+```
+yourdomain.com  -> IP вашего VPS
+www.yourdomain.com -> IP вашего VPS
+```
+
+Подождите 5-30 минут для распространения DNS записей.
+
+### 11. Настройка SSL (Let's Encrypt)
+
+**Только после того, как домен привязан и DNS записи распространились:**
 
 ```bash
 sudo apt install certbot python3-certbot-nginx
 sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
 ```
 
-### 11. Настройка домена
-
-В DNS провайдере добавить A-запись:
-```
-yourdomain.com  -> IP вашего VPS
-www.yourdomain.com -> IP вашего VPS
-```
+После установки SSL:
+- Certbot автоматически обновит Nginx конфигурацию
+- Обновите `.env`: `NEXTAUTH_URL="https://yourdomain.com"`
+- Перезапустите приложение: `pm2 restart krimvk`
 
 ## Обновление кода для локального хранилища
 

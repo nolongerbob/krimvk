@@ -182,13 +182,27 @@ sudo chmod -R 755 /var/www/krimvk/uploads
 
 ### 6. Применение миграций
 
+**Для новой пустой базы данных (рекомендуется):**
+
+```bash
+cd /var/www/krimvk
+npx prisma generate
+npx prisma db push
+```
+
+Это создаст всю схему базы данных сразу из `schema.prisma`.
+
+**Если база уже частично заполнена и нужны миграции:**
+
 ```bash
 cd /var/www/krimvk
 npx prisma generate
 npx prisma migrate deploy
-# или если миграций нет:
-npx prisma db push
 ```
+
+**Если получили ошибку "relation does not exist":**
+
+Это означает, что база пустая, но миграции предполагают существующие таблицы. Используйте `prisma db push` вместо `migrate deploy`.
 
 ### 7. Сборка приложения
 

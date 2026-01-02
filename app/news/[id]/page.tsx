@@ -82,7 +82,7 @@ export default async function NewsDetailPage({
         <div className="px-6 md:px-8 py-8">
           <div className="prose prose-lg max-w-none prose-headings:font-bold prose-headings:text-gray-900 prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-4 prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline prose-strong:text-gray-900 prose-ul:list-disc prose-ul:pl-6 prose-ol:list-decimal prose-ol:pl-6 prose-li:mb-2">
             <div className="text-gray-700 whitespace-pre-line text-base leading-7">
-              {news.content.split('\n').map((paragraph, index) => {
+              {news.content.split('\n').map((paragraph: string, index: number) => {
                 if (paragraph.trim() === '') {
                   return <br key={index} className="mb-4" />;
                 }

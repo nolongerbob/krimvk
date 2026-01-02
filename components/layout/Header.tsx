@@ -45,14 +45,6 @@ export function Header() {
     };
   }, [mobileMenuOpen]);
 
-  // Отладка роли (можно убрать после проверки)
-  if (typeof window !== 'undefined' && session?.user) {
-    console.log('=== DEBUG SESSION ===');
-    console.log('User role in session:', session.user.role);
-    console.log('User email:', session.user.email);
-    console.log('Full session.user:', session.user);
-    console.log('===================');
-  }
 
   const isActive = (path: string) => {
     if (path === "/") {

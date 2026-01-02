@@ -76,7 +76,7 @@ describe('QuickActionCard', () => {
   })
 
   it('renders with primary styling when isPrimary is true', () => {
-    render(
+    const { container } = render(
       <QuickActionCard
         iconName="Droplet"
         title="Primary Card"
@@ -86,7 +86,10 @@ describe('QuickActionCard', () => {
       />
     )
 
-    const card = screen.getByText('Primary Card').closest('a')
+    const link = container.querySelector('a')
+    expect(link).toBeInTheDocument()
+    // Проверяем, что Card внутри ссылки имеет нужные классы
+    const card = link?.querySelector('[class*="border-2"]')
     expect(card).toBeInTheDocument()
   })
 

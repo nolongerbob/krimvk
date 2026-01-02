@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
-import { put } from "@vercel/blob";
+import { storage } from "@/lib/storage";
 
 export const maxDuration = 30;
 
@@ -45,32 +45,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
-    
-    if (!blobToken) {
-      console.error("BLOB_READ_WRITE_TOKEN is not set in environment variables");
-      return NextResponse.json(
-        { error: "Ошибка сервера: токен для загрузки файлов не настроен." },
-        { status: 500 }
-      );
-    }
-
     // Генерируем уникальное имя файла
     const timestamp = Date.now();
     const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
     const fileName = `user_${session.user.id}_${timestamp}_${originalName}`;
-    const blobPath = `applications/user/${fileName}`;
+    const filePath = `applications/user/${fileName}`;
 
-    // Загружаем файл в Vercel Blob Storage
-    const blob = await put(blobPath, file, {
-      access: 'public',
+    // Загружаем файл через абстракцию хранилища
+    const result = await storage.upload(file, filePath, {
       contentType: file.type || 'application/octet-stream',
-      token: blobToken,
+      access: 'public',
     });
 
     return NextResponse.json({
       success: true,
-      url: blob.url, // Возвращаем URL из Blob Storage
+      url: result.url, // Возвращаем URL файла
       fileName: file.name,
       fileSize: file.size,
     });

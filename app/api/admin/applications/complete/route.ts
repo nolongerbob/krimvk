@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
 import { prisma, withRetry } from "@/lib/prisma";
-import { put } from "@vercel/blob";
+import { storage } from "@/lib/storage";
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // Увеличиваем время выполнения до 60 секунд для больших файлов

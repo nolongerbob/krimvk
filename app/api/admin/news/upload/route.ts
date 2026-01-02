@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/prisma";
-import { put } from "@vercel/blob";
+import { storage } from "@/lib/storage";
 
 // Увеличиваем лимит времени выполнения для больших файлов
 export const maxDuration = 30;
@@ -47,30 +47,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
-    if (!blobToken) {
-      console.error("BLOB_READ_WRITE_TOKEN is not set in environment variables");
-      return NextResponse.json(
-        { error: "Ошибка конфигурации сервера: токен хранилища не найден" },
-        { status: 500 }
-      );
-    }
-
     // Генерируем уникальное имя файла
     const timestamp = Date.now();
     const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
     const fileName = `${timestamp}_${originalName}`;
-    const blobPath = `news/${fileName}`;
+    const filePath = `news/${fileName}`;
 
-    // Загружаем файл в Vercel Blob Storage
-    const blob = await put(blobPath, file, {
-      access: 'public',
+    // Загружаем файл через абстракцию хранилища
+    const result = await storage.upload(file, filePath, {
       contentType: file.type || 'image/jpeg',
-      token: blobToken,
+      access: 'public',
     });
 
-    // Возвращаем URL изображения из Blob Storage
-    return NextResponse.json({ success: true, imageUrl: blob.url });
+    // Возвращаем URL изображения
+    return NextResponse.json({ success: true, imageUrl: result.url });
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
       console.error("Error uploading image:", error);

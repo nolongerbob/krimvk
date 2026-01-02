@@ -23,6 +23,15 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'blob.vercel-storage.com',
       },
+      // Для локального хранилища на VPS
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+      },
+      {
+        protocol: 'https',
+        hostname: 'yourdomain.com', // Замените на ваш домен
+      },
     ],
   },
   // Сжатие

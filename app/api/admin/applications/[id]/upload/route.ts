@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
 import { prisma, withRetry } from "@/lib/prisma";
-import { put } from "@vercel/blob";
+import { storage } from "@/lib/storage";
 
 export const maxDuration = 30;
 
@@ -53,26 +53,15 @@ export async function POST(
       );
     }
 
-    const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
-    
-    if (!blobToken) {
-      console.error("BLOB_READ_WRITE_TOKEN is not set in environment variables");
-      return NextResponse.json(
-        { error: "BLOB_READ_WRITE_TOKEN environment variable is not configured" },
-        { status: 500 }
-      );
-    }
-
     const timestamp = Date.now();
     const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
     const fileName = `${params.id}_${timestamp}_${originalName}`;
-    const blobPath = `applications/${fileName}`;
+    const filePath = `applications/${fileName}`;
 
-    // Загружаем файл в Vercel Blob Storage
-    const blob = await put(blobPath, file, {
-      access: 'public',
+    // Загружаем файл через абстракцию хранилища
+    const result = await storage.upload(file, filePath, {
       contentType: file.type || 'application/octet-stream',
-      token: blobToken,
+      access: 'public',
     });
 
     const applicationFile = await withRetry(() =>
@@ -80,7 +69,7 @@ export async function POST(
         data: {
           applicationId: params.id,
           fileName: file.name,
-          filePath: blob.url, // Сохраняем URL из Blob Storage
+          filePath: result.url, // Сохраняем URL файла
           fileSize: file.size,
           mimeType: file.type || "application/octet-stream",
           uploadedBy: session.user.id,

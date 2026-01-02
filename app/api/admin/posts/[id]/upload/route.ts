@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/prisma";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
-import { existsSync } from "fs";
+import { storage } from "@/lib/storage";
 
 export const maxDuration = 30;
 
@@ -50,26 +48,22 @@ export async function POST(
       );
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
     const timestamp = Date.now();
     const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
     const fileName = `${timestamp}_${originalName}`;
-    const uploadDir = join(process.cwd(), "public", "uploads", "posts");
+    const filePath = `posts/${fileName}`;
 
-    if (!existsSync(uploadDir)) {
-      await mkdir(uploadDir, { recursive: true });
-    }
-
-    const filePath = join(uploadDir, fileName);
-    await writeFile(filePath, buffer);
+    // Загружаем файл через абстракцию хранилища
+    const result = await storage.upload(file, filePath, {
+      contentType: file.type || 'application/octet-stream',
+      access: 'public',
+    });
 
     const postFile = await prisma.postFile.create({
       data: {
         postId: params.id,
         fileName: file.name,
-        filePath: `/uploads/posts/${fileName}`,
+        filePath: result.url,
         fileSize: file.size,
         mimeType: file.type || "application/octet-stream",
       },

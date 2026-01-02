@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/prisma";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
-import { existsSync } from "fs";
+import { storage } from "@/lib/storage";
 
 export const maxDuration = 30;
 
@@ -52,22 +50,17 @@ export async function POST(
       );
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
     // Генерируем уникальное имя файла
     const timestamp = Date.now();
     const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
     const fileName = `${timestamp}_${originalName}`;
-    const uploadDir = join(process.cwd(), "public", "uploads", "pages");
+    const filePath = `pages/${fileName}`;
 
-    // Создаем директорию, если её нет
-    if (!existsSync(uploadDir)) {
-      await mkdir(uploadDir, { recursive: true });
-    }
-
-    const filePath = join(uploadDir, fileName);
-    await writeFile(filePath, buffer);
+    // Загружаем файл через абстракцию хранилища
+    const result = await storage.upload(file, filePath, {
+      contentType: file.type || 'application/octet-stream',
+      access: 'public',
+    });
 
     // TODO: Добавить модель PageFile в схему Prisma, если нужен функционал загрузки файлов для страниц
     // Пока просто возвращаем информацию о файле без сохранения в БД
@@ -76,7 +69,7 @@ export async function POST(
       file: {
         id: fileName,
         fileName: file.name,
-        filePath: `/uploads/pages/${fileName}`,
+        filePath: result.url,
         fileSize: file.size,
         mimeType: file.type || "application/octet-stream",
       }

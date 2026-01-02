@@ -1,4 +1,5 @@
 {
+  "_comment": "Этот файл используется только для деплоя на Vercel. Для VPS используйте ecosystem.config.js и nginx.conf.example",
   "buildCommand": "prisma generate && prisma db push --accept-data-loss && node scripts/migrate-water-quality.js && next build",
   "installCommand": "npm install",
   "functions": {

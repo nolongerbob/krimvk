@@ -37,15 +37,18 @@
 
 ## Установка и запуск
 
+### Локальная разработка
+
 1. Установите зависимости:
 ```bash
 npm install
 ```
 
 2. Настройте базу данных:
-   - Создайте файл `.env` на основе `.env.example`
+   - Создайте файл `.env` на основе `.env.example.vps`
    - Укажите `DATABASE_URL` для подключения к PostgreSQL
    - Укажите `NEXTAUTH_SECRET` для безопасности
+   - Установите `STORAGE_PROVIDER=local` для локального хранилища
 
 3. Инициализируйте базу данных:
 ```bash
@@ -59,6 +62,17 @@ npm run dev
 ```
 
 5. Откройте [http://localhost:3000](http://localhost:3000)
+
+### Деплой на VPS
+
+Подробная инструкция по деплою на VPS находится в [docs/VPS_DEPLOYMENT.md](docs/VPS_DEPLOYMENT.md)
+
+Кратко:
+1. Установите Node.js, PostgreSQL, Nginx, PM2 на VPS
+2. Клонируйте репозиторий
+3. Настройте `.env` с `STORAGE_PROVIDER=local`
+4. Запустите `npm run build:vps`
+5. Настройте PM2 и Nginx
 
 ## Скрипты
 

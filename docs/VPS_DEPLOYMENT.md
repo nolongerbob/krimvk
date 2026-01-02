@@ -106,7 +106,10 @@ CREATE USER krimvk_user WITH PASSWORD 'your_secure_password';
 GRANT ALL PRIVILEGES ON DATABASE krimvk TO krimvk_user;
 
 # ⚠️ ВАЖНО: Даем права на схему public (нужно для миграций)
+# Сначала переключаемся на базу данных:
 \c krimvk
+
+# Теперь даем права (ВАЖНО: выполняйте после \c krimvk):
 GRANT ALL ON SCHEMA public TO krimvk_user;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO krimvk_user;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO krimvk_user;

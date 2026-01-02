@@ -190,7 +190,10 @@ npx prisma generate
 npx prisma db push
 ```
 
-Это создаст всю схему базы данных сразу из `schema.prisma`.
+Это создаст всю схему базы данных сразу из `schema.prisma`, включая:
+- Все основные таблицы (users, applications, services и т.д.)
+- Таблицы качества воды (water_quality_districts, water_quality_cities и т.д.)
+- Таблицы раскрытия информации (disclosure_documents)
 
 **Если база уже частично заполнена и нужны миграции:**
 

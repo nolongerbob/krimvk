@@ -92,21 +92,57 @@ pm2 restart krimvk
 
 ## Генерация NEXTAUTH_SECRET
 
-### В Linux/Mac:
+### Способ 1: Через скрипт (самый простой)
+
+```bash
+# В корне проекта
+./scripts/generate-nextauth-secret.sh
+```
+
+Скрипт автоматически выберет доступный метод и сгенерирует секрет.
+
+### Способ 2: Через openssl (Linux/Mac)
 
 ```bash
 openssl rand -base64 32
 ```
 
-### В Windows (PowerShell):
+**Пример вывода:**
+```
+kX9pL2mN4qR7sT1vW3xY5zA8bC0dE2fG4hI6jK8lM0nO2pQ4rS6tU8vW0xY2z
+```
+
+### Способ 3: Через Node.js (если установлен)
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+```
+
+### Способ 4: В Windows (PowerShell)
 
 ```powershell
 [Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Minimum 0 -Maximum 256 }))
 ```
 
-### Онлайн генератор:
+### Способ 5: Онлайн генератор
 
-Используйте любой генератор случайных строк (32+ символов)
+1. Откройте https://generate-secret.vercel.app/32
+2. Скопируйте сгенерированную строку
+3. Вставьте в `.env` файл
+
+### Как использовать:
+
+1. Сгенерируйте секрет одним из способов выше
+2. Скопируйте результат
+3. Вставьте в `.env` файл:
+   ```env
+   NEXTAUTH_SECRET="ваш-сгенерированный-секрет"
+   ```
+
+**Важно:**
+- ✅ Секрет должен быть минимум 32 символа
+- ✅ Используйте разные секреты для разработки и продакшена
+- ✅ Храните секрет в безопасности, не коммитьте в Git
 
 ## Проверка .env файла
 

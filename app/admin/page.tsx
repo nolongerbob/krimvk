@@ -257,6 +257,19 @@ export default async function AdminPage() {
             </Button>
           </CardContent>
         </Card>
+
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader>
+            <FileText className="h-10 w-10 text-blue-500 mb-2" />
+            <CardTitle>Раскрытие информации</CardTitle>
+            <CardDescription>Управление документами раскрытия информации</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild className="w-full">
+              <Link href="/admin/disclosure">Перейти</Link>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

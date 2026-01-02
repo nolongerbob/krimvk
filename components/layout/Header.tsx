@@ -153,6 +153,9 @@ export function Header() {
                   <Link href="/o-kompanii/kachestvo-vody" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
                     Качество питьевой воды
                   </Link>
+                  <Link href="/o-kompanii/raskrytie-informatsii" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    Раскрытие информации
+                  </Link>
                   <div className="border-t my-1"></div>
                   <div className="group/sub relative">
                     <div className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center justify-between">
@@ -475,6 +478,14 @@ export function Header() {
                           >
                             <Droplet className="h-4 w-4 flex-shrink-0" />
                             <span className="text-sm">Качество питьевой воды</span>
+                          </Link>
+                          <Link
+                            href="/o-kompanii/raskrytie-informatsii"
+                            className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            <FileText className="h-4 w-4 flex-shrink-0" />
+                            <span className="text-sm">Раскрытие информации</span>
                           </Link>
                           <Link
                             href="/o-kompanii/licenzii"

@@ -410,3 +410,19 @@ model WaterQualityDocument {
 
   @@map("water_quality_documents")
 }
+
+// Раскрытие информации
+model DisclosureDocument {
+  id          String   @id @default(cuid())
+  title       String   // Название документа
+  fileName    String   // Оригинальное имя файла
+  fileUrl     String   // URL файла в Blob Storage
+  fileSize    Int      // Размер файла в байтах
+  mimeType    String   // MIME тип файла
+  order       Int      @default(0) // Порядок отображения
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("disclosure_documents")
+}

@@ -27,8 +27,7 @@ export default async function HomePage() {
   }> = [];
 
   try {
-    // Используем type assertion для обхода проблемы с типами Prisma
-    const newsData = await (prisma as any).news.findMany({
+    const newsData = await prisma.news.findMany({
       where: { published: true },
       include: {
         author: { select: { name: true, email: true } },
@@ -39,6 +38,7 @@ export default async function HomePage() {
     news = newsData;
   } catch (error) {
     console.error("Error loading news:", error);
+    // Продолжаем работу даже если новости не загрузились
   }
   return (
     <div className="flex flex-col">

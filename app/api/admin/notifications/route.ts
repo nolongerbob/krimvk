@@ -21,17 +21,17 @@ export async function GET(request: NextRequest) {
     // Считаем новые заявки (PENDING)
     const newApplications = await prisma.application.count({
       where: { status: "PENDING" },
-    });
+    }).catch(() => 0);
 
     // Считаем новые вопросы (PENDING)
     const newQuestions = await prisma.question.count({
       where: { status: "PENDING" },
-    });
+    }).catch(() => 0);
 
     // Считаем вопросы в работе (IN_PROGRESS)
     const inProgressQuestions = await prisma.question.count({
       where: { status: "IN_PROGRESS" },
-    });
+    }).catch(() => 0);
 
     return NextResponse.json({
       newApplications,

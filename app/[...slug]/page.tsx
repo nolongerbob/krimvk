@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { File, Download, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { sanitizeHTML } from "@/lib/sanitize-html";
 
 export default async function DynamicPagePage({
   params,
@@ -103,7 +104,7 @@ export default async function DynamicPagePage({
           <CardContent className="pt-6">
             <div
               className="prose max-w-none"
-              dangerouslySetInnerHTML={{ __html: post.content }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHTML(post.content) }}
             />
           </CardContent>
         </Card>
@@ -177,7 +178,7 @@ export default async function DynamicPagePage({
           <CardContent className="pt-6">
             <div
               className="prose max-w-none"
-              dangerouslySetInnerHTML={{ __html: page.content }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHTML(page.content) }}
             />
           </CardContent>
         </Card>
@@ -206,7 +207,7 @@ export default async function DynamicPagePage({
                     <div
                       className="text-sm text-gray-600 line-clamp-2 mb-2"
                       dangerouslySetInnerHTML={{
-                        __html: postItem.content.substring(0, 200) + (postItem.content.length > 200 ? "..." : ""),
+                        __html: sanitizeHTML(postItem.content.substring(0, 200) + (postItem.content.length > 200 ? "..." : "")),
                       }}
                     />
                     <p className="text-xs text-gray-500">

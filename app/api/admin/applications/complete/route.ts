@@ -82,24 +82,16 @@ export async function POST(request: NextRequest) {
         }
 
         try {
-          const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
-          
-          if (!blobToken) {
-            console.error("BLOB_READ_WRITE_TOKEN is not set in environment variables");
-            throw new Error("BLOB_READ_WRITE_TOKEN environment variable is not configured");
-          }
-
           const timestamp = Date.now();
           const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
           // Используем тот же формат имени файла, что и в /api/admin/applications/[id]/upload
           const fileName = `${applicationId}_${timestamp}_${originalName}`;
-          const blobPath = `applications/${fileName}`;
+          const filePath = `applications/${fileName}`;
 
-          // Загружаем файл в Vercel Blob Storage
-          const blob = await put(blobPath, file, {
-            access: 'public',
+          // Загружаем файл через абстракцию хранилища
+          const result = await storage.upload(file, filePath, {
             contentType: file.type || 'application/octet-stream',
-            token: blobToken,
+            access: 'public',
           });
 
           // Сохраняем информацию о файле в базу данных
@@ -108,7 +100,7 @@ export async function POST(request: NextRequest) {
               data: {
                 applicationId: applicationId,
                 fileName: file.name,
-                filePath: blob.url, // Сохраняем URL из Blob Storage
+                filePath: result.url, // Сохраняем URL файла
                 fileSize: file.size,
                 mimeType: file.type || "application/octet-stream",
                 uploadedBy: session.user.id,

@@ -27,7 +27,9 @@ describe('QuickActionCard', () => {
       />
     )
 
-    expect(screen.getByText('Передать показания')).toBeInTheDocument()
+    // Текст может быть в нескольких местах, используем getAllByText
+    const titles = screen.getAllByText('Передать показания')
+    expect(titles.length).toBeGreaterThan(0)
     expect(screen.getByText('Передать показания счетчиков воды')).toBeInTheDocument()
   })
 

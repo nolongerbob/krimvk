@@ -97,9 +97,31 @@ sudo chown krimvk:krimvk /var/www/krimvk
 ```bash
 # Создание базы данных
 sudo -u postgres psql
+
+# В psql выполните:
 CREATE DATABASE krimvk;
 CREATE USER krimvk_user WITH PASSWORD 'your_secure_password';
+
+# Даем права на базу данных
 GRANT ALL PRIVILEGES ON DATABASE krimvk TO krimvk_user;
+
+# ⚠️ ВАЖНО: Даем права на схему public (нужно для миграций)
+\c krimvk
+GRANT ALL ON SCHEMA public TO krimvk_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO krimvk_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO krimvk_user;
+
+# Выход
+\q
+```
+
+**Если уже создали пользователя, но забыли дать права на схему:**
+
+```bash
+sudo -u postgres psql -d krimvk
+GRANT ALL ON SCHEMA public TO krimvk_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO krimvk_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO krimvk_user;
 \q
 ```
 

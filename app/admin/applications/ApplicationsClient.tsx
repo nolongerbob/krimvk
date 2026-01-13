@@ -315,16 +315,11 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
 
     // Обрабатываем description - может быть JSON для других типов
     let displayDescription = app.description || "Без описания";
-    // Используем уже распарсенные данные, если они есть
-    if (parsed && parsed.type === "technical_conditions") {
-      // Это технические условия, но почему-то не попали в проверку выше
-      // Показываем через специальный компонент
-      return <TechnicalConditionsApplication key={app.id} application={app} />;
-    }
     
-    if (parsed) {
+    // Если parsed существует и это не технические условия, показываем краткое описание
+    if (parsed && parsed.type && parsed.type !== "technical_conditions") {
       displayDescription = "Заявка на технологическое присоединение";
-    } else {
+    } else if (!parsed) {
       // Не JSON, используем как есть, но ограничиваем длину
       // Если description начинается с {, это может быть обрезанный JSON
       if (app.description && app.description.trim().startsWith('{')) {

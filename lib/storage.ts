@@ -29,7 +29,7 @@ class VercelBlobStorage implements StorageProvider {
     }
 
     const blob = await put(path, file, {
-      access: options?.access || 'public',
+      access: (options?.access === 'private' ? 'private' : 'public') as 'public',
       contentType: options?.contentType || 'application/octet-stream',
       token: blobToken,
     });
@@ -78,11 +78,12 @@ class S3Storage implements StorageProvider {
     });
 
     const buffer = file instanceof File ? await file.arrayBuffer() : file;
+    const bodyBuffer = buffer instanceof ArrayBuffer ? Buffer.from(buffer) : buffer;
     
     await client.send(new PutObjectCommand({
       Bucket: this.bucket,
       Key: path,
-      Body: Buffer.from(buffer),
+      Body: bodyBuffer,
       ContentType: options?.contentType || 'application/octet-stream',
       ACL: options?.access === 'public' ? 'public-read' : 'private',
     }));
@@ -134,7 +135,8 @@ class LocalStorage implements StorageProvider {
     await fs.mkdir(dir, { recursive: true });
     
     const buffer = file instanceof File ? await file.arrayBuffer() : file;
-    await fs.writeFile(fullPath, Buffer.from(buffer));
+    const bodyBuffer = buffer instanceof ArrayBuffer ? Buffer.from(buffer) : buffer;
+    await fs.writeFile(fullPath, bodyBuffer);
     
     // Для локального хранилища URL должен быть относительным или абсолютным
     // В зависимости от того, как настроен Nginx

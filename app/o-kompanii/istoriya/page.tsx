@@ -46,8 +46,8 @@ export default function IstoriyaPage() {
           </p>
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p className="text-gray-700 leading-relaxed">
-              <strong>Возрождение началось в 2000 году.</strong> Тогда энтузиасты во главе с В.П. Кожемякиным создали первое частное предприятие «Сервис-Плюс», 
-              а чуть позже, в <strong>2003 году</strong>, появилась команда Э.С. Черкашина — «Сакский регионсервис».
+              <strong>Возрождение началось в 2000 году.</strong> Тогда энтузиасты создали первое частное предприятие «Сервис-Плюс», 
+              а чуть позже, в <strong>2003 году</strong>, появилась команда — «Сакский регионсервис».
             </p>
           </div>
           <p className="text-gray-700 leading-relaxed">

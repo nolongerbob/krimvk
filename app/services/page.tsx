@@ -51,7 +51,10 @@ export default async function ServicesPage() {
         where: { isActive: true },
         orderBy: { createdAt: "asc" },
       })
-    );
+    ).catch((error) => {
+      console.error("[ServicesPage] Ошибка при загрузке услуг:", error);
+      return [];
+    }) as typeof services;
     
     // Если услуг нет, пытаемся создать базовые услуги
     if (services.length === 0) {
@@ -110,47 +113,59 @@ export default async function ServicesPage() {
         ];
 
         for (const serviceData of basicServices) {
-          const existing = await prisma.service.findFirst({
-            where: { title: serviceData.title },
-          });
+          const existing = await withRetry(() =>
+            prisma.service.findFirst({
+              where: { title: serviceData.title },
+            })
+          ).catch(() => null);
           
           if (existing) {
-            await prisma.service.update({
-              where: { id: existing.id },
-              data: { isActive: true },
-            });
+            await withRetry(() =>
+              prisma.service.update({
+                where: { id: existing.id },
+                data: { isActive: true },
+              })
+            ).catch((e) => console.error('Error updating service:', e));
           } else {
-            await prisma.service.create({
-              data: serviceData,
-            });
+            await withRetry(() =>
+              prisma.service.create({
+                data: serviceData,
+              })
+            ).catch((e) => console.error('Error creating service:', e));
           }
         }
 
         // Создаем услугу "Технологическое присоединение"
-        const techService = await prisma.service.findFirst({
-          where: {
-            OR: [
-              { id: "tehnologicheskoe-prisoedinenie" },
-              { title: { contains: "Технологическое присоединение", mode: "insensitive" } },
-            ],
-          },
-        });
+        const techService = await withRetry(() =>
+          prisma.service.findFirst({
+            where: {
+              OR: [
+                { id: "tehnologicheskoe-prisoedinenie" },
+                { title: { contains: "Технологическое присоединение", mode: "insensitive" } },
+              ],
+            },
+          })
+        ).catch(() => null);
 
         if (techService) {
-          await prisma.service.update({
-            where: { id: techService.id },
-            data: { isActive: true },
-          });
+          await withRetry(() =>
+            prisma.service.update({
+              where: { id: techService.id },
+              data: { isActive: true },
+            })
+          ).catch((e) => console.error('Error updating tech service:', e));
         } else {
-          await prisma.service.create({
-            data: {
-              id: "tehnologicheskoe-prisoedinenie",
-              title: "Технологическое присоединение",
-              description: "Заявка на выдачу технических условий на подключение (технологическое присоединение) к централизованным системам холодного водоснабжения и (или) водоотведения",
-              category: "подключение",
-              isActive: true,
-            },
-          });
+          await withRetry(() =>
+            prisma.service.create({
+              data: {
+                id: "tehnologicheskoe-prisoedinenie",
+                title: "Технологическое присоединение",
+                description: "Заявка на выдачу технических условий на подключение (технологическое присоединение) к централизованным системам холодного водоснабжения и (или) водоотведения",
+                category: "подключение",
+                isActive: true,
+              },
+            })
+          ).catch((e) => console.error('Error creating tech service:', e));
         }
 
         // Загружаем услуги снова

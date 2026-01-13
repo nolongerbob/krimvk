@@ -192,7 +192,8 @@ export function ApplicationForm({ formData, isPreview = false }: { formData: any
           formData.objectType === "residential" ? "Жилой дом" : 
           formData.objectType === "apartment" ? "Квартира" : 
           formData.objectType === "commercial" ? "Коммерческий объект" : 
-          formData.objectType === "industrial" ? "Промышленный объект" : "", 
+          formData.objectType === "industrial" ? "Промышленный объект" : 
+          formData.objectType === "land" ? "Земельный участок" : "", 
           30
         )} (указать нужное):</span>
       </p>

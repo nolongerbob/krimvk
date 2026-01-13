@@ -238,43 +238,114 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
     const regular: Application[] = [];
 
     completedApplications.forEach((app) => {
+      let isTechnicalConditions = false;
+      
+      // Проверяем по JSON в description (приоритет)
       try {
         if (app.description) {
           const data = JSON.parse(app.description);
           if (data && data.type === "technical_conditions") {
-            tech.push(app);
-            return;
+            isTechnicalConditions = true;
           }
         }
       } catch (e) {
-        // Не JSON, значит обычная заявка
+        // Не JSON, продолжаем проверку
       }
-      regular.push(app);
+      
+      // Проверяем по названию услуги
+      if (!isTechnicalConditions) {
+        const titleLower = app.service.title.toLowerCase();
+        if (titleLower.includes("технологическое присоединение") || 
+            titleLower.includes("технические условия")) {
+          isTechnicalConditions = true;
+        }
+      }
+      
+      if (isTechnicalConditions) {
+        tech.push(app);
+      } else {
+        regular.push(app);
+      }
     });
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Completed applications split:', {
+        total: completedApplications.length,
+        technical: tech.length,
+        regular: regular.length,
+        techIds: tech.map(a => a.id),
+        techTitles: tech.map(a => a.service.title),
+      });
+    }
 
     return { completedTechnicalConditions: tech, completedRegular: regular };
   }, [completedApplications]);
 
   const renderApplication = (app: Application) => {
+    // Проверяем, не является ли это техническими условиями
+    let isTechnicalConditions = false;
+    let techData = null;
+    
+    // Проверяем по JSON в description
+    try {
+      if (app.description) {
+        const parsed = JSON.parse(app.description);
+        if (parsed && parsed.type === "technical_conditions") {
+          isTechnicalConditions = true;
+          techData = parsed;
+        }
+      }
+    } catch (e) {
+      // Не JSON или ошибка парсинга
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Failed to parse description in renderApplication:', app.id, e);
+      }
+    }
+    
+    // Проверяем по названию услуги
+    if (!isTechnicalConditions) {
+      const titleLower = app.service.title.toLowerCase();
+      if (titleLower.includes("технологическое присоединение") || 
+          titleLower.includes("технические условия")) {
+        isTechnicalConditions = true;
+      }
+    }
+    
+    // Если это технические условия, используем специальный компонент
+    if (isTechnicalConditions) {
+      return <TechnicalConditionsApplication key={app.id} application={app} />;
+    }
+
     const status = statusConfig[app.status as keyof typeof statusConfig];
     const StatusIcon = status.icon;
 
-    // Обрабатываем description - может быть JSON для технических условий
+    // Обрабатываем description - может быть JSON для других типов
     let displayDescription = app.description || "Без описания";
     try {
       if (app.description) {
         const parsed = JSON.parse(app.description);
+        // Если это JSON, но не технические условия, показываем краткую информацию
         if (parsed.type === "technical_conditions") {
-          // Для технических условий показываем краткую информацию
-          const fio = [parsed.lastName, parsed.firstName, parsed.middleName].filter(Boolean).join(" ");
-          displayDescription = fio ? `ФИО: ${fio}` : "Заявка на технические условия";
-          if (parsed.objectAddress) {
-            displayDescription += ` | Адрес объекта: ${parsed.objectAddress}`;
-          }
+          // Это технические условия, но почему-то не попали в проверку выше
+          // Показываем через специальный компонент
+          return <TechnicalConditionsApplication key={app.id} application={app} />;
         }
+        displayDescription = "Заявка на технологическое присоединение";
       }
     } catch (e) {
-      // Не JSON, используем как есть
+      // Не JSON, используем как есть, но ограничиваем длину
+      // Если description начинается с {, это может быть обрезанный JSON
+      if (app.description && app.description.trim().startsWith('{')) {
+        // Пытаемся показать через TechnicalConditionsApplication
+        const titleLower = app.service.title.toLowerCase();
+        if (titleLower.includes("технологическое присоединение") || 
+            titleLower.includes("технические условия")) {
+          return <TechnicalConditionsApplication key={app.id} application={app} />;
+        }
+      }
+      if (displayDescription.length > 200) {
+        displayDescription = displayDescription.substring(0, 200) + "...";
+      }
     }
 
     return (

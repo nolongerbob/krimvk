@@ -106,22 +106,22 @@ export function Header() {
               <div className="absolute top-full left-0 mt-1 w-72 bg-white rounded-md shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                 <div className="py-2">
                   <div className="px-3 py-1.5 text-xs font-semibold text-gray-500">Услуги и подключение</div>
-                  <Link href="/abonenty/platy-uslugi/otkachka" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    Заявка на откачку сточных вод
-                  </Link>
-                  <Link href="/abonenty/platy-uslugi/podklyuchenie" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                  <Link href="/abonenty/tehnologicheskoe-prisoedinenie" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
                     Подключение
                   </Link>
-                  <Link href="/abonenty/tehnologicheskoe-prisoedinenie" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    Технологическое присоединение
+                  <Link href="/abonenty/kalkulyator-stoimosti-podklyucheniya" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    Калькулятор стоимости подключения
+                  </Link>
+                  <Link href="/abonenty/platy-uslugi/otkachka" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    Заявка на откачку сточных вод
                   </Link>
                   <div className="border-t my-1"></div>
                   <div className="px-3 py-1.5 text-xs font-semibold text-gray-500">Тарифы</div>
                   <Link href="/abonenty/tarify-podklyuchenie" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
                     Тарифы на подключение
                   </Link>
-                  <Link href="/abonenty/tarify-proektirovanie" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    Тарифы на проектирование
+                  <Link href="/abonenty/tarify-vodosnabzhenie-vodootvedenie" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    Тарифы на водоснабжение и водоотведение
                   </Link>
                 </div>
               </div>
@@ -141,9 +141,6 @@ export function Header() {
               </button>
               <div className="absolute top-full left-0 mt-1 w-72 bg-white rounded-md shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                 <div className="py-2">
-                  <Link href="/o-kompanii/rukovodstvo" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    Руководство
-                  </Link>
                   <Link href="/o-kompanii/licenzii" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
                     Лицензии и заключения
                   </Link>
@@ -152,9 +149,6 @@ export function Header() {
                   </Link>
                   <Link href="/o-kompanii/kachestvo-vody" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
                     Качество питьевой воды
-                  </Link>
-                  <Link href="/o-kompanii/raskrytie-informatsii" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    Раскрытие информации
                   </Link>
                   <div className="border-t my-1"></div>
                   <div className="group/sub relative">
@@ -275,15 +269,6 @@ export function Header() {
                         </Link>
                       </>
                     )}
-                    {/* Временная отладка - показываем админку всегда для проверки */}
-                    {session.user.email === "admin@krimvk.ru" && (
-                      <>
-                        <div className="border-t my-1"></div>
-                        <Link href="/admin" className="block px-3 py-2.5 hover:bg-gray-100 text-sm">
-                          Админ-панель (по email)
-                        </Link>
-                      </>
-                    )}
                     <div className="border-t my-1"></div>
                     <button
                       onClick={() => signOut({ callbackUrl: "/" })}
@@ -392,22 +377,6 @@ export function Header() {
                       <AccordionContent className="pb-2">
                         <div className="space-y-1 pl-4">
                           <Link
-                            href="/abonenty/platy-uslugi/otkachka"
-                            className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all"
-                            onClick={() => setMobileMenuOpen(false)}
-                          >
-                            <Droplet className="h-4 w-4 flex-shrink-0" />
-                            <span className="text-sm">Заявка на откачку сточных вод</span>
-                          </Link>
-                          <Link
-                            href="/abonenty/platy-uslugi/podklyuchenie"
-                            className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all"
-                            onClick={() => setMobileMenuOpen(false)}
-                          >
-                            <FileText className="h-4 w-4 flex-shrink-0" />
-                            <span className="text-sm">Подключение</span>
-                          </Link>
-                          <Link
                             href="/abonenty/tarify-podklyuchenie"
                             className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all"
                             onClick={() => setMobileMenuOpen(false)}
@@ -416,12 +385,12 @@ export function Header() {
                             <span className="text-sm">Тарифы на подключение</span>
                           </Link>
                           <Link
-                            href="/abonenty/tarify-proektirovanie"
+                            href="/abonenty/tarify-vodosnabzhenie-vodootvedenie"
                             className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all"
                             onClick={() => setMobileMenuOpen(false)}
                           >
                             <FileText className="h-4 w-4 flex-shrink-0" />
-                            <span className="text-sm">Тарифы на проектирование</span>
+                            <span className="text-sm">Тарифы на водоснабжение и водоотведение</span>
                           </Link>
                           <Link
                             href="/abonenty/tehnologicheskoe-prisoedinenie"
@@ -429,7 +398,23 @@ export function Header() {
                             onClick={() => setMobileMenuOpen(false)}
                           >
                             <FileText className="h-4 w-4 flex-shrink-0" />
-                            <span className="text-sm">Технологическое присоединение</span>
+                            <span className="text-sm">Подключение</span>
+                          </Link>
+                          <Link
+                            href="/abonenty/kalkulyator-stoimosti-podklyucheniya"
+                            className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            <FileText className="h-4 w-4 flex-shrink-0" />
+                            <span className="text-sm">Калькулятор стоимости подключения</span>
+                          </Link>
+                          <Link
+                            href="/abonenty/platy-uslugi/otkachka"
+                            className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            <Droplet className="h-4 w-4 flex-shrink-0" />
+                            <span className="text-sm">Заявка на откачку сточных вод</span>
                           </Link>
                         </div>
                       </AccordionContent>
@@ -447,14 +432,6 @@ export function Header() {
                       </AccordionTrigger>
                       <AccordionContent className="pb-2">
                         <div className="space-y-1 pl-4">
-                          <Link
-                            href="/o-kompanii/rukovodstvo"
-                            className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all"
-                            onClick={() => setMobileMenuOpen(false)}
-                          >
-                            <Users className="h-4 w-4 flex-shrink-0" />
-                            <span className="text-sm">Руководство</span>
-                          </Link>
                           <Link
                             href="/o-kompanii/vakansii"
                             className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all"
@@ -478,14 +455,6 @@ export function Header() {
                           >
                             <Droplet className="h-4 w-4 flex-shrink-0" />
                             <span className="text-sm">Качество питьевой воды</span>
-                          </Link>
-                          <Link
-                            href="/o-kompanii/raskrytie-informatsii"
-                            className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all"
-                            onClick={() => setMobileMenuOpen(false)}
-                          >
-                            <FileText className="h-4 w-4 flex-shrink-0" />
-                            <span className="text-sm">Раскрытие информации</span>
                           </Link>
                           <Link
                             href="/o-kompanii/licenzii"

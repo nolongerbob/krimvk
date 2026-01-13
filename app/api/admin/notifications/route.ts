@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
-import { prisma } from "@/lib/prisma";
+import { prisma, withRetry } from "@/lib/prisma";
 
 export const dynamic = 'force-dynamic';
 
@@ -18,20 +18,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Доступ запрещен" }, { status: 403 });
     }
 
-    // Считаем новые заявки (PENDING)
-    const newApplications = await prisma.application.count({
-      where: { status: "PENDING" },
-    }).catch(() => 0);
-
-    // Считаем новые вопросы (PENDING)
-    const newQuestions = await prisma.question.count({
-      where: { status: "PENDING" },
-    }).catch(() => 0);
-
-    // Считаем вопросы в работе (IN_PROGRESS)
-    const inProgressQuestions = await prisma.question.count({
-      where: { status: "IN_PROGRESS" },
-    }).catch(() => 0);
+    // Простые запросы с обработкой ошибок и переподключением
+    const [newApplications, newQuestions, inProgressQuestions] = await Promise.all([
+      withRetry(() => prisma.application.count({ where: { status: "PENDING" } })).catch(() => 0),
+      withRetry(() => prisma.question.count({ where: { status: "PENDING" } })).catch(() => 0),
+      withRetry(() => prisma.question.count({ where: { status: "IN_PROGRESS" } })).catch(() => 0),
+    ]);
 
     return NextResponse.json({
       newApplications,

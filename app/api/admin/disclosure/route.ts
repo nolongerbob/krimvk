@@ -59,11 +59,18 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { title, fileName, fileUrl, fileSize, mimeType, order, isActive } = body;
+    const { title, fileName, fileUrl, fileSize, mimeType, category, order, isActive } = body;
 
     if (!title || !fileName || !fileUrl) {
       return NextResponse.json(
         { error: "Необходимо указать название, имя файла и URL" },
+        { status: 400 }
+      );
+    }
+
+    if (!category) {
+      return NextResponse.json(
+        { error: "Необходимо указать категорию документа" },
         { status: 400 }
       );
     }
@@ -75,6 +82,7 @@ export async function POST(request: NextRequest) {
         fileUrl,
         fileSize: fileSize || 0,
         mimeType: mimeType || "application/octet-stream",
+        category: category.trim(),
         order: order || 0,
         isActive: isActive !== undefined ? isActive : true,
       },

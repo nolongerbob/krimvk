@@ -18,6 +18,7 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  const verified = searchParams.get("verified");
 
   // Автоматический редирект, если пользователь уже авторизован
   useEffect(() => {
@@ -64,7 +65,11 @@ function LoginForm() {
       });
 
       if (result?.error) {
-        setError("Неверный email или пароль");
+        if (result.error === 'EMAIL_NOT_VERIFIED' || result.error.includes('EMAIL_NOT_VERIFIED')) {
+          setError("Email не подтвержден. Пожалуйста, проверьте вашу почту и перейдите по ссылке подтверждения.");
+        } else {
+          setError("Неверный email или пароль");
+        }
         setIsLoading(false);
       } else if (result?.ok) {
         // Принудительный редирект после успешного входа
@@ -93,6 +98,11 @@ function LoginForm() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {verified === "true" && (
+              <div className="bg-green-50 border border-green-200 text-green-800 text-sm p-3 rounded-md">
+                Email успешно подтвержден! Теперь вы можете войти.
+              </div>
+            )}
             {error && (
               <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md">
                 {error}

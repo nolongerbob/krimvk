@@ -3,7 +3,15 @@
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Droplet, FileText, Calendar, MapPin, Search, Building2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Droplet, FileText, Calendar, MapPin, Search, Building2, ChevronDown } from "lucide-react";
 
 interface WaterQualityDocument {
   id: string;
@@ -46,13 +54,13 @@ function formatFileSize(bytes: number): string {
 
 export function KachestvoVodyClient({ districts }: KachestvoVodyClientProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedDistrictId, setSelectedDistrictId] = useState<string>("");
+  const [selectedDistrictId, setSelectedDistrictId] = useState<string>("all");
 
   const filteredDistricts = useMemo(() => {
     let filtered = districts;
 
     // Фильтр по району
-    if (selectedDistrictId) {
+    if (selectedDistrictId && selectedDistrictId !== "all") {
       filtered = filtered.filter((d) => d.id === selectedDistrictId);
     }
 
@@ -93,19 +101,34 @@ export function KachestvoVodyClient({ districts }: KachestvoVodyClientProps) {
             <label htmlFor="district-filter" className="block text-sm font-medium text-gray-700 mb-2">
               Район
             </label>
-            <select
-              id="district-filter"
+            <Select
               value={selectedDistrictId}
-              onChange={(e) => setSelectedDistrictId(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              onValueChange={setSelectedDistrictId}
             >
-              <option value="">Все районы</option>
-              {districts.map((district) => (
-                <option key={district.id} value={district.id}>
-                  {district.name}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger 
+                id="district-filter"
+                className="w-full h-11 text-base bg-white border-gray-300 hover:border-blue-400 hover:bg-blue-50/50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm"
+              >
+                <SelectValue placeholder="Все районы" />
+              </SelectTrigger>
+              <SelectContent className="max-h-[300px] shadow-lg border-gray-200">
+                <SelectItem 
+                  value="all"
+                  className="cursor-pointer hover:bg-blue-50 focus:bg-blue-50 font-medium text-gray-900"
+                >
+                  Все районы
+                </SelectItem>
+                {districts.map((district) => (
+                  <SelectItem 
+                    key={district.id} 
+                    value={district.id}
+                    className="cursor-pointer hover:bg-blue-50 focus:bg-blue-50 text-gray-700"
+                  >
+                    {district.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Поиск по городам */}
@@ -131,7 +154,7 @@ export function KachestvoVodyClient({ districts }: KachestvoVodyClientProps) {
       {filteredDistricts.length === 0 ? (
         <Card className="text-center py-12">
           <CardContent>
-            {searchQuery || selectedDistrictId ? (
+            {searchQuery || (selectedDistrictId && selectedDistrictId !== "all") ? (
               <p className="text-gray-500 text-lg">
                 По запросу ничего не найдено
               </p>

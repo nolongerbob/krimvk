@@ -28,12 +28,13 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { title, order, isActive } = body;
+    const { title, category, order, isActive } = body;
 
     const document = await prisma.disclosureDocument.update({
       where: { id: params.id },
       data: {
         ...(title && { title: title.trim() }),
+        ...(category && { category: category.trim() }),
         ...(order !== undefined && { order }),
         ...(isActive !== undefined && { isActive }),
       },

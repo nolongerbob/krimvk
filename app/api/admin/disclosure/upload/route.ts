@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get("file") as File;
     const title = formData.get("title") as string;
+    const category = formData.get("category") as string;
     
     if (!file || file.size === 0) {
       return NextResponse.json({ error: "Файл не найден или пуст" }, { status: 400 });
@@ -34,6 +35,13 @@ export async function POST(request: NextRequest) {
     if (!title || title.trim() === "") {
       return NextResponse.json(
         { error: "Название документа обязательно" },
+        { status: 400 }
+      );
+    }
+
+    if (!category || category.trim() === "") {
+      return NextResponse.json(
+        { error: "Категория документа обязательна" },
         { status: 400 }
       );
     }
@@ -58,6 +66,7 @@ export async function POST(request: NextRequest) {
         fileUrl: result.url,
         fileSize: file.size,
         mimeType: file.type || "application/octet-stream",
+        category: category.trim(),
         order: 0,
         isActive: true,
       },

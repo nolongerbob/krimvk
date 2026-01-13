@@ -7,7 +7,7 @@ import { QuickActionCard } from "@/components/QuickActionCard";
 import { AboutCompany } from "@/components/AboutCompany";
 import { NewsSection } from "@/components/NewsSection";
 import { BecomeSubscriberButton } from "@/components/BecomeSubscriberButton";
-import { prisma } from "@/lib/prisma";
+import { prisma, withRetry } from "@/lib/prisma";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -27,18 +27,36 @@ export default async function HomePage() {
   }> = [];
 
   try {
-    const newsData = await prisma.news.findMany({
-      where: { published: true },
-      include: {
-        author: { select: { name: true, email: true } },
-      },
-      orderBy: { publishedAt: "desc" },
-      take: 6,
-    });
-    news = newsData;
+    const newsData = await withRetry(() =>
+      prisma.news.findMany({
+        where: { published: true },
+        include: {
+          author: { select: { name: true, email: true } },
+        },
+        orderBy: { publishedAt: "desc" },
+        take: 6,
+      })
+    ).catch((error) => {
+      console.error("Error loading news (after retry):", error);
+      return [];
+    }) as Array<{
+      id: string;
+      title: string;
+      content: string;
+      imageUrl: string | null;
+      publishedAt: Date | null;
+      author: {
+        name: string | null;
+        email: string;
+      };
+    }>;
+    news = newsData.map((item) => ({
+      ...item,
+      publishedAt: item.publishedAt ? new Date(item.publishedAt) : null,
+    }));
   } catch (error) {
     console.error("Error loading news:", error);
-    // Продолжаем работу даже если новости не загрузились
+    news = [];
   }
   return (
     <div className="flex flex-col">
@@ -46,13 +64,11 @@ export default async function HomePage() {
       <section className="relative text-white py-16 md:py-24 overflow-hidden">
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
-          <Image
-            src="/images/banner-bg.jpg"
-            alt=""
-            fill
-            className="object-cover"
-            priority
-            quality={90}
+          <div 
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{
+              backgroundImage: 'url(/images/banner-bg.jpg)',
+            }}
           />
           {/* Затемнение фона для лучшей читабельности */}
           <div className="absolute inset-0 bg-gradient-to-br from-blue-900/80 via-blue-800/75 to-cyan-900/80 z-10"></div>
@@ -172,8 +188,8 @@ export default async function HomePage() {
                     <Mail className="h-5 w-5 text-blue-500" />
                     <div>
                       <p className="font-medium mb-1">Email для передачи показаний</p>
-                      <a href="mailto:pokazaniya@krimvk.ru" className="text-gray-600 hover:text-primary">
-                        pokazaniya@krimvk.ru
+                      <a href="mailto:NVKVK2208@mail.ru" className="text-gray-600 hover:text-primary">
+                        NVKVK2208@mail.ru
                       </a>
                       <p className="text-sm text-gray-500 mt-1">
                         Отправляйте показания счетчиков на этот адрес

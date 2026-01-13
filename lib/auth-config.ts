@@ -58,6 +58,9 @@ export const authOptions: NextAuthOptions = {
           return null; // Пользователь зарегистрирован через OAuth, нельзя войти по паролю
         }
 
+        // Разрешаем вход даже если email не подтвержден
+        // Проверка подтверждения будет в личном кабинете
+
         const isValidPassword = await verifyPassword(
           credentials.password,
           user.password

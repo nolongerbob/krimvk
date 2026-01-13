@@ -54,6 +54,22 @@ interface TechnicalConditionsApplicationProps {
   };
 }
 
+// Функция для преобразования внутренних обозначений типа объекта в читаемые названия
+const getObjectTypeLabel = (objectType?: string): string => {
+  if (!objectType) return "не указано";
+  
+  const typeMap: Record<string, string> = {
+    "residential": "Жилой дом",
+    "apartment": "Квартира",
+    "commercial": "Коммерческий объект",
+    "industrial": "Промышленный объект",
+    "land": "Земельный участок",
+    "land-plot": "Земельный участок",
+  };
+  
+  return typeMap[objectType] || objectType;
+};
+
 export function TechnicalConditionsApplication({ application }: TechnicalConditionsApplicationProps) {
   let data: TechnicalConditionsData | null = null;
   
@@ -62,10 +78,110 @@ export function TechnicalConditionsApplication({ application }: TechnicalConditi
       data = JSON.parse(application.description);
     }
   } catch (e) {
-    // Если не JSON, значит это старая заявка
+    // Если не JSON или JSON обрезан, пытаемся извлечь данные из обрезанного JSON
+    if (application.description && application.description.trim().startsWith('{')) {
+      try {
+        // Пытаемся найти основные поля даже в обрезанном JSON с помощью регулярных выражений
+        const desc = application.description;
+        const extractField = (fieldName: string): string | undefined => {
+          const regex = new RegExp(`"${fieldName}":"([^"]*)"`, 'i');
+          const match = desc.match(regex);
+          return match ? match[1] : undefined;
+        };
+        
+        const lastName = extractField('lastName');
+        const firstName = extractField('firstName');
+        const middleName = extractField('middleName');
+        const objectAddress = extractField('objectAddress');
+        const birthDate = extractField('birthDate');
+        const registrationAddress = extractField('registrationAddress');
+        const passportSeries = extractField('passportSeries');
+        const passportNumber = extractField('passportNumber');
+        const passportIssuedBy = extractField('passportIssuedBy');
+        const passportIssueDate = extractField('passportIssueDate');
+        const passportDivisionCode = extractField('passportDivisionCode');
+        const inn = extractField('inn');
+        const snils = extractField('snils');
+        const objectType = extractField('objectType');
+        const connectionTypeWater = desc.includes('"connectionTypeWater":true');
+        const connectionTypeSewerage = desc.includes('"connectionTypeSewerage":true');
+        
+        if (lastName || firstName || middleName || desc.includes('"type":"technical_conditions"')) {
+          data = {
+            type: "technical_conditions",
+            lastName: lastName || "",
+            firstName: firstName || "",
+            middleName: middleName || "",
+            birthDate: birthDate,
+            registrationAddress: registrationAddress,
+            passportSeries: passportSeries,
+            passportNumber: passportNumber,
+            passportIssuedBy: passportIssuedBy,
+            passportIssueDate: passportIssueDate,
+            passportDivisionCode: passportDivisionCode,
+            inn: inn,
+            snils: snils,
+            objectType: objectType,
+            objectAddress: objectAddress || "",
+            connectionTypeWater: connectionTypeWater,
+            connectionTypeSewerage: connectionTypeSewerage,
+          } as TechnicalConditionsData;
+        }
+      } catch (parseError) {
+        console.error("Failed to extract data from truncated JSON:", parseError);
+      }
+    }
   }
 
-  if (!data || data.type !== "technical_conditions") {
+  // Если это не технические условия по типу, но название услуги указывает на это, все равно показываем
+  const isTechnicalConditionsByTitle = 
+    application.service?.title?.toLowerCase().includes("технологическое присоединение") ||
+    application.service?.title?.toLowerCase().includes("технические условия");
+
+  // Если нет данных, но название услуги указывает на технические условия, показываем базовую информацию
+  if (!data || (data.type !== "technical_conditions" && !isTechnicalConditionsByTitle)) {
+    if (isTechnicalConditionsByTitle) {
+      // Показываем базовую информацию даже если JSON не парсится
+      return (
+        <Card className="border-2 border-blue-200 bg-blue-50">
+          <CardHeader>
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <CardTitle>Заявка на технические условия</CardTitle>
+                  <Badge variant="outline" className="bg-blue-100">Технические условия</Badge>
+                </div>
+                <div className="space-y-2 text-sm text-gray-600">
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    <span>{application.user.name || application.user.email}</span>
+                  </div>
+                  {application.address && (
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4" />
+                      <span>{application.address}</span>
+                    </div>
+                  )}
+                  <div>
+                    Создана: {new Date(application.createdAt).toLocaleDateString("ru-RU")}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-2 items-center">
+              <ApplicationDetails application={application} />
+              <ApplicationActions 
+                applicationId={application.id} 
+                currentStatus={application.status}
+                isTechnicalConditions={true}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
     return null;
   }
 
@@ -150,7 +266,7 @@ export function TechnicalConditionsApplication({ application }: TechnicalConditi
                     {data.objectType && (
                       <div>
                         <span className="text-gray-600">Тип объекта:</span>{" "}
-                        <span className="font-medium">{data.objectType}</span>
+                        <span className="font-medium">{getObjectTypeLabel(data.objectType)}</span>
                       </div>
                     )}
                     {data.objectAddress && (

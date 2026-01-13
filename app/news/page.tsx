@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { prisma, withRetry } from "@/lib/prisma";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, User, ArrowRight } from "lucide-react";
 import Link from "next/link";
@@ -9,13 +9,35 @@ export const revalidate = 0;
 
 export default async function NewsPage() {
   // Загружаем только опубликованные новости
-  const news = await prisma.news.findMany({
-    where: { published: true },
-    include: {
-      author: { select: { name: true, email: true } },
-    },
-    orderBy: { publishedAt: "desc" },
-  });
+  let news: Array<{
+    id: string;
+    title: string;
+    content: string;
+    imageUrl: string | null;
+    publishedAt: Date | null;
+    author: {
+      name: string | null;
+      email: string;
+    };
+  }> = [];
+
+  try {
+    news = await withRetry(() =>
+      prisma.news.findMany({
+        where: { published: true },
+        include: {
+          author: { select: { name: true, email: true } },
+        },
+        orderBy: { publishedAt: "desc" },
+      })
+    ).catch((error) => {
+      console.error("Error loading news:", error);
+      return [];
+    }) as typeof news;
+  } catch (error) {
+    console.error("Error loading news:", error);
+    news = [];
+  }
 
   return (
     <div className="container py-8 px-4">

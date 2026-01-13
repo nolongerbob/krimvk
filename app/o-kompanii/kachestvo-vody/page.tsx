@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { prisma, withRetry } from "@/lib/prisma";
 import { KachestvoVodyClient } from "./KachestvoVodyClient";
 
 export const dynamic = 'force-dynamic';
@@ -27,7 +27,7 @@ interface WaterQualityRegion {
 
 async function getWaterQualityData() {
   try {
-    const districts = await prisma.waterQualityDistrict.findMany({
+    const districts = await withRetry(() => prisma.waterQualityDistrict.findMany({
       where: {
         isActive: true,
       },
@@ -53,7 +53,7 @@ async function getWaterQualityData() {
         },
       },
       orderBy: { name: "asc" },
-    });
+    }));
 
     // Сериализуем данные для передачи в клиентский компонент
     return districts.map((district) => ({

@@ -14,6 +14,13 @@ import {
 } from "@/components/ui/dialog";
 import { FileText, Plus, Trash2, Edit, Upload, Search, CheckCircle2, XCircle } from "lucide-react";
 import Link from "next/link";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface DisclosureDocument {
   id: string;
@@ -22,6 +29,7 @@ interface DisclosureDocument {
   fileUrl: string;
   fileSize: number;
   mimeType: string;
+  category: string;
   order: number;
   isActive: boolean;
   createdAt: string;
@@ -44,16 +52,27 @@ export function DisclosureClient({ initialDocuments }: DisclosureClientProps) {
   const [documents, setDocuments] = useState<DisclosureDocument[]>(initialDocuments);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingDocument, setEditingDocument] = useState<DisclosureDocument | null>(null);
   
   // Формы
   const [title, setTitle] = useState("");
+  const [category, setCategory] = useState("uchreditelnye-dokumenty");
   const [order, setOrder] = useState(0);
   const [isActive, setIsActive] = useState(true);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+
+  const categories = [
+    { value: "uchreditelnye-dokumenty", label: "Учредительные документы" },
+    { value: "normativnye-dokumenty", label: "Нормативные документы" },
+    { value: "informaciya-raskrytie", label: "Информация, подлежащая раскрытию" },
+    { value: "zashchita-personalnyh-dannyh", label: "Защита персональных данных" },
+    { value: "antikorrupciya", label: "Антикоррупционная политика" },
+    { value: "investicionnaya-programma", label: "Инвестиционная программа" },
+  ];
 
   const refreshData = async () => {
     setLoading(true);
@@ -70,19 +89,30 @@ export function DisclosureClient({ initialDocuments }: DisclosureClientProps) {
     }
   };
 
-  // Фильтрация по поисковому запросу
+  // Фильтрация по поисковому запросу и категории
   const filteredDocuments = useMemo(() => {
-    if (!searchQuery.trim()) return documents;
-    
-    const query = searchQuery.toLowerCase().trim();
-    return documents.filter((doc) =>
-      doc.title.toLowerCase().includes(query) ||
-      doc.fileName.toLowerCase().includes(query)
-    );
-  }, [documents, searchQuery]);
+    let filtered = documents;
+
+    // Фильтр по категории
+    if (selectedCategory !== "all") {
+      filtered = filtered.filter((doc) => doc.category === selectedCategory);
+    }
+
+    // Фильтр по поисковому запросу
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter((doc) =>
+        doc.title.toLowerCase().includes(query) ||
+        doc.fileName.toLowerCase().includes(query)
+      );
+    }
+
+    return filtered;
+  }, [documents, searchQuery, selectedCategory]);
 
   const openUploadDialog = () => {
     setTitle("");
+    setCategory("uchreditelnye-dokumenty");
     setOrder(0);
     setIsActive(true);
     setSelectedFile(null);
@@ -93,6 +123,7 @@ export function DisclosureClient({ initialDocuments }: DisclosureClientProps) {
   const openEditDialog = (doc: DisclosureDocument) => {
     setEditingDocument(doc);
     setTitle(doc.title);
+    setCategory(doc.category || "uchreditelnye-dokumenty");
     setOrder(doc.order);
     setIsActive(doc.isActive);
     setSelectedFile(null);
@@ -110,6 +141,7 @@ export function DisclosureClient({ initialDocuments }: DisclosureClientProps) {
       const formData = new FormData();
       formData.append("file", selectedFile);
       formData.append("title", title.trim());
+      formData.append("category", category);
 
       const response = await fetch("/api/admin/disclosure/upload", {
         method: "POST",
@@ -146,6 +178,7 @@ export function DisclosureClient({ initialDocuments }: DisclosureClientProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: title.trim(),
+          category,
           order,
           isActive,
         }),
@@ -210,18 +243,54 @@ export function DisclosureClient({ initialDocuments }: DisclosureClientProps) {
         </div>
       </div>
 
-      {/* Поиск */}
-      <div className="mb-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-          <Input
-            type="text"
-            placeholder="Поиск по названию или имени файла..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
+      {/* Фильтры и поиск */}
+      <div className="mb-6 space-y-4">
+        <div className="grid md:grid-cols-2 gap-4">
+          {/* Фильтр по категории */}
+          <div>
+            <Label htmlFor="category-filter" className="mb-2 block">
+              Категория
+            </Label>
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger id="category-filter" className="w-full">
+                <SelectValue placeholder="Все категории" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Все категории</SelectItem>
+                {categories.map((cat) => (
+                  <SelectItem key={cat.value} value={cat.value}>
+                    {cat.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Поиск */}
+          <div>
+            <Label htmlFor="search" className="mb-2 block">
+              Поиск
+            </Label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <Input
+                id="search"
+                type="text"
+                placeholder="Поиск по названию или имени файла..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
         </div>
+
+        {/* Информация о результатах */}
+        {filteredDocuments.length !== documents.length && (
+          <div className="text-sm text-gray-600">
+            Показано {filteredDocuments.length} из {documents.length} документов
+          </div>
+        )}
       </div>
 
       {/* Список документов */}
@@ -256,6 +325,11 @@ export function DisclosureClient({ initialDocuments }: DisclosureClientProps) {
                     <p className="text-sm text-gray-500 mt-1">
                       {doc.fileName} • {formatFileSize(doc.fileSize)}
                     </p>
+                    {doc.category && (
+                      <p className="text-xs text-blue-600 mt-1">
+                        {categories.find(c => c.value === doc.category)?.label || doc.category}
+                      </p>
+                    )}
                   </div>
                   <div className="flex gap-2">
                     <Button
@@ -306,6 +380,21 @@ export function DisclosureClient({ initialDocuments }: DisclosureClientProps) {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
+            <div>
+              <Label htmlFor="category">Категория *</Label>
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger id="category">
+                  <SelectValue placeholder="Выберите категорию" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div>
               <Label htmlFor="title">Название документа *</Label>
               <Input
@@ -368,6 +457,21 @@ export function DisclosureClient({ initialDocuments }: DisclosureClientProps) {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
+            <div>
+              <Label htmlFor="edit-category">Категория *</Label>
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger id="edit-category">
+                  <SelectValue placeholder="Выберите категорию" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div>
               <Label htmlFor="edit-title">Название документа *</Label>
               <Input

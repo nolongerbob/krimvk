@@ -169,11 +169,13 @@ export default function BecomeSubscriberPage() {
       return (
         formData.lastName &&
         formData.firstName &&
+        formData.birthDate &&
         formData.phone &&
         formData.passportSeries &&
         formData.passportNumber &&
         formData.passportIssuedBy &&
-        formData.passportIssueDate
+        formData.passportIssueDate &&
+        formData.passportDivisionCode
       );
     }
     if (currentStep === "object") {
@@ -506,8 +508,6 @@ export default function BecomeSubscriberPage() {
 - Тип подключения: ${formData.connectionMethod === "with-well" ? "с колодцем" : "по протяженности"}
 ${formData.connectionMethod === "with-well" ? `- Тип колодца: ${formData.wellType === "existing" ? "Существующий" : "Проектируемый"}` : ""}
 - Запрошенная нагрузка: ${formData.requestedLoad || "не указано"} м³
-- Ограничение водоснабжения: ${formData.waterSupplyRestriction ? "Да" : "Нет"}
-- Разрешение на подключение к частным сетям: ${formData.privateNetworkPermission ? "Да" : "Нет"}
 - Расположение точки подключения: ${formData.connectionPointLocation || "не указано"}
 - Диаметр водопровода: ${formData.pipeDiameter || "не указано"} мм
 - Материал труб: ${formData.pipeMaterial || "не указано"}
@@ -903,7 +903,9 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="birthDate">Дата рождения</Label>
+                <Label htmlFor="birthDate">
+                  Дата рождения <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   id="birthDate"
                   type="text"
@@ -920,6 +922,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                   }}
                   placeholder="16.04.2006"
                   maxLength={10}
+                  required
                 />
                 <p className="text-xs text-gray-500">Формат: дд.мм.гггг (например: 16.04.2006)</p>
               </div>
@@ -1034,7 +1037,9 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                             <p className="text-xs text-gray-500">Формат: дд.мм.гггг (например: 20.03.2015)</p>
                           </div>
                   <div className="space-y-2">
-                    <Label htmlFor="passportDivisionCode">Код подразделения</Label>
+                    <Label htmlFor="passportDivisionCode">
+                      Код подразделения <span className="text-red-500">*</span>
+                    </Label>
                     <Input
                       id="passportDivisionCode"
                       value={formData.passportDivisionCode}
@@ -1046,6 +1051,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                       }
                       maxLength={6}
                       placeholder="123-456"
+                      required
                     />
                   </div>
                 </div>
@@ -1126,6 +1132,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                     <option value="apartment">Квартира</option>
                     <option value="commercial">Коммерческий объект</option>
                     <option value="industrial">Промышленный объект</option>
+                    <option value="land">Земельный участок</option>
                   </select>
                 </div>
                 <div className="space-y-2">
@@ -1152,11 +1159,40 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                 <Input
                   id="cadastralNumber"
                   value={formData.cadastralNumber}
-                  onChange={(e) =>
-                    setFormData({ ...formData, cadastralNumber: e.target.value })
-                  }
-                  placeholder="XX:XX:XXXXXXXX:XX"
+                  onChange={(e) => {
+                    let value = e.target.value.replace(/[^0-9:]/g, ''); // Только цифры и двоеточия
+                    
+                    // Удаляем все двоеточия для переформатирования
+                    const digitsOnly = value.replace(/:/g, '');
+                    
+                    // Автоматически добавляем двоеточия в нужных местах
+                    // Формат: XX:XX:XXXXXX:XXXX
+                    let formatted = '';
+                    for (let i = 0; i < digitsOnly.length; i++) {
+                      formatted += digitsOnly[i];
+                      // Добавляем двоеточие после 2-й, 4-й и 10-й цифры
+                      if ((i === 1 || i === 3 || i === 9) && i < digitsOnly.length - 1) {
+                        formatted += ':';
+                      }
+                    }
+                    
+                    setFormData({ ...formData, cadastralNumber: formatted });
+                  }}
+                  placeholder="XX:XX:XXXXXX:XXXX"
+                  maxLength={18} // Максимальная длина с двоеточиями: 2:2:6:4 = 18 символов
                 />
+                <p className="text-xs text-gray-500">Формат: XX:XX:XXXXXX:XXXX (например: 77:01:000100:1001)</p>
+                <a
+                  href="https://nspd.gov.ru/map"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 underline"
+                >
+                  Узнать кадастровый номер
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
               </div>
 
               <div className="space-y-2">
@@ -1323,37 +1359,6 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                   placeholder="0"
                   min="0"
                 />
-              </div>
-
-              <div className="space-y-3">
-                <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-lg hover:bg-gray-50 transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={formData.waterSupplyRestriction}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        waterSupplyRestriction: e.target.checked,
-                      })
-                    }
-                    className="w-5 h-5"
-                  />
-                  <span>Ограничение водоснабжения</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-lg hover:bg-gray-50 transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={formData.privateNetworkPermission}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        privateNetworkPermission: e.target.checked,
-                      })
-                    }
-                    className="w-5 h-5"
-                  />
-                  <span>Требуется разрешение на подключение к частным сетям</span>
-                </label>
               </div>
 
               <div className="space-y-2">

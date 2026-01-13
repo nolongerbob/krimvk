@@ -13,8 +13,12 @@ import {
   AlertCircle, 
   Truck,
   Wallet,
-  Loader2
+  Loader2,
+  Mail,
+  XCircle,
+  CheckCircle2
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -51,6 +55,12 @@ export default function DashboardPage() {
     metersCount: 0,
     activeApplications: 0,
   });
+  const [emailVerified, setEmailVerified] = useState<boolean | null>(null);
+  const [userEmail, setUserEmail] = useState<string>("");
+  const [resendingEmail, setResendingEmail] = useState(false);
+  const [changingEmail, setChangingEmail] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [emailMessage, setEmailMessage] = useState("");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -60,6 +70,7 @@ export default function DashboardPage() {
     if (status === "authenticated") {
       fetchAccounts();
       fetchStats();
+      fetchUserEmailStatus();
     }
   }, [status, router]);
 
@@ -83,6 +94,78 @@ export default function DashboardPage() {
       router.replace("/dashboard", { scroll: false });
     }
   }, [status, searchParams, router]);
+
+  const fetchUserEmailStatus = async () => {
+    try {
+      const response = await fetch("/api/user/profile");
+      if (response.ok) {
+        const data = await response.json();
+        setEmailVerified(data.user?.emailVerified ? true : false);
+        setUserEmail(data.user?.email || "");
+      }
+    } catch (error) {
+      console.error("Error fetching user email status:", error);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    setResendingEmail(true);
+    setEmailMessage("");
+    try {
+      console.log("[Dashboard] Отправка запроса на повторную отправку письма");
+      const response = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+      });
+      
+      console.log("[Dashboard] Ответ получен, статус:", response.status);
+      const data = await response.json();
+      console.log("[Dashboard] Данные ответа:", data);
+      
+      if (response.ok) {
+        setEmailMessage("Письмо отправлено! Проверьте вашу почту.");
+      } else {
+        setEmailMessage(data.error || data.details || "Ошибка при отправке письма");
+      }
+    } catch (error: any) {
+      console.error("[Dashboard] Ошибка при отправке запроса:", error);
+      setEmailMessage(`Произошла ошибка: ${error?.message || "Попробуйте позже"}`);
+    } finally {
+      setResendingEmail(false);
+    }
+  };
+
+  const handleChangeEmail = async () => {
+    if (!newEmail.trim() || !newEmail.includes("@")) {
+      setEmailMessage("Введите корректный email адрес");
+      return;
+    }
+    
+    setChangingEmail(true);
+    setEmailMessage("");
+    try {
+      const response = await fetch("/api/auth/change-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ newEmail: newEmail.trim() }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setEmailMessage("Email изменен! Письмо с подтверждением отправлено на новый адрес.");
+        setUserEmail(data.newEmail);
+        setNewEmail("");
+        // Обновляем статус
+        setTimeout(() => {
+          fetchUserEmailStatus();
+        }, 1000);
+      } else {
+        setEmailMessage(data.error || "Ошибка при изменении email");
+      }
+    } catch (error) {
+      setEmailMessage("Произошла ошибка. Попробуйте позже.");
+    } finally {
+      setChangingEmail(false);
+    }
+  };
 
   const fetchStats = async () => {
     try {
@@ -264,6 +347,87 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
       <div className="container py-8 px-4 max-w-7xl">
+        {/* Email Verification Banner */}
+        {emailVerified === false && (
+          <Card className="mb-6 border-2 border-amber-200 bg-amber-50">
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="p-2 bg-amber-100 rounded-lg flex-shrink-0">
+                  <Mail className="h-6 w-6 text-amber-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-amber-900 mb-2">
+                    Подтвердите ваш email адрес
+                  </h3>
+                  <p className="text-sm text-amber-800 mb-4">
+                    Для полного доступа к функциям личного кабинета необходимо подтвердить ваш email адрес: <strong>{userEmail}</strong>
+                  </p>
+                  
+                  {emailMessage && (
+                    <div className={`mb-4 p-3 rounded-md text-sm ${
+                      emailMessage.includes("отправлено") || emailMessage.includes("изменен")
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                    }`}>
+                      {emailMessage}
+                    </div>
+                  )}
+
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Button
+                      onClick={handleResendVerification}
+                      disabled={resendingEmail}
+                      variant="default"
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      {resendingEmail ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Отправка...
+                        </>
+                      ) : (
+                        <>
+                          <Mail className="h-4 w-4 mr-2" />
+                          Отправить письмо повторно
+                        </>
+                      )}
+                    </Button>
+                    
+                    <div className="flex-1 flex gap-2">
+                      <Input
+                        type="email"
+                        placeholder="Новый email адрес"
+                        value={newEmail}
+                        onChange={(e) => setNewEmail(e.target.value)}
+                        className="flex-1"
+                        disabled={changingEmail}
+                      />
+                      <Button
+                        onClick={handleChangeEmail}
+                        disabled={changingEmail || !newEmail.trim()}
+                        variant="outline"
+                      >
+                        {changingEmail ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Изменение...
+                          </>
+                        ) : (
+                          "Изменить email"
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <p className="text-xs text-amber-700 mt-3">
+                    Не получили письмо? Проверьте папку "Спам" или измените email адрес, если он указан неверно.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Header with Balance and Account */}
         <div className="mb-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">

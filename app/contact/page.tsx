@@ -47,8 +47,8 @@ export default function ContactPage() {
                 <Mail className="h-5 w-5 text-blue-500" />
                 <div>
                   <p className="font-medium mb-1">Email для передачи показаний</p>
-                  <a href="mailto:pokazaniya@krimvk.ru" className="text-gray-600 hover:text-primary">
-                    pokazaniya@krimvk.ru
+                  <a href="mailto:NVKVK2208@mail.ru" className="text-gray-600 hover:text-primary">
+                    NVKVK2208@mail.ru
                   </a>
                   <p className="text-sm text-gray-500 mt-1">
                     Отправляйте показания счетчиков на этот адрес

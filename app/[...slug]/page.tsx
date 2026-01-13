@@ -1,10 +1,30 @@
-import { prisma } from "@/lib/prisma";
+import { prisma, withRetry } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { File, Download, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { sanitizeHTML } from "@/lib/sanitize-html";
+import { Prisma } from "@prisma/client";
+
+type PageWithRelations = Prisma.PageGetPayload<{
+  include: {
+    author: { select: { name: true; email: true } };
+    posts: {
+      include: {
+        author: { select: { name: true; email: true } };
+      };
+    };
+  };
+}>;
+
+type PostWithRelations = Prisma.PostGetPayload<{
+  include: {
+    page: { select: { id: true; title: true; slug: true } };
+    author: { select: { name: true; email: true } };
+    attachments: true;
+  };
+}>;
 
 export default async function DynamicPagePage({
   params,
@@ -14,63 +34,80 @@ export default async function DynamicPagePage({
   const slugArray = params.slug;
   const fullSlug = "/" + slugArray.join("/");
 
-  // Сначала пробуем найти страницу по полному slug
-  let page = await prisma.page.findUnique({
-    where: {
-      slug: fullSlug,
-      isActive: true,
-    },
-    include: {
-      author: { select: { name: true, email: true } },
-      posts: {
-        include: {
-          author: { select: { name: true, email: true } },
-        },
-        orderBy: { createdAt: "desc" },
-        take: 20,
-      },
-    },
-  });
+  let page: PageWithRelations | null = null;
+  let post: PostWithRelations | null = null;
 
-  // Если страница не найдена, пробуем найти пост по slug
-  let post = null;
-  if (!page) {
-    // Пробуем найти пост по slug (последний сегмент)
-    const lastSegment = slugArray[slugArray.length - 1];
-    post = await prisma.post.findUnique({
+  try {
+    // Сначала пробуем найти страницу по полному slug
+    page = await withRetry(() => prisma.page.findUnique({
       where: {
-        slug: lastSegment,
+        slug: fullSlug,
+        isActive: true,
       },
       include: {
-        page: {
-          select: { id: true, title: true, slug: true },
-        },
         author: { select: { name: true, email: true } },
-        attachments: {
-          orderBy: { uploadedAt: "desc" },
+        posts: {
+          include: {
+            author: { select: { name: true, email: true } },
+          },
+          orderBy: { createdAt: "desc" },
+          take: 20,
         },
       },
+    })).catch((error) => {
+      console.error("Error loading page:", error);
+      return null;
     });
 
-    // Если пост найден, загружаем страницу-категорию
-    if (post) {
-      page = await prisma.page.findUnique({
+    // Если страница не найдена, пробуем найти пост по slug
+    if (!page) {
+      // Пробуем найти пост по slug (последний сегмент)
+      const lastSegment = slugArray[slugArray.length - 1];
+      post = await withRetry(() => prisma.post.findUnique({
         where: {
-          id: post.pageId,
-          isActive: true,
+          slug: lastSegment,
         },
         include: {
+          page: {
+            select: { id: true, title: true, slug: true },
+          },
           author: { select: { name: true, email: true } },
-          posts: {
-            include: {
-              author: { select: { name: true, email: true } },
-            },
-            orderBy: { createdAt: "desc" },
-            take: 20,
+          attachments: {
+            orderBy: { uploadedAt: "desc" },
           },
         },
+      })).catch((error) => {
+        console.error("Error loading post:", error);
+        return null;
       });
+
+      // Если пост найден, загружаем страницу-категорию
+      if (post) {
+        const postPageId = post.pageId;
+        page = await withRetry(() => prisma.page.findUnique({
+          where: {
+            id: postPageId,
+            isActive: true,
+          },
+          include: {
+            author: { select: { name: true, email: true } },
+            posts: {
+              include: {
+                author: { select: { name: true, email: true } },
+              },
+              orderBy: { createdAt: "desc" },
+              take: 20,
+            },
+          },
+        })).catch((error) => {
+          console.error("Error loading page for post:", error);
+          return null;
+        });
+      }
     }
+  } catch (error) {
+    console.error("Error loading page:", error);
+    notFound();
   }
 
   // Если это пост, отображаем его

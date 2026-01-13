@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { createUser, getUserByEmail } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+import { sendVerificationEmail } from '@/lib/resend';
 import { z } from 'zod';
+import crypto from 'crypto';
 
 const registerSchema = z.object({
   email: z.string().email('Некорректный email'),
@@ -38,11 +41,40 @@ export async function POST(request: Request) {
       );
     }
 
-    // Создаем пользователя
+    // Создаем пользователя (email еще не подтвержден)
     const user = await createUser(validatedData);
 
+    // Генерируем токен подтверждения
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = new Date();
+    expires.setHours(expires.getHours() + 24); // Токен действителен 24 часа
+
+    // Сохраняем токен в базе данных
+    await prisma.emailVerificationToken.create({
+      data: {
+        userId: user.id,
+        token,
+        expires,
+      },
+    });
+
+    // Отправляем email с подтверждением
+    try {
+      console.log('Sending verification email to:', user.email);
+      const emailResult = await sendVerificationEmail(user.email, token, user.name || undefined);
+      console.log('Verification email sent successfully:', emailResult);
+    } catch (emailError) {
+      console.error('Failed to send verification email:', emailError);
+      // Не прерываем регистрацию, если email не отправился
+      // Пользователь сможет запросить повторную отправку позже
+    }
+
     return NextResponse.json(
-      { message: 'Пользователь успешно зарегистрирован', userId: user.id },
+      { 
+        message: 'Регистрация успешна. Пожалуйста, проверьте вашу почту для подтверждения email.',
+        userId: user.id,
+        emailSent: true,
+      },
       { status: 201 }
     );
   } catch (error) {

@@ -55,9 +55,6 @@ const companyInfo: Array<{
             </div>
           </div>
         </div>
-        <div className="pt-4 border-t">
-          <p className="text-gray-700 italic">Наша задача проста: круглосуточная подача чистой воды и оперативная помощь в любых ситуациях.</p>
-        </div>
       </div>
     ),
   },
@@ -103,9 +100,6 @@ const companyInfo: Array<{
               </div>
             </div>
           </div>
-        </div>
-        <div className="pt-4 border-t">
-          <p className="text-gray-700 italic">Мы ценим наш коллектив, который ежедневно трудится ради комфорта и уюта в домах 177 000 жителей.</p>
         </div>
       </div>
     ),
@@ -153,9 +147,6 @@ const companyInfo: Array<{
             </div>
           </div>
         </div>
-        <div className="pt-4 border-t">
-          <p className="text-gray-700 italic">Лучшая оценка нашей работы — это доверие жителей и стабильная вода в кранах тысяч домов.</p>
-        </div>
       </div>
     ),
   },
@@ -201,9 +192,6 @@ const companyInfo: Array<{
               </div>
             </div>
           </div>
-        </div>
-        <div className="pt-4 border-t">
-          <p className="text-gray-700 italic">Мы строим будущее, где чистая вода доступна каждому, с бережным отношением к уникальной природе Крыма.</p>
         </div>
       </div>
     ),

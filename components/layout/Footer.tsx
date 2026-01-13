@@ -108,14 +108,14 @@ export function Footer() {
             <ul className="space-y-3 text-sm">
               <li className="flex items-center space-x-2">
                 <Phone className="h-4 w-4 text-gray-600" />
-                <a href="tel:+78001234567" className="text-gray-600 hover:text-primary">
-                  8 (800) 123-45-67
+                <a href="tel:+79780800366" className="text-gray-600 hover:text-primary">
+                  +7 (978) 080-03-66
                 </a>
               </li>
               <li className="flex items-center space-x-2">
                 <Mail className="h-4 w-4 text-gray-600" />
-                <a href="mailto:info@krimvk.ru" className="text-gray-600 hover:text-primary">
-                  info@krimvk.ru
+                <a href="mailto:sakwcompany@mail.ru" className="text-gray-600 hover:text-primary">
+                  sakwcompany@mail.ru
                 </a>
               </li>
               <li className="flex items-start space-x-2">

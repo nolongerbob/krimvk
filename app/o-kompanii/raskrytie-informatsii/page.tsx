@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { prisma, withRetry } from "@/lib/prisma";
 import { DisclosureClient } from "./DisclosureClient";
 
 export const dynamic = 'force-dynamic';
@@ -6,7 +6,7 @@ export const revalidate = 0;
 
 async function getDisclosureDocuments() {
   try {
-    const documents = await prisma.disclosureDocument.findMany({
+    const documents = await withRetry(() => prisma.disclosureDocument.findMany({
       where: {
         isActive: true,
       },
@@ -14,7 +14,7 @@ async function getDisclosureDocuments() {
         { order: "asc" },
         { createdAt: "desc" },
       ],
-    });
+    }));
 
     return documents.map((doc) => ({
       id: doc.id,

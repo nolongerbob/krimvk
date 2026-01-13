@@ -19,23 +19,37 @@ export function AdminNotifications() {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const response = await fetch("/api/admin/notifications");
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2000); // Таймаут 2 секунды
+        
+        const response = await fetch("/api/admin/notifications", {
+          signal: controller.signal,
+        });
+        
+        clearTimeout(timeoutId);
+        
         if (response.ok) {
           const data = await response.json();
           setNotifications(data);
         }
-      } catch (error) {
-        console.error("Error fetching notifications:", error);
+      } catch (error: any) {
+        // Игнорируем ошибки, чтобы не ломать страницу
+        if (error.name !== 'AbortError') {
+          // Тихо игнорируем
+        }
       }
     };
 
-    // Загружаем сразу
-    fetchNotifications();
+    // Загружаем с задержкой, чтобы не блокировать рендеринг
+    const timeout = setTimeout(fetchNotifications, 1000);
 
-    // Обновляем каждые 10 секунд
-    const interval = setInterval(fetchNotifications, 10000);
+    // Обновляем каждые 30 секунд (реже)
+    const interval = setInterval(fetchNotifications, 30000);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(timeout);
+      clearInterval(interval);
+    };
   }, []);
 
   const totalNotifications = notifications.newApplications + notifications.newQuestions;

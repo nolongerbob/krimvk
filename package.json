@@ -76,6 +76,7 @@
     "@testing-library/user-event": "^14.6.1",
     "@types/dompurify": "^3.0.5",
     "@types/jest": "^30.0.0",
+    "@types/jsdom": "^27.0.0",
     "@types/node": "^20",
     "@types/pg": "^8.10.9",
     "@types/react": "^18",

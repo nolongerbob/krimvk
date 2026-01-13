@@ -43,6 +43,10 @@ interface TechnicalConditionsApplicationProps {
       email: string;
       phone: string | null;
     };
+    service?: {
+      title: string;
+      category?: string;
+    };
     adminFiles?: Array<{
       id: string;
       fileName: string;

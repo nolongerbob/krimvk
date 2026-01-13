@@ -1,5 +1,4 @@
 {
-  "_comment": "Этот файл используется только для деплоя на Vercel. Для VPS используйте ecosystem.config.js и nginx.conf.example",
   "functions": {
     "app/api/admin/water-quality/documents/upload/route.ts": {
       "maxDuration": 300,

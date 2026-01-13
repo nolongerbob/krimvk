@@ -74,14 +74,35 @@ const getObjectTypeLabel = (objectType?: string): string => {
   return typeMap[objectType] || objectType;
 };
 
+// Безопасная функция для парсинга JSON из description с учетом комментариев администратора
+function safeParseDescription(description: string | null): any | null {
+  if (!description) return null;
+  
+  try {
+    // Извлекаем JSON часть, если есть комментарий администратора
+    let jsonPart = description;
+    const commentIndex = description.indexOf('\n\nКомментарий при завершении:');
+    if (commentIndex !== -1) {
+      jsonPart = description.substring(0, commentIndex).trim();
+    }
+    
+    return JSON.parse(jsonPart);
+  } catch (e) {
+    return null;
+  }
+}
+
 export function TechnicalConditionsApplication({ application }: TechnicalConditionsApplicationProps) {
   let data: TechnicalConditionsData | null = null;
   
-  try {
-    if (application.description) {
-      data = JSON.parse(application.description);
-    }
-  } catch (e) {
+  // Используем безопасную функцию парсинга
+  const parsed = safeParseDescription(application.description);
+  if (parsed) {
+    data = parsed;
+  }
+  
+  // Если не удалось распарсить, пытаемся извлечь данные из обрезанного JSON
+  if (!data) {
     // Если не JSON или JSON обрезан, пытаемся извлечь данные из обрезанного JSON
     if (application.description && application.description.trim().startsWith('{')) {
       try {

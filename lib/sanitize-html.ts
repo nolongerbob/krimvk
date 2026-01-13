@@ -19,7 +19,7 @@ export function sanitizeHTML(html: string): string {
   // Для серверного рендеринга используем JSDOM
   if (typeof window === 'undefined') {
     const dom = new JSDOM('');
-    const purify = DOMPurify(dom.window as unknown as Window & typeof globalThis);
+    const purify = DOMPurify(dom.window as any);
     return purify.sanitize(html, sanitizeConfig);
   }
 

@@ -358,7 +358,23 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
               <div className="space-y-2 text-sm text-gray-600">
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4" />
-                  <span>{app.user.name || app.user.email}</span>
+                  <span>
+                    {(() => {
+                      // Пытаемся извлечь ФИО из данных заявки
+                      try {
+                        if (app.description) {
+                          const data = JSON.parse(app.description);
+                          if (data && (data.lastName || data.firstName || data.middleName)) {
+                            const fullName = `${data.lastName || ""} ${data.firstName || ""} ${data.middleName || ""}`.trim();
+                            if (fullName) return fullName;
+                          }
+                        }
+                      } catch (e) {
+                        // Игнорируем ошибки парсинга
+                      }
+                      return app.user.name || app.user.email;
+                    })()}
+                  </span>
                 </div>
                 {app.user.phone && (
                   <div className="flex items-center gap-2">

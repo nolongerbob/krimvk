@@ -145,6 +145,15 @@ export function TechnicalConditionsApplication({ application }: TechnicalConditi
   // Если нет данных, но название услуги указывает на технические условия, показываем базовую информацию
   if (!data || (data.type !== "technical_conditions" && !isTechnicalConditionsByTitle)) {
     if (isTechnicalConditionsByTitle) {
+      // Пытаемся извлечь ФИО из данных, даже если JSON не полностью распарсился
+      let extractedFullName = application.user.name || application.user.email;
+      if (data) {
+        const extractedName = `${data.lastName || ""} ${data.firstName || ""} ${data.middleName || ""}`.trim();
+        if (extractedName) {
+          extractedFullName = extractedName;
+        }
+      }
+      
       // Показываем базовую информацию даже если JSON не парсится
       return (
         <Card className="border-2 border-blue-200 bg-blue-50">
@@ -158,7 +167,7 @@ export function TechnicalConditionsApplication({ application }: TechnicalConditi
                 <div className="space-y-2 text-sm text-gray-600">
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4" />
-                    <span>{application.user.name || application.user.email}</span>
+                    <span>{extractedFullName}</span>
                   </div>
                   {application.address && (
                     <div className="flex items-center gap-2">

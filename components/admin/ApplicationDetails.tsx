@@ -331,7 +331,11 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
         <DialogHeader>
           <DialogTitle>Детали заявки</DialogTitle>
           <DialogDescription>
-            Полная информация о заявке от {application.user.name || application.user.email}
+            Полная информация о заявке от {
+              data?.lastName || data?.firstName || data?.middleName
+                ? `${data.lastName || ""} ${data.firstName || ""} ${data.middleName || ""}`.trim()
+                : application.user.name || application.user.email
+            }
           </DialogDescription>
         </DialogHeader>
 

@@ -73,6 +73,24 @@ const statusConfig = {
   },
 };
 
+// Безопасная функция для парсинга JSON из description с учетом комментариев администратора
+function safeParseDescription(description: string | null): any | null {
+  if (!description) return null;
+  
+  try {
+    // Извлекаем JSON часть, если есть комментарий администратора
+    let jsonPart = description;
+    const commentIndex = description.indexOf('\n\nКомментарий при завершении:');
+    if (commentIndex !== -1) {
+      jsonPart = description.substring(0, commentIndex).trim();
+    }
+    
+    return JSON.parse(jsonPart);
+  } catch (e) {
+    return null;
+  }
+}
+
 export function ApplicationsClient({ applications, categories }: ApplicationsClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -134,19 +152,10 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
     const regular: Application[] = [];
 
     applications.forEach((app) => {
-      try {
-        if (app.description) {
-          const data = JSON.parse(app.description);
-          if (data && data.type === "technical_conditions") {
-            techApps.push(app);
-            return;
-          }
-        }
-      } catch (e) {
-        // Не JSON, значит обычная заявка
-        if (process.env.NODE_ENV === 'development') {
-          console.log('Failed to parse description for app:', app.id, e);
-        }
+      const data = safeParseDescription(app.description);
+      if (data && data.type === "technical_conditions") {
+        techApps.push(app);
+        return;
       }
       regular.push(app);
     });
@@ -241,15 +250,9 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
       let isTechnicalConditions = false;
       
       // Проверяем по JSON в description (приоритет)
-      try {
-        if (app.description) {
-          const data = JSON.parse(app.description);
-          if (data && data.type === "technical_conditions") {
-            isTechnicalConditions = true;
-          }
-        }
-      } catch (e) {
-        // Не JSON, продолжаем проверку
+      const data = safeParseDescription(app.description);
+      if (data && data.type === "technical_conditions") {
+        isTechnicalConditions = true;
       }
       
       // Проверяем по названию услуги
@@ -287,19 +290,10 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
     let techData = null;
     
     // Проверяем по JSON в description
-    try {
-      if (app.description) {
-        const parsed = JSON.parse(app.description);
-        if (parsed && parsed.type === "technical_conditions") {
-          isTechnicalConditions = true;
-          techData = parsed;
-        }
-      }
-    } catch (e) {
-      // Не JSON или ошибка парсинга
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Failed to parse description in renderApplication:', app.id, e);
-      }
+    const parsed = safeParseDescription(app.description);
+    if (parsed && parsed.type === "technical_conditions") {
+      isTechnicalConditions = true;
+      techData = parsed;
     }
     
     // Проверяем по названию услуги
@@ -321,18 +315,16 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
 
     // Обрабатываем description - может быть JSON для других типов
     let displayDescription = app.description || "Без описания";
-    try {
-      if (app.description) {
-        const parsed = JSON.parse(app.description);
-        // Если это JSON, но не технические условия, показываем краткую информацию
-        if (parsed.type === "technical_conditions") {
-          // Это технические условия, но почему-то не попали в проверку выше
-          // Показываем через специальный компонент
-          return <TechnicalConditionsApplication key={app.id} application={app} />;
-        }
-        displayDescription = "Заявка на технологическое присоединение";
-      }
-    } catch (e) {
+    // Используем уже распарсенные данные, если они есть
+    if (parsed && parsed.type === "technical_conditions") {
+      // Это технические условия, но почему-то не попали в проверку выше
+      // Показываем через специальный компонент
+      return <TechnicalConditionsApplication key={app.id} application={app} />;
+    }
+    
+    if (parsed) {
+      displayDescription = "Заявка на технологическое присоединение";
+    } else {
       // Не JSON, используем как есть, но ограничиваем длину
       // Если description начинается с {, это может быть обрезанный JSON
       if (app.description && app.description.trim().startsWith('{')) {
@@ -361,16 +353,10 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
                   <span>
                     {(() => {
                       // Пытаемся извлечь ФИО из данных заявки
-                      try {
-                        if (app.description) {
-                          const data = JSON.parse(app.description);
-                          if (data && (data.lastName || data.firstName || data.middleName)) {
-                            const fullName = `${data.lastName || ""} ${data.firstName || ""} ${data.middleName || ""}`.trim();
-                            if (fullName) return fullName;
-                          }
-                        }
-                      } catch (e) {
-                        // Игнорируем ошибки парсинга
+                      const data = safeParseDescription(app.description);
+                      if (data && (data.lastName || data.firstName || data.middleName)) {
+                        const fullName = `${data.lastName || ""} ${data.firstName || ""} ${data.middleName || ""}`.trim();
+                        if (fullName) return fullName;
                       }
                       return app.user.name || app.user.email;
                     })()}

@@ -30,7 +30,8 @@ export default async function AdminContractsPage() {
   }
 
   // Загружаем все договоры
-  let contracts = [];
+  // Явно указываем тип, чтобы избежать implicit any[]
+  let contracts: any[] = [];
   try {
     const rawContracts = await withRetry(() =>
       prisma.contract.findMany({

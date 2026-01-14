@@ -65,20 +65,38 @@ export async function GET(request: NextRequest) {
     );
 
     // Преобразуем данные счетчиков из 1С в нужный формат
-    // Структура данных из 1С может отличаться, нужно адаптировать под реальную структуру
+    // На старом сайте для таблицы счетчиков использовалось поле NumberOfDevice:
+    //   <?php echo $device->NumberOfDevice; ?>
+    // Его же нужно использовать и как идентификатор прибора, который передаём в 1С.
     const meters = data?.MeteringDevices || data?.Devices || data?.meters || [];
 
     return NextResponse.json({
       success: true,
-      meters: meters.map((meter: any, index: number) => ({
-        id: meter.Number || meter.DeviceNumber || `device-${index}`,
-        serialNumber: meter.SerialNumber || meter.Number || `Счетчик ${index + 1}`,
-        type: meter.ServiceName?.toLowerCase().includes("горяч") ? "горячая" : "холодная",
-        address: account.address,
-        lastReading: meter.LastReading ? parseFloat(meter.LastReading) : null,
-        lastReadingDate: meter.LastReadingDate || null,
-        serviceName: meter.ServiceName || "Водоснабжение",
-      })),
+      meters: meters.map((meter: any, index: number) => {
+        const numberOfDevice =
+          meter.NumberOfDevice ||
+          meter.Number ||
+          meter.DeviceNumber ||
+          meter.SerialNumber ||
+          `device-${index}`;
+
+        return {
+          // Это значение потом уходит как WaNumberOfDevice
+          id: String(numberOfDevice),
+          // На карточке показываем тот же номер, что и в старой таблице
+          serialNumber:
+            meter.SerialNumber ||
+            meter.NumberOfDevice ||
+            meter.Number ||
+            meter.DeviceNumber ||
+            `Счетчик ${index + 1}`,
+          type: meter.ServiceName?.toLowerCase().includes("горяч") ? "горячая" : "холодная",
+          address: account.address,
+          lastReading: meter.LastReading ? parseFloat(meter.LastReading) : null,
+          lastReadingDate: meter.LastReadingDate || null,
+          serviceName: meter.ServiceName || "Водоснабжение",
+        };
+      }),
     });
   } catch (error: any) {
     console.error("Error fetching meters from 1C:", error);

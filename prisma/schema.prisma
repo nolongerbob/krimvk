@@ -34,6 +34,7 @@ model User {
   emergencyReports        EmergencyReport[]
   userAccounts            UserAccount[] // Лицевые счета пользователя
   emailVerificationToken  EmailVerificationToken?
+  contracts               Contract[] // Договоры
 
   @@map("users")
 }
@@ -441,4 +442,95 @@ model DisclosureDocument {
   updatedAt DateTime @updatedAt
 
   @@map("disclosure_documents")
+}
+
+enum ContractStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+// Договоры на технологическое присоединение
+model Contract {
+  id        String   @id @default(cuid())
+  userId    String? // ID пользователя (опционально, для связи с пользователем если нужно)
+  contractNumber String // Номер договора
+  contractDate   String? // Дата договора
+  status    ContractStatus @default(PENDING) // Статус договора
+  
+  // Информация об абоненте
+  lastName            String // Фамилия
+  firstName           String // Имя
+  middleName          String? // Отчество
+  birthDate           String? // Дата рождения
+  registrationAddress String? @db.Text // Адрес регистрации
+  passportSeries      String? // Серия паспорта
+  passportNumber      String? // Номер паспорта
+  passportIssuedBy    String? @db.Text // Кем выдан
+  passportIssueDate   String? // Дата выдачи
+  passportDivisionCode String? // Код подразделения
+  phone               String? // Телефон для связи
+  
+  // Информация об объекте
+  objectType          String? // Тип объекта
+  objectPurpose       String? // Назначение объекта
+  cadastralNumber     String? // Кадастровый номер
+  objectAddress       String? @db.Text // Адрес объекта
+  objectArea          String? // Площадь объекта (кв. метров)
+  siteMaster          String? // Мастер участка
+  position            String? // Должность
+  objectBasis         String? @db.Text // Объект принадлежит на основании
+  
+  // Параметры присоединения
+  hasWaterSupply      Boolean  @default(false) // Водопровод
+  hasSewerage         Boolean  @default(false) // Канализация
+  connectionType      String? // Тип подключения (по протяженности, с колодцем)
+  wellType            String? // Тип колодца
+  requestedLoad       String? // Запрошенная нагрузка (м³)
+  connectionPoint     String? @db.Text // Расположение точки подключения
+  pipeDiameter        String? // Диаметр водопровода (мм)
+  pipeMaterial        String? // Материал труб
+  waterSupplyRestriction Boolean @default(false) // Ограничение водоснабжения
+  privateNetworkPermission Boolean @default(false) // Требуется разрешение на подключение к частным сетям
+  
+  // Ход подключения
+  receiptDate         String? // Дата поступления
+  technicalConditionsIssueDate String? // Дата выдачи технических условий
+  technicalConditionsNumber    String? // № тех. условий
+  connectionAgreementIssueDate String? // Дата выдачи договора присоединения
+  connectionAgreementNumber    String? // № договора присоединения
+  designAgreementIssueDate    String? // Дата выдачи договора проектных работ
+  designAgreementNumber       String? // № договора проектных работ
+  costWithVAT         String? // Стоимость с НДС (рублей)
+  
+  // Файл договора
+  contractFileUrl     String? // URL файла договора
+  contractFileName    String? // Имя файла договора
+  contractFileSize    Int? // Размер файла
+  contractFileMimeType String? // MIME тип файла
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  documents ContractDocument[]
+
+  @@map("contracts")
+}
+
+// Документы к договорам
+model ContractDocument {
+  id        String   @id @default(cuid())
+  contractId String
+  documentType String // Тип документа: application, pre-calculation, tu, contract-tp, contract-project, act-project, vr
+  fileName  String // Оригинальное имя файла
+  fileUrl   String // URL файла в Blob Storage
+  fileSize  Int // Размер файла в байтах
+  mimeType  String // MIME тип файла
+  uploadedAt DateTime @default(now())
+  
+  contract Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
+  @@map("contract_documents")
 }

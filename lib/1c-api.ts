@@ -111,16 +111,39 @@ export async function submitMeterReading(
   region?: string
 ): Promise<any> {
   const regionPath = getRegion(region);
-  const url = new URL(`${BASE_URL}/${regionPath}/hs/WebAccounts/set_metering_device_indication`);
-  
-  url.searchParams.append("WaLsCode", accountNumber);
-  url.searchParams.append("WaPass", password);
-  url.searchParams.append("WaNumberOfDevice", deviceNumber);
-  url.searchParams.append("WaReading", reading.toString());
+  /**
+   * ВАЖНО:
+   * Старый PHP-сайт формировал URL вручную:
+   *
+   *   .../set_metering_device_indication?WaLsCode=...&WaPass=...&WaNumberOfDevice=...&WaReading=...
+   *
+   * при этом для WaNumberOfDevice пробелы заменялись на "%20":
+   *
+   *   preg_replace("/\s/is","%20",$val['0'])
+   *
+   * Если использовать URLSearchParams, пробелы могут кодироваться как "+",
+   * что для 1С может отличаться от ожидаемого и приводить к "## Data not found.".
+   *
+   * Поэтому формируем строку запроса максимально близко к старому сайту.
+   */
+  const baseUrl = `${BASE_URL}/${regionPath}/hs/WebAccounts/set_metering_device_indication`;
+
+  // Полностью повторяем поведение старого сайта:
+  // - LSCode триммим и кодируем
+  // - пароль передаём как есть (как делал PHP)
+  // - номер прибора: пробелы -> "%20", как в preg_replace
+  // - показание просто как число в строке
+  const query =
+    `WaLsCode=${encodeURIComponent(accountNumber.trim())}` +
+    `&WaPass=${password}` +
+    `&WaNumberOfDevice=${deviceNumber.replace(/\s/g, "%20")}` +
+    `&WaReading=${reading.toString()}`;
+
+  const url = `${baseUrl}?${query}`;
 
   let response;
   try {
-    response = await fetch(url.toString(), {
+    response = await fetch(url, {
       method: "GET",
       headers: {
         "Accept": "application/json",

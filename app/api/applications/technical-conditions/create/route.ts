@@ -14,6 +14,18 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.json();
 
+    // Временное логирование для отладки
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[API] Received formData:', {
+        lastName: formData.lastName,
+        firstName: formData.firstName,
+        middleName: formData.middleName,
+        hasLastName: !!formData.lastName,
+        hasFirstName: !!formData.firstName,
+        hasMiddleName: !!formData.middleName,
+      });
+    }
+
     // Ищем или создаем услугу "Технологическое присоединение"
     let service = await prisma.service.findFirst({
       where: {
@@ -83,9 +95,9 @@ export async function POST(request: NextRequest) {
         type: "technical_conditions",
         personType: formData.personType,
         // Личные данные
-        lastName: formData.lastName,
-        firstName: formData.firstName,
-        middleName: formData.middleName,
+        lastName: formData.lastName || null,
+        firstName: formData.firstName || null,
+        middleName: formData.middleName || null,
         birthDate: formData.birthDate,
         registrationAddress: formData.registrationAddress,
         passportSeries: formData.passportSeries,

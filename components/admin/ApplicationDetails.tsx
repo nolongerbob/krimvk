@@ -332,9 +332,18 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
           <DialogTitle>Детали заявки</DialogTitle>
           <DialogDescription>
             Полная информация о заявке от {
-              data?.lastName || data?.firstName || data?.middleName
-                ? `${data.lastName || ""} ${data.firstName || ""} ${data.middleName || ""}`.trim()
-                : application.user.name || application.user.email
+              (() => {
+                if (data) {
+                  const lastName = (data.lastName && typeof data.lastName === 'string') ? data.lastName.trim() : "";
+                  const firstName = (data.firstName && typeof data.firstName === 'string') ? data.firstName.trim() : "";
+                  const middleName = (data.middleName && typeof data.middleName === 'string') ? data.middleName.trim() : "";
+                  if (lastName || firstName) {
+                    const fullName = `${lastName} ${firstName} ${middleName}`.trim();
+                    if (fullName) return fullName;
+                  }
+                }
+                return application.user.name || application.user.email;
+              })()
             }
           </DialogDescription>
         </DialogHeader>

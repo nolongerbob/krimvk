@@ -91,6 +91,46 @@ function safeParseDescription(description: string | null): any | null {
   }
 }
 
+// Функция для извлечения полного имени из данных заявки
+function extractFullName(data: any | null, fallbackName: string | null, fallbackEmail: string): string {
+  if (data) {
+    // Проверяем наличие полей ФИО (могут быть пустыми строками, null, undefined)
+    const lastName = (data.lastName && typeof data.lastName === 'string') ? data.lastName.trim() : "";
+    const firstName = (data.firstName && typeof data.firstName === 'string') ? data.firstName.trim() : "";
+    const middleName = (data.middleName && typeof data.middleName === 'string') ? data.middleName.trim() : "";
+    
+    // Временное логирование для отладки
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+      console.log('[extractFullName] Debug:', {
+        hasData: !!data,
+        rawLastName: data.lastName,
+        rawFirstName: data.firstName,
+        rawMiddleName: data.middleName,
+        lastName,
+        firstName,
+        middleName,
+        fallbackName,
+        fallbackEmail
+      });
+    }
+    
+    // Если есть хотя бы фамилия или имя, формируем ФИО
+    if (lastName || firstName) {
+      const fullName = `${lastName} ${firstName} ${middleName}`.trim();
+      if (fullName) {
+        if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+          console.log('[extractFullName] Returning fullName from data:', fullName);
+        }
+        return fullName;
+      }
+    }
+  }
+  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+    console.log('[extractFullName] Returning fallback:', fallbackName || fallbackEmail);
+  }
+  return fallbackName || fallbackEmail;
+}
+
 export function ApplicationsClient({ applications, categories }: ApplicationsClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -346,15 +386,7 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4" />
                   <span>
-                    {(() => {
-                      // Пытаемся извлечь ФИО из данных заявки
-                      const data = safeParseDescription(app.description);
-                      if (data && (data.lastName || data.firstName || data.middleName)) {
-                        const fullName = `${data.lastName || ""} ${data.firstName || ""} ${data.middleName || ""}`.trim();
-                        if (fullName) return fullName;
-                      }
-                      return app.user.name || app.user.email;
-                    })()}
+                    {extractFullName(safeParseDescription(app.description), app.user.name, app.user.email)}
                   </span>
                 </div>
                 {app.user.phone && (

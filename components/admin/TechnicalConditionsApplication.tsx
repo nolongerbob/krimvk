@@ -92,6 +92,46 @@ function safeParseDescription(description: string | null): any | null {
   }
 }
 
+// Функция для извлечения полного имени из данных заявки
+function extractFullName(data: any | null, fallbackName: string | null, fallbackEmail: string): string {
+  if (data) {
+    // Проверяем наличие полей ФИО (могут быть пустыми строками, null, undefined)
+    const lastName = (data.lastName && typeof data.lastName === 'string') ? data.lastName.trim() : "";
+    const firstName = (data.firstName && typeof data.firstName === 'string') ? data.firstName.trim() : "";
+    const middleName = (data.middleName && typeof data.middleName === 'string') ? data.middleName.trim() : "";
+    
+    // Временное логирование для отладки
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[extractFullName] Debug:', {
+        hasData: !!data,
+        rawLastName: data.lastName,
+        rawFirstName: data.firstName,
+        rawMiddleName: data.middleName,
+        lastName,
+        firstName,
+        middleName,
+        fallbackName,
+        fallbackEmail
+      });
+    }
+    
+    // Если есть хотя бы фамилия или имя, формируем ФИО
+    if (lastName || firstName) {
+      const fullName = `${lastName} ${firstName} ${middleName}`.trim();
+      if (fullName) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[extractFullName] Returning fullName from data:', fullName);
+        }
+        return fullName;
+      }
+    }
+  }
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[extractFullName] Returning fallback:', fallbackName || fallbackEmail);
+  }
+  return fallbackName || fallbackEmail;
+}
+
 export function TechnicalConditionsApplication({ application }: TechnicalConditionsApplicationProps) {
   let data: TechnicalConditionsData | null = null;
   
@@ -99,6 +139,27 @@ export function TechnicalConditionsApplication({ application }: TechnicalConditi
   const parsed = safeParseDescription(application.description);
   if (parsed) {
     data = parsed;
+    // Временное логирование для отладки
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[TechnicalConditionsApplication] Parsed data:', {
+        type: parsed.type,
+        lastName: parsed.lastName,
+        firstName: parsed.firstName,
+        middleName: parsed.middleName,
+        hasLastName: !!parsed.lastName,
+        hasFirstName: !!parsed.firstName,
+        hasMiddleName: !!parsed.middleName,
+        user: application.user.name || application.user.email
+      });
+    }
+  } else {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[TechnicalConditionsApplication] Failed to parse description:', {
+        descriptionLength: application.description?.length,
+        descriptionStart: application.description?.substring(0, 200),
+        user: application.user.name || application.user.email
+      });
+    }
   }
   
   // Если не удалось распарсить, пытаемся извлечь данные из обрезанного JSON
@@ -166,14 +227,8 @@ export function TechnicalConditionsApplication({ application }: TechnicalConditi
   // Если нет данных, но название услуги указывает на технические условия, показываем базовую информацию
   if (!data || (data.type !== "technical_conditions" && !isTechnicalConditionsByTitle)) {
     if (isTechnicalConditionsByTitle) {
-      // Пытаемся извлечь ФИО из данных, даже если JSON не полностью распарсился
-      let extractedFullName = application.user.name || application.user.email;
-      if (data) {
-        const extractedName = `${data.lastName || ""} ${data.firstName || ""} ${data.middleName || ""}`.trim();
-        if (extractedName) {
-          extractedFullName = extractedName;
-        }
-      }
+      // Извлекаем ФИО из данных заявки
+      const extractedFullName = extractFullName(data, application.user.name, application.user.email);
       
       // Показываем базовую информацию даже если JSON не парсится
       return (
@@ -219,7 +274,7 @@ export function TechnicalConditionsApplication({ application }: TechnicalConditi
     return null;
   }
 
-  const fullName = `${data.lastName || ""} ${data.firstName || ""} ${data.middleName || ""}`.trim();
+  const fullName = extractFullName(data, application.user.name, application.user.email);
   const passportInfo = data.passportSeries && data.passportNumber 
     ? `Серия ${data.passportSeries} № ${data.passportNumber}` 
     : "не указано";

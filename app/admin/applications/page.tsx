@@ -81,10 +81,28 @@ export default async function AdminApplicationsPage() {
       })
     );
 
+    // Фильтруем заявки на технологическое присоединение на уровне приложения
+    const filteredApplications = rawApplications.filter((app) => {
+      // Проверяем по названию услуги (регистронезависимо)
+      const serviceTitleLower = app.service.title.toLowerCase();
+      if (
+        serviceTitleLower.includes("технологическое присоединение") ||
+        serviceTitleLower.includes("технические условия")
+      ) {
+        return false;
+      }
+
+      // Проверяем по типу в description
+      if (app.description && app.description.includes('"type":"technical_conditions"')) {
+        return false;
+      }
+
+      return true;
+    });
 
     // Сериализуем даты для передачи в клиентский компонент
     // Важно: Next.js требует, чтобы все данные были сериализуемы (без Date объектов)
-    applications = rawApplications.map((app) => {
+    applications = filteredApplications.map((app) => {
       try {
         return {
           id: app.id,

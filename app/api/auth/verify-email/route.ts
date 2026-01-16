@@ -23,7 +23,11 @@ export async function GET(request: Request) {
       // Токен не найден - возможно уже использован (email уже подтвержден)
       // Редиректим на страницу verify-email с параметром already=true
       // Там покажем сообщение, что email уже подтвержден
-      const redirectUrl = new URL('/verify-email?already=true', process.env.NEXTAUTH_URL || 'http://localhost:3000');
+      // Определяем базовый URL
+      const baseUrl = process.env.NEXTAUTH_URL || 
+        (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+        (process.env.NODE_ENV === 'production' ? 'https://krimvk.ru' : 'http://localhost:3000');
+      const redirectUrl = new URL('/verify-email?already=true', baseUrl);
       return NextResponse.redirect(redirectUrl);
     }
 
@@ -79,8 +83,12 @@ export async function GET(request: Request) {
         ? '__Secure-next-auth.session-token'
         : 'next-auth.session-token';
 
+      // Определяем базовый URL
+      const baseUrl = process.env.NEXTAUTH_URL || 
+        (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+        (process.env.NODE_ENV === 'production' ? 'https://krimvk.ru' : 'http://localhost:3000');
       // Редиректим на страницу verify-email с параметром success
-      const redirectUrl = new URL('/verify-email?verified=true', process.env.NEXTAUTH_URL || 'http://localhost:3000');
+      const redirectUrl = new URL('/verify-email?verified=true', baseUrl);
       const response = NextResponse.redirect(redirectUrl);
 
       // Устанавливаем cookie для NextAuth (автоматический вход)

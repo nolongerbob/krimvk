@@ -12,7 +12,23 @@ console.log('[Resend] Инициализация с API ключом:', apiKey.s
 export const resend = new Resend(apiKey);
 
 export async function sendVerificationEmail(email: string, token: string, name?: string) {
-  const verificationUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/verify-email?token=${token}`;
+  // Определяем базовый URL для ссылок
+  // На Vercel должен быть установлен NEXTAUTH_URL
+  // Если не установлен, пытаемся определить из окружения или используем production URL
+  const baseUrl = process.env.NEXTAUTH_URL || 
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+    (process.env.NODE_ENV === 'production' ? 'https://krimvk.ru' : 'http://localhost:3000');
+  
+  const verificationUrl = `${baseUrl}/verify-email?token=${token}`;
+  
+  // Логируем для отладки
+  console.log('[Resend] Формирование ссылки подтверждения:', {
+    NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+    VERCEL_URL: process.env.VERCEL_URL,
+    NODE_ENV: process.env.NODE_ENV,
+    baseUrl,
+    verificationUrl,
+  });
   
   try {
     // Определяем адрес отправителя:
@@ -112,7 +128,23 @@ export async function sendVerificationEmail(email: string, token: string, name?:
 }
 
 export async function sendPasswordResetEmail(email: string, token: string, name?: string) {
-  const resetUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/reset-password?token=${token}`;
+  // Определяем базовый URL для ссылок
+  // На Vercel должен быть установлен NEXTAUTH_URL
+  // Если не установлен, пытаемся определить из окружения или используем production URL
+  const baseUrl = process.env.NEXTAUTH_URL || 
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+    (process.env.NODE_ENV === 'production' ? 'https://krimvk.ru' : 'http://localhost:3000');
+  
+  const resetUrl = `${baseUrl}/reset-password?token=${token}`;
+  
+  // Логируем для отладки
+  console.log('[Resend] Формирование ссылки восстановления пароля:', {
+    NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+    VERCEL_URL: process.env.VERCEL_URL,
+    NODE_ENV: process.env.NODE_ENV,
+    baseUrl,
+    resetUrl,
+  });
   
   try {
     // Используем верифицированный домен krimvk.ru

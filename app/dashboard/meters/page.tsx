@@ -6,9 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Droplet, Thermometer, Snowflake, AlertCircle, CheckCircle, CreditCard } from "lucide-react";
+import { Droplet, Thermometer, Snowflake, AlertCircle, CheckCircle, CreditCard, ArrowLeft } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AddAccountForm } from "@/components/AddAccountForm";
+import Link from "next/link";
 
 interface Meter {
   id: string;
@@ -443,6 +444,14 @@ export default function MetersPage() {
 
   return (
     <div className="container py-8 px-4 max-w-4xl">
+      <div className="mb-6">
+        <Button asChild variant="outline" size="sm">
+          <Link href="/dashboard">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Назад
+          </Link>
+        </Button>
+      </div>
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Передача показаний счетчиков</h1>
         <p className="text-gray-600">Выберите лицевой счет и передайте показания счетчиков холодной воды</p>

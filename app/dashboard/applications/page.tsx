@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { FileText, Clock, CheckCircle, XCircle, AlertCircle, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { getSession } from "@/lib/get-session";
 import { redirect } from "next/navigation";
@@ -115,6 +115,14 @@ export default async function ApplicationsPage() {
 
   return (
     <div className="container py-8 px-4">
+      <div className="mb-6">
+        <Button asChild variant="outline" size="sm">
+          <Link href="/dashboard">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Назад
+          </Link>
+        </Button>
+      </div>
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold mb-2">Мои заявки</h1>

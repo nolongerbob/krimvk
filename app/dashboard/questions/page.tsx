@@ -2,6 +2,9 @@ import { getSession } from "@/lib/get-session";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { QuestionsChat } from "@/components/questions/QuestionsChat";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
 export default async function QuestionsPage() {
   const session = await getSession();
@@ -47,6 +50,14 @@ export default async function QuestionsPage() {
 
   return (
     <div className="container py-8 px-4 max-w-4xl">
+      <div className="mb-6">
+        <Button asChild variant="outline" size="sm">
+          <Link href="/dashboard">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Назад
+          </Link>
+        </Button>
+      </div>
       <div className="mb-8 animate-fade-in">
         <h1 className="text-3xl font-bold mb-2">Задать вопрос</h1>
         <p className="text-gray-600">Задайте вопрос нашей службе поддержки</p>

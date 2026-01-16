@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CreditCard, CheckCircle, AlertCircle, Calendar, Loader2, Download } from "lucide-react";
+import { CreditCard, CheckCircle, AlertCircle, Calendar, Loader2, Download, ArrowLeft } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Link from "next/link";
 
@@ -238,6 +238,14 @@ export default function BillsPage() {
 
   return (
     <div className="container py-8 px-4 max-w-6xl">
+      <div className="mb-6">
+        <Button asChild variant="outline" size="sm">
+          <Link href="/dashboard">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Назад
+          </Link>
+        </Button>
+      </div>
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Счета и оплата</h1>
         <p className="text-gray-600">Управление счетами за водоснабжение</p>

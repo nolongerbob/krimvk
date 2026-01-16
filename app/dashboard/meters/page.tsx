@@ -171,13 +171,13 @@ export default function MetersPage() {
         let historyItems: MeterHistoryItem[] = [];
         
         if (data.history) {
-          const historyData = data.history.History || data.history.history || data.history;
+          const historyData: any = data.history.History || data.history.history || data.history;
           
           // Если History - это объект (ключи = timestamp, значения = массивы)
           if (historyData && typeof historyData === 'object' && !Array.isArray(historyData)) {
             // Преобразуем объект в плоский массив, как на старом сайте
             Object.keys(historyData).forEach((timestamp) => {
-              const readingsForDate = historyData[timestamp];
+              const readingsForDate: any = historyData[timestamp];
               if (Array.isArray(readingsForDate)) {
                 readingsForDate.forEach((item: any) => {
                   // Добавляем дату из timestamp
@@ -192,16 +192,16 @@ export default function MetersPage() {
           }
           // Если History - это массив
           else if (Array.isArray(historyData)) {
-            historyItems = historyData;
+            historyItems = historyData as MeterHistoryItem[];
           }
           // Если data.history сам по себе массив
           else if (Array.isArray(data.history)) {
-            historyItems = data.history;
+            historyItems = data.history as MeterHistoryItem[];
           }
         }
         // Если data сам по себе массив
         else if (Array.isArray(data)) {
-          historyItems = data;
+          historyItems = data as MeterHistoryItem[];
         }
         
         if (process.env.NODE_ENV === 'development') {

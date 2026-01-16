@@ -129,7 +129,7 @@ export default function HistoryPage() {
         // Поля из старого сайта: DateOfPayment, Charge, Source
         // На старом сайте: date('d-m-Y', strtotime($res->DateOfPayment))
         // strtotime() в PHP очень гибкий и может распарсить разные форматы
-        const formattedPayments = paymentsArray.map((payment: any) => {
+        const formattedPayments: Array<{date: string; dateForSort: Date | null; amount: number; source: string}> = paymentsArray.map((payment: any) => {
           const dateOfPayment = payment.DateOfPayment || payment.date || payment.PaymentDate || payment.Date || "";
           let formattedDate = "";
           let dateForSort: Date | null = null;

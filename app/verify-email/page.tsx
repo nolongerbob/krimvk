@@ -16,32 +16,113 @@ export default function VerifyEmailPage() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
   const [userEmail, setUserEmail] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
 
   useEffect(() => {
+    // Проверяем, если это редирект после успешного подтверждения
+    const verified = searchParams.get('verified');
+    if (verified === 'true') {
+      setStatus('success');
+      setMessage('Email успешно подтвержден! Теперь вы можете войти в личный кабинет.');
+      
+      // Автоматический переход в ЛК через 3 секунды
+      const timer = setTimeout(() => {
+        window.location.href = '/dashboard?emailVerified=true';
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+
+    // Проверяем, если это редирект с параметром already=true (email уже подтвержден)
+    const alreadyVerified = searchParams.get('already');
+    if (alreadyVerified === 'true') {
+      setStatus('success');
+      setMessage('Email уже был подтвержден ранее. Войдите в систему, используя ваш email и пароль.');
+      return;
+    }
+
+    // Предотвращаем повторные вызовы
+    if (isVerifying || status !== 'loading') {
+      return;
+    }
+
     if (!token) {
       setStatus('error');
       setMessage('Токен подтверждения не предоставлен');
       return;
     }
 
+    // Обрабатываем токен только один раз
+    setIsVerifying(true);
     verifyEmail(token);
-  }, [token]);
+  }, [token, isVerifying, status, searchParams]);
 
   const verifyEmail = async (token: string) => {
     try {
-      const response = await fetch(`/api/auth/verify-email?token=${token}`);
+      // Убеждаемся, что статус loading
+      setStatus('loading');
+      setMessage('Проверяем токен подтверждения...');
+      
+      // Используем прямой переход на серверный endpoint
+      // Сервер установит cookie и сделает редирект в том же запросе
+      // Это гарантирует, что cookie будет установлена в том же браузере/вкладке, где открыта ссылка
+      // Если токен уже использован, сервер редиректит на /verify-email?already=true
+      window.location.href = `/api/auth/verify-email?token=${token}`;
+      return;
+      
+      // Код ниже не выполнится из-за редиректа, но оставлен для fallback
+      const response = await fetch(`/api/auth/verify-email?token=${token}`, {
+        cache: 'no-store',
+        redirect: 'manual',
+      });
+
       const data = await response.json();
 
       if (response.ok) {
-        setStatus('success');
-        setMessage('Email успешно подтвержден! Теперь вы можете войти в систему.');
+        // Успешное подтверждение или email уже был подтвержден
+        if (data.alreadyVerified) {
+          setStatus('success');
+          setMessage('Email уже был подтвержден ранее. Выполняется вход...');
+        } else {
+          setStatus('success');
+          setMessage('Email успешно подтвержден! Выполняется автоматический вход...');
+        }
         
-        // Автоматически авторизуем пользователя через 2 секунды
-        setTimeout(() => {
-          // Попробуем найти email пользователя из ответа или запросить его
-          // Пока просто редиректим на логин
-          router.push('/login?verified=true');
-        }, 2000);
+        // Автоматически входим в аккаунт через отдельный API
+        if (data.userId && data.userEmail) {
+          try {
+            // Вызываем API для автоматического входа
+            const loginResponse = await fetch('/api/auth/auto-login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId: data.userId }),
+              credentials: 'include', // Важно для установки cookies
+            });
+
+            if (loginResponse.ok) {
+              // Редиректим в dashboard с полной перезагрузкой страницы для применения cookies
+              setTimeout(() => {
+                window.location.href = '/dashboard?emailVerified=true';
+              }, 500);
+            } else {
+              // Если автоматический вход не сработал, просто редиректим на логин
+              setTimeout(() => {
+                router.push('/login?verified=true');
+              }, 1000);
+            }
+          } catch (loginError) {
+            console.error('Auto-login error:', loginError);
+            // В случае ошибки редиректим на логин
+            setTimeout(() => {
+              router.push('/login?verified=true');
+            }, 1000);
+          }
+        } else {
+          // Если userId не получен, редиректим на логин
+          setTimeout(() => {
+            router.push('/login?verified=true');
+          }, 1000);
+        }
       } else {
         setStatus('error');
         setMessage(data.error || 'Ошибка при подтверждении email');
@@ -86,15 +167,41 @@ export default function VerifyEmailPage() {
 
           {status === 'success' && (
             <div className="space-y-3">
-              <p className="text-sm text-gray-600 text-center">
-                Вы будете перенаправлены на страницу входа...
-              </p>
-              <Button 
-                onClick={() => router.push('/login?verified=true')} 
-                className="w-full"
-              >
-                Перейти к входу
-              </Button>
+              {searchParams.get('already') === 'true' ? (
+                // Если email уже был подтвержден - показываем кнопку входа
+                <>
+                  <p className="text-sm text-gray-600 text-center">
+                    Для входа в личный кабинет используйте ваш email и пароль.
+                  </p>
+                  <Button 
+                    onClick={() => router.push('/login')} 
+                    className="w-full"
+                  >
+                    Перейти к входу
+                  </Button>
+                </>
+              ) : (
+                // Если только что подтвердили - показываем сообщение и автоматически переходим в ЛК
+                // Пользователь уже авторизован (cookie установлена)
+                <>
+                  <p className="text-sm text-gray-600 text-center">
+                    Ваш email адрес успешно подтвержден.
+                  </p>
+                  <p className="text-xs text-gray-500 text-center mt-2">
+                    Вы будете автоматически перенаправлены в личный кабинет через несколько секунд...
+                  </p>
+                  <Button 
+                    onClick={() => {
+                      // Используем window.location для полной перезагрузки и применения cookie
+                      // Это гарантирует, что cookie будет применена перед переходом
+                      window.location.href = '/dashboard?emailVerified=true';
+                    }} 
+                    className="w-full"
+                  >
+                    Перейти в личный кабинет сейчас
+                  </Button>
+                </>
+              )}
             </div>
           )}
 

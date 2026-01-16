@@ -102,24 +102,34 @@ export default function ReceiptViewPage() {
 
   const receiptRef = useRef<HTMLDivElement>(null);
 
-  const handlePrint = () => {
-    window.print();
-  };
-
-  const handleDownloadPDF = async () => {
+  const generatePDF = async (openForPrint = false) => {
     if (!receiptRef.current) return;
 
     try {
-      // Создаем canvas из HTML элемента
+      // Для печати используем более высокое качество, для скачивания - оптимизированное
+      const scale = openForPrint ? 2.5 : 2; // Выше разрешение для печати
+      const jpegQuality = openForPrint ? 0.95 : 0.9; // Выше качество JPEG для печати
+      
+      // Создаем canvas из HTML элемента с оптимизированными настройками
       const canvas = await html2canvas(receiptRef.current, {
-        scale: 2,
+        scale: scale, // Высокое разрешение для четкости
         useCORS: true,
         logging: false,
+        backgroundColor: '#ffffff',
+        removeContainer: true,
+        imageTimeout: 0,
+        // Высокое качество для четкости
+        quality: 1.0, // Максимальное качество
+        // Дополнительные настройки для четкости
+        allowTaint: false,
+        foreignObjectRendering: false,
       });
 
       // Создаем PDF
       const pdf = new jsPDF("p", "mm", "a4");
-      const imgData = canvas.toDataURL("image/png");
+      
+      // Используем JPEG с высоким качеством для четкости
+      const imgData = canvas.toDataURL("image/jpeg", jpegQuality);
       
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
@@ -131,18 +141,44 @@ export default function ReceiptViewPage() {
       const xOffset = (pdfWidth - imgScaledWidth) / 2;
       const yOffset = (pdfHeight - imgScaledHeight) / 2;
 
-      pdf.addImage(imgData, "PNG", xOffset, yOffset, imgScaledWidth, imgScaledHeight);
+      pdf.addImage(imgData, "JPEG", xOffset, yOffset, imgScaledWidth, imgScaledHeight);
       
       // Генерируем имя файла
       const fileName = `receipt_${receiptData?.LSCode || accountInfo?.accountNumber}_${new Date().toISOString().split("T")[0]}.pdf`;
       
-      // Скачиваем PDF
-      pdf.save(fileName);
+      if (openForPrint) {
+        // Открываем PDF в новом окне для печати
+        const pdfBlob = pdf.output('blob');
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        const printWindow = window.open(pdfUrl, '_blank');
+        
+        if (printWindow) {
+          printWindow.onload = () => {
+            // Небольшая задержка для загрузки PDF
+            setTimeout(() => {
+              printWindow.print();
+            }, 500);
+          };
+        }
+      } else {
+        // Скачиваем PDF
+        pdf.save(fileName);
+      }
     } catch (error) {
       console.error("Error generating PDF:", error);
       // Fallback на печать браузера
       window.print();
     }
+  };
+
+  const handlePrint = async () => {
+    // Генерируем PDF и открываем для печати
+    await generatePDF(true);
+  };
+
+  const handleDownloadPDF = async () => {
+    // Генерируем PDF и скачиваем
+    await generatePDF(false);
   };
 
   const handleQRClick = () => {
@@ -245,8 +281,8 @@ export default function ReceiptViewPage() {
       </div>
 
       {/* Квитанция */}
-      <div className="container max-w-4xl mx-auto px-4 pb-8">
-        <Card ref={receiptRef} className="bg-white shadow-lg print:shadow-none">
+      <div className="container max-w-4xl mx-auto px-4 pb-8 print:block">
+        <Card ref={receiptRef} className="bg-white shadow-lg print:shadow-none print:block">
           <CardContent className="p-8 print:p-6">
             {/* Шапка */}
             <div className="flex items-center justify-center gap-4 mb-8 pb-6 border-b-2 border-blue-600">
@@ -570,20 +606,23 @@ export default function ReceiptViewPage() {
                   console.log("QR String generated:", qrString);
                   
                   return (
-                    <div className="mt-8 p-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                      <div className="flex flex-col md:flex-row items-center justify-center gap-6">
-                        <div className="flex flex-col items-center">
+                    <div className="mt-8 p-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 print:break-inside-avoid print:page-break-inside-avoid print:keep-together">
+                      <div className="flex flex-col md:flex-row items-center justify-center gap-6 print:break-inside-avoid print:page-break-inside-avoid print:keep-together">
+                        <div className="flex flex-col items-center print:break-inside-avoid print:page-break-inside-avoid print:keep-together">
                           <div 
                             onClick={handleQRClick}
-                            className="cursor-pointer hover:opacity-80 transition-opacity p-4 bg-white rounded-lg shadow-md"
+                            className="cursor-pointer hover:opacity-80 transition-opacity p-4 bg-white rounded-lg shadow-md print:break-inside-avoid print:page-break-inside-avoid print:keep-together"
                             title="Нажмите для оплаты через СБП"
                           >
-                            <QRCodeSVG
-                              value={qrString}
-                              size={130}
-                              level="M"
-                              includeMargin={true}
-                            />
+                            <div className="print:scale-75 print:origin-center">
+                              <QRCodeSVG
+                                value={qrString}
+                                size={130}
+                                level="M"
+                                includeMargin={true}
+                                className="print:break-inside-avoid"
+                              />
+                            </div>
                           </div>
                           <p className="text-xs text-gray-600 mt-2 text-center max-w-[150px]">
                             Нажмите на QR-код для оплаты через СБП
@@ -683,17 +722,115 @@ export default function ReceiptViewPage() {
       {/* Стили для печати */}
       <style jsx global>{`
         @media print {
+          /* Переопределяем глобальные стили печати для страницы квитанции */
+          body * {
+            visibility: visible !important;
+          }
+          
+          /* Скрываем только элементы с классом print:hidden */
+          .print\\:hidden,
+          .print\\:hidden * {
+            display: none !important;
+            visibility: hidden !important;
+          }
+          
+          /* Показываем квитанцию */
+          .print\\:block,
+          .print\\:block * {
+            display: block !important;
+            visibility: visible !important;
+          }
+          
+          /* Скрываем навигацию, хедер, футер */
+          header,
+          footer,
+          nav,
+          .no-print {
+            display: none !important;
+            visibility: hidden !important;
+          }
+          
+          /* Стили для квитанции */
           body {
-            background: white;
+            background: white !important;
           }
-          .print\\:hidden {
-            display: none;
-          }
+          
           .print\\:shadow-none {
-            box-shadow: none;
+            box-shadow: none !important;
           }
+          
           .print\\:p-6 {
-            padding: 1.5rem;
+            padding: 1.5rem !important;
+          }
+          
+          /* Предотвращаем разрыв QR-кода на две страницы */
+          .print\\:break-inside-avoid,
+          .print\\:page-break-inside-avoid,
+          .print\\:keep-together {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            -webkit-region-break-inside: avoid !important;
+          }
+          
+          /* Более строгие правила для блока с QR-кодом */
+          div[class*="bg-gray-50"][class*="border-dashed"] {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            -webkit-region-break-inside: avoid !important;
+            orphans: 3 !important;
+            widows: 3 !important;
+          }
+          
+          /* Предотвращаем разрыв внутри flex контейнера с QR-кодом */
+          div[class*="flex"][class*="items-center"] {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+          
+          /* Предотвращаем разрыв таблиц и других блоков */
+          table,
+          tr,
+          td,
+          th {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+          
+          /* Уменьшаем размер QR-кода и всего блока при печати */
+          .print\\:scale-75 {
+            transform: scale(0.75) !important;
+            transform-origin: center !important;
+          }
+          
+          /* Уменьшаем отступы блока с QR-кодом при печати */
+          div[class*="bg-gray-50"][class*="border-dashed"] {
+            padding: 0.75rem !important;
+            margin-top: 1rem !important;
+          }
+          
+          /* Уменьшаем размер QR-кода при печати */
+          svg[class*="QRCode"],
+          svg[data-testid="qr-code-svg"] {
+            max-width: 100px !important;
+            max-height: 100px !important;
+            width: 100px !important;
+            height: 100px !important;
+          }
+          
+          /* Уменьшаем размер текста в блоке QR-кода при печати */
+          div[class*="bg-gray-50"][class*="border-dashed"] p,
+          div[class*="bg-gray-50"][class*="border-dashed"] h3 {
+            font-size: 0.875rem !important;
+          }
+          
+          /* Скрываем кнопку при печати */
+          div[class*="bg-gray-50"][class*="border-dashed"] button {
+            display: none !important;
+          }
+          
+          /* Убираем отступы страницы для квитанции */
+          @page {
+            margin: 0.5cm;
           }
         }
       `}</style>

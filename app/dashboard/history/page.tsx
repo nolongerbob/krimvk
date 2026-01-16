@@ -81,13 +81,144 @@ export default function HistoryPage() {
       
       if (response.ok) {
         const data = await response.json();
-        // Преобразуем данные из 1С в нужный формат
-        const historyData = data.data?.Payments || data.data?.payments || data.data || [];
-        setPayments(historyData.map((payment: any) => ({
-          date: payment.Date || payment.date || payment.PaymentDate || "",
-          amount: parseFloat(payment.Amount || payment.amount || payment.Sum || 0),
-          source: payment.Source || payment.source || payment.PaymentSource || "Не указан",
-        })));
+        
+        // На старом сайте ответ содержит поле Payments (не вложенное)
+        // Строки 331-359 старого PHP кода:
+        //   if($response->Payments) {
+        //     $the_history = $response->Payments;
+        //     $the_history = (array)$the_history;
+        //     rsort($the_history); // Сортировка по дате (обратная - новые сверху)
+        //     foreach($the_history as $k => $res){
+        //       $out['results'][$k]['DateOfPayment'] = date('d-m-Y', strtotime($res->DateOfPayment));
+        //       $out['results'][$k]['Charge'] = $res->Charge;
+        //       $out['results'][$k]['Source'] = $res->Source;
+        //     }
+        //   }
+        
+        // Обрабатываем Payments как массив
+        let paymentsArray: any[] = [];
+        
+        if (data.data) {
+          // Вариант 1: data.data.Payments (массив)
+          if (Array.isArray(data.data.Payments)) {
+            paymentsArray = data.data.Payments;
+          }
+          // Вариант 2: data.data.payments (массив)
+          else if (Array.isArray(data.data.payments)) {
+            paymentsArray = data.data.payments;
+          }
+          // Вариант 3: data.data сам по себе массив
+          else if (Array.isArray(data.data)) {
+            paymentsArray = data.data;
+          }
+          // Вариант 4: data.data - объект с Payments
+          else if (data.data.Payments && Array.isArray(data.data.Payments)) {
+            paymentsArray = data.data.Payments;
+          }
+        }
+        // Вариант 5: data.Payments напрямую
+        else if (data.Payments && Array.isArray(data.Payments)) {
+          paymentsArray = data.Payments;
+        }
+        // Вариант 6: data сам по себе массив
+        else if (Array.isArray(data)) {
+          paymentsArray = data;
+        }
+        
+        // Преобразуем данные в нужный формат
+        // Поля из старого сайта: DateOfPayment, Charge, Source
+        // На старом сайте: date('d-m-Y', strtotime($res->DateOfPayment))
+        // strtotime() в PHP очень гибкий и может распарсить разные форматы
+        const formattedPayments = paymentsArray.map((payment: any) => {
+          const dateOfPayment = payment.DateOfPayment || payment.date || payment.PaymentDate || payment.Date || "";
+          let formattedDate = "";
+          let dateForSort: Date | null = null;
+          
+          if (dateOfPayment) {
+            // Логируем для отладки
+            if (process.env.NODE_ENV === 'development') {
+              console.log('[Payment History] Raw DateOfPayment:', dateOfPayment, typeof dateOfPayment);
+            }
+            
+            try {
+              // Пробуем распарсить дату как strtotime() в PHP
+              // strtotime() может распарсить: "2024-01-15", "2024-01-15T10:30:00", "15.01.2024" и др.
+              let date: Date | null = null;
+              
+              // Вариант 1: Прямой парсинг через Date (работает для ISO и стандартных форматов)
+              date = new Date(dateOfPayment);
+              
+              // Если не удалось распарсить, пробуем другие форматы
+              if (isNaN(date.getTime())) {
+                // Вариант 2: Timestamp (число)
+                if (typeof dateOfPayment === 'number') {
+                  date = new Date(dateOfPayment * 1000); // Если секунды
+                  if (isNaN(date.getTime())) {
+                    date = new Date(dateOfPayment); // Если миллисекунды
+                  }
+                }
+                // Вариант 3: Строка в формате ДД.ММ.ГГГГ или ДД-ММ-ГГГГ
+                else if (typeof dateOfPayment === 'string') {
+                  // Пробуем распарсить ДД.ММ.ГГГГ или ДД-ММ-ГГГГ
+                  const match = dateOfPayment.match(/(\d{1,2})[.\-\/](\d{1,2})[.\-\/](\d{4})/);
+                  if (match) {
+                    const [, day, month, year] = match;
+                    date = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
+                  }
+                  // Пробуем формат ГГГГ-ММ-ДД
+                  else {
+                    const match2 = dateOfPayment.match(/(\d{4})[.\-\/](\d{1,2})[.\-\/](\d{1,2})/);
+                    if (match2) {
+                      const [, year, month, day] = match2;
+                      date = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
+                    }
+                  }
+                }
+              }
+              
+              if (date && !isNaN(date.getTime())) {
+                // Форматируем как на старом сайте: d-m-Y (15-01-2024)
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                formattedDate = `${day}-${month}-${year}`;
+                dateForSort = date;
+                
+                if (process.env.NODE_ENV === 'development') {
+                  console.log('[Payment History] Parsed date:', dateOfPayment, '→', formattedDate);
+                }
+              } else {
+                // Если не удалось распарсить, используем исходное значение
+                formattedDate = String(dateOfPayment);
+                console.warn('[Payment History] Could not parse date:', dateOfPayment);
+              }
+            } catch (error) {
+              console.error('[Payment History] Error parsing date:', dateOfPayment, error);
+              formattedDate = String(dateOfPayment);
+            }
+          }
+          
+          return {
+            date: formattedDate,
+            dateForSort: dateForSort,
+            amount: parseFloat(payment.Charge || payment.Amount || payment.amount || payment.Sum || 0),
+            source: payment.Source || payment.source || payment.PaymentSource || "Не указан",
+          };
+        });
+        
+        // Сортируем по дате (новые сверху) как на старом сайте (rsort)
+        formattedPayments.sort((a, b) => {
+          if (a.dateForSort && b.dateForSort) {
+            return b.dateForSort.getTime() - a.dateForSort.getTime(); // Обратная сортировка (новые сверху)
+          }
+          // Если дата не распарсилась, сортируем по строке
+          return b.date.localeCompare(a.date);
+        });
+        
+        // Убираем dateForSort из результата (он был только для сортировки)
+        const finalPayments = formattedPayments.map(({ dateForSort, ...rest }) => rest);
+        
+        setPayments(finalPayments);
       } else {
         const errorData = await response.json().catch(() => ({}));
         setError(errorData.error || "Ошибка при загрузке истории платежей");
@@ -225,13 +356,7 @@ export default function HistoryPage() {
                   {payments.map((payment, index) => (
                     <tr key={index} className="border-b hover:bg-gray-50">
                       <td className="p-3">
-                        {payment.date
-                          ? new Date(payment.date).toLocaleDateString("ru-RU", {
-                              day: "2-digit",
-                              month: "2-digit",
-                              year: "numeric",
-                            })
-                          : "Не указана"}
+                        {payment.date || "Не указана"}
                       </td>
                       <td className="p-3 font-semibold">
                         {payment.amount.toLocaleString("ru-RU", {

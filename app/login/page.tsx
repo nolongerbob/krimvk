@@ -103,6 +103,11 @@ function LoginForm() {
                 Email успешно подтвержден! Теперь вы можете войти.
               </div>
             )}
+            {searchParams.get("passwordReset") === "true" && (
+              <div className="bg-green-50 border border-green-200 text-green-800 text-sm p-3 rounded-md">
+                Пароль успешно изменен! Теперь вы можете войти с новым паролем.
+              </div>
+            )}
             {error && (
               <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md">
                 {error}
@@ -123,9 +128,17 @@ function LoginForm() {
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium">
-                Пароль
-              </label>
+              <div className="flex items-center justify-between">
+                <label htmlFor="password" className="text-sm font-medium">
+                  Пароль
+                </label>
+                <Link
+                  href="/forgot-password"
+                  className="text-xs text-primary hover:underline"
+                >
+                  Забыли пароль?
+                </Link>
+              </div>
               <input
                 id="password"
                 type="password"

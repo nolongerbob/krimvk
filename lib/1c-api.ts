@@ -167,7 +167,10 @@ export async function submitMeterReading(
 
 /**
  * Получить историю платежей из 1С
- * GET /prog/hs/WebAccounts/get_payment_history
+ * GET /{region}/hs/WebAccounts/get_payment_history
+ * 
+ * На старом сайте использовался формат:
+ * $url = 'http://46.172.223.34/'.$lk_region.'/hs/WebAccounts/get_payment_history?WaLsCode='.urlencode(trim($lk_login)).'&WaPass='.urlencode(trim($lk_passwd)).'&WaDateFrom='.$start_date.'&WaDateTo='.$end_date;
  */
 export async function getPaymentHistory(
   accountNumber: string,
@@ -177,12 +180,24 @@ export async function getPaymentHistory(
   region?: string
 ): Promise<any> {
   const regionPath = getRegion(region);
-  const url = new URL(`${BASE_URL}/${regionPath}/hs/WebAccounts/get_payment_history`);
+  const baseUrl = `${BASE_URL}/${regionPath}/hs/WebAccounts/get_payment_history`;
   
-  url.searchParams.append("WaLsCode", accountNumber);
-  url.searchParams.append("WaPass", password);
-  url.searchParams.append("WaDateFrom", formatDateFor1C(dateFrom));
-  url.searchParams.append("WaDateTo", formatDateFor1C(dateTo));
+  // Формируем даты в формате ДД.ММ.ГГГГ как на старом сайте
+  const formatDate = (date: Date): string => {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}.${month}.${year}`;
+  };
+  
+  // Формируем URL как на старом сайте: WaLsCode и WaPass кодируются, даты передаются как есть
+  const query =
+    `WaLsCode=${encodeURIComponent(accountNumber.trim())}` +
+    `&WaPass=${encodeURIComponent(password.trim())}` +
+    `&WaDateFrom=${formatDate(dateFrom)}` +
+    `&WaDateTo=${formatDate(dateTo)}`;
+  
+  const url = `${baseUrl}?${query}`;
 
   let response;
   try {
@@ -211,21 +226,32 @@ export async function getPaymentHistory(
 /**
  * Получить историю показаний счетчиков из 1С
  * GET /{region}/hs/WebAccounts/get_metering_device_history
+ * 
+ * На старом сайте использовался формат:
+ * $url = 'http://46.172.223.34/'.$lk_region.'/hs/WebAccounts/get_metering_device_history?WaLsCode='.urlencode(trim($lk_login)).'&WaPass='.urlencode(trim($lk_passwd)).'&WaDateFrom='.$start_date.'&WaDateTo='.$end_date;
  */
 export async function getMeteringDeviceHistory(
   accountNumber: string,
   password: string,
-  region?: string
+  region?: string,
+  dateFrom?: string,
+  dateTo?: string
 ): Promise<any> {
   const regionPath = getRegion(region);
-  const url = new URL(`${BASE_URL}/${regionPath}/hs/WebAccounts/get_metering_device_history`);
+  const baseUrl = `${BASE_URL}/${regionPath}/hs/WebAccounts/get_metering_device_history`;
   
-  url.searchParams.append("WaLsCode", accountNumber);
-  url.searchParams.append("WaPass", password);
+  // Формируем URL как на старом сайте: WaLsCode и WaPass кодируются, даты передаются как есть
+  const query =
+    `WaLsCode=${encodeURIComponent(accountNumber.trim())}` +
+    `&WaPass=${encodeURIComponent(password.trim())}` +
+    (dateFrom ? `&WaDateFrom=${dateFrom}` : '') +
+    (dateTo ? `&WaDateTo=${dateTo}` : '');
+  
+  const url = `${baseUrl}?${query}`;
 
   let response;
   try {
-    response = await fetch(url.toString(), {
+    response = await fetch(url, {
       method: "GET",
       headers: {
         "Accept": "application/json",
@@ -233,7 +259,7 @@ export async function getMeteringDeviceHistory(
       signal: AbortSignal.timeout(30000), // 30 секунд таймаут
     });
   } catch (error: any) {
-    handleFetchError(error, url.toString());
+    handleFetchError(error, url);
   }
 
   if (!response.ok) {

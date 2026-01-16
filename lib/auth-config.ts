@@ -163,14 +163,46 @@ export const authOptions: NextAuthOptions = {
       }
       return true;
     },
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, trigger }) {
+      // Логируем для отладки
+      if (process.env.NODE_ENV === 'development') {
+        console.log('JWT callback called:', {
+          hasToken: !!token,
+          hasUser: !!user,
+          hasAccount: !!account,
+          trigger,
+          tokenKeys: token ? Object.keys(token) : [],
+          tokenId: token?.id,
+          tokenSub: token?.sub,
+        });
+      }
+      
+      // Если токен уже имеет id (создан вручную), используем его
+      // Это нужно для токенов, созданных после подтверждения email
+      if (token.id && !user) {
+        // Токен уже имеет все необходимые данные, просто возвращаем его
+        if (process.env.NODE_ENV === 'development') {
+          console.log('JWT callback - token already has data (manual token):', {
+            id: token.id,
+            email: token.email,
+            role: token.role,
+          });
+        }
+        return token;
+      }
+      
+      // Обычный процесс - обновляем токен при входе пользователя
       if (user) {
         token.id = user.id;
         token.email = user.email;
         token.name = user.name;
         token.role = user.role;
         if (process.env.NODE_ENV === 'development') {
-          console.log('JWT token updated with role:', user.role);
+          console.log('JWT token updated with user data:', {
+            id: user.id,
+            email: user.email,
+            role: user.role,
+          });
         }
       }
       

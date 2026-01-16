@@ -74,6 +74,43 @@ export default function DashboardPage() {
     }
   }, [status, router]);
 
+  // Дополнительная проверка сессии при загрузке страницы
+  // Особенно важно после подтверждения email
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const response = await fetch("/api/auth/check", {
+          credentials: 'include', // Важно для передачи cookies
+        });
+        const data = await response.json();
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log("[Dashboard] Session check result:", data);
+        }
+        
+        if (!data.authenticated && status === "authenticated") {
+          // Сессия не найдена на сервере, но клиент думает что авторизован
+          // Это может произойти после подтверждения email, если cookie не применилась
+          console.log("[Dashboard] Session mismatch, refreshing...");
+          // Даем небольшую задержку для применения cookie
+          setTimeout(() => {
+            window.location.reload();
+          }, 500);
+        }
+      } catch (error) {
+        console.error("[Dashboard] Error checking session:", error);
+      }
+    };
+    
+    // Проверяем сессию при загрузке и после подтверждения email
+    if (status === "authenticated" || searchParams.get("emailVerified") === "true") {
+      // Небольшая задержка, чтобы cookie успела примениться
+      setTimeout(() => {
+        checkSession();
+      }, 1000);
+    }
+  }, [status, searchParams]);
+
   // Обновляем статистику при монтировании компонента (когда пользователь возвращается на дашборд)
   useEffect(() => {
     if (status === "authenticated") {
@@ -95,9 +132,27 @@ export default function DashboardPage() {
     }
   }, [status, searchParams, router]);
 
-  const fetchUserEmailStatus = async () => {
+  // Обновляем статус email при возврате после подтверждения
+  useEffect(() => {
+    if (status === "authenticated" && searchParams.get("emailVerified") === "true") {
+      // Принудительно обновляем статус email после подтверждения
+      // Добавляем небольшую задержку, чтобы БД успела обновиться
+      setTimeout(() => {
+        fetchUserEmailStatus(true); // force = true для обхода кэша
+        // Убираем параметр из URL
+        router.replace("/dashboard", { scroll: false });
+      }, 500);
+    }
+  }, [status, searchParams, router]);
+
+  const fetchUserEmailStatus = async (force = false) => {
     try {
-      const response = await fetch("/api/user/profile");
+      // Добавляем cache-busting параметр, чтобы получить свежие данные
+      const cacheBuster = force ? `?t=${Date.now()}` : '';
+      const response = await fetch(`/api/user/profile${cacheBuster}`, {
+        cache: 'no-store', // Отключаем кэширование для получения актуальных данных
+        credentials: 'include', // Важно для передачи cookies
+      });
       if (response.ok) {
         const data = await response.json();
         setEmailVerified(data.user?.emailVerified ? true : false);
@@ -115,6 +170,7 @@ export default function DashboardPage() {
       console.log("[Dashboard] Отправка запроса на повторную отправку письма");
       const response = await fetch("/api/auth/resend-verification", {
         method: "POST",
+        credentials: 'include', // Важно для передачи cookies
       });
       
       console.log("[Dashboard] Ответ получен, статус:", response.status);
@@ -147,6 +203,7 @@ export default function DashboardPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ newEmail: newEmail.trim() }),
+        credentials: 'include', // Важно для передачи cookies
       });
       const data = await response.json();
       if (response.ok) {
@@ -170,6 +227,7 @@ export default function DashboardPage() {
   const fetchStats = async () => {
     try {
       const response = await fetch("/api/dashboard/stats", {
+        credentials: 'include', // Важно для передачи cookies
         cache: "no-store", // Не кэшируем запрос
       });
       if (response.ok) {
@@ -235,7 +293,9 @@ export default function DashboardPage() {
 
   const fetchAccounts = async () => {
     try {
-      const response = await fetch("/api/accounts");
+      const response = await fetch("/api/accounts", {
+        credentials: 'include', // Важно для передачи cookies
+      });
       if (response.ok) {
         const data = await response.json();
         const accountsList = data.accounts || [];
@@ -259,7 +319,9 @@ export default function DashboardPage() {
     
     setLoadingData(true);
     try {
-      const response = await fetch(`/api/1c/get-data?accountId=${selectedAccountId}`);
+      const response = await fetch(`/api/1c/get-data?accountId=${selectedAccountId}`, {
+        credentials: 'include', // Важно для передачи cookies
+      });
       if (response.ok) {
         const data = await response.json();
         // Извлекаем финансовые данные из ответа 1С согласно структуре старого сайта

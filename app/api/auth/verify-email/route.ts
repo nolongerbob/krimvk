@@ -20,10 +20,11 @@ export async function GET(request: Request) {
     });
 
     if (!verificationToken) {
-      return NextResponse.json(
-        { error: 'Недействительный токен подтверждения' },
-        { status: 400 }
-      );
+      // Токен не найден - возможно уже использован (email уже подтвержден)
+      // Редиректим на страницу verify-email с параметром already=true
+      // Там покажем сообщение, что email уже подтвержден
+      const redirectUrl = new URL('/verify-email?already=true', process.env.NEXTAUTH_URL || 'http://localhost:3000');
+      return NextResponse.redirect(redirectUrl);
     }
 
     // Проверяем, не истек ли токен (24 часа)
@@ -52,10 +53,68 @@ export async function GET(request: Request) {
       where: { id: verificationToken.id },
     });
 
+    // Создаем сессию NextAuth для автоматического входа
+    const secret = process.env.NEXTAUTH_SECRET;
+    if (secret) {
+      const { encode } = await import('next-auth/jwt');
+      
+      // Создаем токен в правильном формате для NextAuth
+      // Важно: структура должна соответствовать тому, что ожидает jwt callback в auth-config.ts
+      // В jwt callback мы используем token.id, token.email, token.name, token.role
+      const token = await encode({
+        token: {
+          sub: verificationToken.user.id, // sub обязателен для NextAuth JWT
+          id: verificationToken.user.id, // id используется в jwt callback
+          email: verificationToken.user.email,
+          name: verificationToken.user.name || null,
+          role: verificationToken.user.role || 'USER',
+        },
+        secret,
+        maxAge: 30 * 24 * 60 * 60, // 30 дней
+      });
+
+      // Определяем имя cookie в зависимости от окружения
+      const isProduction = process.env.NODE_ENV === 'production';
+      const cookieName = isProduction 
+        ? '__Secure-next-auth.session-token'
+        : 'next-auth.session-token';
+
+      // Редиректим на страницу verify-email с параметром success
+      const redirectUrl = new URL('/verify-email?verified=true', process.env.NEXTAUTH_URL || 'http://localhost:3000');
+      const response = NextResponse.redirect(redirectUrl);
+
+      // Устанавливаем cookie для NextAuth (автоматический вход)
+      // Важно: используем те же настройки, что и NextAuth по умолчанию
+      response.cookies.set(cookieName, token, {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: 'lax',
+        maxAge: 30 * 24 * 60 * 60, // 30 дней
+        path: '/',
+      });
+      
+      // Логируем для отладки
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[verify-email] Cookie установлена:', {
+          cookieName,
+          hasToken: !!token,
+          tokenLength: token?.length,
+          userId: verificationToken.user.id,
+          email: verificationToken.user.email,
+          role: verificationToken.user.role,
+        });
+      }
+
+      return response;
+    }
+
+    // Если не удалось создать сессию, возвращаем JSON (fallback)
     return NextResponse.json(
       { 
         message: 'Email успешно подтвержден',
         userId: verificationToken.userId,
+        userEmail: verificationToken.user.email,
+        userName: verificationToken.user.name,
       },
       { status: 200 }
     );

@@ -34,6 +34,7 @@ model User {
   emergencyReports        EmergencyReport[]
   userAccounts            UserAccount[] // Лицевые счета пользователя
   emailVerificationToken  EmailVerificationToken?
+  passwordResetTokens     PasswordResetToken[] // Токены восстановления пароля
   contracts               Contract[] // Договоры
 
   @@map("users")
@@ -94,6 +95,19 @@ model EmailVerificationToken {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("email_verification_tokens")
+}
+
+// Токены для восстановления пароля
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expires   DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_tokens")
 }
 
 // Услуги водоканала

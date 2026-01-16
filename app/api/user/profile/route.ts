@@ -10,6 +10,16 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
+    // Логируем для отладки
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[profile] Session check:', {
+        hasSession: !!session,
+        hasUser: !!session?.user,
+        userId: session?.user?.id,
+        email: session?.user?.email,
+      });
+    }
+
     if (!session || !session.user || !session.user.id) {
       return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
     }

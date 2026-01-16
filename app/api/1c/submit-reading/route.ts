@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/prisma";
-import { submitMeterReading } from "@/lib/1c-api";
+import { submitMeterReading, getMeteringDeviceHistory } from "@/lib/1c-api";
 
 /**
  * POST - передать показания счетчика в 1С
@@ -71,6 +71,49 @@ export async function POST(request: NextRequest) {
         { error: "Показания можно передавать только с 6 по 25 число каждого месяца" },
         { status: 400 }
       );
+    }
+
+    // Проверяем, что показания еще не передавались в этом месяце
+    try {
+      // Формируем даты для текущего месяца (формат ДД.ММ.ГГГГ как на старом сайте)
+      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+      const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      const dateFrom = `${String(firstDay.getDate()).padStart(2, '0')}.${String(firstDay.getMonth() + 1).padStart(2, '0')}.${firstDay.getFullYear()}`;
+      const dateTo = `${String(lastDay.getDate()).padStart(2, '0')}.${String(lastDay.getMonth() + 1).padStart(2, '0')}.${lastDay.getFullYear()}`;
+      
+      const history = await getMeteringDeviceHistory(
+        account.accountNumber,
+        account.password1c,
+        account.region,
+        dateFrom,
+        dateTo
+      );
+
+      // На старом сайте ответ содержит поле History (строки 378-395 PHP кода)
+      const historyItems = history?.History || history?.history || [];
+      
+      for (const item of historyItems) {
+        // Ищем показания для этого счетчика (используется NumberOfDevice)
+        const itemDeviceNumber = String(item.NumberOfDevice || item.DeviceNumber || item.Number || "");
+        if (itemDeviceNumber === String(deviceNumber)) {
+          // Проверяем дату показания
+          const readingDate = item.ReadingDate || item.Date || item.readingDate;
+          if (readingDate) {
+            const date = new Date(readingDate);
+            if (date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear()) {
+              return NextResponse.json(
+                { 
+                  error: `Показания для этого счетчика уже переданы в этом месяце. Последняя передача: ${date.toLocaleDateString("ru-RU")}` 
+                },
+                { status: 400 }
+              );
+            }
+          }
+        }
+      }
+    } catch (historyError: any) {
+      // Если не удалось получить историю, продолжаем (не блокируем отправку)
+      console.warn("Could not check meter history:", historyError?.message);
     }
 
     // Отправляем показания в 1С

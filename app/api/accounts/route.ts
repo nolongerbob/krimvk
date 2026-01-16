@@ -9,7 +9,13 @@ export async function GET(request: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (!session || !session.user || !session.user.id) {
-      console.error("No session or user ID");
+      console.error("No session or user ID", {
+        hasSession: !!session,
+        hasUser: !!session?.user,
+        hasUserId: !!session?.user?.id,
+        sessionKeys: session ? Object.keys(session) : [],
+        userKeys: session?.user ? Object.keys(session.user) : [],
+      });
       return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
     }
 

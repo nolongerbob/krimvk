@@ -194,11 +194,14 @@ export default async function DynamicPagePage({
 
   // Если ни страница, ни пост не найдены, показываем 404
   if (!page && !post) {
+    // Логируем для отладки
+    console.log(`Page not found for slug: ${fullSlug}`);
     notFound();
   }
 
   // TypeScript guard: если мы дошли сюда, page должен быть определен
   if (!page) {
+    console.log(`Page is null for slug: ${fullSlug}, post exists: ${!!post}`);
     notFound();
   }
 

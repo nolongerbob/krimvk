@@ -71,10 +71,13 @@ export async function POST(request: NextRequest) {
     } catch (error: any) {
       // Если таблица не существует, нужно применить миграцию
       if (error?.code === 'P2021' || error?.message?.includes('does not exist')) {
-        console.error('PasswordResetToken table does not exist. Please run: npx prisma db push');
+        console.error('PasswordResetToken table does not exist. Error:', error);
+        // В production на Vercel миграции должны применяться автоматически через vercel-build
+        // Если таблица все еще не существует, возможно нужно вручную выполнить миграцию
         return NextResponse.json(
           { 
-            error: 'Таблица для восстановления пароля не создана. Обратитесь к администратору.' 
+            error: 'Таблица для восстановления пароля не создана. Пожалуйста, выполните миграцию базы данных или обратитесь к администратору.',
+            hint: 'На Vercel миграции должны применяться автоматически. Проверьте логи сборки.'
           },
           { status: 500 }
         );

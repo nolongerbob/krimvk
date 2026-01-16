@@ -65,8 +65,14 @@ export async function POST(request: NextRequest) {
       });
     } catch (error: any) {
       // Игнорируем ошибку, если таблица еще не создана
-      if (error?.code !== 'P2021' && !error?.message?.includes('does not exist')) {
+      const isTableMissing = error?.code === 'P2021' || 
+                            error?.message?.includes('does not exist') ||
+                            error?.message?.includes('password_reset_tokens');
+      
+      if (!isTableMissing) {
         console.error('Error deleting old reset tokens:', error);
+      } else {
+        console.warn('Table password_reset_tokens does not exist yet, will be created on next deploy');
       }
     }
 
@@ -85,20 +91,73 @@ export async function POST(request: NextRequest) {
         },
       });
     } catch (error: any) {
-      // Если таблица не существует, нужно применить миграцию
-      if (error?.code === 'P2021' || error?.message?.includes('does not exist')) {
-        console.error('PasswordResetToken table does not exist. Error:', error);
-        // В production на Vercel миграции должны применяться автоматически через vercel-build
-        // Если таблица все еще не существует, возможно нужно вручную выполнить миграцию
-        return NextResponse.json(
-          { 
-            error: 'Таблица для восстановления пароля не создана. Пожалуйста, выполните миграцию базы данных или обратитесь к администратору.',
-            hint: 'На Vercel миграции должны применяться автоматически. Проверьте логи сборки.'
-          },
-          { status: 500 }
-        );
+      // Если таблица не существует, пытаемся создать её
+      const isTableMissing = error?.code === 'P2021' || 
+                            error?.message?.includes('does not exist') ||
+                            error?.message?.includes('password_reset_tokens');
+      
+      if (isTableMissing) {
+        console.error('PasswordResetToken table does not exist. Attempting to create...', error);
+        
+        // Пытаемся создать таблицу напрямую через SQL
+        try {
+          await prisma.$executeRawUnsafe(`
+            CREATE TABLE IF NOT EXISTS "password_reset_tokens" (
+              "id" TEXT NOT NULL,
+              "userId" TEXT NOT NULL,
+              "token" TEXT NOT NULL,
+              "expires" TIMESTAMP(3) NOT NULL,
+              "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              CONSTRAINT "password_reset_tokens_pkey" PRIMARY KEY ("id")
+            );
+          `);
+          
+          await prisma.$executeRawUnsafe(`
+            CREATE UNIQUE INDEX IF NOT EXISTS "password_reset_tokens_token_key" 
+            ON "password_reset_tokens"("token");
+          `);
+          
+          // Проверяем существование внешнего ключа перед добавлением
+          const fkExists = await prisma.$queryRawUnsafe(`
+            SELECT EXISTS (
+              SELECT 1 FROM information_schema.table_constraints 
+              WHERE constraint_name = 'password_reset_tokens_userId_fkey' 
+              AND table_name = 'password_reset_tokens'
+            ) as exists;
+          `);
+          
+          if (!fkExists || !(fkExists as any[])[0]?.exists) {
+            await prisma.$executeRawUnsafe(`
+              ALTER TABLE "password_reset_tokens" 
+              ADD CONSTRAINT "password_reset_tokens_userId_fkey" 
+              FOREIGN KEY ("userId") REFERENCES "users"("id") 
+              ON DELETE CASCADE ON UPDATE CASCADE;
+            `);
+          }
+          
+          // Пытаемся снова создать токен
+          await prisma.passwordResetToken.create({
+            data: {
+              userId: user.id,
+              token,
+              expires,
+            },
+          });
+          
+          console.log('✅ Table password_reset_tokens created and token saved');
+        } catch (createError: any) {
+          console.error('Failed to create table:', createError);
+          return NextResponse.json(
+            { 
+              error: 'Таблица для восстановления пароля не создана. Пожалуйста, выполните миграцию базы данных.',
+              hint: 'На Vercel миграции должны применяться автоматически при следующем деплое.'
+            },
+            { status: 500 }
+          );
+        }
+      } else {
+        throw error;
       }
-      throw error;
     }
 
     // Отправляем письмо с инструкциями

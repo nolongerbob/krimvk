@@ -107,8 +107,13 @@ export default async function DynamicPagePage({
         });
       }
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error loading page:", error);
+    // Если это ошибка подключения к БД, логируем и показываем 404
+    if (error?.code === 'P1001' || error?.message?.includes('Connection')) {
+      console.error("Database connection error:", error);
+    }
+    // Всегда показываем 404 для несуществующих страниц
     notFound();
   }
 

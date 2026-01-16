@@ -21,8 +21,21 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = forgotPasswordSchema.parse(body);
 
-    // Находим пользователя
-    const user = await getUserByEmail(validatedData.email);
+    // Находим пользователя с обработкой ошибок
+    let user;
+    try {
+      user = await getUserByEmail(validatedData.email);
+    } catch (error: any) {
+      console.error('Error getting user by email:', error);
+      // Если ошибка подключения к БД, возвращаем общую ошибку
+      if (error?.code === 'P1001' || error?.message?.includes('Connection')) {
+        return NextResponse.json(
+          { error: 'Ошибка подключения к базе данных. Попробуйте позже.' },
+          { status: 500 }
+        );
+      }
+      throw error;
+    }
     
     // Всегда возвращаем успех, даже если пользователь не найден
     // Это предотвращает перебор email адресов

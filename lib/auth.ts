@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import { prisma } from './prisma';
+import { prisma, withRetry } from './prisma';
 
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 10);
@@ -13,9 +13,9 @@ export async function verifyPassword(
 }
 
 export async function getUserByEmail(email: string) {
-  return prisma.user.findUnique({
+  return withRetry(() => prisma.user.findUnique({
     where: { email },
-  });
+  }));
 }
 
 export async function createUser(data: {

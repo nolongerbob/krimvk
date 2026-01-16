@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { sanitizeHTML } from "@/lib/sanitize-html";
 import { Prisma } from "@prisma/client";
 
+export const dynamic = 'force-dynamic';
+
 type PageWithRelations = Prisma.PageGetPayload<{
   include: {
     author: { select: { name: true; email: true } };

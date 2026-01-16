@@ -3,6 +3,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/prisma";
 
+// Force dynamic rendering - this route uses headers() via getServerSession
+export const dynamic = 'force-dynamic';
+
 /**
  * GET - получить данные профиля пользователя
  */

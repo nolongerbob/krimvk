@@ -8,6 +8,9 @@ const resetPasswordSchema = z.object({
   password: z.string().min(6, 'Пароль должен содержать минимум 6 символов'),
 });
 
+// Force dynamic rendering - this route uses request.json() and database operations
+export const dynamic = 'force-dynamic';
+
 /**
  * POST - сбросить пароль по токену
  */

@@ -7,6 +7,9 @@ import { getUserByEmail } from '@/lib/auth';
 import crypto from 'crypto';
 import { z } from 'zod';
 
+// Force dynamic rendering - this route uses headers() via getServerSession
+export const dynamic = 'force-dynamic';
+
 const changeEmailSchema = z.object({
   newEmail: z.string().email('Некорректный email'),
 });

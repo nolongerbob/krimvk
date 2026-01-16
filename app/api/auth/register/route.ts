@@ -5,6 +5,9 @@ import { sendVerificationEmail } from '@/lib/resend';
 import { z } from 'zod';
 import crypto from 'crypto';
 
+// Force dynamic rendering - this route uses cookies and database operations
+export const dynamic = 'force-dynamic';
+
 const registerSchema = z.object({
   email: z.string().email('Некорректный email'),
   password: z.string().min(6, 'Пароль должен быть не менее 6 символов'),

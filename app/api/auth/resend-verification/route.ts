@@ -5,6 +5,9 @@ import { prisma } from '@/lib/prisma';
 import { sendVerificationEmail } from '@/lib/resend';
 import crypto from 'crypto';
 
+// Force dynamic rendering - this route uses headers() via getServerSession
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request) {
   try {
     console.log('[resend-verification] Начало запроса');

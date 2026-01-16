@@ -9,6 +9,9 @@ const forgotPasswordSchema = z.object({
   email: z.string().email('Некорректный email'),
 });
 
+// Force dynamic rendering - this route uses request.json() and database operations
+export const dynamic = 'force-dynamic';
+
 /**
  * POST - запросить восстановление пароля
  * Отправляет письмо с ссылкой для сброса пароля

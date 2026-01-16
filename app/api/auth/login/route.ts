@@ -3,6 +3,9 @@ import { getUserByEmail, verifyPassword } from '@/lib/auth';
 import { z } from 'zod';
 import { SignJWT } from 'jose';
 
+// Force dynamic rendering - this route uses cookies
+export const dynamic = 'force-dynamic';
+
 const loginSchema = z.object({
   email: z.string().email('Некорректный email'),
   password: z.string().min(1, 'Пароль обязателен'),

@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { encode } from 'next-auth/jwt';
 
+// Force dynamic rendering - this route uses cookies
+export const dynamic = 'force-dynamic';
+
 /**
  * POST - автоматический вход после подтверждения email
  * Принимает userId и создает сессию через NextAuth (только для подтвержденных email)

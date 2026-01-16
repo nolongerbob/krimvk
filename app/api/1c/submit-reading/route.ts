@@ -4,6 +4,9 @@ import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/prisma";
 import { submitMeterReading, getMeteringDeviceHistory } from "@/lib/1c-api";
 
+// Force dynamic rendering - this route uses headers() via getServerSession
+export const dynamic = 'force-dynamic';
+
 /**
  * POST - передать показания счетчика в 1С
  * Проксирует запрос к 1С API

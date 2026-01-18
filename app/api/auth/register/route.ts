@@ -71,7 +71,7 @@ export async function POST(request: Request) {
       // Не прерываем регистрацию — пользователь сможет запросить повторную отправку в ЛК
     }
 
-    return NextResponse.json(
+    const res = NextResponse.json(
       { 
         message: emailSent 
           ? 'Регистрация успешна. Пожалуйста, проверьте вашу почту для подтверждения email.'
@@ -81,6 +81,15 @@ export async function POST(request: Request) {
       },
       { status: 201 }
     );
+    // Cookie, чтобы при переходе по ссылке из письма на этом же устройстве — автовход и редирект в ЛК
+    res.cookies.set('pending_verify', user.id, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60, // 24 ч
+      path: '/',
+    });
+    return res;
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

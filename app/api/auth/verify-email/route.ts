@@ -1,8 +1,15 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth-config';
 import { prisma } from '@/lib/prisma';
 
 // Force dynamic rendering - this route uses cookies and redirects
 export const dynamic = 'force-dynamic';
+
+function clearPendingVerify(res: NextResponse) {
+  res.cookies.set('pending_verify', '', { maxAge: 0, path: '/' });
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -64,8 +71,17 @@ export async function GET(request: Request) {
       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
       (process.env.NODE_ENV === 'production' ? 'https://krimvk.ru' : 'http://localhost:3000');
 
-    // После подтверждения — автовход и редирект в ЛК (в т.ч. после первой регистрации в том же браузере)
-    if (process.env.NEXTAUTH_SECRET) {
+    const cookieStore = await cookies();
+    const pendingVerify = cookieStore.get('pending_verify')?.value;
+    const session = await getServerSession(authOptions);
+    // Устройство, где регистрировался: есть cookie pending_verify=userId
+    const isRegistrationDevice = pendingVerify === verificationToken.userId;
+    // Тот же браузер, уже был вход (например, повторная отправка из ЛК): есть сессия этого пользователя
+    const isSameDeviceWithSession = session?.user?.id === verificationToken.userId;
+
+    const shouldRedirectToLk = (isRegistrationDevice || isSameDeviceWithSession) && process.env.NEXTAUTH_SECRET;
+
+    if (shouldRedirectToLk) {
       const { encode } = await import('next-auth/jwt');
       const jwt = await encode({
         token: {
@@ -84,8 +100,7 @@ export async function GET(request: Request) {
         ? '__Secure-next-auth.session-token' 
         : 'next-auth.session-token';
 
-      const redirectUrl = new URL('/verify-email?verified=true', baseUrl);
-      const response = NextResponse.redirect(redirectUrl);
+      const response = NextResponse.redirect(new URL('/verify-email?verified=true', baseUrl));
       response.cookies.set(cookieName, jwt, {
         httpOnly: true,
         secure: isProduction,
@@ -93,11 +108,14 @@ export async function GET(request: Request) {
         maxAge: 30 * 24 * 60 * 60,
         path: '/',
       });
+      clearPendingVerify(response);
       return response;
     }
 
-    const redirectUrl = new URL('/verify-email?verified=true', baseUrl);
-    return NextResponse.redirect(redirectUrl);
+    // Подтверждение с другого устройства: не логиним, не редиректим в ЛК
+    const response = NextResponse.redirect(new URL('/verify-email?verified=true&from=other', baseUrl));
+    clearPendingVerify(response);
+    return response;
   } catch (error) {
     console.error('Email verification error:', error);
     return NextResponse.json(

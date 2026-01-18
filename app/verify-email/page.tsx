@@ -21,12 +21,12 @@ export default function VerifyEmailPage() {
 
     if (verified === 'true') {
       setStatus('success');
-      // Раньше: с другого устройства не редиректили (from=other). Сейчас API всегда делает автовход.
+      // Подтверждение с другого устройства: без автовхода, только кнопка «Войти»
       if (fromOther) {
         setMessage('Email успешно подтвержден. Войдите в личный кабинет, используя ваш email и пароль.');
         return;
       }
-      // После подтверждения — редирект в ЛК
+      // Устройство, где регистрировались (или тот же браузер с сессией) — редирект в ЛК
       setMessage('Email успешно подтвержден! Переходим в личный кабинет...');
       const timer = setTimeout(() => {
         window.location.href = '/dashboard?emailVerified=true';

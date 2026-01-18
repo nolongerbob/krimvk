@@ -21,6 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
+import DashboardTour from "@/components/DashboardTour";
 
 
 interface Account {
@@ -517,7 +518,7 @@ export default function DashboardPage() {
         {/* Header with Balance and Account */}
         <div className="mb-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-            <div>
+            <div data-tour-id="tour-welcome">
               <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
                 Личный кабинет
               </h1>
@@ -528,6 +529,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Balance and Account Card */}
+          <div data-tour-id="tour-balance">
           {accounts.length > 0 ? (
             <Card className="mb-6 border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-white shadow-lg">
               <CardContent className="p-6">
@@ -642,10 +644,11 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
           )}
+          </div>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8" data-tour-id="tour-stats">
           <Link href="/dashboard/bills">
             <Card className="border-l-4 border-l-red-500 hover:shadow-lg transition-all cursor-pointer h-full flex flex-col hover:scale-105">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 flex-shrink-0">
@@ -693,7 +696,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8" data-tour-id="tour-quick">
           <Card className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 h-full flex flex-col">
             <CardHeader className="flex-shrink-0">
               <div className="flex items-center gap-3 mb-2">
@@ -796,6 +799,8 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </div>
+
+        <DashboardTour />
       </div>
     </div>
   );

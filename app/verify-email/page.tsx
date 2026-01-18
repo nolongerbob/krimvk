@@ -21,10 +21,46 @@ export default function VerifyEmailPage() {
 
     if (verified === 'true') {
       setStatus('success');
-      // Подтверждение с другого устройства: без автовхода, только кнопка «Войти»
+      // Подтверждение с другого устройства: проверяем статус и редиректим в ЛК
       if (fromOther) {
-        setMessage('Email успешно подтвержден. Войдите в личный кабинет, используя ваш email и пароль.');
-        return;
+        setMessage('Email успешно подтвержден! Проверяем статус и переходим в личный кабинет...');
+        // Опрашиваем статус и при подтверждении создаём сессию и редиректим в ЛК
+        const checkAndRedirect = async () => {
+          try {
+            const res = await fetch('/api/auth/check-email-verified', {
+              credentials: 'include',
+              cache: 'no-store',
+            });
+            if (res.ok) {
+              const data = await res.json();
+              if (data.verified && data.userId) {
+                // Email подтверждён и есть userId — создаём сессию через auto-login
+                const loginRes = await fetch('/api/auth/auto-login', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ userId: data.userId }),
+                  credentials: 'include',
+                });
+                if (loginRes.ok) {
+                  window.location.href = '/dashboard?emailVerified=true';
+                  return;
+                }
+              } else if (data.verified) {
+                // Email подтверждён, но нет userId (нет pending_verify на этом устройстве)
+                // Редиректим на логин — пользователь войдёт и попадёт в ЛК
+                window.location.href = '/login?verified=true';
+                return;
+              }
+            }
+          } catch {
+            // При ошибке редиректим на логин
+            window.location.href = '/login?verified=true';
+          }
+        };
+        // Проверяем сразу и затем каждые 2 секунды
+        checkAndRedirect();
+        const id = setInterval(checkAndRedirect, 2000);
+        return () => clearInterval(id);
       }
       // Устройство, где регистрировались (или тот же браузер с сессией) — редирект в ЛК
       setMessage('Email успешно подтвержден! Переходим в личный кабинет...');
@@ -39,6 +75,44 @@ export default function VerifyEmailPage() {
       setStatus('success');
       setMessage('Email уже был подтвержден ранее. Войдите в систему, используя ваш email и пароль.');
       return;
+    }
+
+    // Если нет токена, но страница открыта — проверяем статус (например, пользователь подтвердил с другого устройства)
+    if (!token && status === 'loading') {
+      // Опрашиваем статус подтверждения
+      const checkStatus = async () => {
+        try {
+          const res = await fetch('/api/auth/check-email-verified', {
+            credentials: 'include',
+            cache: 'no-store',
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.verified && data.userId) {
+              // Email подтверждён — создаём сессию и редиректим в ЛК
+              const loginRes = await fetch('/api/auth/auto-login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: data.userId }),
+                credentials: 'include',
+              });
+              if (loginRes.ok) {
+                window.location.href = '/dashboard?emailVerified=true';
+                return;
+              }
+            } else if (data.verified) {
+              // Email подтверждён, но нет userId — редирект на логин
+              window.location.href = '/login?verified=true';
+              return;
+            }
+          }
+        } catch {
+          // Игнорируем ошибки
+        }
+      };
+      checkStatus();
+      const id = setInterval(checkStatus, 3000);
+      return () => clearInterval(id);
     }
 
     // Предотвращаем повторные вызовы

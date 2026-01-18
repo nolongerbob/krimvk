@@ -16,26 +16,24 @@ export default function VerifyEmailPage() {
   const [isVerifying, setIsVerifying] = useState(false);
 
   useEffect(() => {
-    // Редирект после успешного подтверждения
     const verified = searchParams.get('verified');
     const fromOther = searchParams.get('from') === 'other';
 
     if (verified === 'true') {
       setStatus('success');
-      // С другого устройства (нет сессии): не делаем автовход, не редиректим в ЛК
+      // Раньше: с другого устройства не редиректили (from=other). Сейчас API всегда делает автовход.
       if (fromOther) {
         setMessage('Email успешно подтвержден. Войдите в личный кабинет, используя ваш email и пароль.');
         return;
       }
-      // То же устройство (сессия есть): автовход, редирект в ЛК
+      // После подтверждения — редирект в ЛК
       setMessage('Email успешно подтвержден! Переходим в личный кабинет...');
       const timer = setTimeout(() => {
         window.location.href = '/dashboard?emailVerified=true';
-      }, 3000);
+      }, 2000);
       return () => clearTimeout(timer);
     }
 
-    // Редирект с параметром already=true (email уже подтвержден)
     const alreadyVerified = searchParams.get('already');
     if (alreadyVerified === 'true') {
       setStatus('success');
@@ -196,7 +194,7 @@ export default function VerifyEmailPage() {
                     Ваш email адрес успешно подтвержден.
                   </p>
                   <p className="text-xs text-gray-500 text-center mt-2">
-                    Вы будете перенаправлены в личный кабинет через несколько секунд...
+                    Вы будете перенаправлены в личный кабинет через пару секунд...
                   </p>
                   <Button 
                     onClick={() => { window.location.href = '/dashboard?emailVerified=true'; }} 

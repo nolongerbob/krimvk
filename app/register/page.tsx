@@ -96,7 +96,7 @@ export default function RegisterPage() {
                   {registeredEmail}
                 </p>
                 <p className="text-sm text-green-700 mb-6">
-                  Пожалуйста, проверьте вашу почту и перейдите по ссылке в письме для активации аккаунта.
+                  Пожалуйста, проверьте вашу почту и перейдите по ссылке в письме для активации аккаунта. После подтверждения вы будете перенаправлены в личный кабинет.
                 </p>
                 <div className="bg-white rounded-lg p-4 border border-green-200">
                   <p className="text-xs text-gray-600 mb-2">

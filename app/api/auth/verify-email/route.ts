@@ -1,6 +1,4 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
 import { prisma } from '@/lib/prisma';
 
 // Force dynamic rendering - this route uses cookies and redirects
@@ -66,13 +64,8 @@ export async function GET(request: Request) {
       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
       (process.env.NODE_ENV === 'production' ? 'https://krimvk.ru' : 'http://localhost:3000');
 
-    // Проверяем: есть ли в этом браузере уже сессия того же пользователя (то же устройство)?
-    // Если с другого устройства — сессии нет, не делаем автовход и не редиректим в ЛК.
-    const session = await getServerSession(authOptions);
-    const isSameDevice = session?.user?.id === verificationToken.userId;
-
-    if (isSameDevice && process.env.NEXTAUTH_SECRET) {
-      // То же устройство, уже был авторизован — обновляем сессию и редиректим в ЛК
+    // После подтверждения — автовход и редирект в ЛК (в т.ч. после первой регистрации в том же браузере)
+    if (process.env.NEXTAUTH_SECRET) {
       const { encode } = await import('next-auth/jwt');
       const jwt = await encode({
         token: {
@@ -103,9 +96,7 @@ export async function GET(request: Request) {
       return response;
     }
 
-    // Другое устройство или нет сессии — не ставим cookie, не делаем автовход.
-    // Редирект на страницу с сообщением и кнопкой «Войти».
-    const redirectUrl = new URL('/verify-email?verified=true&from=other', baseUrl);
+    const redirectUrl = new URL('/verify-email?verified=true', baseUrl);
     return NextResponse.redirect(redirectUrl);
   } catch (error) {
     console.error('Email verification error:', error);

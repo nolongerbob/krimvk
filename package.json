@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
-    "vercel-build": "prisma generate && prisma db push --skip-generate && node scripts/apply-password-reset-token-migration.js && next build",
+    "vercel-build": "prisma generate && prisma db push --skip-generate --accept-data-loss && node scripts/apply-password-reset-token-migration.js && next build",
     "build:vps": "prisma generate && prisma migrate deploy && next build",
     "start": "next start",
     "lint": "next lint",
@@ -25,7 +25,10 @@
     "db:reset": "node scripts/reset-db.js",
     "db:clean": "node scripts/clean-database.js",
     "db:setup:neon": "prisma generate && prisma db push",
-    "db:migrate:password-reset": "node scripts/apply-password-reset-token-migration.js"
+    "db:migrate:password-reset": "node scripts/apply-password-reset-token-migration.js",
+    "db:deploy:neon": "prisma generate && prisma migrate deploy && node scripts/apply-password-reset-token-migration.js",
+    "db:sync:neon": "prisma generate && prisma db push --skip-generate && node scripts/apply-password-reset-token-migration.js",
+    "db:update:neon": "prisma generate && node scripts/apply-all-migrations-neon.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.958.0",

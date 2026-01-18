@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signIn, useSession } from "next-auth/react";
+import { signIn } from "next-auth/react";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -87,73 +87,7 @@ export default function RegisterPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {success ? (
-            <div className="space-y-4">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-                  <svg
-                    className="h-8 w-8 text-green-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-semibold text-green-900 mb-2">
-                  Регистрация успешна!
-                </h3>
-                <p className="text-green-800 mb-4">
-                  Мы отправили письмо с подтверждением на адрес:
-                </p>
-                <p className="font-medium text-green-900 mb-4">
-                  {registeredEmail}
-                </p>
-                <p className="text-sm text-green-700 mb-6">
-                  Пожалуйста, проверьте вашу почту и перейдите по ссылке в письме для активации аккаунта. После подтверждения вы будете перенаправлены в личный кабинет.
-                </p>
-                <div className="bg-white rounded-lg p-4 border border-green-200">
-                  <p className="text-xs text-gray-600 mb-2">
-                    Не получили письмо?
-                  </p>
-                  <ul className="text-xs text-gray-600 space-y-1 text-left">
-                    <li>• Проверьте папку "Спам"</li>
-                    <li>• Убедитесь, что email адрес указан правильно</li>
-                    <li>• Письмо может прийти с задержкой до 5 минут</li>
-                  </ul>
-                </div>
-              </div>
-              <Button
-                onClick={() => {
-                  setSuccess(false);
-                  setRegisteredEmail("");
-                  setRegisteredPassword("");
-                  setFormData({
-                    email: "",
-                    password: "",
-                    confirmPassword: "",
-                    name: "",
-                    phone: "",
-                  });
-                }}
-                variant="outline"
-                className="w-full"
-              >
-                Зарегистрировать другой email
-              </Button>
-              <div className="text-center">
-                <Link href="/login" className="text-sm text-primary hover:underline">
-                  Уже подтвердили? Войти
-                </Link>
-              </div>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
                 <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md">
                   {error}
@@ -272,7 +206,6 @@ export default function RegisterPage() {
               </Link>
             </div>
           </form>
-          )}
         </CardContent>
       </Card>
     </div>

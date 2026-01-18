@@ -33,7 +33,8 @@ export default async function DynamicPagePage({
 }: {
   params: { slug: string[] };
 }) {
-  const slugArray = params.slug;
+  const slugArray = Array.isArray(params?.slug) ? params.slug : [];
+  if (slugArray.length === 0) notFound();
   const fullSlug = "/" + slugArray.join("/");
 
   let page: PageWithRelations | null = null;

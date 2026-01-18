@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
@@ -19,6 +19,27 @@ export default function RegisterPage() {
   const [success, setSuccess] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState("");
   const router = useRouter();
+
+  // Если пользователь подтвердил email с другого устройства — редирект на вход
+  useEffect(() => {
+    if (!success) return;
+    const check = async () => {
+      try {
+        const res = await fetch("/api/auth/check-email-verified", {
+          credentials: "include",
+          cache: "no-store",
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.verified) {
+            router.replace("/login?verified=true");
+          }
+        }
+      } catch { /* ignore */ }
+    };
+    const id = setInterval(check, 3000);
+    return () => clearInterval(id);
+  }, [success, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

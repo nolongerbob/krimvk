@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -19,6 +19,7 @@ export default function RegisterPage() {
   const [success, setSuccess] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState("");
   const router = useRouter();
+  const { update: updateSession } = useSession();
 
   // Проверяем статус подтверждения email и редиректим в ЛК после подтверждения
   useEffect(() => {
@@ -76,14 +77,39 @@ export default function RegisterPage() {
         if (data.userId) {
           localStorage.setItem('registeredUserId', data.userId);
         }
-        // Показываем сообщение о необходимости подтверждения email
-        setSuccess(true);
-        setRegisteredEmail(formData.email);
-        setError("");
-        // Обновляем сессию NextAuth на клиенте (если cookie установлена)
-        // NextAuth автоматически подхватит cookie при следующем запросе
-        // Небольшая задержка для применения cookie, затем можно редиректить в ЛК
-        // Но лучше не редиректить сразу - пусть пользователь увидит сообщение
+        
+        // Обновляем сессию NextAuth на клиенте сразу после регистрации
+        // Cookie уже установлена на сервере, используем signIn для обновления сессии на клиенте
+        // (пароль уже был отправлен на сервер при регистрации, это безопасно)
+        try {
+          // Небольшая задержка, чтобы cookie успела примениться
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
+          // Используем signIn для обновления сессии на клиенте
+          // Это обновит useSession() без перезагрузки страницы
+          const result = await signIn('credentials', {
+            email: formData.email,
+            password: formData.password,
+            redirect: false,
+          });
+          
+          // Дополнительно обновляем сессию через update() для гарантии
+          if (result?.ok) {
+            await updateSession();
+            router.refresh();
+          }
+          
+          // Показываем сообщение о необходимости подтверждения email
+          setSuccess(true);
+          setRegisteredEmail(formData.email);
+          setError("");
+        } catch (signInError) {
+          // Если signIn не сработал, всё равно показываем успех
+          // Cookie уже установлена, сессия подхватится при следующем запросе
+          setSuccess(true);
+          setRegisteredEmail(formData.email);
+          setError("");
+        }
       } else {
         setError(data.error || "Ошибка регистрации");
         console.error("Registration error:", data);

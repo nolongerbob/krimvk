@@ -145,6 +145,30 @@ export default function DashboardPage() {
     }
   }, [status, searchParams, router]);
 
+  // Проверка статуса email, если подтвердили с другого устройства (телефон и т.п.)
+  // Пока баннер «Подтвердите email» — опрашиваем профиль; при emailVerified=true убираем баннер и обновляем ЛК
+  useEffect(() => {
+    if (status !== "authenticated" || emailVerified !== false) return;
+    const check = async () => {
+      try {
+        const res = await fetch(`/api/user/profile?t=${Date.now()}`, {
+          cache: "no-store",
+          credentials: "include",
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.user?.emailVerified) {
+            setEmailVerified(true);
+          }
+        }
+      } catch {
+        // ignore
+      }
+    };
+    const id = setInterval(check, 3000);
+    return () => clearInterval(id);
+  }, [status, emailVerified]);
+
   const fetchUserEmailStatus = async (force = false) => {
     try {
       // Добавляем cache-busting параметр, чтобы получить свежие данные

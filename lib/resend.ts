@@ -1,15 +1,18 @@
 import { Resend } from 'resend';
 
-// Используем API ключ из .env.local
-const apiKey = process.env.RESEND_API_KEY;
+// Ленивая инициализация — не бросаем ошибку при импорте, чтобы не ломать маршруты
+// если RESEND_API_KEY не задан (напр. на Vercel). Ошибка будет при первой отправке.
+let _client: Resend | null = null;
 
-if (!apiKey) {
-  throw new Error('RESEND_API_KEY is not set in environment variables');
+function getClient(): Resend {
+  if (_client) return _client;
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey || typeof apiKey !== 'string' || apiKey.trim() === '') {
+    throw new Error('Сервис отправки почты не настроен. Обратитесь к администратору.');
+  }
+  _client = new Resend(apiKey);
+  return _client;
 }
-
-console.log('[Resend] Инициализация с API ключом:', apiKey.substring(0, 15) + '...');
-
-export const resend = new Resend(apiKey);
 
 export async function sendVerificationEmail(email: string, token: string, name?: string) {
   // Определяем базовый URL для ссылок
@@ -21,14 +24,9 @@ export async function sendVerificationEmail(email: string, token: string, name?:
   
   const verificationUrl = `${baseUrl}/verify-email?token=${token}`;
   
-  // Логируем для отладки
-  console.log('[Resend] Формирование ссылки подтверждения:', {
-    NEXTAUTH_URL: process.env.NEXTAUTH_URL,
-    VERCEL_URL: process.env.VERCEL_URL,
-    NODE_ENV: process.env.NODE_ENV,
-    baseUrl,
-    verificationUrl,
-  });
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[Resend] verificationUrl:', baseUrl, '->', verificationUrl);
+  }
   
   try {
     // Определяем адрес отправителя:
@@ -43,16 +41,11 @@ export async function sendVerificationEmail(email: string, token: string, name?:
     
     const fromAddress = process.env.RESEND_FROM_EMAIL || defaultFrom;
     
-    console.log('[Resend] Отправка письма:', { 
-      from: fromAddress, 
-      to: email, 
-      environment: process.env.NODE_ENV,
-      apiKey: apiKey ? apiKey.substring(0, 15) + '...' : 'undefined',
-      envFromEmail: process.env.RESEND_FROM_EMAIL,
-      usingDefault: !process.env.RESEND_FROM_EMAIL
-    });
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[Resend] Отправка письма:', { from: fromAddress, to: email });
+    }
     
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await getClient().emails.send({
       from: fromAddress,
       to: email,
       subject: 'Подтвердите ваш email адрес',
@@ -101,28 +94,21 @@ export async function sendVerificationEmail(email: string, token: string, name?:
     });
 
     if (error) {
-      console.error('Resend error:', error);
-      
-      // Более понятное сообщение об ошибке верификации домена
-      const errorMessage = typeof error === 'object' && error !== null
-        ? JSON.stringify(error)
-        : String(error);
-      
-      if (errorMessage.includes('verify') || errorMessage.includes('domain')) {
-        throw new Error(
-          `Домен не верифицирован в Resend. ` +
-          `Проверьте настройки домена krimvk.ru в панели Resend или используйте onboarding@resend.dev для тестирования. ` +
-          `Ошибка: ${errorMessage}`
-        );
+      const errMsg = typeof error === 'object' && error !== null ? JSON.stringify(error) : String(error);
+      console.error('[Resend] Ошибка отправки (verify):', errMsg);
+      if (/verify|domain|from\s*address/i.test(errMsg)) {
+        throw new Error('Домен отправителя не верифицирован. Обратитесь к администратору.');
       }
-      
-      throw new Error(`Failed to send verification email: ${errorMessage}`);
+      if (/api|key|invalid|unauthorized|401/i.test(errMsg)) {
+        throw new Error('Сервис отправки почты не настроен. Обратитесь к администратору.');
+      }
+      throw new Error('Не удалось отправить письмо. Обратитесь к администратору.');
     }
 
-    console.log('Email sent successfully:', data);
+    if (process.env.NODE_ENV === 'development') console.log('[Resend] Verify email sent:', data?.id);
     return data;
   } catch (error) {
-    console.error('Error sending verification email:', error);
+    console.error('[Resend] Error sending verification email:', error);
     throw error;
   }
 }
@@ -137,15 +123,6 @@ export async function sendPasswordResetEmail(email: string, token: string, name?
   
   const resetUrl = `${baseUrl}/reset-password?token=${token}`;
   
-  // Логируем для отладки
-  console.log('[Resend] Формирование ссылки восстановления пароля:', {
-    NEXTAUTH_URL: process.env.NEXTAUTH_URL,
-    VERCEL_URL: process.env.VERCEL_URL,
-    NODE_ENV: process.env.NODE_ENV,
-    baseUrl,
-    resetUrl,
-  });
-  
   try {
     // Используем верифицированный домен krimvk.ru
     const isProduction = process.env.NODE_ENV === 'production';
@@ -155,13 +132,7 @@ export async function sendPasswordResetEmail(email: string, token: string, name?
     
     const fromAddress = process.env.RESEND_FROM_EMAIL || defaultFrom;
     
-    console.log('[Resend] Отправка письма восстановления пароля:', { 
-      from: fromAddress, 
-      to: email, 
-      environment: process.env.NODE_ENV,
-    });
-    
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await getClient().emails.send({
       from: fromAddress,
       to: email,
       subject: 'Восстановление пароля',
@@ -210,27 +181,21 @@ export async function sendPasswordResetEmail(email: string, token: string, name?
     });
 
     if (error) {
-      console.error('Resend error:', error);
-      
-      const errorMessage = typeof error === 'object' && error !== null
-        ? JSON.stringify(error)
-        : String(error);
-      
-      if (errorMessage.includes('verify') || errorMessage.includes('domain')) {
-        throw new Error(
-          `Домен не верифицирован в Resend. ` +
-          `Проверьте настройки домена krimvk.ru в панели Resend или используйте onboarding@resend.dev для тестирования. ` +
-          `Ошибка: ${errorMessage}`
-        );
+      const errMsg = typeof error === 'object' && error !== null ? JSON.stringify(error) : String(error);
+      console.error('[Resend] Ошибка отправки (reset):', errMsg);
+      if (/verify|domain|from\s*address/i.test(errMsg)) {
+        throw new Error('Домен отправителя не верифицирован. Обратитесь к администратору.');
       }
-      
-      throw new Error(`Failed to send password reset email: ${errorMessage}`);
+      if (/api|key|invalid|unauthorized|401/i.test(errMsg)) {
+        throw new Error('Сервис отправки почты не настроен. Обратитесь к администратору.');
+      }
+      throw new Error('Не удалось отправить письмо. Обратитесь к администратору.');
     }
 
-    console.log('Password reset email sent successfully:', data);
+    if (process.env.NODE_ENV === 'development') console.log('[Resend] Password reset email sent:', data?.id);
     return data;
   } catch (error) {
-    console.error('Error sending password reset email:', error);
+    console.error('[Resend] Error sending password reset email:', error);
     throw error;
   }
 }

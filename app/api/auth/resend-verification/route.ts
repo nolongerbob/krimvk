@@ -75,12 +75,11 @@ export async function POST(request: Request) {
       { status: 200 }
     );
   } catch (error: any) {
-    console.error('[resend-verification] Ошибка:', error);
-    console.error('[resend-verification] Stack:', error?.stack);
+    console.error('[resend-verification] Ошибка:', error?.message ?? error);
     return NextResponse.json(
       { 
-        error: 'Ошибка при отправке письма',
-        details: process.env.NODE_ENV === 'development' ? error?.message : undefined
+        error: error?.message || 'Ошибка при отправке письма',
+        details: process.env.NODE_ENV === 'development' ? error?.stack : undefined
       },
       { status: 500 }
     );

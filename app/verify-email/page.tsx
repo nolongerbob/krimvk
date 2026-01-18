@@ -5,9 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2, XCircle, Loader2, Mail } from "lucide-react";
-import Link from "next/link";
-import { signIn } from "next-auth/react";
-
 export default function VerifyEmailPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -19,21 +16,26 @@ export default function VerifyEmailPage() {
   const [isVerifying, setIsVerifying] = useState(false);
 
   useEffect(() => {
-    // Проверяем, если это редирект после успешного подтверждения
+    // Редирект после успешного подтверждения
     const verified = searchParams.get('verified');
+    const fromOther = searchParams.get('from') === 'other';
+
     if (verified === 'true') {
       setStatus('success');
-      setMessage('Email успешно подтвержден! Теперь вы можете войти в личный кабинет.');
-      
-      // Автоматический переход в ЛК через 3 секунды
+      // С другого устройства (нет сессии): не делаем автовход, не редиректим в ЛК
+      if (fromOther) {
+        setMessage('Email успешно подтвержден. Войдите в личный кабинет, используя ваш email и пароль.');
+        return;
+      }
+      // То же устройство (сессия есть): автовход, редирект в ЛК
+      setMessage('Email успешно подтвержден! Переходим в личный кабинет...');
       const timer = setTimeout(() => {
         window.location.href = '/dashboard?emailVerified=true';
       }, 3000);
-      
       return () => clearTimeout(timer);
     }
 
-    // Проверяем, если это редирект с параметром already=true (email уже подтвержден)
+    // Редирект с параметром already=true (email уже подтвержден)
     const alreadyVerified = searchParams.get('already');
     if (alreadyVerified === 'true') {
       setStatus('success');
@@ -168,34 +170,36 @@ export default function VerifyEmailPage() {
           {status === 'success' && (
             <div className="space-y-3">
               {searchParams.get('already') === 'true' ? (
-                // Если email уже был подтвержден - показываем кнопку входа
+                // Email уже был подтвержден ранее
                 <>
                   <p className="text-sm text-gray-600 text-center">
                     Для входа в личный кабинет используйте ваш email и пароль.
                   </p>
-                  <Button 
-                    onClick={() => router.push('/login')} 
-                    className="w-full"
-                  >
+                  <Button onClick={() => router.push('/login')} className="w-full">
                     Перейти к входу
                   </Button>
                 </>
+              ) : searchParams.get('from') === 'other' ? (
+                // Подтвердили с другого устройства — без автовхода, только кнопка «Войти»
+                <>
+                  <p className="text-sm text-gray-600 text-center">
+                    Войдите в личный кабинет, используя ваш email и пароль.
+                  </p>
+                  <Button onClick={() => router.push('/login')} className="w-full">
+                    Войти
+                  </Button>
+                </>
               ) : (
-                // Если только что подтвердили - показываем сообщение и автоматически переходим в ЛК
-                // Пользователь уже авторизован (cookie установлена)
+                // То же устройство, сессия есть — автопереход в ЛК
                 <>
                   <p className="text-sm text-gray-600 text-center">
                     Ваш email адрес успешно подтвержден.
                   </p>
                   <p className="text-xs text-gray-500 text-center mt-2">
-                    Вы будете автоматически перенаправлены в личный кабинет через несколько секунд...
+                    Вы будете перенаправлены в личный кабинет через несколько секунд...
                   </p>
                   <Button 
-                    onClick={() => {
-                      // Используем window.location для полной перезагрузки и применения cookie
-                      // Это гарантирует, что cookie будет применена перед переходом
-                      window.location.href = '/dashboard?emailVerified=true';
-                    }} 
+                    onClick={() => { window.location.href = '/dashboard?emailVerified=true'; }} 
                     className="w-full"
                   >
                     Перейти в личный кабинет сейчас

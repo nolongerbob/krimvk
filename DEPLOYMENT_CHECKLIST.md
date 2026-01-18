@@ -116,3 +116,14 @@ NEXTAUTH_URL="https://yourdomain.com"
 curl ifconfig.me
 ```
 
+## 📝 Vercel: переменные окружения
+
+Для работы подтверждения email и восстановления пароля в настройках проекта Vercel нужно задать:
+
+- `RESEND_API_KEY` — API‑ключ из [Resend](https://resend.com)
+- `NEXTAUTH_URL` — продакшен‑URL, напр. `https://krimvk.ru`
+- `NEXTAUTH_SECRET` — секрет NextAuth
+- `DATABASE_URL` — строка подключения к БД (Neon и др.)
+
+Без `RESEND_API_KEY` при регистрации и при повторной отправке письма будет ошибка «Сервис отправки почты не настроен».
+

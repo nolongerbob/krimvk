@@ -62,21 +62,22 @@ export async function POST(request: Request) {
     });
 
     // Отправляем email с подтверждением
+    let emailSent = false;
     try {
-      console.log('Sending verification email to:', user.email);
-      const emailResult = await sendVerificationEmail(user.email, token, user.name || undefined);
-      console.log('Verification email sent successfully:', emailResult);
+      await sendVerificationEmail(user.email, token, user.name || undefined);
+      emailSent = true;
     } catch (emailError) {
-      console.error('Failed to send verification email:', emailError);
-      // Не прерываем регистрацию, если email не отправился
-      // Пользователь сможет запросить повторную отправку позже
+      console.error('[register] Не удалось отправить письмо:', (emailError as Error)?.message ?? emailError);
+      // Не прерываем регистрацию — пользователь сможет запросить повторную отправку в ЛК
     }
 
     return NextResponse.json(
       { 
-        message: 'Регистрация успешна. Пожалуйста, проверьте вашу почту для подтверждения email.',
+        message: emailSent 
+          ? 'Регистрация успешна. Пожалуйста, проверьте вашу почту для подтверждения email.'
+          : 'Регистрация успешна. Письмо с подтверждением не удалось отправить — запросите повторную отправку в личном кабинете.',
         userId: user.id,
-        emailSent: true,
+        emailSent,
       },
       { status: 201 }
     );

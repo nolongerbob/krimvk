@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth-config';
 import { prisma } from '@/lib/prisma';
 
 // Force dynamic rendering - this route uses cookies and redirects
@@ -60,75 +62,51 @@ export async function GET(request: Request) {
       where: { id: verificationToken.id },
     });
 
-    // Создаем сессию NextAuth для автоматического входа
-    const secret = process.env.NEXTAUTH_SECRET;
-    if (secret) {
+    const baseUrl = process.env.NEXTAUTH_URL || 
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+      (process.env.NODE_ENV === 'production' ? 'https://krimvk.ru' : 'http://localhost:3000');
+
+    // Проверяем: есть ли в этом браузере уже сессия того же пользователя (то же устройство)?
+    // Если с другого устройства — сессии нет, не делаем автовход и не редиректим в ЛК.
+    const session = await getServerSession(authOptions);
+    const isSameDevice = session?.user?.id === verificationToken.userId;
+
+    if (isSameDevice && process.env.NEXTAUTH_SECRET) {
+      // То же устройство, уже был авторизован — обновляем сессию и редиректим в ЛК
       const { encode } = await import('next-auth/jwt');
-      
-      // Создаем токен в правильном формате для NextAuth
-      // Важно: структура должна соответствовать тому, что ожидает jwt callback в auth-config.ts
-      // В jwt callback мы используем token.id, token.email, token.name, token.role
-      const token = await encode({
+      const jwt = await encode({
         token: {
-          sub: verificationToken.user.id, // sub обязателен для NextAuth JWT
-          id: verificationToken.user.id, // id используется в jwt callback
+          sub: verificationToken.user.id,
+          id: verificationToken.user.id,
           email: verificationToken.user.email,
           name: verificationToken.user.name || null,
           role: verificationToken.user.role || 'USER',
         },
-        secret,
-        maxAge: 30 * 24 * 60 * 60, // 30 дней
+        secret: process.env.NEXTAUTH_SECRET,
+        maxAge: 30 * 24 * 60 * 60,
       });
 
-      // Определяем имя cookie в зависимости от окружения
       const isProduction = process.env.NODE_ENV === 'production';
       const cookieName = isProduction 
-        ? '__Secure-next-auth.session-token'
+        ? '__Secure-next-auth.session-token' 
         : 'next-auth.session-token';
 
-      // Определяем базовый URL
-      const baseUrl = process.env.NEXTAUTH_URL || 
-        (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
-        (process.env.NODE_ENV === 'production' ? 'https://krimvk.ru' : 'http://localhost:3000');
-      // Редиректим на страницу verify-email с параметром success
       const redirectUrl = new URL('/verify-email?verified=true', baseUrl);
       const response = NextResponse.redirect(redirectUrl);
-
-      // Устанавливаем cookie для NextAuth (автоматический вход)
-      // Важно: используем те же настройки, что и NextAuth по умолчанию
-      response.cookies.set(cookieName, token, {
+      response.cookies.set(cookieName, jwt, {
         httpOnly: true,
         secure: isProduction,
         sameSite: 'lax',
-        maxAge: 30 * 24 * 60 * 60, // 30 дней
+        maxAge: 30 * 24 * 60 * 60,
         path: '/',
       });
-      
-      // Логируем для отладки
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[verify-email] Cookie установлена:', {
-          cookieName,
-          hasToken: !!token,
-          tokenLength: token?.length,
-          userId: verificationToken.user.id,
-          email: verificationToken.user.email,
-          role: verificationToken.user.role,
-        });
-      }
-
       return response;
     }
 
-    // Если не удалось создать сессию, возвращаем JSON (fallback)
-    return NextResponse.json(
-      { 
-        message: 'Email успешно подтвержден',
-        userId: verificationToken.userId,
-        userEmail: verificationToken.user.email,
-        userName: verificationToken.user.name,
-      },
-      { status: 200 }
-    );
+    // Другое устройство или нет сессии — не ставим cookie, не делаем автовход.
+    // Редирект на страницу с сообщением и кнопкой «Войти».
+    const redirectUrl = new URL('/verify-email?verified=true&from=other', baseUrl);
+    return NextResponse.redirect(redirectUrl);
   } catch (error) {
     console.error('Email verification error:', error);
     return NextResponse.json(

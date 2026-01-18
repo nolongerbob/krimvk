@@ -9,12 +9,16 @@ export const dynamic = 'force-dynamic';
 /**
  * GET — проверка, подтверждён ли email.
  * Проверяет:
- * 1. Cookie pending_verify (устройство регистрации)
- * 2. Текущую сессию (если пользователь авторизован)
+ * 1. Текущую сессию (если пользователь авторизован)
+ * 2. Cookie pending_verify (устройство регистрации)
+ * 3. Query параметр userId (из localStorage на клиенте)
  * Возвращает { verified: boolean, userId?: string }.
  */
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const userIdFromQuery = searchParams.get('userId'); // Из localStorage на клиенте
+    
     const cookieStore = await cookies();
     const pendingUserId = cookieStore.get('pending_verify')?.value;
     
@@ -31,14 +35,16 @@ export async function GET() {
     }
 
     // Проверяем pending_verify cookie (устройство регистрации)
-    if (pendingUserId) {
+    const userIdToCheck = pendingUserId || userIdFromQuery;
+    if (userIdToCheck) {
       const user = await prisma.user.findUnique({
-        where: { id: pendingUserId },
+        where: { id: userIdToCheck },
         select: { emailVerified: true },
       });
       const verified = !!user?.emailVerified;
-      const res = NextResponse.json({ verified, userId: verified ? pendingUserId : undefined });
-      if (verified) {
+      const res = NextResponse.json({ verified, userId: verified ? userIdToCheck : undefined });
+      if (verified && pendingUserId) {
+        // Очищаем cookie только если она была установлена
         res.cookies.set('pending_verify', '', { maxAge: 0, path: '/' });
       }
       return res;

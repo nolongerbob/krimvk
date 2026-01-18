@@ -20,19 +20,26 @@ export default function RegisterPage() {
   const [registeredEmail, setRegisteredEmail] = useState("");
   const router = useRouter();
 
-  // Если пользователь подтвердил email с другого устройства — редирект на вход
+  // Проверяем статус подтверждения email и редиректим в ЛК после подтверждения
   useEffect(() => {
     if (!success) return;
     const check = async () => {
       try {
-        const res = await fetch("/api/auth/check-email-verified", {
+        // Получаем userId из localStorage (сохранён при регистрации)
+        const userId = localStorage.getItem('registeredUserId');
+        const url = userId 
+          ? `/api/auth/check-email-verified?userId=${userId}`
+          : '/api/auth/check-email-verified';
+        const res = await fetch(url, {
           credentials: "include",
           cache: "no-store",
         });
         if (res.ok) {
           const data = await res.json();
           if (data.verified) {
-            router.replace("/login?verified=true");
+            // Email подтверждён — редиректим в ЛК (сессия уже создана при регистрации)
+            localStorage.removeItem('registeredUserId'); // Очищаем после использования
+            router.replace("/dashboard?emailVerified=true");
           }
         }
       } catch { /* ignore */ }
@@ -65,10 +72,18 @@ export default function RegisterPage() {
       const data = await response.json();
 
       if (response.ok) {
+        // Сохраняем userId в localStorage для использования после подтверждения
+        if (data.userId) {
+          localStorage.setItem('registeredUserId', data.userId);
+        }
         // Показываем сообщение о необходимости подтверждения email
         setSuccess(true);
         setRegisteredEmail(formData.email);
         setError("");
+        // Обновляем сессию NextAuth на клиенте (если cookie установлена)
+        // NextAuth автоматически подхватит cookie при следующем запросе
+        // Небольшая задержка для применения cookie, затем можно редиректить в ЛК
+        // Но лучше не редиректить сразу - пусть пользователь увидит сообщение
       } else {
         setError(data.error || "Ошибка регистрации");
         console.error("Registration error:", data);

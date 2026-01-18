@@ -71,6 +71,23 @@ export async function POST(request: Request) {
       // Не прерываем регистрацию — пользователь сможет запросить повторную отправку в ЛК
     }
 
+    // Создаём сессию NextAuth для автоматического входа сразу после регистрации
+    let sessionCookie: string | null = null;
+    if (process.env.NEXTAUTH_SECRET) {
+      const { encode } = await import('next-auth/jwt');
+      sessionCookie = await encode({
+        token: {
+          sub: user.id,
+          id: user.id,
+          email: user.email,
+          name: user.name || null,
+          role: user.role || 'USER',
+        },
+        secret: process.env.NEXTAUTH_SECRET,
+        maxAge: 30 * 24 * 60 * 60, // 30 дней
+      });
+    }
+
     const res = NextResponse.json(
       { 
         message: emailSent 
@@ -81,7 +98,8 @@ export async function POST(request: Request) {
       },
       { status: 201 }
     );
-    // Cookie, чтобы при переходе по ссылке из письма на этом же устройстве — автовход и редирект в ЛК
+
+    // Cookie для определения устройства регистрации (для автовхода после подтверждения)
     res.cookies.set('pending_verify', user.id, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -89,6 +107,22 @@ export async function POST(request: Request) {
       maxAge: 24 * 60 * 60, // 24 ч
       path: '/',
     });
+
+    // Создаём сессию NextAuth для автоматического входа
+    if (sessionCookie) {
+      const isProduction = process.env.NODE_ENV === 'production';
+      const cookieName = isProduction 
+        ? '__Secure-next-auth.session-token' 
+        : 'next-auth.session-token';
+      res.cookies.set(cookieName, sessionCookie, {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: 'lax',
+        maxAge: 30 * 24 * 60 * 60, // 30 дней
+        path: '/',
+      });
+    }
+
     return res;
   } catch (error) {
     if (error instanceof z.ZodError) {

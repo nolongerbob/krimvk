@@ -27,7 +27,12 @@ export default function VerifyEmailPage() {
         // Опрашиваем статус и при подтверждении создаём сессию и редиректим в ЛК
         const checkAndRedirect = async () => {
           try {
-            const res = await fetch('/api/auth/check-email-verified', {
+            // Пробуем получить userId из localStorage (если пользователь регистрировался на этом устройстве)
+            const userId = localStorage.getItem('registeredUserId');
+            const url = userId 
+              ? `/api/auth/check-email-verified?userId=${userId}`
+              : '/api/auth/check-email-verified';
+            const res = await fetch(url, {
               credentials: 'include',
               cache: 'no-store',
             });
@@ -35,6 +40,7 @@ export default function VerifyEmailPage() {
               const data = await res.json();
               if (data.verified && data.userId) {
                 // Email подтверждён и есть userId — создаём сессию через auto-login
+                localStorage.removeItem('registeredUserId'); // Очищаем после использования
                 const loginRes = await fetch('/api/auth/auto-login', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
@@ -82,7 +88,12 @@ export default function VerifyEmailPage() {
       // Опрашиваем статус подтверждения
       const checkStatus = async () => {
         try {
-          const res = await fetch('/api/auth/check-email-verified', {
+          // Пробуем получить userId из localStorage
+          const userId = localStorage.getItem('registeredUserId');
+          const url = userId 
+            ? `/api/auth/check-email-verified?userId=${userId}`
+            : '/api/auth/check-email-verified';
+          const res = await fetch(url, {
             credentials: 'include',
             cache: 'no-store',
           });
@@ -90,6 +101,7 @@ export default function VerifyEmailPage() {
             const data = await res.json();
             if (data.verified && data.userId) {
               // Email подтверждён — создаём сессию и редиректим в ЛК
+              localStorage.removeItem('registeredUserId'); // Очищаем после использования
               const loginRes = await fetch('/api/auth/auto-login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

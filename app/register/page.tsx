@@ -16,67 +16,7 @@ export default function RegisterPage() {
     phone: "",
   });
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
-  const [registeredEmail, setRegisteredEmail] = useState("");
-  const [registeredPassword, setRegisteredPassword] = useState(""); // Для обновления сессии после подтверждения
   const router = useRouter();
-  const { data: session } = useSession();
-
-  // Предотвращаем автоматический редирект сразу после регистрации
-  // Если пользователь только что зарегистрировался (флаг в sessionStorage),
-  // не редиректим, даже если есть сессия - пользователь должен увидеть страницу "Регистрация успешна"
-  useEffect(() => {
-    const justRegistered = sessionStorage.getItem('justRegistered');
-    if (justRegistered === 'true' && session && !success) {
-      // Пользователь только что зарегистрировался, но страница успеха ещё не показана
-      // Не редиректим - покажем страницу успеха
-      return;
-    }
-  }, [session, success]);
-
-  // Проверяем статус подтверждения email и редиректим в ЛК после подтверждения
-  useEffect(() => {
-    if (!success) return;
-    const check = async () => {
-      try {
-        // Получаем userId из localStorage (сохранён при регистрации)
-        const userId = localStorage.getItem('registeredUserId');
-        const url = userId 
-          ? `/api/auth/check-email-verified?userId=${userId}`
-          : '/api/auth/check-email-verified';
-        const res = await fetch(url, {
-          credentials: "include",
-          cache: "no-store",
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.verified) {
-            // Email подтверждён — обновляем сессию на клиенте и редиректим в ЛК
-            localStorage.removeItem('registeredUserId'); // Очищаем после использования
-            sessionStorage.removeItem('justRegistered'); // Убираем флаг
-            
-            // Обновляем сессию NextAuth на клиенте (cookie уже установлена на сервере)
-            // Используем signIn для обновления сессии без перезагрузки
-            if (registeredEmail && registeredPassword) {
-              try {
-                await signIn('credentials', {
-                  email: registeredEmail,
-                  password: registeredPassword,
-                  redirect: false,
-                });
-              } catch {
-                // Игнорируем ошибки - cookie уже установлена
-              }
-            }
-            
-            router.replace("/dashboard?emailVerified=true");
-          }
-        }
-      } catch { /* ignore */ }
-    };
-    const id = setInterval(check, 3000);
-    return () => clearInterval(id);
-  }, [success, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -107,15 +47,26 @@ export default function RegisterPage() {
           localStorage.setItem('registeredUserId', data.userId);
         }
         
-        // Показываем сообщение о необходимости подтверждения email СРАЗУ
-        // Сессия уже создана на сервере (cookie установлена)
-        // Обновим сессию на клиенте только после подтверждения email
-        // Устанавливаем флаг, чтобы предотвратить автоматический редирект
-        sessionStorage.setItem('justRegistered', 'true');
-        setSuccess(true);
-        setRegisteredEmail(formData.email);
-        setRegisteredPassword(formData.password); // Сохраняем для обновления сессии после подтверждения
-        setError("");
+        // Сразу авторизуем пользователя (обновляем сессию на клиенте)
+        // Cookie уже установлена на сервере при регистрации
+        try {
+          const result = await signIn('credentials', {
+            email: formData.email,
+            password: formData.password,
+            redirect: false,
+          });
+          
+          if (result?.ok) {
+            // Сессия обновлена — редиректим на страницу ожидания подтверждения email
+            router.push('/verify-email?waiting=true');
+          } else {
+            // Если signIn не сработал, всё равно редиректим (cookie уже установлена)
+            router.push('/verify-email?waiting=true');
+          }
+        } catch (signInError) {
+          // При ошибке всё равно редиректим (cookie уже установлена)
+          router.push('/verify-email?waiting=true');
+        }
       } else {
         setError(data.error || "Ошибка регистрации");
         console.error("Registration error:", data);

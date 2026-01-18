@@ -2,20 +2,71 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2, XCircle, Loader2, Mail } from "lucide-react";
+
 export default function VerifyEmailPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { data: session } = useSession();
   const token = searchParams.get('token');
+  const waiting = searchParams.get('waiting') === 'true';
   
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'waiting'>('loading');
   const [message, setMessage] = useState('');
   const [userEmail, setUserEmail] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
 
+  // Режим ожидания подтверждения (после регистрации)
   useEffect(() => {
+    if (!waiting) return;
+    
+    setStatus('waiting');
+    
+    // Получаем email из сессии, если пользователь авторизован
+    if (session?.user?.email) {
+      setUserEmail(session.user.email);
+      setMessage(`Ожидаем подтверждения email. Проверьте вашу почту (${session.user.email}) и перейдите по ссылке в письме.`);
+    } else {
+      setMessage('Ожидаем подтверждения email. Проверьте вашу почту и перейдите по ссылке в письме.');
+    }
+    
+    // Опрашиваем статус подтверждения каждые 2 секунды
+    const checkStatus = async () => {
+      try {
+        const userId = localStorage.getItem('registeredUserId');
+        const url = userId 
+          ? `/api/auth/check-email-verified?userId=${userId}`
+          : '/api/auth/check-email-verified';
+        const res = await fetch(url, {
+          credentials: 'include',
+          cache: 'no-store',
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.verified) {
+            // Email подтверждён — редиректим в ЛК
+            localStorage.removeItem('registeredUserId');
+            router.replace('/dashboard?emailVerified=true');
+          }
+        }
+      } catch {
+        // Игнорируем ошибки
+      }
+    };
+    
+    // Проверяем сразу и затем каждые 2 секунды
+    checkStatus();
+    const id = setInterval(checkStatus, 2000);
+    return () => clearInterval(id);
+  }, [waiting, router, session]);
+
+  useEffect(() => {
+    // Если в режиме ожидания, не обрабатываем токен
+    if (waiting) return;
+    
     const verified = searchParams.get('verified');
     const fromOther = searchParams.get('from') === 'other';
 
@@ -225,7 +276,7 @@ export default function VerifyEmailPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            {status === 'loading' && (
+            {(status === 'loading' || status === 'waiting') && (
               <Loader2 className="h-12 w-12 text-blue-600 animate-spin" />
             )}
             {status === 'success' && (
@@ -237,11 +288,13 @@ export default function VerifyEmailPage() {
           </div>
           <CardTitle className="text-2xl">
             {status === 'loading' && 'Подтверждение email...'}
+            {status === 'waiting' && 'Ожидаем подтверждения email'}
             {status === 'success' && 'Email подтвержден!'}
             {status === 'error' && 'Ошибка подтверждения'}
           </CardTitle>
           <CardDescription>
             {status === 'loading' && 'Пожалуйста, подождите'}
+            {status === 'waiting' && 'Проверьте вашу почту и перейдите по ссылке в письме'}
             {status === 'success' && 'Ваш email адрес успешно подтвержден'}
             {status === 'error' && 'Не удалось подтвердить email адрес'}
           </CardDescription>
@@ -323,6 +376,33 @@ export default function VerifyEmailPage() {
                   Регистрация
                 </Button>
               </div>
+            </div>
+          )}
+
+          {status === 'waiting' && (
+            <div className="space-y-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+                <Mail className="h-8 w-8 text-blue-600 mx-auto mb-3" />
+                <p className="text-sm text-blue-800 mb-2">
+                  Мы отправили письмо с подтверждением на ваш email адрес.
+                </p>
+                <p className="text-sm text-blue-700">
+                  Пожалуйста, проверьте вашу почту и перейдите по ссылке в письме для активации аккаунта.
+                </p>
+              </div>
+              <div className="bg-white rounded-lg p-4 border border-gray-200">
+                <p className="text-xs text-gray-600 mb-2 font-medium">
+                  Не получили письмо?
+                </p>
+                <ul className="text-xs text-gray-600 space-y-1 text-left">
+                  <li>• Проверьте папку "Спам"</li>
+                  <li>• Убедитесь, что email адрес указан правильно</li>
+                  <li>• Письмо может прийти с задержкой до 5 минут</li>
+                </ul>
+              </div>
+              <p className="text-xs text-gray-500 text-center">
+                После подтверждения вы будете автоматически перенаправлены в личный кабинет...
+              </p>
             </div>
           )}
 

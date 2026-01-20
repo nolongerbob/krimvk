@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useRef } from "react";
+import { Fragment, useEffect, useState, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,6 +66,15 @@ export default function BecomeSubscriberPage() {
     passportIssueDate: "",
     passportDivisionCode: "",
     phone: "",
+    // Информация об абоненте (юридическое лицо)
+    fullName: "",       // полное наименование
+    shortName: "",      // сокращенное наименование
+    ogrn: "",           // ОГРН
+    // Для объекта юр.лица (п.3): место по ЕГРЮЛ, почтовый, фактический, телефон, email
+    legalAddress: "",   // место нахождения и адрес по ЕГРЮЛ
+    postalAddress: "",  // почтовый адрес
+    actualAddress: "",  // фактический адрес
+    objectEmail: "",    // адрес электронной почты (для юр.лиц в объекте)
     // Информация об объекте
     objectType: "",
     objectPurpose: "",
@@ -178,7 +187,26 @@ export default function BecomeSubscriberPage() {
         formData.passportDivisionCode
       );
     }
+    if (currentStep === "abonent" && personType === "legal") {
+      return (
+        formData.fullName &&
+        formData.shortName &&
+        formData.ogrn &&
+        formData.inn
+      );
+    }
     if (currentStep === "object") {
+      if (personType === "legal") {
+        return (
+          formData.legalAddress &&
+          formData.postalAddress &&
+          formData.actualAddress &&
+          formData.phone &&
+          formData.objectEmail &&
+          formData.objectType &&
+          formData.objectAddress
+        );
+      }
       return formData.objectType && formData.objectAddress;
     }
     if (currentStep === "params") {
@@ -435,7 +463,9 @@ export default function BecomeSubscriberPage() {
         }
       }
       
-      const fileName = `zayavlenie_TU_${formData.lastName}_${new Date().toISOString().split("T")[0]}.pdf`;
+      const fileName = personType === "legal"
+        ? `zayavlenie_TU_${(formData.shortName || formData.fullName || "legal").replace(/[^a-zA-Zа-яА-ЯёЁ0-9_-]/g, "_")}_${new Date().toISOString().split("T")[0]}.pdf`
+        : `zayavlenie_TU_${formData.lastName}_${new Date().toISOString().split("T")[0]}.pdf`;
       pdf.save(fileName);
     } catch (error) {
       console.error("Error generating PDF:", error);
@@ -481,11 +511,20 @@ export default function BecomeSubscriberPage() {
         }
       }
 
-      const description = `Заявка на подключение к водоснабжению/водоотведению
+      const abonentBlock = personType === "legal"
+        ? `Информация об абоненте (юр. лицо):
+- Полное наименование: ${formData.fullName}
+- Сокращенное наименование: ${formData.shortName}
+- ОГРН: ${formData.ogrn}
+- ИНН: ${formData.inn}
 
-Тип лица: ${personType === "individual" ? "Физическое лицо" : "Юридическое лицо"}
-
-Информация об абоненте:
+Контактные данные (объект):
+- Адрес по ЕГРЮЛ: ${formData.legalAddress}
+- Почтовый адрес: ${formData.postalAddress}
+- Фактический адрес: ${formData.actualAddress}
+- Телефон: ${formData.phone}
+- Email: ${formData.objectEmail}`
+        : `Информация об абоненте (физ. лицо):
 - ФИО: ${formData.lastName} ${formData.firstName} ${formData.middleName}
 - Дата рождения: ${formData.birthDate || "не указано"}
 - Адрес регистрации: ${formData.registrationAddress}
@@ -493,7 +532,13 @@ export default function BecomeSubscriberPage() {
 - Выдан: ${formData.passportIssuedBy}
 - Дата выдачи: ${formData.passportIssueDate || "не указано"}
 - Код подразделения: ${formData.passportDivisionCode}
-- Телефон: ${formData.phone}
+- Телефон: ${formData.phone}`;
+
+      const description = `Заявка на подключение к водоснабжению/водоотведению
+
+Тип лица: ${personType === "individual" ? "Физическое лицо" : "Юридическое лицо"}
+
+${abonentBlock}
 
 Информация об объекте:
 - Тип объекта: ${formData.objectType}
@@ -626,8 +671,8 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
 
       {/* Прогресс-бар */}
       <Card className="mb-6">
-        <CardContent className="p-6">
-          <div className="flex items-start justify-between gap-2">
+        <CardContent className="p-6 overflow-x-auto">
+          <div className="flex items-center w-full min-w-[660px]">
             {steps.map((step, index) => {
               const StepIcon = step.icon;
               const isActive = step.id === currentStep;
@@ -635,8 +680,9 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
               const isAccessible = index === 0 || getCurrentStepIndex() >= index - 1;
 
               return (
-                <div key={step.id} className="flex items-center flex-1 min-w-0">
-                  <div className="flex flex-col items-center flex-1 min-w-0">
+                <Fragment key={step.id}>
+                  {/* Круг и подпись — фиксированная ширина, чтобы соединительные линии были одинаковые */}
+                  <div className="flex flex-col items-center flex-shrink-0 w-[100px] sm:w-[120px]">
                     <button
                       onClick={() => {
                         if (isAccessible) {
@@ -665,14 +711,16 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                       {step.label}
                     </span>
                   </div>
+                  {/* Соединительная линия — flex-1, все одинаковой длины, выровнена по центру круга */}
                   {index < steps.length - 1 && (
                     <div
-                      className={`flex-1 h-1 mx-2 mt-6 ${
+                      className={`flex-1 h-1 min-w-[12px] mx-1 self-start mt-6 ${
                         isCompleted ? "bg-green-500" : "bg-gray-200"
                       }`}
+                      aria-hidden
                     />
                   )}
-                </div>
+                </Fragment>
               );
             })}
           </div>
@@ -1110,6 +1158,84 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
             </div>
           )}
 
+          {/* Шаг 2: Личные данные (юридическое лицо) */}
+          {currentStep === "abonent" && personType === "legal" && (
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold mb-2">Юридическое лицо</h3>
+              <p className="text-gray-600 mb-4">
+                Полное и сокращенное наименования, ОГРН, ИНН
+              </p>
+              <div className="space-y-2">
+                <Label htmlFor="fullName">
+                  Полное наименование <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="fullName"
+                  value={formData.fullName}
+                  onChange={(e) =>
+                    setFormData({ ...formData, fullName: e.target.value })
+                  }
+                  required
+                  placeholder="Общество с ограниченной ответственностью «Пример»"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="shortName">
+                  Сокращенное наименование <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="shortName"
+                  value={formData.shortName}
+                  onChange={(e) =>
+                    setFormData({ ...formData, shortName: e.target.value })
+                  }
+                  required
+                  placeholder="ООО «Пример»"
+                />
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="ogrn">
+                    ОГРН <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="ogrn"
+                    value={formData.ogrn}
+                    onChange={(e) => {
+                      const v = e.target.value.replace(/\D/g, "").slice(0, 13);
+                      setFormData({ ...formData, ogrn: v });
+                    }}
+                    required
+                    placeholder="1234567890123"
+                    maxLength={13}
+                  />
+                  <p className="text-xs text-gray-500">
+                    Основной государственный регистрационный номер в ЕГРЮЛ (13 цифр)
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="innLegal">
+                    ИНН <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="innLegal"
+                    value={formData.inn}
+                    onChange={(e) => {
+                      const v = e.target.value.replace(/\D/g, "").slice(0, 12);
+                      setFormData({ ...formData, inn: v });
+                    }}
+                    required
+                    placeholder="1234567890"
+                    maxLength={12}
+                  />
+                  <p className="text-xs text-gray-500">
+                    Идентификационный номер налогоплательщика (10 или 12 цифр)
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Шаг 3: Информация об объекте */}
           {currentStep === "object" && personType === "individual" && (
             <div className="space-y-6">
@@ -1224,8 +1350,182 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
             </div>
           )}
 
+          {/* Шаг 3: Объект (юридическое лицо) — контактные данные и данные объекта */}
+          {currentStep === "object" && personType === "legal" && (
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold mb-2">Контактные данные (место нахождения, адреса)</h3>
+              <div className="space-y-2">
+                <Label htmlFor="legalAddress">
+                  Место нахождения и адрес по ЕГРЮЛ <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="legalAddress"
+                  value={formData.legalAddress}
+                  onChange={(e) =>
+                    setFormData({ ...formData, legalAddress: e.target.value })
+                  }
+                  required
+                  placeholder="Адрес по Единому государственному реестру юридических лиц"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="postalAddress">
+                  Почтовый адрес <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="postalAddress"
+                  value={formData.postalAddress}
+                  onChange={(e) =>
+                    setFormData({ ...formData, postalAddress: e.target.value })
+                  }
+                  required
+                  placeholder="Почтовый адрес для связи"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="actualAddress">
+                  Фактический адрес <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="actualAddress"
+                  value={formData.actualAddress}
+                  onChange={(e) =>
+                    setFormData({ ...formData, actualAddress: e.target.value })
+                  }
+                  required
+                  placeholder="Фактический адрес осуществления деятельности"
+                />
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="phoneLegal">
+                    Контактный телефон <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="phoneLegal"
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) =>
+                      setFormData({ ...formData, phone: e.target.value })
+                    }
+                    required
+                    placeholder="+7 (978) 123-45-67"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="objectEmail">
+                    Адрес электронной почты <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="objectEmail"
+                    type="email"
+                    value={formData.objectEmail}
+                    onChange={(e) =>
+                      setFormData({ ...formData, objectEmail: e.target.value })
+                    }
+                    required
+                    placeholder="info@company.ru"
+                  />
+                </div>
+              </div>
+
+              <div className="border-t pt-6 mt-6">
+                <h3 className="font-semibold text-lg mb-4">Данные подключаемого объекта</h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="objectTypeLegal">
+                      Объект <span className="text-red-500">*</span>
+                    </Label>
+                    <select
+                      id="objectTypeLegal"
+                      value={formData.objectType}
+                      onChange={(e) =>
+                        setFormData({ ...formData, objectType: e.target.value })
+                      }
+                      required
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <option value="">Выберите тип объекта</option>
+                      <option value="residential">Жилой дом</option>
+                      <option value="apartment">Квартира</option>
+                      <option value="commercial">Коммерческий объект</option>
+                      <option value="industrial">Промышленный объект</option>
+                      <option value="land">Земельный участок</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="objectPurposeLegal">Назначение объекта</Label>
+                    <select
+                      id="objectPurposeLegal"
+                      value={formData.objectPurpose}
+                      onChange={(e) =>
+                        setFormData({ ...formData, objectPurpose: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <option value="">Выберите назначение</option>
+                      <option value="residential">Жилое</option>
+                      <option value="commercial">Коммерческое</option>
+                      <option value="industrial">Промышленное</option>
+                      <option value="public">Общественное</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-2 mt-4">
+                  <Label htmlFor="cadastralNumberLegal">Кадастровый номер</Label>
+                  <Input
+                    id="cadastralNumberLegal"
+                    value={formData.cadastralNumber}
+                    onChange={(e) => {
+                      let value = e.target.value.replace(/[^0-9:]/g, "");
+                      const digitsOnly = value.replace(/:/g, "");
+                      let formatted = "";
+                      for (let i = 0; i < digitsOnly.length; i++) {
+                        formatted += digitsOnly[i];
+                        if ((i === 1 || i === 3 || i === 9) && i < digitsOnly.length - 1) {
+                          formatted += ":";
+                        }
+                      }
+                      setFormData({ ...formData, cadastralNumber: formatted });
+                    }}
+                    placeholder="XX:XX:XXXXXX:XXXX"
+                    maxLength={18}
+                  />
+                </div>
+
+                <div className="space-y-2 mt-4">
+                  <Label htmlFor="objectAddressLegal">
+                    Адрес объекта <span className="text-red-500">*</span>
+                  </Label>
+                  <AddressInput
+                    value={formData.objectAddress}
+                    onChange={(value: string) =>
+                      setFormData({ ...formData, objectAddress: value })
+                    }
+                  />
+                </div>
+
+                <div className="space-y-2 mt-4">
+                  <Label htmlFor="areaLegal">Площадь объекта (кв. метров)</Label>
+                  <Input
+                    id="areaLegal"
+                    type="number"
+                    value={formData.area}
+                    onChange={(e) =>
+                      setFormData({ ...formData, area: e.target.value })
+                    }
+                    placeholder="0"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Шаг 4: Параметры присоединения */}
-          {currentStep === "params" && personType === "individual" && (
+          {currentStep === "params" && (personType === "individual" || personType === "legal") && (
             <div className="space-y-6">
               <div>
                 <Label className="mb-4 block">
@@ -1416,7 +1716,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
           )}
 
           {/* Шаг 5: Документы */}
-          {currentStep === "documents" && personType === "individual" && (
+          {currentStep === "documents" && (personType === "individual" || personType === "legal") && (
             <div className="space-y-6">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                 <div className="flex items-start gap-3">
@@ -1428,7 +1728,11 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                       <li>Распечатайте заявление</li>
                       <li>Подпишите заявление</li>
                       <li>Отсканируйте подписанное заявление</li>
-                      <li>Отсканируйте копии паспорта (страницы с фото и пропиской)</li>
+                      {personType === "individual" ? (
+                        <li>Отсканируйте копии паспорта (страницы с фото и пропиской)</li>
+                      ) : (
+                        <li>Отсканируйте учредительные документы (устав, свидетельство о регистрации и т.п.)</li>
+                      )}
                       <li>Загрузите все документы ниже</li>
                     </ol>
                   </div>
@@ -1448,11 +1752,11 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {/* Предпросмотр заявления */}
-                  <ApplicationForm formData={formData} isPreview={true} />
+                  <ApplicationForm formData={formData} personType={personType} isPreview={true} />
 
                   {/* Скрытое заявление для генерации PDF */}
                   <div ref={applicationRef} style={{ display: 'none' }}>
-                    <ApplicationForm formData={formData} isPreview={false} />
+                    <ApplicationForm formData={formData} personType={personType} isPreview={false} />
                   </div>
 
                   <div className="flex flex-wrap gap-3">
@@ -1487,7 +1791,9 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                 <CardHeader>
                   <CardTitle>Загрузка документов</CardTitle>
                   <CardDescription>
-                    Загрузите отсканированные документы: подписанное заявление и копии паспорта
+                    {personType === "individual"
+                      ? "Загрузите отсканированные документы: подписанное заявление и копии паспорта"
+                      : "Загрузите отсканированные документы: подписанное заявление и учредительные документы (устав, свидетельство о регистрации и т.п.)"}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -1553,7 +1859,11 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                           <p className="font-semibold text-xs text-amber-900 mb-1">Требования к документам:</p>
                           <ul className="text-xs text-amber-800 space-y-1 list-disc list-inside">
                             <li>Подписанное заявление на выдачу ТУ (отсканированное)</li>
-                            <li>Копии страниц паспорта с фото и пропиской</li>
+                            {personType === "individual" ? (
+                              <li>Копии страниц паспорта с фото и пропиской</li>
+                            ) : (
+                              <li>Учредительные документы (устав, свидетельство о регистрации и т.п.)</li>
+                            )}
                             <li>Все документы должны быть четкими и читаемыми</li>
                           </ul>
                         </div>

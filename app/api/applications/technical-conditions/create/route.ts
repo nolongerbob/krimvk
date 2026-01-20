@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
       description: JSON.stringify({
         type: "technical_conditions",
         personType: formData.personType,
-        // Личные данные
+        // Личные данные (физ. лицо)
         lastName: formData.lastName || null,
         firstName: formData.firstName || null,
         middleName: formData.middleName || null,
@@ -107,6 +107,14 @@ export async function POST(request: NextRequest) {
         passportDivisionCode: formData.passportDivisionCode,
         inn: formData.inn,
         snils: formData.snils,
+        // Личные данные (юр. лицо)
+        fullName: formData.fullName || null,
+        shortName: formData.shortName || null,
+        ogrn: formData.ogrn || null,
+        legalAddress: formData.legalAddress || null,
+        postalAddress: formData.postalAddress || null,
+        actualAddress: formData.actualAddress || null,
+        objectEmail: formData.objectEmail || null,
         // Информация об объекте
         objectType: formData.objectType,
         objectPurpose: formData.objectPurpose,

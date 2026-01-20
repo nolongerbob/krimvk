@@ -1,7 +1,10 @@
 "use client";
 
+type PersonType = "individual" | "legal" | null;
+
 // Компонент для отображения заявления в формате, соответствующем оригинальному PDF
-export function ApplicationForm({ formData, isPreview = false }: { formData: any; isPreview?: boolean }) {
+export function ApplicationForm({ formData, personType = null, isPreview = false }: { formData: any; personType?: PersonType; isPreview?: boolean }) {
+  const isLegal = personType === "legal";
   const containerClass = isPreview 
     ? "border rounded-lg p-6 bg-white mb-4 max-h-[600px] overflow-y-auto"
     : "bg-white";
@@ -25,21 +28,38 @@ export function ApplicationForm({ formData, isPreview = false }: { formData: any
   };
 
   // Собираем данные для пункта 2
-  const personData = [
-    formData.lastName && formData.firstName && formData.middleName ? `${formData.lastName} ${formData.firstName} ${formData.middleName}` : "",
-    formData.birthDate ? `, дата рождения: ${formData.birthDate}` : "",
-    formData.passportSeries && formData.passportNumber ? `, паспорт серия ${formData.passportSeries} № ${formData.passportNumber}` : "",
-    formData.passportIssuedBy ? `, выдан ${formData.passportIssuedBy}` : "",
-    formData.passportIssueDate ? `, дата выдачи ${formData.passportIssueDate}` : "",
-    formData.passportDivisionCode ? `, код подразделения ${formData.passportDivisionCode}` : "",
-    formData.inn ? `, ИНН ${formData.inn}` : "",
-    formData.snils ? `, СНИЛС ${formData.snils}` : ""
-  ].filter(Boolean).join("");
+  const personData = isLegal
+    ? [
+        formData.fullName && `Полное наименование: ${formData.fullName}`,
+        formData.shortName && `сокращенное: ${formData.shortName}`,
+        formData.ogrn && `ОГРН ${formData.ogrn}`,
+        formData.inn && `ИНН ${formData.inn}`,
+      ].filter(Boolean).join(", ")
+    : [
+        formData.lastName && formData.firstName && formData.middleName ? `${formData.lastName} ${formData.firstName} ${formData.middleName}` : "",
+        formData.birthDate ? `, дата рождения: ${formData.birthDate}` : "",
+        formData.passportSeries && formData.passportNumber ? `, паспорт серия ${formData.passportSeries} № ${formData.passportNumber}` : "",
+        formData.passportIssuedBy ? `, выдан ${formData.passportIssuedBy}` : "",
+        formData.passportIssueDate ? `, дата выдачи ${formData.passportIssueDate}` : "",
+        formData.passportDivisionCode ? `, код подразделения ${formData.passportDivisionCode}` : "",
+        formData.inn ? `, ИНН ${formData.inn}` : "",
+        formData.snils ? `, СНИЛС ${formData.snils}` : "",
+      ].filter(Boolean).join("");
 
   // Контактные данные для пункта 3
-  const registrationAddressData = formData.registrationAddress ? `Адрес регистрации: ${formData.registrationAddress}` : "";
-  const objectAddressData = formData.objectAddress ? `Адрес объекта: ${formData.objectAddress}` : "";
-  const phoneData = formData.phone ? `телефон: ${formData.phone}` : "";
+  const contactLines = isLegal
+    ? [
+        formData.legalAddress ? `Место нахождения и адрес по ЕГРЮЛ: ${formData.legalAddress}` : null,
+        formData.postalAddress ? `Почтовый адрес: ${formData.postalAddress}` : null,
+        formData.actualAddress ? `Фактический адрес: ${formData.actualAddress}` : null,
+        formData.phone ? `телефон: ${formData.phone}` : null,
+        formData.objectEmail ? `адрес электронной почты: ${formData.objectEmail}` : null,
+      ].filter(Boolean) as string[]
+    : [
+        formData.registrationAddress ? `Адрес регистрации: ${formData.registrationAddress}` : null,
+        formData.objectAddress ? `Адрес объекта: ${formData.objectAddress}` : null,
+        formData.phone ? `телефон: ${formData.phone}` : null,
+      ].filter(Boolean) as string[];
 
   return (
     <div className={containerClass} style={{ fontFamily: "Times New Roman, serif", lineHeight: "1.5", fontSize: fontSize, ...containerStyle }}>
@@ -125,22 +145,13 @@ export function ApplicationForm({ formData, isPreview = false }: { formData: any
       <p style={{ margin: 0, textAlign: "justify", textIndent: "35.4pt" }}>
         <span>3. Контактные данные лица, обратившегося  за  выдачей   технических условий</span>
       </p>
-      {registrationAddressData && (
-        <p style={{ margin: 0, textAlign: "justify", textIndent: 0, fontSize: fontSize }}>
-          <span>{underlineField(registrationAddressData, 70)}</span>
-        </p>
-      )}
-      {objectAddressData && (
-        <p style={{ margin: 0, textAlign: "justify", textIndent: 0, fontSize: fontSize }}>
-          <span>{underlineField(objectAddressData, 70)}</span>
-        </p>
-      )}
-      {phoneData && (
-        <p style={{ margin: 0, textAlign: "justify", textIndent: 0, fontSize: fontSize }}>
-          <span>{underlineField(phoneData, 70)}</span>
-        </p>
-      )}
-      {!registrationAddressData && !objectAddressData && !phoneData && (
+      {contactLines.length > 0 ? (
+        contactLines.map((line, i) => (
+          <p key={i} style={{ margin: 0, textAlign: "justify", textIndent: 0, fontSize: fontSize }}>
+            <span>{underlineField(line, 70)}</span>
+          </p>
+        ))
+      ) : (
         <p style={{ margin: 0, textAlign: "justify", textIndent: 0, fontSize: fontSize }}>
           <span>{underlineField("", 70)}</span>
         </p>
@@ -164,7 +175,7 @@ export function ApplicationForm({ formData, isPreview = false }: { formData: any
         <span>4. Основания обращения с запросом о выдаче технических условий:</span>
       </p>
       <p style={{ margin: 0, textAlign: "justify", textIndent: 0, fontSize: fontSize }}>
-        <span>{underlineField(formData.lastName ? "Правообладатель земельного участка" : "", 70)}</span>
+        <span>{underlineField((formData.lastName || formData.fullName) ? "Правообладатель земельного участка" : "", 70)}</span>
       </p>
       <p style={{ margin: 0, textAlign: "justify", textIndent: 0, fontSize: isPreview ? "9px" : "8.5pt", lineHeight: "1.3" }}>
         <span>  </span><span>(указание, кем именно из перечня лиц, имеющих  право  обратиться  с запросом о выдаче технических условий, указанных в </span>
@@ -355,16 +366,18 @@ export function ApplicationForm({ formData, isPreview = false }: { formData: any
           <span style={{ whiteSpace: "nowrap" }}>«____»_____________20__ г.</span>
           <span style={{ whiteSpace: "nowrap" }}>{underlineField("", 15)}</span>
           <span style={{ whiteSpace: "nowrap" }}>{underlineField(
-            formData.lastName && formData.firstName 
-              ? `${formData.lastName} ${formData.firstName} ${formData.middleName || ""}`.trim()
-              : "", 
+            isLegal
+              ? (formData.shortName || formData.fullName || "")
+              : (formData.lastName && formData.firstName 
+                  ? `${formData.lastName} ${formData.firstName} ${formData.middleName || ""}`.trim()
+                  : ""), 
             20
           )}</span>
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "top" }}>
           <span style={{ width: "30%" }}></span>
           <span style={{ textAlign: "center", width: "35%" }}>(М.П., подпись)</span>
-          <span style={{ textAlign: "right", width: "35%" }}>(Ф.И.О.)</span>
+          <span style={{ textAlign: "right", width: "35%" }}>{isLegal ? "(наименование организации)" : "(Ф.И.О.)"}</span>
         </div>
       </div>
     </div>

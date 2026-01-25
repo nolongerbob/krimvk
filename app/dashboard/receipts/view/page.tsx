@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Download, Printer, ArrowLeft, FileText, QrCode } from "lucide-react";
+import { Loader2, Download, Printer, ArrowLeft, Smartphone, Phone, MapPin, Clock } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -44,6 +44,14 @@ interface ReceiptData {
     Recalculation: string;
     Norm: string;
     Unit: string;
+    /** Предыдущее показание (Нач.) — из 1С или истории */
+    StartReading?: number | string;
+    PastReading?: number | string;
+    PreviousReading?: number | string;
+    /** Текущее показание (Кон.) — по которому сформирована квитанция */
+    EndReading?: number | string;
+    Reading?: number | string;
+    CurrentReading?: number | string;
   }>;
 }
 
@@ -88,6 +96,7 @@ export default function ReceiptViewPage() {
           address: receiptDataRaw.address || receiptDataRaw.Address,
           name: receiptDataRaw.name || receiptDataRaw.LSName,
         });
+        if (data._debug) console.log("[receipt] _debug:", data._debug);
       } else {
         const errorData = await response.json().catch(() => ({}));
         setError(errorData.error || "Ошибка при загрузке квитанции");
@@ -198,16 +207,6 @@ export default function ReceiptViewPage() {
     window.open(sbpURL, "_blank");
   };
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("ru-RU", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
   const parseAmount = (value: string | number | null | undefined): number => {
     if (value === null || value === undefined || value === "") return 0;
     if (typeof value === "number") return isNaN(value) ? 0 : value;
@@ -254,467 +253,292 @@ export default function ReceiptViewPage() {
     );
   }
 
-  const period = dateFrom && dateTo 
-    ? `${formatDate(dateFrom)} - ${formatDate(dateTo)}`
-    : `Текущий период (${new Date().toLocaleDateString("ru-RU", { month: "long", year: "numeric" })})`;
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Кнопки управления (скрываются при печати) */}
       <div className="container py-6 px-4 print:hidden">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <Button variant="outline" onClick={() => router.back()}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Назад
           </Button>
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={handleDownloadPDF}>
-              <Download className="h-4 w-4 mr-2" />
+          <div className="flex flex-wrap gap-2">
+            {(() => {
+              const lscode = receiptData?.LSCode || receiptData?.lscode || accountInfo?.accountNumber;
+              const addr = receiptData?.Address || receiptData?.address || accountInfo?.address;
+              if (lscode && addr) {
+                return (
+                  <Button onClick={handleQRClick} className="gap-2">
+                    <Smartphone className="h-4 w-4" />
+                    Оплатить по QR
+                  </Button>
+                );
+              }
+              return null;
+            })()}
+            <Button variant="outline" onClick={handleDownloadPDF} className="gap-2">
+              <Download className="h-4 w-4" />
               Скачать PDF
             </Button>
-            <Button onClick={handlePrint}>
-              <Printer className="h-4 w-4 mr-2" />
+            <Button variant="outline" onClick={handlePrint} className="gap-2">
+              <Printer className="h-4 w-4" />
               Печать
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Квитанция */}
+      {/* Квитанция — дружелюбный формат */}
       <div className="container max-w-4xl mx-auto px-4 pb-8 print:block">
-        <Card ref={receiptRef} className="bg-white shadow-lg print:shadow-none print:block">
-          <CardContent className="p-8 print:p-6">
-            {/* Шапка */}
-            <div className="flex items-center justify-center gap-4 mb-8 pb-6 border-b-2 border-blue-600">
-              <img 
-                src="/images/logo.png" 
-                alt="Логотип Крымская Водная Компания" 
-                className="h-16 w-16 object-contain"
-              />
-              <div className="text-center">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                  Крымская Водная Компания
+        <Card ref={receiptRef} className="bg-white shadow-md print:shadow-none print:block border-gray-200">
+          <CardContent className="p-6 sm:p-8 print:p-6 text-gray-900">
+            {(() => {
+              const commonDutyAmount = parseAmount(receiptData.CommonDuty);
+              const lscode = receiptData.LSCode || receiptData.lscode || accountInfo?.accountNumber || "";
+              const address = receiptData.Address || receiptData.address || accountInfo?.address || "";
+              const commonDuty = receiptData.CommonDuty || receiptData.commonDuty || "0";
+              const periodDate = dateFrom ? new Date(dateFrom) : new Date();
+              const periodMonth = periodDate.toLocaleDateString("ru-RU", { month: "long" });
+              const periodYear = periodDate.getFullYear();
+              const periodStr = `${periodMonth} ${periodYear} г.`;
+              const receiptNum = receiptData.LSCode || accountInfo?.accountNumber || "";
+              // Отрицательный баланс = недоплата (долг), положительный = переплата
+              const isOverpaid = commonDutyAmount > 0;
+              const isUnderpaid = commonDutyAmount < 0;
+
+              return (
+                <>
+            {/* Шапка: заголовок слева, сумма и QR справа */}
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 pb-4 border-b border-gray-200">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-base sm:text-lg font-bold leading-snug text-gray-900">
+                  Счёт-квитанция за услугу водоснабжения и водоотведения №{" "}
+                  <span className="break-all font-mono">{receiptNum}</span> за {periodStr}
                 </h1>
-                <p className="text-lg text-gray-600">Квитанция на оплату коммунальных услуг</p>
               </div>
-            </div>
-
-            {/* Информация о периоде */}
-            <div className="mb-6 p-4 bg-blue-50 rounded-lg">
-              <p className="text-sm text-gray-600 mb-1">Период</p>
-              <p className="text-lg font-semibold text-gray-900">{period}</p>
-            </div>
-
-            {/* Данные абонента */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Лицевой счет</p>
-                <p className="text-lg font-semibold text-gray-900">
-                  {receiptData.LSCode || accountInfo?.accountNumber}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Абонент</p>
-                <p className="text-lg font-semibold text-gray-900">
-                  {receiptData.LSName || accountInfo?.name || "—"}
-                </p>
-              </div>
-              <div className="md:col-span-2">
-                <p className="text-sm text-gray-600 mb-1">Адрес</p>
-                <p className="text-lg font-semibold text-gray-900">
-                  {receiptData.Address || accountInfo?.address}
-                </p>
-              </div>
-            </div>
-
-            {/* Долг на начало периода */}
-            {receiptData.StartCommonDuty && parseFloat(receiptData.StartCommonDuty) > 0 && (
-              <div className="mb-6 p-4 bg-yellow-50 border-l-4 border-yellow-500 rounded">
-                <p className="text-sm text-gray-600 mb-2">Долг на начало периода</p>
-                <p className="text-2xl font-bold text-yellow-700">
-                  {formatCurrency(receiptData.StartCommonDuty)} ₽
-                </p>
-                {receiptData.StartDutys && receiptData.StartDutys.length > 0 && (
-                  <div className="mt-3 space-y-1">
-                    {receiptData.StartDutys.map((duty, index) => (
-                      <div key={index} className="text-sm text-gray-700">
-                        {duty.Service}: {formatCurrency(duty.Duty)} ₽
-                      </div>
-                    ))}
+              <div className="flex flex-col items-start sm:items-end gap-3 flex-shrink-0 print:break-inside-avoid">
+                <div className={`rounded-lg px-4 py-2.5 min-w-0 ${isOverpaid ? "bg-emerald-50 text-emerald-800" : isUnderpaid ? "bg-amber-50 text-amber-800" : "bg-gray-50 text-gray-700"}`}>
+                  <p className="text-xs font-medium text-inherit/80">{isOverpaid ? "Переплата" : isUnderpaid ? "К оплате (недоплата)" : "Нет задолженности"}</p>
+                  <p className="text-xl font-bold tabular-nums whitespace-nowrap">{formatCurrency(commonDutyAmount)} ₽</p>
+                </div>
+                {lscode && address && (
+                  <div className="flex flex-col items-start sm:items-end">
+                    <div onClick={handleQRClick} className="cursor-pointer p-2 bg-white border border-gray-200 rounded-lg hover:border-sky-300 hover:shadow-sm transition-all print:border-gray-300" title="Оплата через СБП">
+                      <QRCodeSVG value={generateSBPQRString(lscode, address, commonDuty)} size={100} level="M" includeMargin={false} />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1.5 print:hidden">Нажмите или отсканируйте для оплаты</p>
                   </div>
                 )}
               </div>
-            )}
+            </div>
 
-            {/* Начисления по услугам */}
-            {receiptData.ChargesAndPayments && receiptData.ChargesAndPayments.length > 0 && (
-              <div className="mb-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">Начисления по услугам</h2>
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
+            {/* Получатель платежа */}
+            <div className="mb-5 pb-4 border-b border-gray-200 min-w-0">
+              <p className="text-sm font-semibold text-gray-700 mb-2">Получатель платежа</p>
+              <div className="text-sm text-gray-600 space-y-0.5 break-words">
+                <p className="font-medium text-gray-900">ООО «Крымская Водная Компания»</p>
+                <p>296560, с. Лесновка Сакского района, ул. Механизаторов, 9</p>
+                <p>ИНН 9107000240, КПП 910701001 · П/с <span className="break-all font-mono">40702810725190003625</span></p>
+                <p>Банк: Филиал «Центральный» Банка ВТБ (ПАО), БИК 044525411, корр. счёт <span className="break-all font-mono">30101810145250000411</span></p>
+                <p>Тел.: +7 (978) 080-03-66, +7 (978) 741-57-59</p>
+              </div>
+            </div>
+
+            {/* Плательщик и адрес — компактно */}
+            <div className="grid sm:grid-cols-2 gap-4 mb-5 pb-4 border-b border-gray-200">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-gray-700 mb-0.5">Плательщик</p>
+                <p className="text-sm text-gray-900 break-words">{receiptData.LSName || accountInfo?.name || "—"}</p>
+                <p className="text-xs text-gray-500 mt-0.5">Лицевой счёт № <span className="break-all font-mono">{receiptNum}</span></p>
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-gray-700 mb-0.5">Адрес потребления</p>
+                <p className="text-sm text-gray-900 break-words">{address || "—"}</p>
+              </div>
+            </div>
+
+            {/* Справочная информация — компактно */}
+            <div className="mb-5 pb-4 border-b border-gray-200">
+              <p className="text-sm font-semibold text-gray-700 mb-1.5">Справочная информация</p>
+              <ul className="text-sm text-gray-600 space-y-0.5 list-none">
+                <li>Льгот и договоров рассрочки не имеется.</li>
+                <li>Услуги по приборам учёта и нормативам.</li>
+                {receiptData.CommonPayment && parseFloat(receiptData.CommonPayment) > 0 && (
+                  <li>Последняя оплата: <span className="font-medium text-gray-800">{formatCurrency(receiptData.CommonPayment)} ₽</span>.</li>
+                )}
+              </ul>
+            </div>
+
+            {/* Расшифровка начислений */}
+            {((receiptData.ChargesAndPayments && receiptData.ChargesAndPayments.length > 0) || (receiptData.StartCommonDuty && parseAmount(receiptData.StartCommonDuty) > 0.01)) && (
+              <div className="mb-5">
+                <p className="text-sm font-semibold text-gray-700 mb-2">
+                  Расшифровка начислений за {periodStr}
+                </p>
+                <div className="overflow-x-auto rounded-lg border border-gray-200 -mx-1 print:mx-0">
+                  <table className="w-full border-collapse text-xs min-w-[520px] print:text-[10px]">
                     <thead>
-                      <tr className="bg-gray-100">
-                        <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                          Услуга
-                        </th>
-                        <th className="border border-gray-300 px-4 py-3 text-center text-sm font-semibold text-gray-700">
-                          Объем
-                        </th>
-                        <th className="border border-gray-300 px-4 py-3 text-center text-sm font-semibold text-gray-700">
-                          Тариф
-                        </th>
-                        <th className="border border-gray-300 px-4 py-3 text-center text-sm font-semibold text-gray-700">
-                          Льгота
-                        </th>
-                        <th className="border border-gray-300 px-4 py-3 text-center text-sm font-semibold text-gray-700">
-                          Перерасчет
-                        </th>
-                        <th className="border border-gray-300 px-4 py-3 text-right text-sm font-semibold text-gray-700">
-                          К оплате
-                        </th>
+                      <tr className="bg-gray-50">
+                        <th className="border-b border-gray-200 px-1.5 py-1.5 text-left font-semibold text-gray-700 min-w-0 break-words">Услуга</th>
+                        <th className="border-b border-gray-200 px-1 py-1.5 text-center font-semibold text-gray-700" colSpan={3}>Показания</th>
+                        <th className="border-b border-gray-200 px-1 py-1.5 text-center font-semibold text-gray-700 w-[1%] whitespace-nowrap">Расход</th>
+                        <th className="border-b border-gray-200 px-1 py-1.5 text-center font-semibold text-gray-700 w-[1%] whitespace-nowrap">Тариф</th>
+                        <th className="border-b border-gray-200 px-1 py-1.5 text-center font-semibold text-gray-700 w-[1%] whitespace-nowrap">Начисл.</th>
+                        <th className="border-b border-gray-200 px-1 py-1.5 text-center font-semibold text-gray-700 w-[1%] whitespace-nowrap">Льгота</th>
+                        <th className="border-b border-gray-200 px-1 py-1.5 text-center font-semibold text-gray-700 w-[1%] whitespace-nowrap">Перерасч.</th>
+                        <th className="border-b border-gray-200 px-1 py-1.5 text-right font-semibold text-gray-700 w-[1%] whitespace-nowrap">Итого, ₽</th>
+                      </tr>
+                      <tr className="bg-gray-50/80">
+                        <th className="border-b border-gray-200 px-1.5 py-1 text-left font-medium text-gray-600" />
+                        <th className="border-b border-gray-200 px-0.5 py-1 text-center font-medium text-gray-600">Нач.</th>
+                        <th className="border-b border-gray-200 px-0.5 py-1 text-center font-medium text-gray-600">Кон.</th>
+                        <th className="border-b border-gray-200 px-0.5 py-1 text-center font-medium text-gray-600">кол-во</th>
+                        <th className="border-b border-gray-200 px-1 py-1" />
+                        <th className="border-b border-gray-200 px-1 py-1" />
+                        <th className="border-b border-gray-200 px-1 py-1" />
+                        <th className="border-b border-gray-200 px-1 py-1" />
+                        <th className="border-b border-gray-200 px-1 py-1" />
+                        <th className="border-b border-gray-200 px-1 py-1" />
                       </tr>
                     </thead>
                     <tbody>
-                      {/* Долг на начало периода - добавляем в таблицу если есть */}
+                      {/* Долг на начало периода */}
                       {(() => {
                         const startDutyAmount = parseAmount(receiptData.StartCommonDuty);
                         if (startDutyAmount > 0.01) {
-                          // Если есть разбивка по услугам, показываем их отдельно
                           if (receiptData.StartDutys && receiptData.StartDutys.length > 0) {
-                            return receiptData.StartDutys.map((duty, index) => {
-                              const dutyAmount = parseAmount(duty.Duty);
-                              if (dutyAmount > 0) {
-                                return (
-                                  <tr key={`start-duty-${index}`} className="hover:bg-gray-50 bg-yellow-50">
-                                    <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900 font-semibold">
-                                      {duty.Service || "Долг за предыдущий период"}
-                                    </td>
-                                    <td className="border border-gray-300 px-4 py-3 text-center text-sm text-gray-700">
-                                      —
-                                    </td>
-                                    <td className="border border-gray-300 px-4 py-3 text-center text-sm text-gray-700">
-                                      —
-                                    </td>
-                                    <td className="border border-gray-300 px-4 py-3 text-center text-sm text-gray-700">
-                                      —
-                                    </td>
-                                    <td className="border border-gray-300 px-4 py-3 text-center text-sm text-gray-700">
-                                      —
-                                    </td>
-                                    <td className="border border-gray-300 px-4 py-3 text-right text-sm font-semibold text-yellow-700">
-                                      {formatCurrency(dutyAmount)} ₽
-                                    </td>
-                                  </tr>
-                                );
-                              }
+                            return receiptData.StartDutys.map((duty, i) => {
+                              const a = parseAmount(duty.Duty);
+                              if (a > 0) return (
+                                <tr key={`sd-${i}`} className="bg-amber-50/50">
+                                  <td className="border-b border-gray-100 px-1.5 py-1 text-gray-900 break-words align-top">{duty.Service || "Долг за предыдущий период"}</td>
+                                  <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
+                                  <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
+                                  <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
+                                  <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
+                                  <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
+                                  <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
+                                  <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">0,00</td>
+                                  <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">0,00</td>
+                                  <td className="border-b border-gray-100 px-1 py-1 text-right font-medium tabular-nums">{formatCurrency(a)}</td>
+                                </tr>
+                              );
                               return null;
                             }).filter(Boolean);
-                          } else {
-                            // Если нет разбивки, показываем общий долг
-                            return (
-                              <tr key="start-duty" className="hover:bg-gray-50 bg-yellow-50">
-                                <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900 font-semibold">
-                                  Долг на начало периода
-                                </td>
-                                <td className="border border-gray-300 px-4 py-3 text-center text-sm text-gray-700">
-                                  —
-                                </td>
-                                <td className="border border-gray-300 px-4 py-3 text-center text-sm text-gray-700">
-                                  —
-                                </td>
-                                <td className="border border-gray-300 px-4 py-3 text-center text-sm text-gray-700">
-                                  —
-                                </td>
-                                <td className="border border-gray-300 px-4 py-3 text-center text-sm text-gray-700">
-                                  —
-                                </td>
-                                <td className="border border-gray-300 px-4 py-3 text-right text-sm font-semibold text-yellow-700">
-                                  {formatCurrency(startDutyAmount)} ₽
-                                </td>
-                              </tr>
-                            );
                           }
-                        }
-                        return null;
-                      })()}
-                      {/* Начисления за текущий период */}
-                      {receiptData.ChargesAndPayments.map((charge, index) => (
-                        <tr key={index} className="hover:bg-gray-50">
-                          <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
-                            {charge.Service}
-                          </td>
-                          <td className="border border-gray-300 px-4 py-3 text-center text-sm text-gray-700">
-                            {charge.Volume} {charge.Unit || "м³"}
-                          </td>
-                          <td className="border border-gray-300 px-4 py-3 text-center text-sm text-gray-700">
-                            {formatCurrency(charge.TariffPrice)} ₽
-                          </td>
-                          <td className="border border-gray-300 px-4 py-3 text-center text-sm text-gray-700">
-                            {parseAmount(charge.Exemption) !== 0 ? `${formatCurrency(charge.Exemption)} ₽` : "—"}
-                          </td>
-                          <td className="border border-gray-300 px-4 py-3 text-center text-sm text-gray-700">
-                            {parseAmount(charge.Recalculation) !== 0 ? `${formatCurrency(charge.Recalculation)} ₽` : "—"}
-                          </td>
-                          <td className="border border-gray-300 px-4 py-3 text-right text-sm font-semibold text-gray-900">
-                            {formatCurrency(charge.ChargeFull || charge.Charge)} ₽
-                          </td>
-                        </tr>
-                      ))}
-                      {/* Прочая задолженность - если есть разница между суммой таблицы и CommonDuty */}
-                      {(() => {
-                        // Вычисляем сумму всех строк в таблице
-                        let tableSum = 0;
-                        
-                        // Долг на начало периода
-                        const startDutyAmount = parseAmount(receiptData.StartCommonDuty);
-                        if (startDutyAmount > 0.01) {
-                          if (receiptData.StartDutys && receiptData.StartDutys.length > 0) {
-                            receiptData.StartDutys.forEach((duty) => {
-                              tableSum += parseAmount(duty.Duty);
-                            });
-                          } else {
-                            tableSum += startDutyAmount;
-                          }
-                        }
-                        
-                        // Начисления за текущий период
-                        if (receiptData.ChargesAndPayments && Array.isArray(receiptData.ChargesAndPayments)) {
-                          receiptData.ChargesAndPayments.forEach((charge) => {
-                            tableSum += parseAmount(charge.ChargeFull || charge.Charge);
-                          });
-                        }
-                        
-                        // Итоговая задолженность из CommonDuty
-                        const commonDutyAmount = parseAmount(receiptData.CommonDuty);
-                        const totalDebt = Math.abs(commonDutyAmount);
-                        
-                        // Разница между общей задолженностью и суммой в таблице
-                        const difference = totalDebt - tableSum;
-                        
-                        // Если разница больше 1 копейки, показываем "Прочую задолженность"
-                        if (difference > 0.01) {
                           return (
-                            <tr key="other-debt" className="hover:bg-gray-50 bg-orange-50">
-                              <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900 font-semibold">
-                                Прочая задолженность
-                              </td>
-                              <td className="border border-gray-300 px-4 py-3 text-center text-sm text-gray-700">
-                                —
-                              </td>
-                              <td className="border border-gray-300 px-4 py-3 text-center text-sm text-gray-700">
-                                —
-                              </td>
-                              <td className="border border-gray-300 px-4 py-3 text-center text-sm text-gray-700">
-                                —
-                              </td>
-                              <td className="border border-gray-300 px-4 py-3 text-center text-sm text-gray-700">
-                                —
-                              </td>
-                              <td className="border border-gray-300 px-4 py-3 text-right text-sm font-semibold text-orange-700">
-                                {formatCurrency(difference)} ₽
-                              </td>
+                            <tr className="bg-amber-50/50">
+                              <td className="border-b border-gray-100 px-1.5 py-1 text-gray-900 break-words align-top">Долг на начало периода</td>
+                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
+                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
+                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
+                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
+                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
+                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
+                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">0,00</td>
+                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">0,00</td>
+                              <td className="border-b border-gray-100 px-1 py-1 text-right font-medium tabular-nums">{formatCurrency(startDutyAmount)}</td>
                             </tr>
                           );
                         }
                         return null;
                       })()}
+                      {(receiptData.ChargesAndPayments || []).map((c, i) => {
+                        const startVal = c.StartReading ?? c.PastReading ?? c.PreviousReading;
+                        const endVal = c.EndReading ?? c.Reading ?? c.CurrentReading;
+                        const numStart = startVal != null && startVal !== "" ? Number(startVal) : NaN;
+                        const numEnd = endVal != null && endVal !== "" ? Number(endVal) : NaN;
+                        const qty = !isNaN(numStart) && !isNaN(numEnd) ? (numEnd - numStart) : (c.Volume != null && c.Volume !== "" ? String(c.Volume) : "—");
+                        const fmt = (v: number | string) => (typeof v === "number" ? (Number.isInteger(v) ? String(v) : v.toLocaleString("ru-RU", { minimumFractionDigits: 1, maximumFractionDigits: 2 })) : v);
+                        return (
+                        <tr key={i} className="hover:bg-gray-50/80">
+                          <td className="border-b border-gray-100 px-1.5 py-1 text-gray-900 break-words align-top">{c.Service}</td>
+                          <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{startVal != null && startVal !== "" ? fmt(startVal) : "—"}</td>
+                          <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{endVal != null && endVal !== "" ? fmt(endVal) : "—"}</td>
+                          <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{fmt(qty)}</td>
+                          <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{c.Volume || "—"} {c.Unit || "м³"}</td>
+                          <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{formatCurrency(c.TariffPrice)}</td>
+                          <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{formatCurrency(c.ChargeFull || c.Charge)}</td>
+                          <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{parseAmount(c.Exemption) !== 0 ? formatCurrency(c.Exemption) : "0,00"}</td>
+                          <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{parseAmount(c.Recalculation) !== 0 ? formatCurrency(c.Recalculation) : "0,00"}</td>
+                          <td className="border-b border-gray-100 px-1 py-1 text-right font-medium text-gray-900 tabular-nums">{formatCurrency(c.ChargeFull || c.Charge)}</td>
+                        </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
               </div>
             )}
 
-            {/* Оплачено в текущем периоде */}
-            {receiptData.CommonPayment && parseFloat(receiptData.CommonPayment) > 0 && (
-              <div className="mb-6 p-4 bg-green-50 border-l-4 border-green-500 rounded">
-                <p className="text-sm text-gray-600 mb-1">Оплачено в текущем периоде</p>
-                <p className="text-2xl font-bold text-green-700">
-                  {formatCurrency(receiptData.CommonPayment)} ₽
-                </p>
-              </div>
-            )}
-
-            {/* Итого к оплате */}
+            {/* Расшифровка суммы счёта */}
             {(() => {
-              // Вычисляем итоговую сумму к оплате из CommonDuty
-              // CommonDuty - это итоговая задолженность (может быть отрицательной)
-              const commonDutyAmount = parseAmount(receiptData.CommonDuty);
-              const totalToPay = Math.abs(commonDutyAmount);
-              
-              // Также вычисляем сумму из таблицы для проверки
-              let tableSum = 0;
-              
-              // Долг на начало периода
-              const startDutyAmount = parseAmount(receiptData.StartCommonDuty);
-              if (startDutyAmount > 0.01) {
-                if (receiptData.StartDutys && receiptData.StartDutys.length > 0) {
-                  // Если есть разбивка, суммируем её
-                  receiptData.StartDutys.forEach((duty) => {
-                    tableSum += parseAmount(duty.Duty);
-                  });
-                } else {
-                  // Если нет разбивки, добавляем общий долг
-                  tableSum += startDutyAmount;
-                }
+              const startDebt = parseAmount(receiptData.StartCommonDuty);
+              let totalCharged = 0;
+              if (receiptData.ChargesAndPayments?.length) {
+                receiptData.ChargesAndPayments.forEach((c) => { totalCharged += parseAmount(c.ChargeFull || c.Charge); });
               }
-              
-              // Начисления за текущий период
-              if (receiptData.ChargesAndPayments && Array.isArray(receiptData.ChargesAndPayments)) {
-                receiptData.ChargesAndPayments.forEach((charge) => {
-                  tableSum += parseAmount(charge.ChargeFull || charge.Charge);
-                });
-              }
-              
-              // Используем CommonDuty как основной источник истины
-              // (он уже учитывает все: долг на начало + начисления - оплаты)
-              const displayAmount = totalToPay;
-              
+              const totalRecalc = 0;
+              const payments = parseAmount(receiptData.CommonPayment);
+              const d = dateFrom ? new Date(dateFrom) : new Date();
+              const firstDay = new Date(d.getFullYear(), d.getMonth(), 1);
+              const debtLabel = `Задолженность на ${String(firstDay.getDate()).padStart(2, "0")}.${String(firstDay.getMonth() + 1).padStart(2, "0")}.${firstDay.getFullYear()}`;
+              const isOverpaid = commonDutyAmount > 0;
+              const isUnderpaid = commonDutyAmount < 0;
+              const totalRowStyle = isOverpaid ? "bg-emerald-50 text-emerald-800" : isUnderpaid ? "bg-amber-50 text-amber-800" : "bg-gray-50 text-gray-800";
               return (
-                <div className="mt-8 p-6 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg text-white">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-blue-100 mb-1">Итого к оплате</p>
-                      <p className="text-4xl font-bold">
-                        {formatCurrency(displayAmount)} ₽
-                      </p>
-                    </div>
-                    <FileText className="h-16 w-16 text-blue-200 opacity-50" />
+                <div className="mb-5">
+                  <p className="text-sm font-semibold text-gray-700 mb-2">Расшифровка суммы счёта</p>
+                  <div className="max-w-full rounded-lg border border-gray-200 overflow-hidden overflow-x-auto">
+                    <table className="w-full min-w-[280px] text-sm border-collapse">
+                      <tbody className="text-gray-700">
+                        <tr className="border-b border-gray-100"><td className="py-2 pr-4 pl-3">Задолженность на 1-е число</td><td className="py-2 pr-3 pl-2 text-right tabular-nums whitespace-nowrap">{formatCurrency(startDebt)}</td></tr>
+                        <tr className="border-b border-gray-100"><td className="py-2 pr-4 pl-3">Перерасчёты</td><td className="py-2 pr-3 pl-2 text-right tabular-nums whitespace-nowrap">{formatCurrency(totalRecalc)}</td></tr>
+                        <tr className="border-b border-gray-100"><td className="py-2 pr-4 pl-3">Начислено за {periodStr}</td><td className="py-2 pr-3 pl-2 text-right tabular-nums whitespace-nowrap">{formatCurrency(totalCharged)}</td></tr>
+                        <tr className="border-b border-gray-100"><td className="py-2 pr-4 pl-3">Оплаты за {periodStr}</td><td className="py-2 pr-3 pl-2 text-right tabular-nums whitespace-nowrap">{formatCurrency(payments)}</td></tr>
+                        <tr className={`font-semibold ${totalRowStyle}`}>
+                          <td className="py-3 pl-3">Итого</td>
+                          <td className="py-3 pr-3 pl-2 text-right text-base tabular-nums whitespace-nowrap">{formatCurrency(commonDutyAmount)} ₽</td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               );
             })()}
 
-            {/* QR-код для оплаты через СБП */}
-            {(() => {
-              const commonDuty = receiptData.CommonDuty || receiptData.commonDuty || receiptData.CommonDuty || "0";
-              const lscode = receiptData.LSCode || receiptData.lscode || accountInfo?.accountNumber || "";
-              const address = receiptData.Address || receiptData.address || accountInfo?.address || "";
-              
-              // Отладка
-              console.log("QR Code Debug:", { 
-                lscode, 
-                address, 
-                commonDuty, 
-                receiptData, 
-                accountInfo 
-              });
-              
-              // Показываем QR-код если есть лицевой счет и адрес
-              if (lscode && address) {
-                try {
-                  const qrString = generateSBPQRString(lscode, address, commonDuty);
-                  console.log("QR String generated:", qrString);
-                  
-                  return (
-                    <div className="mt-8 p-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 print:break-inside-avoid print:page-break-inside-avoid print:keep-together">
-                      <div className="flex flex-col md:flex-row items-center justify-center gap-6 print:break-inside-avoid print:page-break-inside-avoid print:keep-together">
-                        <div className="flex flex-col items-center print:break-inside-avoid print:page-break-inside-avoid print:keep-together">
-                          <div 
-                            onClick={handleQRClick}
-                            className="cursor-pointer hover:opacity-80 transition-opacity p-4 bg-white rounded-lg shadow-md print:break-inside-avoid print:page-break-inside-avoid print:keep-together"
-                            title="Нажмите для оплаты через СБП"
-                          >
-                            <div className="print:scale-75 print:origin-center">
-                              <QRCodeSVG
-                                value={qrString}
-                                size={130}
-                                level="M"
-                                includeMargin={true}
-                                className="print:break-inside-avoid"
-                              />
-                            </div>
-                          </div>
-                          <p className="text-xs text-gray-600 mt-2 text-center max-w-[150px]">
-                            Нажмите на QR-код для оплаты через СБП
-                          </p>
-                        </div>
-                        <div className="flex-1 text-center md:text-left">
-                          <div className="flex items-center gap-2 mb-2 justify-center md:justify-start">
-                            <QrCode className="h-5 w-5 text-blue-600" />
-                            <h3 className="text-lg font-semibold text-gray-900">Оплата через СБП</h3>
-                          </div>
-                          <p className="text-sm text-gray-600 mb-3">
-                            Отсканируйте QR-код в приложении банка или нажмите на него для перехода к оплате
-                          </p>
-                          <Button
-                            onClick={handleQRClick}
-                            className="w-full md:w-auto"
-                            size="sm"
-                          >
-                            Оплатить через СБП
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                } catch (error) {
-                  console.error("Error generating QR code:", error);
-                  return (
-                    <div className="mt-8 p-4 bg-red-50 border border-red-200 rounded">
-                      <p className="text-sm text-red-600">Ошибка генерации QR-кода: {String(error)}</p>
-                    </div>
-                  );
-                }
-              }
-              
-              // Показываем сообщение если данных недостаточно
-              return (
-                <div className="mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded">
-                  <p className="text-sm text-yellow-600">
-                    Недостаточно данных для генерации QR-кода. LSCode: {lscode || "нет"}, Address: {address || "нет"}
+            {/* Подвал: контакты и информация */}
+            <div className="mt-6 pt-5 border-t border-gray-200">
+              <div className="grid sm:grid-cols-2 gap-6 text-sm">
+                <div>
+                  <p className="text-gray-600 mb-3">При несвоевременной оплате взыскание задолженности производится в судебном порядке.</p>
+                  <p className="text-gray-500">Сформировано {new Date().toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}. QR-код — оплата через СБП.</p>
+                </div>
+                <div className="space-y-2 min-w-0">
+                  <p className="font-medium text-gray-700 flex flex-wrap items-center gap-x-1 gap-y-0.5 print:gap-0">
+                    <Phone className="h-4 w-4 flex-shrink-0 print:hidden" />
+                    <span className="mr-1">Тел.:</span>
+                    <a href="tel:+79780800366" className="text-sky-600 hover:underline print:text-inherit whitespace-nowrap">+7 (978) 080-03-66</a>
+                    <span>,</span>
+                    <a href="tel:+79787415759" className="text-sky-600 hover:underline print:text-inherit whitespace-nowrap">+7 (978) 741-57-59</a>
+                    <span>,</span>
+                    <a href="tel:+79787013050" className="text-sky-600 hover:underline print:text-inherit whitespace-nowrap">+7 (978) 701-30-50</a>
+                    <span> (аварийная)</span>
                   </p>
-                </div>
-              );
-            })()}
-
-            {/* Реквизиты для оплаты */}
-            <div className="mt-8 p-6 bg-gray-50 rounded-lg border border-gray-200">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Реквизиты счёта</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="font-semibold text-gray-900 mb-1">Организация</p>
-                  <p className="text-gray-700">ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ &quot;КРЫМСКАЯ ВОДНАЯ КОМПАНИЯ&quot;</p>
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-900 mb-1">ИНН организации</p>
-                  <p className="text-gray-700">9107000240</p>
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-900 mb-1">КПП организации</p>
-                  <p className="text-gray-700">910701001</p>
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-900 mb-1">Счёт</p>
-                  <p className="text-gray-700">40702810725190003625</p>
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-900 mb-1">Банк</p>
-                  <p className="text-gray-700">ФИЛИАЛ &quot;ЦЕНТРАЛЬНЫЙ&quot; БАНКА ВТБ (ПАО)</p>
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-900 mb-1">Корр. счёт</p>
-                  <p className="text-gray-700">30101810145250000411</p>
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-900 mb-1">БИК</p>
-                  <p className="text-gray-700">044525411</p>
+                  <p className="text-gray-600 flex items-center gap-2">
+                    <MapPin className="h-4 w-4 flex-shrink-0 print:hidden" />
+                    с. Лесновка Сакского района, ул. Механизаторов, 9
+                  </p>
+                  <p className="text-gray-600 flex items-center gap-2">
+                    <Clock className="h-4 w-4 flex-shrink-0 print:hidden" />
+                    Пн–Чт 08:00–17:00, Пт 08:00–16:00 · обед 12:00–12:48
+                  </p>
                 </div>
               </div>
             </div>
-
-            {/* Подвал */}
-            <div className="mt-8 pt-6 border-t border-gray-300 text-center text-sm text-gray-500">
-              <p>Квитанция сформирована автоматически</p>
-              <p className="mt-1">
-                Дата формирования: {new Date().toLocaleDateString("ru-RU", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </p>
-            </div>
+                </>
+              );
+            })()}
           </CardContent>
         </Card>
       </div>

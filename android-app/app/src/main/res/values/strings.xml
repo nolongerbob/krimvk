@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">КрымВК</string>
+
+    <!-- Auth -->
+    <string name="login">Вход</string>
+    <string name="register">Регистрация</string>
+    <string name="email">Email</string>
+    <string name="password">Пароль</string>
+    <string name="name">Имя</string>
+    <string name="phone">Телефон</string>
+    <string name="login_button">Войти</string>
+    <string name="register_button">Зарегистрироваться</string>
+    <string name="forgot_password">Забыли пароль?</string>
+    <string name="dont_have_account">Нет аккаунта?</string>
+    <string name="already_have_account">Уже есть аккаунт?</string>
+    <string name="logout">Выйти</string>
+
+    <!-- Dashboard -->
+    <string name="dashboard">Личный кабинет</string>
+    <string name="balance">Баланс</string>
+    <string name="current_charges">Начисления за текущий месяц</string>
+    <string name="current_payments">Оплачено за текущий месяц</string>
+    <string name="pay">Оплатить</string>
+    <string name="email_not_verified">Email не подтвержден</string>
+    <string name="verify_email">Подтвердить email</string>
+    <string name="resend_verification">Отправить повторно</string>
+
+    <!-- Navigation -->
+    <string name="nav_dashboard">Главная</string>
+    <string name="nav_bills">Счета</string>
+    <string name="nav_meters">Счетчики</string>
+    <string name="nav_receipts">Квитанции</string>
+    <string name="nav_history">История</string>
+    <string name="nav_applications">Заявки</string>
+    <string name="nav_support">Поддержка</string>
+    <string name="nav_settings">Настройки</string>
+
+    <!-- Accounts -->
+    <string name="accounts">Лицевые счета</string>
+    <string name="account_number">Номер счета</string>
+    <string name="address">Адрес</string>
+    <string name="add_account">Добавить счет</string>
+    <string name="subscriber_name">ФИО абонента</string>
+
+    <!-- Bills -->
+    <string name="bills">Счета к оплате</string>
+    <string name="unpaid_bills">Неоплаченных счетов</string>
+    <string name="total_amount">Общая сумма</string>
+    <string name="bill_status_unpaid">Не оплачен</string>
+    <string name="bill_status_paid">Оплачен</string>
+    <string name="bill_status_overdue">Просрочен</string>
+
+    <!-- Meters -->
+    <string name="meters">Счетчики воды</string>
+    <string name="meter_readings">Показания счетчиков</string>
+    <string name="submit_reading">Подать показания</string>
+    <string name="take_photo">Сфотографировать</string>
+    <string name="enter_manually">Ввести вручную</string>
+    <string name="hot_water">Горячая вода</string>
+    <string name="cold_water">Холодная вода</string>
+    <string name="last_reading">Последнее показание</string>
+    <string name="current_reading">Текущее показание</string>
+    <string name="serial_number">Серийный номер</string>
+    <string name="add_meter">Добавить счетчик</string>
+
+    <!-- Applications -->
+    <string name="applications">Заявки</string>
+    <string name="create_application">Создать заявку</string>
+    <string name="application_status">Статус заявки</string>
+    <string name="application_number">Номер заявки</string>
+    <string name="application_type">Тип заявки</string>
+    <string name="application_description">Описание</string>
+
+    <!-- Support -->
+    <string name="support">Поддержка</string>
+    <string name="questions">Вопросы</string>
+    <string name="new_question">Новый вопрос</string>
+    <string name="send_message">Отправить сообщение</string>
+    <string name="message">Сообщение</string>
+
+    <!-- Settings -->
+    <string name="settings">Настройки</string>
+    <string name="profile">Профиль</string>
+    <string name="change_password">Изменить пароль</string>
+    <string name="old_password">Старый пароль</string>
+    <string name="new_password">Новый пароль</string>
+    <string name="confirm_password">Подтвердите пароль</string>
+    <string name="save">Сохранить</string>
+    <string name="cancel">Отмена</string>
+
+    <!-- Common -->
+    <string name="loading">Загрузка…</string>
+    <string name="error">Ошибка</string>
+    <string name="retry">Повторить</string>
+    <string name="ok">OK</string>
+    <string name="yes">Да</string>
+    <string name="no">Нет</string>
+    <string name="search">Поиск</string>
+    <string name="filter">Фильтр</string>
+    <string name="date">Дата</string>
+    <string name="amount">Сумма</string>
+    <string name="status">Статус</string>
+    <string name="description">Описание</string>
+    <string name="submit">Отправить</string>
+    <string name="close">Закрыть</string>
+</resources>

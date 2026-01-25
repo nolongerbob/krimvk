@@ -175,7 +175,14 @@ export function ApplicationForm({ formData, personType = null, isPreview = false
         <span>4. Основания обращения с запросом о выдаче технических условий:</span>
       </p>
       <p style={{ margin: 0, textAlign: "justify", textIndent: 0, fontSize: fontSize }}>
-        <span>{underlineField((formData.lastName || formData.fullName) ? "Правообладатель земельного участка" : "", 70)}</span>
+        <span>{underlineField(
+          formData.requestBasis === "owner"
+            ? "Правообладатель земельного участка"
+            : formData.requestBasis === "trusted"
+              ? "Доверенное лицо"
+              : "",
+          70
+        )}</span>
       </p>
       <p style={{ margin: 0, textAlign: "justify", textIndent: 0, fontSize: isPreview ? "9px" : "8.5pt", lineHeight: "1.3" }}>
         <span>  </span><span>(указание, кем именно из перечня лиц, имеющих  право  обратиться  с запросом о выдаче технических условий, указанных в </span>

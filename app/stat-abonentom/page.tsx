@@ -33,6 +33,109 @@ import Link from "next/link";
 type PersonType = "individual" | "legal" | null;
 type Step = "stages" | "type" | "abonent" | "object" | "params" | "documents";
 
+const W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+const XML_NS = "http://www.w3.org/XML/1998/namespace";
+
+/** Склеивает плейсхолдеры {{X}}, разорванные Word по разным <w:r>/<w:t>, в один <w:t>. Сохраняет оформление: копирует w:rPr из исходных runs. */
+function fixSplitPlaceholdersInDocumentXml(xmlString: string): string {
+  let doc: Document;
+  try {
+    doc = new DOMParser().parseFromString(xmlString, "text/xml");
+  } catch {
+    return xmlString;
+  }
+  if (!doc?.documentElement) return xmlString;
+
+  const paras = doc.getElementsByTagNameNS(W_NS, "p");
+  for (let i = 0; i < paras.length; i++) {
+    const para = paras[i];
+    const runs = Array.from(para.getElementsByTagNameNS(W_NS, "r"));
+    let paraText = "";
+    const runLengths: number[] = [];
+    for (const run of runs) {
+      let L = 0;
+      const ts = run.getElementsByTagNameNS(W_NS, "t");
+      for (let j = 0; j < ts.length; j++) {
+        const txt = ts[j].textContent || "";
+        L += txt.length;
+        paraText += txt;
+      }
+      runLengths.push(L);
+    }
+    if (!paraText.includes("{{") || !paraText.includes("}}")) continue;
+    paraText = paraText.replace(/\{\{([^}]+)\}\{\1\}\}/g, "{{$1}}");
+    if (!/\{\{[^}]+\}\}/.test(paraText)) continue;
+
+    const cumulative: number[] = [0];
+    for (let k = 0; k < runLengths.length; k++) cumulative.push(cumulative[k]! + runLengths[k]!);
+    const runForIndex = (idx: number) => {
+      for (let k = cumulative.length - 1; k >= 0; k--) if (cumulative[k]! <= idx) return Math.min(k, runs.length - 1);
+      return 0;
+    };
+
+    type Seg = { text: string; runIndex: number; rPr: Node | null };
+    const segments: Seg[] = [];
+    let current = paraText;
+    let globalStart = 0;
+    while (current) {
+      const m = current.match(/\{\{[^}]+\}\}/);
+      if (m) {
+        const ph = m[0];
+        const idx = current.indexOf(ph);
+        const before = current.slice(0, idx);
+        if (before) {
+          segments.push({ text: before, runIndex: runForIndex(globalStart), rPr: null });
+          globalStart += before.length;
+        }
+        segments.push({ text: ph, runIndex: runForIndex(globalStart), rPr: null });
+        globalStart += ph.length;
+        current = current.slice(idx + ph.length);
+      } else {
+        if (current) segments.push({ text: current, runIndex: runForIndex(globalStart), rPr: null });
+        break;
+      }
+    }
+
+    for (const seg of segments) {
+      const run = runs[seg.runIndex];
+      const rPrEl = run?.getElementsByTagNameNS(W_NS, "rPr")[0];
+      seg.rPr = rPrEl ? rPrEl.cloneNode(true) : null;
+    }
+
+    for (const run of runs) {
+      const parent = run.parentNode;
+      if (parent) parent.removeChild(run);
+    }
+
+    for (const seg of segments) appendRun(para, doc, seg.text, seg.rPr);
+  }
+
+  try {
+    return new XMLSerializer().serializeToString(doc);
+  } catch {
+    return xmlString;
+  }
+}
+
+function appendRun(para: Element, doc: Document, text: string, rPrClone: Node | null): void {
+  const run = doc.createElementNS(W_NS, "r");
+  if (rPrClone) {
+    run.appendChild(rPrClone);
+  } else {
+    const rPr = doc.createElementNS(W_NS, "rPr");
+    const fonts = doc.createElementNS(W_NS, "rFonts");
+    fonts.setAttributeNS(W_NS, "ascii", "Times New Roman");
+    fonts.setAttributeNS(W_NS, "hAnsi", "Times New Roman");
+    rPr.appendChild(fonts);
+    run.appendChild(rPr);
+  }
+  const t = doc.createElementNS(W_NS, "t");
+  t.textContent = text;
+  if (text.startsWith(" ") || text.endsWith(" ")) t.setAttributeNS(XML_NS, "space", "preserve");
+  run.appendChild(t);
+  para.appendChild(run);
+}
+
 export default function BecomeSubscriberPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -95,6 +198,7 @@ export default function BecomeSubscriberPage() {
     // Дополнительные поля для официального заявления
     inn: "",
     snils: "",
+    requestBasis: "", // основание обращения: владелец или доверенное лицо
     constructionType: "", // новое строительство, реконструкция, модернизация
     resourceType: "", // получение питьевой или технической воды, сброс хозяйственно-бытовых, сточных вод
     objectHeight: "",
@@ -207,7 +311,13 @@ export default function BecomeSubscriberPage() {
           formData.objectAddress
         );
       }
-      return formData.objectType && formData.objectAddress;
+      return (
+        formData.objectType &&
+        formData.objectAddress &&
+        formData.requestBasis &&
+        formData.constructionType &&
+        formData.resourceType
+      );
     }
     if (currentStep === "params") {
       return (
@@ -274,202 +384,166 @@ export default function BecomeSubscriberPage() {
   };
 
   const handleDownloadApplication = async () => {
-    if (!applicationRef.current) {
-      setError("Ошибка: элемент заявления не найден");
-      return;
-    }
-
     try {
-      const html2canvas = (await import("html2canvas")).default;
-      const jsPDF = (await import("jspdf")).default;
+      // Импортируем необходимые библиотеки
+      const pizzipMod = await import("pizzip");
+      const PizZip = pizzipMod.default ?? (pizzipMod as any).PizZip;
+      if (typeof PizZip !== "function") {
+        throw new Error("Не удалось загрузить PizZip. Проверьте установку пакета pizzip.");
+      }
+      const Docxtemplater = (await import("docxtemplater")).default;
+      const fileSaver = await import("file-saver");
+      const saveAs = (fileSaver as any).saveAs ?? (fileSaver as any).default;
+      if (typeof saveAs !== "function") {
+        throw new Error("Не удалось загрузить file-saver (saveAs).");
+      }
 
-      // Показываем заявление для генерации
-      const hiddenElement = applicationRef.current;
-      const originalClasses = hiddenElement.className;
-      const originalStyle = hiddenElement.style.cssText;
-      const originalDisplay = hiddenElement.style.display;
-      const originalPosition = hiddenElement.style.position;
-      const originalLeft = hiddenElement.style.left;
-      const originalTop = hiddenElement.style.top;
-      const originalZIndex = hiddenElement.style.zIndex;
-      
-      // Устанавливаем стили для правильной генерации A4
-      // Временно показываем элемент вне экрана для правильного рендеринга
-      hiddenElement.className = "bg-white";
-      hiddenElement.style.display = "block";
-      hiddenElement.style.position = "absolute";
-      hiddenElement.style.left = "-9999px";
-      hiddenElement.style.top = "0";
-      hiddenElement.style.zIndex = "-1";
-      // Устанавливаем точную ширину A4, padding будет добавлен при добавлении в PDF
-      // Устанавливаем ширину с учетом боковых отступов (210mm - 40mm = 170mm)
-      hiddenElement.style.width = "170mm";
-      hiddenElement.style.maxWidth = "170mm";
-      hiddenElement.style.minWidth = "170mm";
-      hiddenElement.style.padding = "0";
-      hiddenElement.style.margin = "0";
-      hiddenElement.style.boxSizing = "border-box";
-      hiddenElement.style.fontFamily = "Times New Roman, serif";
-      hiddenElement.style.fontSize = "10pt"; // Уменьшили еще для умещения на 2 листа
-      hiddenElement.style.lineHeight = "1.5";
-      hiddenElement.style.color = "#000000";
-      hiddenElement.style.boxSizing = "border-box";
-      hiddenElement.style.overflow = "visible";
-      hiddenElement.style.height = "auto";
+      // Источник: файл из корня (zayavlenie-o-vydache-tehnicheskih-uslovij.docx). Запас: _fixed и основной в public/documents, minimal.
+      const templateUrls = [
+        `/api/documents/zayavlenie?v=${Date.now()}`,
+        `/documents/zayavlenie-o-vydache-tehnicheskih-uslovij_fixed.docx?v=${Date.now()}`,
+        `/documents/zayavlenie-o-vydache-tehnicheskih-uslovij.docx?v=${Date.now()}`,
+        `/documents/tu-template-minimal.docx?v=${Date.now()}`,
+      ];
 
-      // Ждем, чтобы стили применились и контент отрендерился
-      await new Promise(resolve => setTimeout(resolve, 300));
-
-      // Получаем реальные размеры контента
-      const scrollWidth = hiddenElement.scrollWidth;
-      const scrollHeight = hiddenElement.scrollHeight;
-
-      const canvas = await html2canvas(hiddenElement, {
-        scale: 1.5, // Уменьшаем scale для меньшего размера файла
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#ffffff",
-        allowTaint: true,
-        removeContainer: false,
-        width: scrollWidth,
-        height: scrollHeight,
-        windowWidth: scrollWidth,
-        windowHeight: scrollHeight,
-        scrollX: 0,
-        scrollY: 0,
+      // Подготавливаем данные до цикла: при ошибке compile/render (разорванные {{ }}) пробуем следующий шаблон
+      const isLegal = personType === "legal";
+      const fio = isLegal
+        ? formData.fullName || ""
+        : `${formData.lastName} ${formData.firstName} ${formData.middleName || ""}`.trim();
+      const passport = isLegal
+        ? ""
+        : `серия ${formData.passportSeries} № ${formData.passportNumber}, выдан ${formData.passportIssuedBy}, ${formData.passportIssueDate}, код подразделения ${formData.passportDivisionCode}`;
+      const ownerOrTrustedPerson = formData.requestBasis === "owner"
+        ? "Правообладатель земельного участка"
+        : formData.requestBasis === "trusted"
+          ? "Доверенное лицо"
+          : "";
+      const objectTypeName =
+        formData.objectType === "residential" ? "Жилой дом" :
+        formData.objectType === "apartment" ? "Квартира" :
+        formData.objectType === "commercial" ? "Коммерческий объект" :
+        formData.objectType === "industrial" ? "Промышленный объект" :
+        formData.objectType === "land" ? "Земельный участок" : "";
+      const objectInformation = [
+        `Тип: ${objectTypeName}`,
+        formData.cadastralNumber ? `Кадастровый номер: ${formData.cadastralNumber}` : "",
+        formData.area ? `Площадь: ${formData.area} кв.м` : "",
+      ].filter(Boolean).join(", ");
+      const typeOfConnection =
+        formData.connectionMethod === "with-well"
+          ? `с колодцем (${formData.wellType === "existing" ? "существующий" : "проектируемый"})`
+          : "по протяженности";
+      const templateData_fields = {
+        resourse_type: formData.resourceType || "",
+        object_type: objectTypeName,
+        BirthDate: formData.birthDate || "",
+        snils: formData.snils ? `СНИЛС ${formData.snils}` : "",
+        "object information": objectInformation,
+        "where to receive result": formData.notificationMethod || "на адрес электронной почты",
+        date_start: formData.plannedCommissioningDate || "",
+        "place address": formData.objectAddress || "",
+        "type of connection": typeOfConnection,
+        FIO: fio,
+        fio: fio,
+        Passport: passport,
+        inn: formData.inn ? `ИНН ${formData.inn}` : "",
+        email: formData.objectEmail || "",
+        "mail address": isLegal ? formData.postalAddress : formData.registrationAddress || "",
+        "owner or trusted person": ownerOrTrustedPerson,
+        phone: formData.phone || "",
+        reason: formData.constructionType || "",
+        "registration address": formData.registrationAddress || "",
+      };
+      const dataProxy = new Proxy(templateData_fields, {
+        get(t, p: string) {
+          if (Object.prototype.hasOwnProperty.call(t, p)) return t[p as keyof typeof t];
+          return "";
+        },
       });
 
-      // Восстанавливаем оригинальные стили
-      hiddenElement.className = originalClasses;
-      hiddenElement.style.cssText = originalStyle;
-      hiddenElement.style.display = originalDisplay;
-      hiddenElement.style.position = originalPosition;
-      hiddenElement.style.left = originalLeft;
-      hiddenElement.style.top = originalTop;
-      hiddenElement.style.zIndex = originalZIndex;
+      let doc: InstanceType<typeof Docxtemplater> | null = null;
+      for (const url of templateUrls) {
+        const res = await fetch(url, { cache: "no-store", headers: { "Cache-Control": "no-cache", Pragma: "no-cache" } });
+        if (!res.ok) continue;
+        const buf = await res.arrayBuffer();
+        if (!buf?.byteLength) continue;
 
-      const pdf = new jsPDF("p", "mm", "a4");
-      // Используем JPEG с качеством 0.85 для меньшего размера файла
-      const imgData = canvas.toDataURL("image/jpeg", 0.85);
-      
-      const pdfWidth = pdf.internal.pageSize.getWidth(); // 210mm
-      const pdfHeight = pdf.internal.pageSize.getHeight(); // 297mm
-      
-      // Размеры canvas в пикселях (при scale=1.5)
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      
-      // Реальный размер в пикселях (делим на scale)
-      const scale = 1.5;
-      const realWidthPx = imgWidth / scale;
-      const realHeightPx = imgHeight / scale;
-      
-      // Масштабируем под ширину страницы A4, сохраняя пропорции
-      // Отступы для каждой страницы (PDF generation)
-      const paddingTop = 15; // мм - отступ сверху на каждой странице
-      const paddingLeft = 20; // мм
-      const paddingRight = 20; // мм
-      const paddingBottom = 20; // мм - увеличен отступ снизу для предотвращения обрезания последней строки
-      // Добавляем небольшой запас для предотвращения обрезания текста
-      const safetyMargin = 5; // мм - запас для предотвращения обрезания строк
-      const availableWidth = pdfWidth - paddingLeft - paddingRight;
-      const availableHeight = pdfHeight - paddingTop - paddingBottom - safetyMargin;
-      
-      // Конвертируем пиксели в мм (96 DPI: 1px = 25.4/96 mm)
-      const pxToMm = 25.4 / 96;
-      const imgWidthMm = realWidthPx * pxToMm;
-      const imgHeightMm = realHeightPx * pxToMm;
-      
-      // Масштабируем под доступную ширину, сохраняя пропорции
-      const widthRatio = availableWidth / imgWidthMm;
-      const finalWidth = availableWidth;
-      const finalHeight = imgHeightMm * widthRatio;
-      
-      // Если изображение больше одной страницы, разбиваем на страницы
-      if (finalHeight <= availableHeight) {
-        // Помещается на одну страницу
-        pdf.addImage(imgData, "JPEG", paddingLeft, paddingTop, finalWidth, finalHeight);
-      } else {
-        // Разбиваем на несколько страниц
-        // Высота одной страницы в мм (с учетом отступов и запаса)
-        const pageHeightMm = availableHeight;
-        // Вычисляем сколько пикселей исходного canvas соответствует одной странице
-        // Сначала переводим высоту страницы в мм обратно в реальные пиксели
-        const pageHeightRealPx = pageHeightMm / pxToMm / widthRatio;
-        // Учитываем scale
-        const pageHeightPx = pageHeightRealPx * scale;
-        
-        let sourceY = 0;
-        let pageNumber = 0;
-        
-        while (sourceY < imgHeight) {
-          const remainingHeight = imgHeight - sourceY;
-          const isLastPage = sourceY + pageHeightPx >= imgHeight - 1; // -1 для учета погрешности
-          
-          // Для всех страниц кроме последней используем фиксированную высоту pageHeightPx
-          // Это обеспечивает одинаковое масштабирование на всех страницах
-          let currentPageHeightPx: number;
-          if (isLastPage) {
-            // На последней странице берем оставшуюся высоту
-            currentPageHeightPx = remainingHeight;
-          } else {
-            // На всех остальных страницах используем фиксированную высоту
-            currentPageHeightPx = pageHeightPx;
+        const zip = new PizZip(buf);
+
+        // Убираем недопустимые для XML 1.0 управляющие символы (кроме \t, \n, \r)
+        // и склеиваем плейсхолдеры {{X}}, разорванные Word по разным <w:r>/<w:t>, в один <w:t>
+        const docEntry = zip.files["word/document.xml"];
+        if (docEntry) {
+          try {
+            let safe = docEntry.asText().replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "");
+            safe = fixSplitPlaceholdersInDocumentXml(safe);
+            zip.file("word/document.xml", safe);
+          } catch {
+            // оставляем как есть
           }
-          
-          // Создаем временный canvas для текущей страницы
-          const pageCanvas = document.createElement('canvas');
-          pageCanvas.width = imgWidth;
-          pageCanvas.height = Math.ceil(currentPageHeightPx);
-          const pageCtx = pageCanvas.getContext('2d');
-          
-          if (pageCtx) {
-            // Копируем часть исходного canvas
-            pageCtx.drawImage(
-              canvas, 
-              0, sourceY, imgWidth, currentPageHeightPx,
-              0, 0, imgWidth, currentPageHeightPx
-            );
-            const pageImgData = pageCanvas.toDataURL("image/jpeg", 0.85);
-            
-            if (pageNumber > 0) {
-              pdf.addPage();
-            }
-            
-            // На каждой странице добавляем верхний отступ
-            const yPosition = paddingTop;
-            
-            // Используем тот же подход, что и для одной страницы
-            // Вычисляем высоту страницы пропорционально finalHeight
-            // Это обеспечивает одинаковое масштабирование на всех страницах
-            const pageHeightRatio = currentPageHeightPx / imgHeight; // Доля от общей высоты
-            const pageHeightForPdf = finalHeight * pageHeightRatio; // Пропорциональная высота в мм
-            
-            let actualPageHeight: number;
-            if (isLastPage) {
-              // На последней странице добавляем дополнительный запас снизу
-              const lastPageExtraMargin = 15; // мм
-              actualPageHeight = pageHeightForPdf + lastPageExtraMargin;
-            } else {
-              // На всех остальных страницах используем пропорциональную высоту
-              actualPageHeight = pageHeightForPdf;
-            }
-            
-            pdf.addImage(pageImgData, "JPEG", paddingLeft, yPosition, finalWidth, actualPageHeight);
+        }
+
+        try {
+          doc = new Docxtemplater(zip, {
+            paragraphLoop: true,
+            linebreaks: true,
+            nullGetter: () => "",
+            stripInvalidXMLChars: true,
+          });
+          doc.render(dataProxy);
+          break;
+        } catch (e: unknown) {
+          const err = e as { message?: string; properties?: { id?: string; errors?: Array<{ properties?: { id?: string } }> } };
+          const errList: Array<{ properties?: { id?: string } }> = err?.properties?.errors ?? (e as any)?.properties?.error ?? (e as any)?.errors ?? [];
+          const malformed = err?.properties?.id === "malformed_xml" || /malformed xml/i.test(String(err?.message ?? ""));
+          const hasFragmented = errList.some((x) => x?.properties?.id === "duplicate_open_tag" || x?.properties?.id === "duplicate_close_tag");
+          const multiTag = err?.message === "Multi error" && errList.length > 0;
+          if (malformed || hasFragmented || multiTag) {
+            doc = null;
+            continue; // пробуем следующий шаблон
           }
-          
-          sourceY += currentPageHeightPx;
-          pageNumber++;
+          throw e;
         }
       }
-      
+
+      if (!doc) {
+        throw new Error("Не удалось подготовить шаблон (ошибка XML). Используйте «Скачать бланк (DOCX)» и заполните вручную.");
+      }
+
+      // Генерируем документ
+      const docxBlob = doc.getZip().generate({
+        type: "blob",
+        mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      });
+
+      // Сохраняем файл
       const fileName = personType === "legal"
-        ? `zayavlenie_TU_${(formData.shortName || formData.fullName || "legal").replace(/[^a-zA-Zа-яА-ЯёЁ0-9_-]/g, "_")}_${new Date().toISOString().split("T")[0]}.pdf`
-        : `zayavlenie_TU_${formData.lastName}_${new Date().toISOString().split("T")[0]}.pdf`;
-      pdf.save(fileName);
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      setError(error instanceof Error ? error.message : "Ошибка при генерации PDF.");
+        ? `zayavlenie_TU_${(formData.shortName || formData.fullName || "legal").replace(/[^a-zA-Zа-яА-ЯёЁ0-9_-]/g, "_")}_${new Date().toISOString().split("T")[0]}.docx`
+        : `zayavlenie_TU_${formData.lastName}_${new Date().toISOString().split("T")[0]}.docx`;
+
+      saveAs(docxBlob, fileName);
+    } catch (error: unknown) {
+      console.error("Error generating DOCX:", error);
+
+      let msg = "Ошибка при генерации DOCX.";
+      const err = error as { message?: string; name?: string; properties?: { id?: string; errors?: Array<{ message?: string }> } };
+      if (error instanceof Error) {
+        msg = error.message;
+        if (err?.properties?.id === "malformed_xml" || /malformed xml/i.test(msg)) {
+          msg = "Ошибка XML в шаблоне Word. Используйте «Скачать бланк (DOCX)» и заполните вручную.";
+        } else if (error.name === "TemplateError" || /tag|placeholder|парсер|parser/i.test(msg)) {
+          msg = "Ошибка шаблона Word (возможно, плейсхолдеры разорваны). Скачайте бланк ниже и заполните вручную.";
+        }
+      }
+      if (err?.properties?.errors?.length) {
+        const first = err.properties.errors[0]?.message ?? "";
+        if (/tag|parser|malformed/i.test(first)) {
+          msg = "Ошибка в шаблоне заявления. Используйте «Скачать бланк (DOCX)» и заполните вручную.";
+        }
+      }
+
+      setError(msg);
     }
   };
 
@@ -1347,6 +1421,145 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                   step="0.01"
                 />
               </div>
+
+              <div className="border-t pt-4 mt-4">
+                <h3 className="font-semibold text-lg mb-4">Дополнительная информация</h3>
+
+                <div className="space-y-2">
+                  <Label htmlFor="requestBasis">
+                    Основание обращения с запросом <span className="text-red-500">*</span>
+                  </Label>
+                  <select
+                    id="requestBasis"
+                    value={formData.requestBasis}
+                    onChange={(e) =>
+                      setFormData({ ...formData, requestBasis: e.target.value })
+                    }
+                    required
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value="">Выберите основание</option>
+                    <option value="owner">Правообладатель земельного участка</option>
+                    <option value="trusted">Доверенное лицо</option>
+                  </select>
+                  <p className="text-xs text-gray-500">Укажите, кем вы являетесь по отношению к объекту</p>
+                </div>
+
+                <div className="space-y-2 mt-4">
+                  <Label htmlFor="constructionType">
+                    В связи с чем просится выдать ТУ <span className="text-red-500">*</span>
+                  </Label>
+                  <select
+                    id="constructionType"
+                    value={formData.constructionType}
+                    onChange={(e) =>
+                      setFormData({ ...formData, constructionType: e.target.value })
+                    }
+                    required
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value="">Выберите тип работ</option>
+                    <option value="новое строительство">Новое строительство</option>
+                    <option value="реконструкция">Реконструкция</option>
+                    <option value="модернизация">Модернизация</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2 mt-4">
+                  <Label htmlFor="resourceType">
+                    Необходимые виды ресурсов <span className="text-red-500">*</span>
+                  </Label>
+                  <select
+                    id="resourceType"
+                    value={formData.resourceType}
+                    onChange={(e) =>
+                      setFormData({ ...formData, resourceType: e.target.value })
+                    }
+                    required
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value="">Выберите вид ресурсов</option>
+                    <option value="получение питьевой воды">Получение питьевой воды</option>
+                    <option value="получение технической воды">Получение технической воды</option>
+                    <option value="сброс хозяйственно-бытовых сточных вод">Сброс хозяйственно-бытовых сточных вод</option>
+                    <option value="получение питьевой воды, сброс хозяйственно-бытовых сточных вод">Получение питьевой воды и сброс хозяйственно-бытовых сточных вод</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2 mt-4">
+                  <Label htmlFor="plannedCommissioningDate">
+                    Планируемый срок ввода в эксплуатацию
+                  </Label>
+                  <Input
+                    id="plannedCommissioningDate"
+                    type="text"
+                    value={formData.plannedCommissioningDate}
+                    onChange={(e) => {
+                      let value = e.target.value.replace(/[^0-9.]/g, '');
+                      if (value.length === 2 && !value.includes('.')) {
+                        value = value + '.';
+                      } else if (value.length === 5 && value.split('.').length === 2) {
+                        value = value + '.';
+                      }
+                      setFormData({ ...formData, plannedCommissioningDate: value });
+                    }}
+                    placeholder="дд.мм.гггг (например: 01.12.2025)"
+                    maxLength={10}
+                  />
+                  <p className="text-xs text-gray-500">Необязательное поле</p>
+                </div>
+              </div>
+
+              <div className="border-t pt-4 mt-4">
+                <h3 className="font-semibold text-lg mb-4">Информация о предельных параметрах (необязательно)</h3>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="objectHeight">Высота объекта (метров)</Label>
+                    <Input
+                      id="objectHeight"
+                      type="number"
+                      value={formData.objectHeight}
+                      onChange={(e) =>
+                        setFormData({ ...formData, objectHeight: e.target.value })
+                      }
+                      placeholder="0"
+                      min="0"
+                      step="0.1"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="objectFloors">Этажность</Label>
+                    <Input
+                      id="objectFloors"
+                      type="number"
+                      value={formData.objectFloors}
+                      onChange={(e) =>
+                        setFormData({ ...formData, objectFloors: e.target.value })
+                      }
+                      placeholder="0"
+                      min="0"
+                      step="1"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="networkLength">Протяженность сети (метров)</Label>
+                    <Input
+                      id="networkLength"
+                      type="number"
+                      value={formData.networkLength}
+                      onChange={(e) =>
+                        setFormData({ ...formData, networkLength: e.target.value })
+                      }
+                      placeholder="0"
+                      min="0"
+                      step="0.1"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
@@ -1766,7 +1979,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                       className="gap-2"
                     >
                       <Download className="h-4 w-4" />
-                      Скачать заявление (PDF)
+                      Скачать заявление (DOCX)
                     </Button>
                     <Button
                       type="button"
@@ -1775,8 +1988,8 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                       className="gap-2"
                     >
                       <a
-                        href="/documents/zayavlenie-o-vydache-tehnicheskih-uslovij.docx"
-                        download
+                        href="/api/documents/zayavlenie"
+                        download="zayavlenie-o-vydache-tehnicheskih-uslovij.docx"
                       >
                         <Download className="h-4 w-4" />
                         Скачать бланк (DOCX)

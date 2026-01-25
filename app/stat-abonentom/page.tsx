@@ -1988,8 +1988,8 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                       className="gap-2"
                     >
                       <a
-                        href="/api/documents/zayavlenie"
-                        download="zayavlenie-o-vydache-tehnicheskih-uslovij.docx"
+                        href="/api/documents/zayavlenie-blank"
+                        download="zayavlenie-o-vydache-tehnicheskih-uslovij-3.docx"
                       >
                         <Download className="h-4 w-4" />
                         Скачать бланк (DOCX)

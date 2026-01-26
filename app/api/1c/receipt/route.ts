@@ -90,8 +90,19 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Проверяем, является ли пользователь админом
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true },
+    });
+
+    const isAdmin = user?.role === "ADMIN";
+
+    // Админ может получать квитанции для любого лицевого счета, обычный пользователь - только для своих
     const account = await prisma.userAccount.findFirst({
-      where: { id: accountId, userId: session.user.id, isActive: true },
+      where: isAdmin
+        ? { id: accountId, isActive: true }
+        : { id: accountId, userId: session.user.id, isActive: true },
     });
 
     if (!account) {
@@ -117,11 +128,13 @@ export async function GET(request: NextRequest) {
 
     // Период для истории: расширяем на месяц назад и вперёд — показания по счёту
     // могут быть переданы в следующем месяце (как в «Истории показаний»).
+    // По умолчанию: предыдущий месяц (платим за прошлый месяц)
     let histFrom: Date;
     let histTo: Date;
     const t = new Date();
-    const billStart = fromDate ?? new Date(t.getFullYear(), t.getMonth(), 1);
-    const billEnd = toDate ?? new Date(t.getFullYear(), t.getMonth() + 1, 0);
+    const defaultMonth = new Date(t.getFullYear(), t.getMonth() - 1, 1);
+    const billStart = fromDate ?? defaultMonth;
+    const billEnd = toDate ?? new Date(defaultMonth.getFullYear(), defaultMonth.getMonth() + 1, 0);
     histFrom = new Date(billStart.getFullYear(), billStart.getMonth() - 1, 1);
     histTo = new Date(billEnd.getFullYear(), billEnd.getMonth() + 2, 0); // конец следующего после счёта месяца
     const dateFromStr = formatDateFor1C(histFrom);

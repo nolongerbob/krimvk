@@ -26,10 +26,11 @@ export default function ReceiptsPage() {
 
   useEffect(() => {
     fetchAccounts();
-    // Устанавливаем текущий месяц по умолчанию
+    // Устанавливаем предыдущий месяц по умолчанию (платим за прошлый месяц)
     const today = new Date();
-    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    const prevMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    const firstDay = new Date(prevMonth.getFullYear(), prevMonth.getMonth(), 1);
+    const lastDay = new Date(prevMonth.getFullYear(), prevMonth.getMonth() + 1, 0);
     setDateFrom(firstDay.toISOString().split("T")[0]);
     setDateTo(lastDay.toISOString().split("T")[0]);
   }, []);

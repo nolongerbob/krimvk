@@ -297,7 +297,14 @@ export default function ReceiptViewPage() {
               const lscode = receiptData.LSCode || receiptData.lscode || accountInfo?.accountNumber || "";
               const address = receiptData.Address || receiptData.address || accountInfo?.address || "";
               const commonDuty = receiptData.CommonDuty || receiptData.commonDuty || "0";
-              const periodDate = dateFrom ? new Date(dateFrom) : new Date();
+              // Период: если dateFrom указан, используем его; иначе - предыдущий месяц (платим за прошлый месяц)
+              let periodDate: Date;
+              if (dateFrom) {
+                periodDate = new Date(dateFrom);
+              } else {
+                const today = new Date();
+                periodDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+              }
               const periodMonth = periodDate.toLocaleDateString("ru-RU", { month: "long" });
               const periodYear = periodDate.getFullYear();
               const periodStr = `${periodMonth} ${periodYear} г.`;
@@ -480,7 +487,14 @@ export default function ReceiptViewPage() {
               }
               const totalRecalc = 0;
               const payments = parseAmount(receiptData.CommonPayment);
-              const d = dateFrom ? new Date(dateFrom) : new Date();
+              // Для "Задолженность на 1-е число" используем начало периода: если dateFrom указан, используем его; иначе - предыдущий месяц
+              let d: Date;
+              if (dateFrom) {
+                d = new Date(dateFrom);
+              } else {
+                const today = new Date();
+                d = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+              }
               const firstDay = new Date(d.getFullYear(), d.getMonth(), 1);
               const debtLabel = `Задолженность на ${String(firstDay.getDate()).padStart(2, "0")}.${String(firstDay.getMonth() + 1).padStart(2, "0")}.${firstDay.getFullYear()}`;
               const isOverpaid = commonDutyAmount > 0;

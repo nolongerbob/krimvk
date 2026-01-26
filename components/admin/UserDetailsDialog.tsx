@@ -20,9 +20,14 @@ import {
   XCircle,
   Clock,
   Eye,
+  Receipt,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ApplicationDetails } from "@/components/admin/ApplicationDetails";
+import Link from "next/link";
+import { useState, useEffect } from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface UserAccount {
   id: string;
@@ -124,6 +129,27 @@ const billStatusConfig = {
 };
 
 export function UserDetailsDialog({ user, open, onOpenChange }: UserDetailsDialogProps) {
+  const [receiptDateFrom, setReceiptDateFrom] = useState("");
+  const [receiptDateTo, setReceiptDateTo] = useState("");
+
+  // Устанавливаем период по умолчанию (предыдущий месяц) при открытии диалога
+  useEffect(() => {
+    if (open && !receiptDateFrom && !receiptDateTo) {
+      const today = new Date();
+      const prevMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      const firstDay = new Date(prevMonth.getFullYear(), prevMonth.getMonth(), 1);
+      const lastDay = new Date(prevMonth.getFullYear(), prevMonth.getMonth() + 1, 0);
+      setReceiptDateFrom(firstDay.toISOString().split("T")[0]);
+      setReceiptDateTo(lastDay.toISOString().split("T")[0]);
+    }
+  }, [open, receiptDateFrom, receiptDateTo]);
+
+  const getReceiptUrl = (accountId: string) => {
+    const params = new URLSearchParams({ accountId });
+    if (receiptDateFrom) params.append("dateFrom", receiptDateFrom);
+    if (receiptDateTo) params.append("dateTo", receiptDateTo);
+    return `/dashboard/receipts/view?${params.toString()}`;
+  };
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
@@ -331,6 +357,48 @@ export function UserDetailsDialog({ user, open, onOpenChange }: UserDetailsDialo
                         </div>
                       </div>
                     )}
+
+                    {/* Кнопка создания квитанции */}
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <Label htmlFor={`dateFrom-${account.id}`} className="text-xs">Дата начала</Label>
+                            <Input
+                              id={`dateFrom-${account.id}`}
+                              type="date"
+                              value={receiptDateFrom}
+                              onChange={(e) => setReceiptDateFrom(e.target.value)}
+                              className="mt-1 text-xs"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor={`dateTo-${account.id}`} className="text-xs">Дата окончания</Label>
+                            <Input
+                              id={`dateTo-${account.id}`}
+                              type="date"
+                              value={receiptDateTo}
+                              onChange={(e) => setReceiptDateTo(e.target.value)}
+                              className="mt-1 text-xs"
+                            />
+                          </div>
+                        </div>
+                        <Button
+                          asChild
+                          variant="outline"
+                          className="w-full gap-2"
+                          disabled={!receiptDateFrom || !receiptDateTo}
+                        >
+                          <Link
+                            href={getReceiptUrl(account.id)}
+                            target="_blank"
+                          >
+                            <Receipt className="h-4 w-4" />
+                            Создать квитанцию
+                          </Link>
+                        </Button>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               ))

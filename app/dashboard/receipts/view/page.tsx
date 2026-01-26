@@ -336,7 +336,7 @@ export default function ReceiptViewPage() {
               <div className="flex flex-col items-start sm:items-end gap-3 flex-shrink-0 print:break-inside-avoid">
                 <div className={`rounded-lg px-4 py-2.5 min-w-0 ${isOverpaid ? "bg-emerald-50 text-emerald-800" : isUnderpaid ? "bg-amber-50 text-amber-800" : "bg-gray-50 text-gray-700"}`}>
                   <p className="text-xs font-medium text-inherit/80">{isOverpaid ? "Переплата" : isUnderpaid ? "К оплате (недоплата)" : "Нет задолженности"}</p>
-                  <p className="text-xl font-bold tabular-nums whitespace-nowrap">{formatCurrency(commonDutyAmount)} ₽</p>
+                  <p className="text-xl font-bold tabular-nums whitespace-nowrap">{formatCurrency(Math.abs(commonDutyAmount))} ₽</p>
                 </div>
                 {lscode && address && (
                   <div className="flex flex-col items-start sm:items-end">
@@ -548,7 +548,7 @@ export default function ReceiptViewPage() {
                         <tr className="border-b border-gray-100"><td className="py-2 pr-4 pl-3">Оплаты за {periodStr}</td><td className="py-2 pr-3 pl-2 text-right tabular-nums whitespace-nowrap">{formatCurrency(payments)}</td></tr>
                         <tr className={`font-semibold ${totalRowStyle}`}>
                           <td className="py-3 pl-3">Итого</td>
-                          <td className="py-3 pr-3 pl-2 text-right text-base tabular-nums whitespace-nowrap">{formatCurrency(commonDutyAmount)} ₽</td>
+                          <td className="py-3 pr-3 pl-2 text-right text-base tabular-nums whitespace-nowrap">{formatCurrency(Math.abs(commonDutyAmount))} ₽</td>
                         </tr>
                       </tbody>
                     </table>

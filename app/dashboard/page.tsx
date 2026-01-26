@@ -567,18 +567,37 @@ export default function DashboardPage() {
                           <p className={`text-4xl font-bold ${
                         accountData?.balance !== undefined
                           ? accountData.balance < 0
-                            ? "text-red-600" // Отрицательный баланс (долг) - красный
+                            ? "text-green-600" // Отрицательный баланс = переплата - зеленый
                             : accountData.balance === 0
                             ? "text-green-600" // Нулевой баланс - зеленый
                             : accountData.balance > 0
-                            ? "text-red-600" // Положительный баланс (тоже долг в 1С) - красный
+                            ? "text-red-600" // Положительный баланс = долг к оплате - красный
                             : "text-gray-900"
                           : "text-gray-900"
                       }`}>
                         {accountData?.balance !== undefined 
-                          ? `${accountData.balance.toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₽`
+                          ? `${Math.abs(accountData.balance).toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₽`
                           : "— ₽"}
                       </p>
+                      {accountData?.balance !== undefined && (
+                        <p className={`text-sm mt-1 ${
+                          accountData.balance < 0
+                            ? "text-green-600" // Отрицательный баланс = переплата - зеленый
+                            : accountData.balance === 0
+                            ? "text-green-600" // Нулевой баланс - зеленый
+                            : accountData.balance > 0
+                            ? "text-red-600" // Положительный баланс = долг к оплате - красный
+                            : "text-gray-600"
+                        }`}>
+                          {accountData.balance < 0
+                            ? "Переплата"
+                            : accountData.balance === 0
+                            ? "Нет задолженности"
+                            : accountData.balance > 0
+                            ? "К оплате"
+                            : ""}
+                        </p>
+                      )}
                     )}
                       </div>
                       {accountData && selectedAccountId && (accountData.balance < 0 || accountData.balance > 0) && (

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/prisma";
-import { get1CUserData, getMeteringDeviceHistory, formatDateFor1C } from "@/lib/1c-api";
+import { get1CUserData, getMeteringDeviceHistory, formatDateFor1C, getPaymentHistory } from "@/lib/1c-api";
 import { parseMeterHistory, type MeterHistoryItem } from "@/lib/parse-meter-history";
 
 export const dynamic = 'force-dynamic';
@@ -140,6 +140,51 @@ export async function GET(request: NextRequest) {
     const dateFromStr = formatDateFor1C(histFrom);
     const dateToStr = formatDateFor1C(histTo);
 
+    // Получаем оплаты за период квитанции (не общую сумму CommonPayment)
+    let paymentsForPeriod = 0;
+    try {
+      const paymentHistory = await getPaymentHistory(
+        account.accountNumber,
+        account.password1c,
+        billStart,
+        billEnd,
+        account.region
+      );
+      
+      // Обрабатываем структуру ответа 1С (может быть Payments, payments, или массив)
+      let paymentsArray: any[] = [];
+      if (paymentHistory) {
+        if (Array.isArray(paymentHistory)) {
+          paymentsArray = paymentHistory;
+        } else if (paymentHistory.Payments) {
+          paymentsArray = Array.isArray(paymentHistory.Payments) ? paymentHistory.Payments : [paymentHistory.Payments];
+        } else if (paymentHistory.payments) {
+          paymentsArray = Array.isArray(paymentHistory.payments) ? paymentHistory.payments : [paymentHistory.payments];
+        } else if (typeof paymentHistory === "object") {
+          // Если это объект с ключами-датами
+          Object.values(paymentHistory).forEach((val: any) => {
+            if (Array.isArray(val)) {
+              paymentsArray.push(...val);
+            } else if (val) {
+              paymentsArray.push(val);
+            }
+          });
+        }
+      }
+      
+      // Суммируем оплаты за период
+      paymentsForPeriod = paymentsArray.reduce((sum, payment: any) => {
+        const amount = parseFloat(String(payment.Charge || payment.amount || payment.Amount || 0).replace(/,/g, ".").replace(/\s/g, ""));
+        return sum + (isNaN(amount) ? 0 : amount);
+      }, 0);
+    } catch (e) {
+      const err = e instanceof Error ? e.message : String(e);
+      console.error("[receipt] getPaymentHistory error:", err);
+      // Если не удалось получить историю оплат, используем CommonPayment как fallback
+      paymentsForPeriod = parseFloat(String(data.CommonPayment || data.commonPayment || 0).replace(/,/g, ".").replace(/\s/g, ""));
+      if (isNaN(paymentsForPeriod)) paymentsForPeriod = 0;
+    }
+
     let debug: { historyError?: string; historyFetched: boolean; flatCount: number; byServiceKeys: string[]; chargeKeys: string[]; historyTopKeys?: string[] } | undefined;
     if (process.env.NODE_ENV === "development") {
       debug = { historyFetched: false, flatCount: 0, byServiceKeys: [], chargeKeys: [] };
@@ -180,6 +225,9 @@ export async function GET(request: NextRequest) {
         address: account.address,
         name: account.name,
         ...data,
+        // Заменяем CommonPayment на сумму оплат за период квитанции
+        CommonPayment: paymentsForPeriod.toFixed(2),
+        commonPayment: paymentsForPeriod.toFixed(2),
       },
     };
     if (process.env.NODE_ENV === "development" && debug) res._debug = debug;

@@ -30,13 +30,19 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Получаем лицевой счет пользователя
+    // Проверяем, является ли пользователь админом
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true },
+    });
+
+    const isAdmin = user?.role === "ADMIN";
+
+    // Админ может получать историю оплат для любого лицевого счета, обычный пользователь - только для своих
     const account = await prisma.userAccount.findFirst({
-      where: {
-        id: accountId,
-        userId: session.user.id,
-        isActive: true,
-      },
+      where: isAdmin
+        ? { id: accountId, isActive: true }
+        : { id: accountId, userId: session.user.id, isActive: true },
     });
 
     if (!account) {

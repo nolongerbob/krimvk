@@ -53,6 +53,16 @@ interface ReceiptData {
     Reading?: number | string;
     CurrentReading?: number | string;
   }>;
+  MetersInfo?: Array<{
+    service: string;
+    deviceNumber: string;
+    norm?: string;
+  }>;
+  metersInfo?: Array<{
+    service: string;
+    deviceNumber: string;
+    norm?: string;
+  }>;
 }
 
 export default function ReceiptViewPage() {
@@ -369,7 +379,32 @@ export default function ReceiptViewPage() {
               <p className="text-sm font-semibold text-gray-700 mb-1.5">Справочная информация</p>
               <ul className="text-sm text-gray-600 space-y-0.5 list-none">
                 <li>Льгот и договоров рассрочки не имеется.</li>
-                <li>Услуги по приборам учёта и нормативам.</li>
+                {(() => {
+                  const metersInfo = receiptData.MetersInfo || receiptData.metersInfo || [];
+                  const metersCount = metersInfo.length;
+                  
+                  if (metersCount > 0) {
+                    return (
+                      <>
+                        <li>
+                          Установлено приборов учёта: <span className="font-medium text-gray-800">{metersCount}</span>.
+                        </li>
+                        {metersInfo.map((meter, idx) => {
+                          const serviceName = meter.service || "Услуга";
+                          const deviceNumber = meter.deviceNumber || "—";
+                          const norm = meter.norm ? `, норматив: ${meter.norm}` : "";
+                          return (
+                            <li key={idx}>
+                              {serviceName}: прибор учёта № <span className="font-medium text-gray-800">{deviceNumber}</span>{norm}.
+                            </li>
+                          );
+                        })}
+                      </>
+                    );
+                  } else {
+                    return <li>Услуги по приборам учёта и нормативам.</li>;
+                  }
+                })()}
                 {receiptData.CommonPayment && parseFloat(receiptData.CommonPayment) > 0 && (
                   <li>Последняя оплата: <span className="font-medium text-gray-800">{formatCurrency(receiptData.CommonPayment)} ₽</span>.</li>
                 )}

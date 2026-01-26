@@ -190,6 +190,10 @@ export async function GET(request: NextRequest) {
       debug = { historyFetched: false, flatCount: 0, byServiceKeys: [], chargeKeys: [] };
     }
 
+    // Собираем информацию о счетчиках и нормативах
+    const metersInfo: Array<{ service: string; deviceNumber: string; norm?: string }> = [];
+    const uniqueDevices = new Set<string>();
+
     try {
       const history = await getMeteringDeviceHistory(
         account.accountNumber,
@@ -204,11 +208,44 @@ export async function GET(request: NextRequest) {
       }
       const flat = parseMeterHistory(history);
       if (debug) debug.flatCount = flat.length;
+      
+      // Собираем уникальные счетчики из истории
+      flat.forEach((item) => {
+        const deviceNumber = String(item.NumberOfDevice || item.DeviceNumber || item.Number || "");
+        const service = String(item.Service || (item as Record<string, unknown>).Услуга || (item as Record<string, unknown>).ServiceName || "");
+        if (deviceNumber && service) {
+          const key = `${service}|${deviceNumber}`;
+          if (!uniqueDevices.has(key)) {
+            uniqueDevices.add(key);
+            metersInfo.push({ service, deviceNumber });
+          }
+        }
+      });
+      
       const enrichResult = enrichChargesWithReadings((data.ChargesAndPayments ?? data.chargesAndPayments) as Record<string, unknown>[] | undefined, flat);
       if (debug) {
         debug.byServiceKeys = enrichResult.byServiceKeys;
         debug.chargeKeys = enrichResult.chargeKeys;
       }
+      
+      // Добавляем нормативы из ChargesAndPayments
+      if (data.ChargesAndPayments || data.chargesAndPayments) {
+        const charges = (data.ChargesAndPayments ?? data.chargesAndPayments) as Array<Record<string, unknown>>;
+        charges.forEach((charge) => {
+          const service = String(charge.Service || "");
+          const norm = charge.Norm ? String(charge.Norm) : undefined;
+          if (service && norm) {
+            const meter = metersInfo.find(m => canonicalServiceKey(m.service) === canonicalServiceKey(service));
+            if (meter) {
+              meter.norm = norm;
+            } else {
+              // Если счетчика нет в истории, но есть норматив, добавляем запись
+              metersInfo.push({ service, deviceNumber: "—", norm });
+            }
+          }
+        });
+      }
+      
       if (flat.length === 0 && history && typeof history === "object") {
         console.warn("[receipt] history flat is empty. history keys:", Object.keys(history as object));
       }
@@ -228,6 +265,9 @@ export async function GET(request: NextRequest) {
         // Заменяем CommonPayment на сумму оплат за период квитанции
         CommonPayment: paymentsForPeriod.toFixed(2),
         commonPayment: paymentsForPeriod.toFixed(2),
+        // Добавляем информацию о счетчиках и нормативах
+        MetersInfo: metersInfo,
+        metersInfo: metersInfo,
       },
     };
     if (process.env.NODE_ENV === "development" && debug) res._debug = debug;

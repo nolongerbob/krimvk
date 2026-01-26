@@ -106,35 +106,87 @@ const statusConfig = {
   },
 };
 
+type DebtFilter = "all" | "debtors" | "no-debt";
+
 export function UsersClient({ users: initialUsers }: UsersClientProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [debtFilter, setDebtFilter] = useState<DebtFilter>("all");
 
-  // Фильтрация пользователей по поисковому запросу
+  // Фильтрация пользователей по поисковому запросу и фильтру должников
   const filteredUsers = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return initialUsers;
+    let filtered = initialUsers;
+
+    // Фильтр по должникам
+    if (debtFilter === "debtors") {
+      filtered = filtered.filter((user) => user.totalDebt > 0.01);
+    } else if (debtFilter === "no-debt") {
+      filtered = filtered.filter((user) => user.totalDebt <= 0.01);
     }
 
-    const query = searchQuery.toLowerCase().trim();
-    return initialUsers.filter((user) => {
-      // Поиск по имени
-      if (user.name?.toLowerCase().includes(query)) return true;
-      // Поиск по email
-      if (user.email.toLowerCase().includes(query)) return true;
-      // Поиск по телефону
-      if (user.phone?.toLowerCase().includes(query)) return true;
-      // Поиск по адресу
-      if (user.address?.toLowerCase().includes(query)) return true;
-      // Поиск по номеру лицевого счета
-      if (user.userAccounts.some((acc) => acc.accountNumber.includes(query))) return true;
-      return false;
-    });
-  }, [initialUsers, searchQuery]);
+    // Фильтр по поисковому запросу
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter((user) => {
+        // Поиск по имени
+        if (user.name?.toLowerCase().includes(query)) return true;
+        // Поиск по email
+        if (user.email.toLowerCase().includes(query)) return true;
+        // Поиск по телефону
+        if (user.phone?.toLowerCase().includes(query)) return true;
+        // Поиск по адресу
+        if (user.address?.toLowerCase().includes(query)) return true;
+        // Поиск по номеру лицевого счета
+        if (user.userAccounts.some((acc) => acc.accountNumber.includes(query))) return true;
+        return false;
+      });
+    }
+
+    return filtered;
+  }, [initialUsers, searchQuery, debtFilter]);
+
+  // Статистика для фильтров
+  const stats = useMemo(() => {
+    const total = initialUsers.length;
+    const debtors = initialUsers.filter((u) => u.totalDebt > 0.01).length;
+    const noDebt = total - debtors;
+    return { total, debtors, noDebt };
+  }, [initialUsers]);
 
   return (
     <>
-      <div className="mb-6">
+      <div className="mb-6 space-y-4">
+        {/* Фильтры по должникам */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm font-medium text-gray-700">Фильтр:</span>
+          <Button
+            variant={debtFilter === "all" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setDebtFilter("all")}
+          >
+            Все ({stats.total})
+          </Button>
+          <Button
+            variant={debtFilter === "debtors" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setDebtFilter("debtors")}
+            className={debtFilter === "debtors" ? "bg-red-600 hover:bg-red-700" : ""}
+          >
+            <DollarSign className="h-4 w-4 mr-1" />
+            Должники ({stats.debtors})
+          </Button>
+          <Button
+            variant={debtFilter === "no-debt" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setDebtFilter("no-debt")}
+            className={debtFilter === "no-debt" ? "bg-green-600 hover:bg-green-700" : ""}
+          >
+            <CheckCircle className="h-4 w-4 mr-1" />
+            Без долгов ({stats.noDebt})
+          </Button>
+        </div>
+
+        {/* Поиск */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
@@ -145,8 +197,13 @@ export function UsersClient({ users: initialUsers }: UsersClientProps) {
             className="pl-10"
           />
         </div>
-        <p className="text-sm text-gray-500 mt-2">
+        <p className="text-sm text-gray-500">
           Найдено пользователей: {filteredUsers.length}
+          {debtFilter !== "all" && (
+            <span className="ml-2">
+              ({debtFilter === "debtors" ? "должников" : "без долгов"})
+            </span>
+          )}
         </p>
       </div>
 

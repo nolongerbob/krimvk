@@ -319,9 +319,9 @@ export default function ReceiptViewPage() {
               const periodYear = periodDate.getFullYear();
               const periodStr = `${periodMonth} ${periodYear} г.`;
               const receiptNum = receiptData.LSCode || accountInfo?.accountNumber || "";
-              // Отрицательный баланс = недоплата (долг), положительный = переплата
-              const isOverpaid = commonDutyAmount > 0;
-              const isUnderpaid = commonDutyAmount < 0;
+              // В 1С: положительное CommonDuty = долг к оплате (недоплата), отрицательное = переплата
+              const isOverpaid = commonDutyAmount < 0;
+              const isUnderpaid = commonDutyAmount > 0;
 
               return (
                 <>
@@ -532,8 +532,9 @@ export default function ReceiptViewPage() {
               }
               const firstDay = new Date(d.getFullYear(), d.getMonth(), 1);
               const debtLabel = `Задолженность на ${String(firstDay.getDate()).padStart(2, "0")}.${String(firstDay.getMonth() + 1).padStart(2, "0")}.${firstDay.getFullYear()}`;
-              const isOverpaid = commonDutyAmount > 0;
-              const isUnderpaid = commonDutyAmount < 0;
+              // В 1С: положительное CommonDuty = долг к оплате (недоплата), отрицательное = переплата
+              const isOverpaid = commonDutyAmount < 0;
+              const isUnderpaid = commonDutyAmount > 0;
               const totalRowStyle = isOverpaid ? "bg-emerald-50 text-emerald-800" : isUnderpaid ? "bg-amber-50 text-amber-800" : "bg-gray-50 text-gray-800";
               return (
                 <div className="mb-5">

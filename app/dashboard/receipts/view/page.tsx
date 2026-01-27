@@ -378,7 +378,18 @@ export default function ReceiptViewPage() {
             <div className="mb-5 pb-4 border-b border-gray-200">
               <p className="text-sm font-semibold text-gray-700 mb-1.5">Справочная информация</p>
               <ul className="text-sm text-gray-600 space-y-0.5 list-none">
-                <li>Льгот и договоров рассрочки не имеется.</li>
+                {(() => {
+                  // Считаем общую сумму льгот из ChargesAndPayments
+                  const totalExemption = (receiptData.ChargesAndPayments || []).reduce((sum, c) => {
+                    return sum + parseAmount(c.Exemption);
+                  }, 0);
+                  
+                  if (totalExemption > 0) {
+                    return <li className="text-emerald-700">Предоставлена льгота: <span className="font-medium">{formatCurrency(totalExemption)} ₽</span></li>;
+                  } else {
+                    return <li>Льгот и договоров рассрочки не имеется.</li>;
+                  }
+                })()}
                 {(() => {
                   const metersInfo = receiptData.MetersInfo || receiptData.metersInfo || [];
                   const metersCount = metersInfo.length;

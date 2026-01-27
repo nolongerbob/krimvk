@@ -216,6 +216,11 @@ export default async function ServicesPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
         {services.map((service) => {
           const Icon = getServiceIcon(service);
+          // Услуга технологического присоединения ведёт на страницу "Стать абонентом"
+          const isTechConnection = service.id === "tehnologicheskoe-prisoedinenie" || 
+            service.title.toLowerCase().includes("технологическое присоединение");
+          const serviceLink = isTechConnection ? "/stat-abonentom" : `/services/${service.id}/apply`;
+          
           return (
             <Card key={service.id} className="hover:shadow-lg transition-shadow flex flex-col">
               <CardHeader>
@@ -227,7 +232,7 @@ export default async function ServicesPage() {
               </CardHeader>
               <CardContent className="flex-1 flex flex-col justify-end">
                 <Button asChild className="w-full">
-                  <Link href={`/services/${service.id}/apply`}>Подать заявку</Link>
+                  <Link href={serviceLink}>Подать заявку</Link>
                 </Button>
               </CardContent>
             </Card>

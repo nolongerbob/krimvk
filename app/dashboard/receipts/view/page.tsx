@@ -583,6 +583,9 @@ export default function ReceiptViewPage() {
                     <Clock className="h-4 w-4 flex-shrink-0 print:hidden" />
                     Пн–Чт 08:00–17:00, Пт 08:00–16:00 · обед 12:00–12:48
                   </p>
+                  <p className="text-gray-600 text-xs leading-relaxed pl-6 print:pl-0">
+                    Приём абонентов: 8:15–15:00. <span className="text-gray-500">С 1 по 7 число каждого месяца приём не ведётся.</span>
+                  </p>
                 </div>
               </div>
             </div>

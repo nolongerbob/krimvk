@@ -17,8 +17,8 @@ const parseAmount = (value: string | number): number => {
   return isNaN(parsed) ? 0 : parsed;
 };
 
-// Функция для расчета задолженности пользователя
-async function calculateUserDebt(userId: string): Promise<{ totalDebt: number; unpaidBillsCount: number }> {
+// Функция для расчета баланса пользователя (положительное = долг, отрицательное = переплата)
+async function calculateUserBalance(userId: string): Promise<{ totalDebt: number; unpaidBillsCount: number }> {
   try {
     // Получаем лицевые счета пользователя
     const userAccounts = await withRetry(() =>
@@ -30,7 +30,7 @@ async function calculateUserDebt(userId: string): Promise<{ totalDebt: number; u
       })
     );
 
-    let totalDebt = 0;
+    let totalBalance = 0; // Положительное = долг, отрицательное = переплата
     let unpaidBillsCount = 0;
 
     // Для каждого лицевого счета получаем данные из 1С
@@ -43,13 +43,13 @@ async function calculateUserDebt(userId: string): Promise<{ totalDebt: number; u
         );
 
         if (responseData) {
-          // Получаем задолженность из CommonDuty
+          // Получаем баланс из CommonDuty (положительное = долг, отрицательное = переплата)
           const commonDutyAmount = parseAmount(responseData.CommonDuty || responseData.commonDuty || "0");
-          const debtAmount = Math.abs(commonDutyAmount);
+          totalBalance += commonDutyAmount;
 
-          if (debtAmount > 0.01) {
-            totalDebt += debtAmount;
-            unpaidBillsCount += 1; // Учитываем как минимум один неоплаченный счет
+          // Считаем неоплаченные только если есть реальный долг
+          if (commonDutyAmount > 0.01) {
+            unpaidBillsCount += 1;
           }
         }
       } catch (error) {
@@ -71,14 +71,15 @@ async function calculateUserDebt(userId: string): Promise<{ totalDebt: number; u
     );
 
     const localDebt = localBills.reduce((sum, bill) => sum + bill.amount, 0);
-    if (localDebt > totalDebt) {
-      totalDebt = localDebt;
+    // Добавляем локальный долг только если он больше уже посчитанного
+    if (localDebt > 0 && localDebt > totalBalance) {
+      totalBalance = localDebt;
     }
     unpaidBillsCount = Math.max(unpaidBillsCount, localBills.length);
 
-    return { totalDebt, unpaidBillsCount };
+    return { totalDebt: totalBalance, unpaidBillsCount };
   } catch (error) {
-    console.error("Error calculating user debt:", error);
+    console.error("Error calculating user balance:", error);
     return { totalDebt: 0, unpaidBillsCount: 0 };
   }
 }
@@ -144,10 +145,10 @@ export default async function AdminUsersPage() {
     })
   );
 
-  // Рассчитываем задолженность для каждого пользователя
+  // Рассчитываем баланс для каждого пользователя
   const usersWithDebt = await Promise.all(
     rawUsers.map(async (user) => {
-      const { totalDebt, unpaidBillsCount } = await calculateUserDebt(user.id);
+      const { totalDebt, unpaidBillsCount } = await calculateUserBalance(user.id);
       
       return {
         id: user.id,
@@ -209,7 +210,7 @@ export default async function AdminUsersPage() {
         </Button>
       </div>
 
-      <UsersClient users={usersWithDebt} />
+      <UsersClient users={usersWithDebt} currentUserId={session.user.id} />
     </div>
   );
 }

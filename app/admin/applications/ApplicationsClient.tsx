@@ -7,7 +7,6 @@ import { FileText, Clock, CheckCircle, XCircle, AlertCircle, User, Phone, MapPin
 import { ApplicationActions } from "@/components/admin/ApplicationActions";
 import { ApplicationFilters } from "@/components/admin/ApplicationFilters";
 import { ServiceCategoryFilters } from "@/components/admin/ServiceCategoryFilters";
-import { TechnicalConditionsApplication } from "@/components/admin/TechnicalConditionsApplication";
 import { ApplicationDetails } from "@/components/admin/ApplicationDetails";
 
 type FilterStatus = "ALL" | "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
@@ -166,52 +165,45 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
     router.replace(newUrl, { scroll: false });
   }, [activeFilter, activeCategory, router]);
 
-  // Подсчитываем количество заявок по статусам
-  const statusCounts = useMemo(() => {
-    return {
-      all: applications.length,
-      pending: applications.filter((app) => app.status === "PENDING").length,
-      inProgress: applications.filter((app) => app.status === "IN_PROGRESS").length,
-      completed: applications.filter((app) => app.status === "COMPLETED").length,
-      cancelled: applications.filter((app) => app.status === "CANCELLED").length,
-    };
-  }, [applications]);
-
-  // Подсчитываем количество заявок по категориям
-  const categoryCounts = useMemo(() => {
-    const counts: { [key: string]: number } = { all: applications.length };
-    categories.forEach((category) => {
-      counts[category] = applications.filter((app) => app.service.category === category).length;
-    });
-    return counts;
-  }, [applications, categories]);
-
-  // Разделяем заявки на технические условия и обычные
-  const { technicalConditionsApps, regularApps } = useMemo(() => {
-    const techApps: Application[] = [];
-    const regular: Application[] = [];
-
-    applications.forEach((app) => {
+  // Фильтруем только обычные заявки (без технологического присоединения)
+  const regularApps = useMemo(() => {
+    return applications.filter((app) => {
+      // Проверяем по JSON в description
       const data = safeParseDescription(app.description);
       if (data && data.type === "technical_conditions") {
-        techApps.push(app);
-        return;
+        return false; // Исключаем технические условия
       }
-      regular.push(app);
+      
+      // Проверяем по названию услуги
+      const titleLower = app.service.title.toLowerCase();
+      if (titleLower.includes("технологическое присоединение") || 
+          titleLower.includes("технические условия")) {
+        return false; // Исключаем технические условия
+      }
+      
+      return true;
     });
-
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Applications split:', {
-        total: applications.length,
-        technical: techApps.length,
-        regular: regular.length,
-        techAppIds: techApps.map(a => a.id),
-        techAppStatuses: techApps.map(a => a.status),
-      });
-    }
-
-    return { technicalConditionsApps: techApps, regularApps: regular };
   }, [applications]);
+
+  // Подсчитываем количество заявок по статусам (только обычные заявки)
+  const statusCounts = useMemo(() => {
+    return {
+      all: regularApps.length,
+      pending: regularApps.filter((app) => app.status === "PENDING").length,
+      inProgress: regularApps.filter((app) => app.status === "IN_PROGRESS").length,
+      completed: regularApps.filter((app) => app.status === "COMPLETED").length,
+      cancelled: regularApps.filter((app) => app.status === "CANCELLED").length,
+    };
+  }, [regularApps]);
+
+  // Подсчитываем количество заявок по категориям (только обычные заявки)
+  const categoryCounts = useMemo(() => {
+    const counts: { [key: string]: number } = { all: regularApps.length };
+    categories.forEach((category) => {
+      counts[category] = regularApps.filter((app) => app.service.category === category).length;
+    });
+    return counts;
+  }, [regularApps, categories]);
 
   // Фильтруем заявки по статусу и категории
   const filteredApplications = useMemo(() => {
@@ -236,42 +228,13 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
     return filtered;
   }, [regularApps, activeFilter, activeCategory]);
 
-  // Фильтруем заявки на технические условия
-  const filteredTechnicalConditions = useMemo(() => {
-    let filtered = technicalConditionsApps;
-
-    // Фильтр по статусу
-    if (activeFilter === "ALL") {
-      // Показываем все технические условия, кроме завершенных (они в отдельном разделе)
-      filtered = filtered.filter((app) => app.status !== "COMPLETED");
-    } else if (activeFilter === "COMPLETED") {
-      // Завершенные технические условия показываются в разделе completedApplications
-      filtered = [];
-    } else {
-      // Показываем только заявки с выбранным статусом
-      filtered = filtered.filter((app) => app.status === activeFilter);
-    }
-
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Filtered technical conditions:', {
-        total: technicalConditionsApps.length,
-        filtered: filtered.length,
-        activeFilter,
-        statuses: technicalConditionsApps.map(a => a.status),
-        filteredStatuses: filtered.map(a => a.status),
-      });
-    }
-
-    return filtered;
-  }, [technicalConditionsApps, activeFilter]);
-
   // Завершенные заявки отдельно (показываются всегда, кроме когда выбран другой фильтр)
   const completedApplications = useMemo(() => {
     if (activeFilter !== "ALL" && activeFilter !== "COMPLETED") {
       return []; // Не показываем завершенные, если выбран другой фильтр
     }
     
-    let completed = applications.filter((app) => app.status === "COMPLETED");
+    let completed = regularApps.filter((app) => app.status === "COMPLETED");
     
     // Применяем фильтр по категории к завершенным
     if (activeCategory !== null) {
@@ -279,100 +242,18 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
     }
     
     return completed;
-  }, [applications, activeFilter, activeCategory]);
-
-  // Разделяем завершенные заявки на технические условия и обычные
-  const { completedTechnicalConditions, completedRegular } = useMemo(() => {
-    const tech: Application[] = [];
-    const regular: Application[] = [];
-
-    completedApplications.forEach((app) => {
-      let isTechnicalConditions = false;
-      
-      // Проверяем по JSON в description (приоритет)
-      const data = safeParseDescription(app.description);
-      if (data && data.type === "technical_conditions") {
-        isTechnicalConditions = true;
-      }
-      
-      // Проверяем по названию услуги
-      if (!isTechnicalConditions) {
-        const titleLower = app.service.title.toLowerCase();
-        if (titleLower.includes("технологическое присоединение") || 
-            titleLower.includes("технические условия")) {
-          isTechnicalConditions = true;
-        }
-      }
-      
-      if (isTechnicalConditions) {
-        tech.push(app);
-      } else {
-        regular.push(app);
-      }
-    });
-
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Completed applications split:', {
-        total: completedApplications.length,
-        technical: tech.length,
-        regular: regular.length,
-        techIds: tech.map(a => a.id),
-        techTitles: tech.map(a => a.service.title),
-      });
-    }
-
-    return { completedTechnicalConditions: tech, completedRegular: regular };
-  }, [completedApplications]);
+  }, [regularApps, activeFilter, activeCategory]);
 
   const renderApplication = (app: Application) => {
-    // Проверяем, не является ли это техническими условиями
-    let isTechnicalConditions = false;
-    let techData = null;
-    
-    // Проверяем по JSON в description
-    const parsed = safeParseDescription(app.description);
-    if (parsed && parsed.type === "technical_conditions") {
-      isTechnicalConditions = true;
-      techData = parsed;
-    }
-    
-    // Проверяем по названию услуги
-    if (!isTechnicalConditions) {
-      const titleLower = app.service.title.toLowerCase();
-      if (titleLower.includes("технологическое присоединение") || 
-          titleLower.includes("технические условия")) {
-        isTechnicalConditions = true;
-      }
-    }
-    
-    // Если это технические условия, используем специальный компонент
-    if (isTechnicalConditions) {
-      return <TechnicalConditionsApplication key={app.id} application={app} />;
-    }
-
     const status = statusConfig[app.status as keyof typeof statusConfig];
     const StatusIcon = status.icon;
 
-    // Обрабатываем description - может быть JSON для других типов
+    // Обрабатываем description
     let displayDescription = app.description || "Без описания";
+    const parsed = safeParseDescription(app.description);
     
-    // Если parsed существует и это не технические условия, показываем краткое описание
-    if (parsed && parsed.type && parsed.type !== "technical_conditions") {
-      displayDescription = "Заявка на технологическое присоединение";
-    } else if (!parsed) {
-      // Не JSON, используем как есть, но ограничиваем длину
-      // Если description начинается с {, это может быть обрезанный JSON
-      if (app.description && app.description.trim().startsWith('{')) {
-        // Пытаемся показать через TechnicalConditionsApplication
-        const titleLower = app.service.title.toLowerCase();
-        if (titleLower.includes("технологическое присоединение") || 
-            titleLower.includes("технические условия")) {
-          return <TechnicalConditionsApplication key={app.id} application={app} />;
-        }
-      }
-      if (displayDescription.length > 200) {
-        displayDescription = displayDescription.substring(0, 200) + "...";
-      }
+    if (!parsed && displayDescription.length > 200) {
+      displayDescription = displayDescription.substring(0, 200) + "...";
     }
 
     return (
@@ -443,35 +324,9 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
         />
       </div>
 
-      {/* Заявки на технические условия */}
-      {filteredTechnicalConditions.length > 0 && (
-        <div className="mb-8">
-          <div className="mb-4">
-            <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
-              <FileText className="h-6 w-6 text-blue-500" />
-              Заявки на технические условия
-            </h2>
-            <p className="text-gray-600 text-sm">
-              Всего: {filteredTechnicalConditions.length} (из {technicalConditionsApps.length} всего)
-            </p>
-          </div>
-          <div className="space-y-4">
-            {filteredTechnicalConditions.map((app) => (
-              <TechnicalConditionsApplication key={app.id} application={app} />
-            ))}
-          </div>
-        </div>
-      )}
-
-
-      {/* Обычные заявки */}
+      {/* Заявки */}
       {filteredApplications.length > 0 && (
         <div className="space-y-4 mb-8">
-          {filteredTechnicalConditions.length > 0 && (
-            <div className="mb-4">
-              <h2 className="text-2xl font-bold mb-2">Остальные заявки</h2>
-            </div>
-          )}
           {filteredApplications.map(renderApplication)}
         </div>
       )}
@@ -479,28 +334,7 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
       {/* Завершенные заявки в отдельном разделе */}
       {activeFilter === "COMPLETED" && completedApplications.length > 0 && (
         <div className="space-y-4">
-          {/* Завершенные технические условия */}
-          {completedTechnicalConditions.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-xl font-bold mb-3">Завершенные заявки на технические условия</h3>
-              <div className="space-y-4">
-                {completedTechnicalConditions.map((app) => (
-                  <TechnicalConditionsApplication key={app.id} application={app} />
-                ))}
-              </div>
-            </div>
-          )}
-          {/* Завершенные обычные заявки */}
-          {completedRegular.length > 0 && (
-            <div>
-              {completedTechnicalConditions.length > 0 && (
-                <h3 className="text-xl font-bold mb-3">Остальные завершенные заявки</h3>
-              )}
-              <div className="space-y-4">
-                {completedRegular.map(renderApplication)}
-              </div>
-            </div>
-          )}
+          {completedApplications.map(renderApplication)}
         </div>
       )}
 
@@ -517,36 +351,13 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
             </p>
           </div>
           <div className="space-y-4">
-            {/* Завершенные технические условия */}
-            {completedTechnicalConditions.length > 0 && (
-              <div className="mb-6">
-                <h3 className="text-xl font-bold mb-3">Завершенные заявки на технические условия</h3>
-                <div className="space-y-4">
-                  {completedTechnicalConditions.map((app) => (
-                    <TechnicalConditionsApplication key={app.id} application={app} />
-                  ))}
-                </div>
-              </div>
-            )}
-            {/* Завершенные обычные заявки */}
-            {completedRegular.length > 0 && (
-              <div>
-                {completedTechnicalConditions.length > 0 && (
-                  <h3 className="text-xl font-bold mb-3">Остальные завершенные заявки</h3>
-                )}
-                <div className="space-y-4">
-                  {completedRegular.map(renderApplication)}
-                </div>
-              </div>
-            )}
+            {completedApplications.map(renderApplication)}
           </div>
         </div>
       )}
 
       {/* Пустое состояние */}
-      {filteredApplications.length === 0 && 
-       filteredTechnicalConditions.length === 0 && 
-       completedApplications.length === 0 && (
+      {filteredApplications.length === 0 && completedApplications.length === 0 && (
         <Card>
           <CardContent className="py-12 text-center">
             <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -557,7 +368,6 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
 
       {/* Пустое состояние для активного фильтра */}
       {filteredApplications.length === 0 && 
-       filteredTechnicalConditions.length === 0 && 
        completedApplications.length > 0 && 
        activeFilter !== "COMPLETED" && (
         <Card>

@@ -2,9 +2,11 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { User, Phone, MapPin, FileText, Building, Settings, Calendar } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { User, Phone, MapPin, FileText, Building, Settings, Calendar, FileCheck } from "lucide-react";
 import { ApplicationActions } from "@/components/admin/ApplicationActions";
 import { ApplicationDetails } from "@/components/admin/ApplicationDetails";
+import Link from "next/link";
 
 interface TechnicalConditionsData {
   type: string;
@@ -258,21 +260,27 @@ export function TechnicalConditionsApplication({ application }: TechnicalConditi
               </div>
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="flex gap-2 items-center">
-              <ApplicationDetails application={application} />
-              <ApplicationActions 
-                applicationId={application.id} 
-                currentStatus={application.status}
-                isTechnicalConditions={true}
-              />
-            </div>
-          </CardContent>
-        </Card>
-      );
-    }
-    return null;
+        <CardContent>
+          <div className="flex gap-2 items-center flex-wrap">
+            <ApplicationDetails application={application} />
+            <ApplicationActions 
+              applicationId={application.id} 
+              currentStatus={application.status}
+              isTechnicalConditions={true}
+            />
+            <Button asChild variant="outline" className="bg-green-50 hover:bg-green-100 border-green-300 text-green-700">
+              <Link href={`/admin/contracts/create?fromApplication=${application.id}`}>
+                <FileCheck className="h-4 w-4 mr-2" />
+                Создать договор
+              </Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
+  return null;
+}
 
   const fullName = extractFullName(data, application.user.name, application.user.email);
   const passportInfo = data.passportSeries && data.passportNumber 
@@ -459,13 +467,19 @@ export function TechnicalConditionsApplication({ application }: TechnicalConditi
         </div>
       </CardHeader>
       <CardContent>
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-2 items-center flex-wrap">
           <ApplicationDetails application={application} />
           <ApplicationActions 
             applicationId={application.id} 
             currentStatus={application.status}
             isTechnicalConditions={true}
           />
+          <Button asChild variant="outline" className="bg-green-50 hover:bg-green-100 border-green-300 text-green-700">
+            <Link href={`/admin/contracts/create?fromApplication=${application.id}`}>
+              <FileCheck className="h-4 w-4 mr-2" />
+              Создать договор
+            </Link>
+          </Button>
         </div>
       </CardContent>
     </Card>

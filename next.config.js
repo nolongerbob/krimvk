@@ -30,7 +30,15 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'yourdomain.com', // Замените на ваш домен
+        hostname: 'krimvk.ru',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.krimvk.ru',
+      },
+      {
+        protocol: 'https',
+        hostname: 'yourdomain.com',
       },
     ],
   },

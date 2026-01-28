@@ -81,6 +81,7 @@ interface User {
 
 interface UsersClientProps {
   users: User[];
+  currentUserId?: string;
 }
 
 const statusConfig = {
@@ -106,22 +107,41 @@ const statusConfig = {
   },
 };
 
-type DebtFilter = "all" | "debtors" | "no-debt";
+type DebtFilter = "all" | "debtors" | "overpaid" | "no-debt" | "admins";
 
-export function UsersClient({ users: initialUsers }: UsersClientProps) {
+export function UsersClient({ users: initialUsers, currentUserId }: UsersClientProps) {
+  const [users, setUsers] = useState<User[]>(initialUsers);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [debtFilter, setDebtFilter] = useState<DebtFilter>("all");
 
+  // Обработчик изменения роли
+  const handleRoleChange = (userId: string, newRole: string) => {
+    // Обновляем список пользователей
+    setUsers((prevUsers) =>
+      prevUsers.map((u) =>
+        u.id === userId ? { ...u, role: newRole } : u
+      )
+    );
+    // Обновляем выбранного пользователя если он открыт
+    if (selectedUser?.id === userId) {
+      setSelectedUser((prev) => (prev ? { ...prev, role: newRole } : null));
+    }
+  };
+
   // Фильтрация пользователей по поисковому запросу и фильтру должников
   const filteredUsers = useMemo(() => {
-    let filtered = initialUsers;
+    let filtered = users;
 
-    // Фильтр по должникам
+    // Фильтр по балансу (положительный = долг, отрицательный = переплата) и по ролям
     if (debtFilter === "debtors") {
       filtered = filtered.filter((user) => user.totalDebt > 0.01);
+    } else if (debtFilter === "overpaid") {
+      filtered = filtered.filter((user) => user.totalDebt < -0.01);
     } else if (debtFilter === "no-debt") {
-      filtered = filtered.filter((user) => user.totalDebt <= 0.01);
+      filtered = filtered.filter((user) => Math.abs(user.totalDebt) <= 0.01);
+    } else if (debtFilter === "admins") {
+      filtered = filtered.filter((user) => user.role === "ADMIN");
     }
 
     // Фильтр по поисковому запросу
@@ -143,20 +163,22 @@ export function UsersClient({ users: initialUsers }: UsersClientProps) {
     }
 
     return filtered;
-  }, [initialUsers, searchQuery, debtFilter]);
+  }, [users, searchQuery, debtFilter]);
 
   // Статистика для фильтров
   const stats = useMemo(() => {
-    const total = initialUsers.length;
-    const debtors = initialUsers.filter((u) => u.totalDebt > 0.01).length;
-    const noDebt = total - debtors;
-    return { total, debtors, noDebt };
-  }, [initialUsers]);
+    const total = users.length;
+    const debtors = users.filter((u) => u.totalDebt > 0.01).length;
+    const overpaid = users.filter((u) => u.totalDebt < -0.01).length;
+    const admins = users.filter((u) => u.role === "ADMIN").length;
+    const noDebt = total - debtors - overpaid;
+    return { total, debtors, overpaid, noDebt, admins };
+  }, [users]);
 
   return (
     <>
       <div className="mb-6 space-y-4">
-        {/* Фильтры по должникам */}
+        {/* Фильтры по балансу */}
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm font-medium text-gray-700">Фильтр:</span>
           <Button
@@ -176,6 +198,15 @@ export function UsersClient({ users: initialUsers }: UsersClientProps) {
             Должники ({stats.debtors})
           </Button>
           <Button
+            variant={debtFilter === "overpaid" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setDebtFilter("overpaid")}
+            className={debtFilter === "overpaid" ? "bg-blue-600 hover:bg-blue-700" : ""}
+          >
+            <DollarSign className="h-4 w-4 mr-1" />
+            Переплата ({stats.overpaid})
+          </Button>
+          <Button
             variant={debtFilter === "no-debt" ? "default" : "outline"}
             size="sm"
             onClick={() => setDebtFilter("no-debt")}
@@ -183,6 +214,16 @@ export function UsersClient({ users: initialUsers }: UsersClientProps) {
           >
             <CheckCircle className="h-4 w-4 mr-1" />
             Без долгов ({stats.noDebt})
+          </Button>
+          <div className="h-4 w-px bg-gray-300 mx-1" />
+          <Button
+            variant={debtFilter === "admins" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setDebtFilter("admins")}
+            className={debtFilter === "admins" ? "bg-purple-600 hover:bg-purple-700" : ""}
+          >
+            <Shield className="h-4 w-4 mr-1" />
+            Администраторы ({stats.admins})
           </Button>
         </div>
 
@@ -201,7 +242,13 @@ export function UsersClient({ users: initialUsers }: UsersClientProps) {
           Найдено пользователей: {filteredUsers.length}
           {debtFilter !== "all" && (
             <span className="ml-2">
-              ({debtFilter === "debtors" ? "должников" : "без долгов"})
+              ({debtFilter === "debtors" 
+                ? "должников" 
+                : debtFilter === "overpaid" 
+                ? "с переплатой" 
+                : debtFilter === "admins"
+                ? "администраторов"
+                : "без долгов"})
             </span>
           )}
         </p>
@@ -276,22 +323,29 @@ export function UsersClient({ users: initialUsers }: UsersClientProps) {
                       <div className="flex items-center gap-2">
                         <DollarSign
                           className={`h-4 w-4 ${
-                            user.totalDebt > 0
+                            user.totalDebt > 0.01
                               ? "text-red-500"
+                              : user.totalDebt < -0.01
+                              ? "text-blue-500"
                               : "text-green-500"
                           }`}
                         />
                         <span
                           className={`font-medium ${
-                            user.totalDebt > 0 ? "text-red-600" : "text-green-600"
+                            user.totalDebt > 0.01
+                              ? "text-red-600"
+                              : user.totalDebt < -0.01
+                              ? "text-blue-600"
+                              : "text-green-600"
                           }`}
                         >
-                          Задолженность:{" "}
-                          {user.totalDebt > 0
-                            ? `${user.totalDebt.toFixed(2)} ₽`
-                            : "Нет задолженности"}
+                          {user.totalDebt > 0.01
+                            ? `Долг: ${user.totalDebt.toFixed(2)} ₽`
+                            : user.totalDebt < -0.01
+                            ? `Переплата: ${Math.abs(user.totalDebt).toFixed(2)} ₽`
+                            : "Баланс: 0 ₽"}
                         </span>
-                        {user.unpaidBillsCount > 0 && (
+                        {user.unpaidBillsCount > 0 && user.totalDebt > 0.01 && (
                           <Badge variant="destructive" className="ml-2">
                             {user.unpaidBillsCount} неоплаченных
                           </Badge>
@@ -341,6 +395,8 @@ export function UsersClient({ users: initialUsers }: UsersClientProps) {
           user={selectedUser}
           open={!!selectedUser}
           onOpenChange={(open) => !open && setSelectedUser(null)}
+          onRoleChange={handleRoleChange}
+          currentUserId={currentUserId}
         />
       )}
     </>

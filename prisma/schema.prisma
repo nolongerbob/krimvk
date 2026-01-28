@@ -469,6 +469,7 @@ enum ContractStatus {
 model Contract {
   id        String   @id @default(cuid())
   userId    String? // ID пользователя (опционально, для связи с пользователем если нужно)
+  applicationId String? // ID заявки, из которой создан договор (опционально)
   contractNumber String // Номер договора
   contractDate   String? // Дата договора
   status    ContractStatus @default(PENDING) // Статус договора
@@ -547,4 +548,31 @@ model ContractDocument {
   contract Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
 
   @@map("contract_documents")
+}
+
+// ==================== БАЗА ЗНАНИЙ И ШАБЛОНЫ ОТВЕТОВ ====================
+
+// Статьи базы знаний (FAQ) - простая структура без категорий
+model KnowledgeBaseArticle {
+  id          String   @id @default(cuid())
+  title       String   // Заголовок/вопрос
+  content     String   @db.Text // Ответ
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("knowledge_base_articles")
+}
+
+// Шаблоны быстрых ответов для админов
+model AnswerTemplate {
+  id          String   @id @default(cuid())
+  title       String   // Краткое название шаблона
+  content     String   @db.Text // Текст шаблона
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("answer_templates")
 }

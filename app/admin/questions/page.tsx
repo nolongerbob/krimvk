@@ -36,15 +36,17 @@ export default async function AdminQuestionsPage() {
   });
 
   return (
-    <div className="container py-8 px-4">
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Вопросы и ответы</h1>
-          <p className="text-gray-600">Ответы на вопросы пользователей</p>
+    <div className="p-3">
+      <div className="mb-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Button asChild variant="outline" size="sm">
+            <Link href="/admin">← Админ</Link>
+          </Button>
+          <h1 className="text-lg font-semibold">Вопросы и ответы</h1>
         </div>
-        <Button asChild variant="outline">
-          <Link href="/admin">Назад</Link>
-        </Button>
+        <div className="text-sm text-gray-500">
+          {questions.length} диалогов
+        </div>
       </div>
 
       <AdminQuestionsChat questions={questions} />

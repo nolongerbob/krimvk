@@ -21,6 +21,9 @@ import {
   Clock,
   Eye,
   Receipt,
+  Loader2,
+  ShieldCheck,
+  UserCog,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ApplicationDetails } from "@/components/admin/ApplicationDetails";
@@ -28,6 +31,30 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+// Маппинг кодов регионов на читаемые названия
+const regionNames: Record<string, string> = {
+  krasn: "Красногвардейский район",
+  saki: "Сакский и Симферопольский районы",
+  pervom: "Первомайский район",
+  nignegorsk: "Нижнегорский район",
+  ruch: "Раздольненский район",
+  evpat: "Евпаторийский район",
+  prog: "Тестовый регион",
+};
+
+// Функция получения читаемого названия региона
+const getRegionName = (regionCode: string | null): string => {
+  if (!regionCode) return "";
+  return regionNames[regionCode] || regionCode;
+};
 
 interface UserAccount {
   id: string;
@@ -88,6 +115,8 @@ interface UserDetailsDialogProps {
   user: UserDetails;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onRoleChange?: (userId: string, newRole: string) => void;
+  currentUserId?: string; // ID текущего админа, чтобы не давать менять свою роль
 }
 
 const statusConfig = {
@@ -128,9 +157,11 @@ const billStatusConfig = {
   },
 };
 
-export function UserDetailsDialog({ user, open, onOpenChange }: UserDetailsDialogProps) {
+export function UserDetailsDialog({ user, open, onOpenChange, onRoleChange, currentUserId }: UserDetailsDialogProps) {
   const [receiptDateFrom, setReceiptDateFrom] = useState("");
   const [receiptDateTo, setReceiptDateTo] = useState("");
+  const [isChangingRole, setIsChangingRole] = useState(false);
+  const [roleError, setRoleError] = useState<string | null>(null);
 
   // Устанавливаем период по умолчанию (предыдущий месяц) при открытии диалога
   useEffect(() => {
@@ -144,12 +175,62 @@ export function UserDetailsDialog({ user, open, onOpenChange }: UserDetailsDialo
     }
   }, [open, receiptDateFrom, receiptDateTo]);
 
+  // Сбрасываем ошибку при закрытии диалога
+  useEffect(() => {
+    if (!open) {
+      setRoleError(null);
+    }
+  }, [open]);
+
   const getReceiptUrl = (accountId: string) => {
     const params = new URLSearchParams({ accountId });
     if (receiptDateFrom) params.append("dateFrom", receiptDateFrom);
     if (receiptDateTo) params.append("dateTo", receiptDateTo);
     return `/dashboard/receipts/view?${params.toString()}`;
   };
+
+  // Функция для изменения роли пользователя
+  const handleRoleChange = async (newRole: string) => {
+    if (newRole === user.role) return;
+
+    setIsChangingRole(true);
+    setRoleError(null);
+
+    try {
+      const response = await fetch("/api/admin/users/role", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          role: newRole,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Ошибка при изменении роли");
+      }
+
+      // Уведомляем родительский компонент об изменении роли
+      if (onRoleChange) {
+        onRoleChange(user.id, newRole);
+      }
+
+      // Показываем сообщение об успехе
+      alert(data.message || "Роль успешно изменена");
+    } catch (error) {
+      console.error("Error changing role:", error);
+      setRoleError(error instanceof Error ? error.message : "Ошибка при изменении роли");
+    } finally {
+      setIsChangingRole(false);
+    }
+  };
+
+  // Нельзя менять свою роль
+  const isSelf = currentUserId === user.id;
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
@@ -222,11 +303,52 @@ export function UserDetailsDialog({ user, open, onOpenChange }: UserDetailsDialo
                   </div>
                   <div className="flex items-center gap-3">
                     <Shield className="h-5 w-5 text-gray-400" />
-                    <div>
-                      <p className="text-sm text-gray-500">Роль</p>
-                      <Badge variant={user.role === "ADMIN" ? "default" : "secondary"}>
-                        {user.role === "ADMIN" ? "Администратор" : "Пользователь"}
-                      </Badge>
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-500 mb-1">Роль</p>
+                      {isSelf ? (
+                        <div className="flex items-center gap-2">
+                          <Badge variant={user.role === "ADMIN" ? "default" : "secondary"}>
+                            {user.role === "ADMIN" ? "Администратор" : "Пользователь"}
+                          </Badge>
+                          <span className="text-xs text-gray-400">(это вы)</span>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <Select
+                            value={user.role}
+                            onValueChange={handleRoleChange}
+                            disabled={isChangingRole}
+                          >
+                            <SelectTrigger className="w-[200px]">
+                              {isChangingRole ? (
+                                <div className="flex items-center gap-2">
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                  <span>Изменение...</span>
+                                </div>
+                              ) : (
+                                <SelectValue placeholder="Выберите роль" />
+                              )}
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="USER">
+                                <div className="flex items-center gap-2">
+                                  <User className="h-4 w-4" />
+                                  <span>Пользователь</span>
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="ADMIN">
+                                <div className="flex items-center gap-2">
+                                  <ShieldCheck className="h-4 w-4" />
+                                  <span>Администратор</span>
+                                </div>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                          {roleError && (
+                            <p className="text-xs text-red-500">{roleError}</p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -253,13 +375,23 @@ export function UserDetailsDialog({ user, open, onOpenChange }: UserDetailsDialo
               </Card>
               <Card>
                 <CardHeader className="pb-2">
-                  <CardDescription>Задолженность</CardDescription>
+                  <CardDescription>Баланс</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className={`text-2xl font-bold ${user.totalDebt > 0 ? "text-red-600" : "text-green-600"}`}>
-                    {user.totalDebt > 0 ? `${user.totalDebt.toFixed(2)} ₽` : "Нет"}
+                  <div className={`text-2xl font-bold ${
+                    user.totalDebt > 0.01 
+                      ? "text-red-600" 
+                      : user.totalDebt < -0.01 
+                      ? "text-blue-600" 
+                      : "text-green-600"
+                  }`}>
+                    {user.totalDebt > 0.01 
+                      ? `Долг: ${user.totalDebt.toFixed(2)} ₽` 
+                      : user.totalDebt < -0.01 
+                      ? `Переплата: ${Math.abs(user.totalDebt).toFixed(2)} ₽`
+                      : "0 ₽"}
                   </div>
-                  {user.unpaidBillsCount > 0 && (
+                  {user.unpaidBillsCount > 0 && user.totalDebt > 0.01 && (
                     <p className="text-xs text-gray-500 mt-1">
                       {user.unpaidBillsCount} неоплаченных счетов
                     </p>
@@ -305,8 +437,8 @@ export function UserDetailsDialog({ user, open, onOpenChange }: UserDetailsDialo
                       )}
                       {account.region && (
                         <div>
-                          <p className="text-sm text-gray-500 mb-1">Регион</p>
-                          <p className="font-medium">{account.region}</p>
+                          <p className="text-sm text-gray-500 mb-1">Район</p>
+                          <p className="font-medium">{getRegionName(account.region)}</p>
                         </div>
                       )}
                       <div>
@@ -485,14 +617,24 @@ export function UserDetailsDialog({ user, open, onOpenChange }: UserDetailsDialo
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <DollarSign className="h-5 w-5" />
-                  Общая задолженность
+                  Баланс абонента
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className={`text-3xl font-bold ${user.totalDebt > 0 ? "text-red-600" : "text-green-600"}`}>
-                  {user.totalDebt > 0 ? `${user.totalDebt.toFixed(2)} ₽` : "Нет задолженности"}
+                <div className={`text-3xl font-bold ${
+                  user.totalDebt > 0.01 
+                    ? "text-red-600" 
+                    : user.totalDebt < -0.01 
+                    ? "text-blue-600" 
+                    : "text-green-600"
+                }`}>
+                  {user.totalDebt > 0.01 
+                    ? `Долг: ${user.totalDebt.toFixed(2)} ₽` 
+                    : user.totalDebt < -0.01 
+                    ? `Переплата: ${Math.abs(user.totalDebt).toFixed(2)} ₽`
+                    : "Баланс: 0 ₽"}
                 </div>
-                {user.unpaidBillsCount > 0 && (
+                {user.unpaidBillsCount > 0 && user.totalDebt > 0.01 && (
                   <p className="text-sm text-gray-500 mt-2">
                     Неоплаченных счетов: {user.unpaidBillsCount}
                   </p>

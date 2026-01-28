@@ -172,7 +172,7 @@ export default async function AdminPage() {
           </CardHeader>
           <CardContent>
             <Button asChild className="w-full" variant="outline">
-              <Link href="/admin/applications?filter=technical_conditions">Перейти</Link>
+              <Link href="/admin/technical-conditions">Перейти</Link>
             </Button>
           </CardContent>
         </Card>

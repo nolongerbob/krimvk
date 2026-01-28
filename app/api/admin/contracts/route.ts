@@ -58,6 +58,7 @@ export async function POST(request: NextRequest) {
     const contract = await prisma.contract.create({
       data: {
         userId: null,
+        applicationId: data.applicationId || null, // Связь с заявкой, если создан из неё
         contractNumber: data.contractNumber || "",
         contractDate: data.contractDate || null,
         lastName: data.lastName || "",

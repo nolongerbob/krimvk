@@ -624,6 +624,14 @@ export function Header() {
                         Личный кабинет
                       </Link>
                     </Button>
+                    {(session.user.role === "ADMIN" || session.user?.role === "ADMIN") && (
+                      <Button asChild variant="outline" className="w-full border-purple-200 text-purple-700 hover:bg-purple-50" size="lg">
+                        <Link href="/admin" onClick={() => setMobileMenuOpen(false)}>
+                          <Shield className="h-4 w-4 mr-2" />
+                          Админ-панель
+                        </Link>
+                      </Button>
+                    )}
                     <Button asChild variant="outline" className="w-full" size="lg">
                       <Link href="/dashboard/settings" onClick={() => setMobileMenuOpen(false)}>
                         <Settings className="h-4 w-4 mr-2" />

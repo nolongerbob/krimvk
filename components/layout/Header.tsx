@@ -5,7 +5,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
-import { Menu, User, LogOut, ChevronDown, Eye, Phone, MessageSquare, X, Home, Briefcase, Newspaper, Mail, Users, FileText, Building2, History, Award, TrendingUp, FileCheck, Shield, Scale, Info, Droplet, Waves, Search as SearchIcon, Settings } from "lucide-react";
+import { Menu, User, LogOut, ChevronDown, Eye, Phone, MessageSquare, X, Home, Briefcase, Newspaper, Mail, Users, FileText, Building2, History, Award, TrendingUp, FileCheck, Shield, Scale, Info, Droplet, Waves, Search as SearchIcon, Settings, AlertTriangle } from "lucide-react";
 import { Search } from "@/components/Search";
 import { BVIButton } from "@/components/BVIButton";
 import { useState, useEffect } from "react";
@@ -56,6 +56,7 @@ export function Header() {
   const navLinks = [
     { href: "/", label: "Главная" },
     { href: "/services", label: "Услуги" },
+    { href: "/avarii", label: "Аварии" },
     { href: "/news", label: "Новости" },
     { href: "/contact", label: "Контакты" },
   ];
@@ -343,6 +344,7 @@ export function Header() {
                     const iconMap: { [key: string]: any } = {
                       "/": Home,
                       "/services": Briefcase,
+                      "/avarii": AlertTriangle,
                       "/news": Newspaper,
                       "/contact": Mail,
                     };

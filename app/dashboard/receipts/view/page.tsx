@@ -335,7 +335,7 @@ export default function ReceiptViewPage() {
               </div>
               <div className="flex flex-col items-start sm:items-end gap-3 flex-shrink-0 print:break-inside-avoid">
                 <div className={`rounded-lg px-4 py-2.5 min-w-0 ${isOverpaid ? "bg-emerald-50 text-emerald-800" : isUnderpaid ? "bg-amber-50 text-amber-800" : "bg-gray-50 text-gray-700"}`}>
-                  <p className="text-xs font-medium text-inherit/80">{isOverpaid ? "Переплата" : isUnderpaid ? "К оплате (недоплата)" : "Нет задолженности"}</p>
+                  <p className="text-xs font-medium text-inherit/80">{isOverpaid ? "Переплата" : isUnderpaid ? "К оплате" : "Нет задолженности"}</p>
                   <p className="text-xl font-bold tabular-nums whitespace-nowrap">{formatCurrency(Math.abs(commonDutyAmount))} ₽</p>
                 </div>
                 {lscode && address && (

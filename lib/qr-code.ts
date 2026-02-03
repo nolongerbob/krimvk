@@ -13,6 +13,8 @@ export function generateSBPQRString(
   lscode: string,
   address: string,
   commonDuty: string | number,
+  paymPeriod?: string,
+  purpose?: string,
   region?: string
 ): string {
   // Форматируем сумму:
@@ -40,7 +42,16 @@ export function generateSBPQRString(
   
   // Формируем строку QR-кода в формате СБП
   // Важно: PayerAddress (одно слово, не PayerAddress)
-  const qrString = `ST00012|Name=${orgName}|PayeeINN=${payeeINN}|PersonalAcc=${personalAcc}|BIC=${bic}|PersAcc=${lscode}|PayerAddress=${address}|Sum=${sum}`;
+  // Дополнительно:
+  // - PaymPeriod: период оплаты (MM.YYYY)
+  // - Purpose: назначение платежа (некоторые банки показывают период именно отсюда)
+  const paymPeriodPart = paymPeriod ? `|PaymPeriod=${paymPeriod}` : "";
+  const purposePart = purpose ? `|Purpose=${purpose}` : "";
+
+  const qrString =
+    `ST00012|Name=${orgName}|PayeeINN=${payeeINN}|PersonalAcc=${personalAcc}|BIC=${bic}` +
+    `|PersAcc=${lscode}|PayerAddress=${address}|Sum=${sum}` +
+    `${paymPeriodPart}${purposePart}`;
   
   return qrString;
 }
@@ -56,15 +67,18 @@ export function generateSBPURL(
   lscode: string,
   address: string,
   commonDuty: string | number,
+  paymPeriod?: string,
+  purpose?: string,
   region?: string
 ): string {
-  const qrString = generateSBPQRString(lscode, address, commonDuty, region);
+  const qrString = generateSBPQRString(lscode, address, commonDuty, paymPeriod, purpose, region);
   
   // Кодируем строку для URL: заменяем специальные символы
   // | -> %7C, пробелы -> %20
   const encoded = qrString
     .replace(/\|/g, "%7C")    // Разделитель полей
     .replace(/\s/g, "%20")     // Пробелы
+    .replace(/\n/g, "%0A")     // Переносы строк (если вдруг будут)
     .replace(/=/g, "%3D");     // Знак равенства
   
   // Используем qr.nspk.ru с кодированной строкой

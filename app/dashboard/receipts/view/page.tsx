@@ -213,9 +213,22 @@ export default function ReceiptViewPage() {
       return;
     }
     
-    const sbpURL = generateSBPURL(lscode, address, amountToPay);
+    // Период оплаты по правилу (до 5-го — позапрошлый, с 5-го — прошлый), если dateFrom не задан
+    let periodDate: Date;
+    if (dateFrom) {
+      periodDate = new Date(dateFrom);
+    } else {
+      const today = new Date();
+      const monthOffset = today.getDate() < 5 ? -2 : -1;
+      periodDate = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
+    }
+    const paymPeriod = `${String(periodDate.getMonth() + 1).padStart(2, "0")}.${periodDate.getFullYear()}`;
+    const periodStr = periodDate.toLocaleDateString("ru-RU", { month: "long", year: "numeric" });
+    const purpose = `Оплата услуг водоснабжения и водоотведения за ${periodStr}. Л/с ${lscode}`.trim();
+
+    const sbpURL = generateSBPURL(lscode, address, amountToPay, paymPeriod, purpose);
     console.log("SBP URL:", sbpURL);
-    console.log("QR String:", generateSBPQRString(lscode, address, amountToPay));
+    console.log("QR String:", generateSBPQRString(lscode, address, amountToPay, paymPeriod, purpose));
     window.open(sbpURL, "_blank");
   };
 
@@ -348,7 +361,15 @@ export default function ReceiptViewPage() {
                   <div className="flex flex-col items-start sm:items-end">
                     <div onClick={handleQRClick} className="cursor-pointer p-2 bg-white border border-gray-200 rounded-lg hover:border-sky-300 hover:shadow-sm transition-all print:border-gray-300" title="Оплата через СБП">
                       <QRCodeSVG
-                        value={generateSBPQRString(lscode, address, isUnderpaid ? Math.abs(commonDutyAmount) : 0)}
+                        value={(() => {
+                          const today = new Date();
+                          const monthOffset = dateFrom ? 0 : today.getDate() < 5 ? -2 : -1;
+                          const pd = dateFrom ? new Date(dateFrom) : new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
+                          const pp = `${String(pd.getMonth() + 1).padStart(2, "0")}.${pd.getFullYear()}`;
+                          const ps = pd.toLocaleDateString("ru-RU", { month: "long", year: "numeric" });
+                          const purp = `Оплата услуг водоснабжения и водоотведения за ${ps}. Л/с ${lscode}`.trim();
+                          return generateSBPQRString(lscode, address, isUnderpaid ? Math.abs(commonDutyAmount) : 0, pp, purp);
+                        })()}
                         size={100}
                         level="M"
                         includeMargin={false}

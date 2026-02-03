@@ -204,16 +204,18 @@ export default function ReceiptViewPage() {
     if (!receiptData) return;
     const lscode = receiptData.LSCode || receiptData.lscode || accountInfo?.accountNumber || "";
     const address = receiptData.Address || receiptData.address || accountInfo?.address || "";
-    const commonDuty = receiptData.CommonDuty || receiptData.commonDuty || "0";
+    // В QR отправляем только сумму долга (переплата -> 0)
+    const commonDutyAmount = parseAmount(receiptData.CommonDuty || receiptData.commonDuty || "0");
+    const amountToPay = commonDutyAmount > 0 ? commonDutyAmount : 0;
     
     if (!lscode || !address) {
       console.error("Недостаточно данных для генерации QR-кода:", { lscode, address, receiptData });
       return;
     }
     
-    const sbpURL = generateSBPURL(lscode, address, commonDuty);
+    const sbpURL = generateSBPURL(lscode, address, amountToPay);
     console.log("SBP URL:", sbpURL);
-    console.log("QR String:", generateSBPQRString(lscode, address, commonDuty));
+    console.log("QR String:", generateSBPQRString(lscode, address, amountToPay));
     window.open(sbpURL, "_blank");
   };
 
@@ -341,7 +343,12 @@ export default function ReceiptViewPage() {
                 {lscode && address && (
                   <div className="flex flex-col items-start sm:items-end">
                     <div onClick={handleQRClick} className="cursor-pointer p-2 bg-white border border-gray-200 rounded-lg hover:border-sky-300 hover:shadow-sm transition-all print:border-gray-300" title="Оплата через СБП">
-                      <QRCodeSVG value={generateSBPQRString(lscode, address, commonDuty)} size={100} level="M" includeMargin={false} />
+                      <QRCodeSVG
+                        value={generateSBPQRString(lscode, address, isUnderpaid ? Math.abs(commonDutyAmount) : 0)}
+                        size={100}
+                        level="M"
+                        includeMargin={false}
+                      />
                     </div>
                     <p className="text-xs text-gray-500 mt-1.5 print:hidden">Нажмите или отсканируйте для оплаты</p>
                   </div>

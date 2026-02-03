@@ -4,7 +4,10 @@
 
 /**
  * Формирует строку QR-кода для оплаты через СБП
- * Формат: ST00012|Name=ООО Крым ВК|PayeeINN=9107000240|PersonalAcc=40702810725190003625|BIC=044525411|PersAcc=9004|PayerAddress=г. Евпатория...|Sum=20616,36
+ * Формат: ST00012|Name=ООО Крым ВК|PayeeINN=9107000240|PersonalAcc=40702810725190003625|BIC=044525411|PersAcc=9004|PayerAddress=г. Евпатория...|Sum=2061636
+ *
+ * Важно: многие банки (в т.ч. ВТБ) трактуют Sum как сумму в КОПЕЙКАХ (целое число),
+ * поэтому передаём Sum без разделителей: 3349.07 ₽ -> 334907
  */
 export function generateSBPQRString(
   lscode: string,
@@ -12,13 +15,21 @@ export function generateSBPQRString(
   commonDuty: string | number,
   region?: string
 ): string {
-  // Форматируем сумму: заменяем точку на запятую и убираем лишние символы
-  // Пример: 20616.36 -> 20616,36 или 20616 -> 20616
-  let sum = String(commonDuty);
-  // Убираем все символы кроме цифр, точки и запятой
-  sum = sum.replace(/[^\d.,]/g, "");
-  // Заменяем точку на запятую для десятичного разделителя
-  sum = sum.replace(/\./g, ",");
+  // Форматируем сумму:
+  // - учитываем пробелы и запятые
+  // - не допускаем отрицательных значений (переплата не должна превращаться в сумму к оплате)
+  // - всегда отдаём 2 знака после запятой (копейки)
+  const parseAmount = (value: string | number): number => {
+    if (typeof value === "number") return isNaN(value) ? 0 : value;
+    if (!value) return 0;
+    const normalized = String(value).replace(/,/g, ".").replace(/\s/g, "");
+    const parsed = parseFloat(normalized);
+    return isNaN(parsed) ? 0 : parsed;
+  };
+
+  const amount = Math.max(0, parseAmount(commonDuty));
+  // Sum в копейках, целым числом
+  const sum = String(Math.round(amount * 100));
   
   // Определяем организацию
   // Используем формат без кавычек: "ООО Крым ВК"
@@ -50,11 +61,10 @@ export function generateSBPURL(
   const qrString = generateSBPQRString(lscode, address, commonDuty, region);
   
   // Кодируем строку для URL: заменяем специальные символы
-  // | -> %7C, пробелы -> %20, запятые -> %2C
+  // | -> %7C, пробелы -> %20
   const encoded = qrString
     .replace(/\|/g, "%7C")    // Разделитель полей
     .replace(/\s/g, "%20")     // Пробелы
-    .replace(/,/g, "%2C")      // Запятые (в сумме)
     .replace(/=/g, "%3D");     // Знак равенства
   
   // Используем qr.nspk.ru с кодированной строкой

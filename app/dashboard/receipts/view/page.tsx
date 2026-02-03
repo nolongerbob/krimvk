@@ -309,13 +309,17 @@ export default function ReceiptViewPage() {
               const lscode = receiptData.LSCode || receiptData.lscode || accountInfo?.accountNumber || "";
               const address = receiptData.Address || receiptData.address || accountInfo?.address || "";
               const commonDuty = receiptData.CommonDuty || receiptData.commonDuty || "0";
-              // Период: если dateFrom указан, используем его; иначе - предыдущий месяц (платим за прошлый месяц)
+              // Период: если dateFrom указан, используем его;
+              // иначе применяем правило:
+              // - до 5-го числа показываем позапрошлый месяц
+              // - с 5-го числа — прошлый месяц
               let periodDate: Date;
               if (dateFrom) {
                 periodDate = new Date(dateFrom);
               } else {
                 const today = new Date();
-                periodDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                const monthOffset = today.getDate() < 5 ? -2 : -1;
+                periodDate = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
               }
               const periodMonth = periodDate.toLocaleDateString("ru-RU", { month: "long" });
               const periodYear = periodDate.getFullYear();

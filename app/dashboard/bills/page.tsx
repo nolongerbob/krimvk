@@ -122,9 +122,12 @@ export default function BillsPage() {
         }
         
         const today = new Date();
-        // Используем предыдущий месяц (платим за прошлый месяц)
-        const prevMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-        const currentMonth = prevMonth.toLocaleDateString("ru-RU", { month: "long", year: "numeric" });
+        // Правило периода:
+        // - до 5-го числа включительно показываем квитанцию/начисления за позапрошлый месяц
+        // - с 5-го числа — за прошлый месяц
+        const monthOffset = today.getDate() < 5 ? -2 : -1;
+        const periodMonthDate = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
+        const currentMonth = periodMonthDate.toLocaleDateString("ru-RU", { month: "long", year: "numeric" });
         
         // 1. Долги за предыдущие периоды (StartDutys)
         // Показываем только если есть задолженность

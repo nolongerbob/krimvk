@@ -22,6 +22,15 @@ interface Payment {
   source: string;
 }
 
+// Единый парсер сумм из 1С (учитывает пробелы и запятые)
+const parseAmount = (value: string | number): number => {
+  if (typeof value === "number") return value;
+  if (!value) return 0;
+  const normalized = String(value).replace(/,/g, ".").replace(/\s/g, "");
+  const parsed = parseFloat(normalized);
+  return isNaN(parsed) ? 0 : parsed;
+};
+
 export default function HistoryPage() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
@@ -202,7 +211,7 @@ export default function HistoryPage() {
           return {
             date: formattedDate,
             dateForSort: dateForSort,
-            amount: parseFloat(payment.Charge || payment.Amount || payment.amount || payment.Sum || 0),
+            amount: parseAmount(payment.Charge || payment.Amount || payment.amount || payment.Sum || 0),
             source: payment.Source || payment.source || payment.PaymentSource || "Не указан",
           };
         });

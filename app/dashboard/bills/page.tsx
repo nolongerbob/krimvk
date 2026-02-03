@@ -23,6 +23,15 @@ interface Bill {
   service?: string;
 }
 
+// Единый парсер сумм из 1С (учитывает пробелы и запятые)
+const parseAmount = (value: string | number): number => {
+  if (typeof value === "number") return value;
+  if (!value) return 0;
+  const normalized = String(value).replace(/,/g, ".").replace(/\s/g, "");
+  const parsed = parseFloat(normalized);
+  return isNaN(parsed) ? 0 : parsed;
+};
+
 const statusConfig = {
   UNPAID: { label: "Не оплачен", icon: AlertCircle, className: "text-red-500" },
   PAID: { label: "Оплачен", icon: CheckCircle, className: "text-green-500" },
@@ -83,15 +92,6 @@ export default function BillsPage() {
         const responseData = data.data || data;
         setAccountData(responseData);
         
-        // Функция для правильного парсинга суммы
-        const parseAmount = (value: string | number): number => {
-          if (typeof value === "number") return value;
-          if (!value) return 0;
-          const normalized = String(value).replace(/,/g, ".").replace(/\s/g, "");
-          const parsed = parseFloat(normalized);
-          return isNaN(parsed) ? 0 : parsed;
-        };
-        
         // Формируем счета из данных 1С
         const billsList: Bill[] = [];
         
@@ -109,9 +109,10 @@ export default function BillsPage() {
           fullData: responseData
         });
         
-        // В 1С отрицательное значение CommonDuty означает долг (к оплате)
-        // Используем абсолютное значение для определения суммы долга
-        const debtAmount = Math.abs(commonDuty);
+        // Логика баланса:
+        // - положительное значение = долг (к оплате)
+        // - отрицательное значение = переплата
+        const debtAmount = commonDuty > 0 ? commonDuty : 0;
         const hasDebt = debtAmount > 0.01; // Есть долг если больше 1 копейки
         
         // Если нет долга (баланс равен нулю), не показываем счета
@@ -142,7 +143,7 @@ export default function BillsPage() {
         }
         
         // 2. Если есть общий долг на начало периода, но нет разбивки по StartDutys
-        if (hasDebt && Math.abs(startCommonDuty) > 0.01 && (!responseData.StartDutys || responseData.StartDutys.length === 0)) {
+        if (hasDebt && startCommonDuty > 0.01 && (!responseData.StartDutys || responseData.StartDutys.length === 0)) {
           billsList.push({
             period: "Долг на начало периода",
             amount: startCommonDuty,
@@ -342,25 +343,31 @@ export default function BillsPage() {
                 <p className="text-sm text-gray-600 mb-1">Итого к оплате</p>
                 <p className={`text-3xl font-bold ${
                   (() => {
-                    const commonDuty = parseFloat(String(accountData.CommonDuty || accountData.commonDuty || "0").replace(/,/g, ".")) || 0;
-                    const debtAmount = Math.abs(commonDuty);
-                    return debtAmount > 0.01 ? "text-red-600" : "text-gray-900";
+                    const commonDuty = parseAmount(accountData.CommonDuty || accountData.commonDuty || "0");
+                    const debtAmount = commonDuty > 0 ? commonDuty : 0;
+                    const overpayAmount = commonDuty < 0 ? Math.abs(commonDuty) : 0;
+                    if (debtAmount > 0.01) return "text-red-600";
+                    if (overpayAmount > 0.01) return "text-green-700";
+                    return "text-gray-900";
                   })()
                 }`}>
                   {(() => {
-                    const commonDuty = parseFloat(String(accountData.CommonDuty || accountData.commonDuty || "0").replace(/,/g, ".")) || 0;
-                    const debtAmount = Math.abs(commonDuty);
-                    return debtAmount.toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    const commonDuty = parseAmount(accountData.CommonDuty || accountData.commonDuty || "0");
+                    const debtAmount = commonDuty > 0 ? commonDuty : 0;
+                    const overpayAmount = commonDuty < 0 ? Math.abs(commonDuty) : 0;
+                    const displayAmount = debtAmount > 0.01 ? debtAmount : overpayAmount > 0.01 ? overpayAmount : 0;
+                    return displayAmount.toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                   })()} ₽
                 </p>
                 {(() => {
-                  const commonDuty = parseFloat(String(accountData.CommonDuty || accountData.commonDuty || "0").replace(/,/g, ".")) || 0;
-                  const debtAmount = Math.abs(commonDuty);
-                  if (debtAmount <= 0.01) {
+                  const commonDuty = parseAmount(accountData.CommonDuty || accountData.commonDuty || "0");
+                  const debtAmount = commonDuty > 0 ? commonDuty : 0;
+                  const overpayAmount = commonDuty < 0 ? Math.abs(commonDuty) : 0;
+                  if (debtAmount <= 0.01 && overpayAmount <= 0.01) {
                     return <p className="text-sm text-gray-600 mt-1">Нет задолженности</p>;
-                  } else {
-                    return <p className="text-sm text-red-600 mt-1">Требуется оплата</p>;
                   }
+                  if (debtAmount > 0.01) return <p className="text-sm text-red-600 mt-1">Требуется оплата</p>;
+                  return <p className="text-sm text-green-700 mt-1">Переплата</p>;
                 })()}
               </div>
             </div>

@@ -145,18 +145,33 @@ const LOCATION_COORDS: Record<string, [number, number]> = {
 // Извлечение локации из текста
 function extractLocation(text: string): { name: string; coords: [number, number] } | null {
   const lowerText = text.toLowerCase();
-  
-  for (const [name, coords] of Object.entries(LOCATION_COORDS)) {
-    if (lowerText.includes(name)) {
-      const regex = new RegExp(name, "i");
-      const match = text.match(regex);
+
+  // Ищем название населенного пункта с учетом префиксов (с., г., п., пгт)
+  // и различных падежей
+  const locationPrefixes = ["с\\.", "село", "г\\.", "город", "п\\.", "посёлок", "поселок", "пгт"];
+  const prefixPattern = `(?:${locationPrefixes.join("|")})?\\s*`;
+
+  // Сортируем названия по длине (сначала длинные), чтобы избежать ложных срабатываний
+  const sortedLocations = Object.entries(LOCATION_COORDS).sort((a, b) => b[0].length - a[0].length);
+
+  for (const [name, coords] of sortedLocations) {
+    // Создаем регулярное выражение для поиска названия с учетом префикса
+    // и границ слова (чтобы не находить "саки" в слове "сакински")
+    const pattern = new RegExp(`\\b${prefixPattern}(${name})(?:[еёиа]?|ом|ою|е|ой)\\b`, "i");
+    const match = lowerText.match(pattern);
+
+    if (match) {
+      // Находим оригинальное написание в тексте с учетом регистра
+      const fullPattern = new RegExp(`${prefixPattern}${name}[еёиа]?|ом|ою|е|ой`, "gi");
+      const originalMatch = text.match(fullPattern);
+
       return {
-        name: match ? match[0].toUpperCase() : name.toUpperCase(),
+        name: originalMatch ? originalMatch[0].charAt(0).toUpperCase() + originalMatch[0].slice(1) : name.charAt(0).toUpperCase() + name.slice(1),
         coords,
       };
     }
   }
-  
+
   return null;
 }
 

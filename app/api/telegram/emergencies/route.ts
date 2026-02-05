@@ -8,11 +8,6 @@ interface ParsedMessage {
   photoUrl?: string;
 }
 
-// Кэш для хранения сообщений
-let cachedMessages: ParsedMessage[] = [];
-let lastFetch: number = 0;
-const CACHE_TTL = 2 * 60 * 1000; // 2 минуты
-
 // Получение сообщений из Telegram канала
 export async function GET(request: NextRequest) {
   try {
@@ -21,23 +16,9 @@ export async function GET(request: NextRequest) {
     const debug = searchParams.get("debug") === "true";
     const all = searchParams.get("all") === "true"; // Показать все сообщения без фильтрации
 
-    // Проверяем кэш (если не debug режим)
-    const now = Date.now();
-    if (!debug && now - lastFetch < CACHE_TTL && cachedMessages.length > 0) {
-      const todayMessages = all ? cachedMessages : filterTodayMessages(cachedMessages);
-      return NextResponse.json({ 
-        messages: todayMessages, 
-        cached: true,
-        totalCached: cachedMessages.length 
-      });
-    }
-
     // Парсим публичную веб-версию канала
     const messages = await fetchPublicChannelMessages(channelUsername);
     
-    cachedMessages = messages;
-    lastFetch = now;
-
     // Фильтруем только сегодняшние сообщения (если не запрошены все)
     const todayMessages = all ? messages : filterTodayMessages(messages);
 
@@ -48,9 +29,9 @@ export async function GET(request: NextRequest) {
         allMessages: Array<{ id: number; date: string; textPreview: string }>;
         serverTime: string;
       };
-    } = { 
+    } = {
       messages: todayMessages,
-      totalParsed: messages.length 
+      totalParsed: messages.length,
     };
     
     if (debug) {
@@ -187,7 +168,7 @@ async function fetchPublicChannelMessages(channelUsername: string): Promise<Pars
 }
 
 // Фильтрация только сегодняшних сообщений
-function filterTodayMessages(messages: typeof cachedMessages) {
+function filterTodayMessages(messages: ParsedMessage[]) {
   // Используем московское время (UTC+3) как основное для Крыма
   const now = new Date();
   const moscowOffset = 3 * 60; // UTC+3 в минутах

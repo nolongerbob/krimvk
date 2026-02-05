@@ -190,20 +190,8 @@ export async function GET(request: NextRequest) {
       debug = { historyFetched: false, flatCount: 0, byServiceKeys: [], chargeKeys: [] };
     }
 
-    // Получаем счетчики из базы данных для получения дат поверки
-    const meters = await prisma.waterMeter.findMany({
-      where: {
-        accountId: accountId,
-      },
-      select: {
-        serialNumber: true,
-        type: true,
-        nextVerificationDate: true,
-      },
-    });
-
     // Собираем информацию о счетчиках и нормативах
-    const metersInfo: Array<{ service: string; deviceNumber: string; norm?: string; nextVerificationDate?: string }> = [];
+    const metersInfo: Array<{ service: string; deviceNumber: string; norm?: string }> = [];
     const uniqueDevices = new Set<string>();
 
     try {
@@ -229,12 +217,7 @@ export async function GET(request: NextRequest) {
           const key = `${service}|${deviceNumber}`;
           if (!uniqueDevices.has(key)) {
             uniqueDevices.add(key);
-            // Ищем дату поверки в базе данных
-            const meterFromDb = meters.find(m => m.serialNumber === deviceNumber);
-            const nextVerificationDate = meterFromDb?.nextVerificationDate
-              ? new Date(meterFromDb.nextVerificationDate).toLocaleDateString("ru-RU")
-              : undefined;
-            metersInfo.push({ service, deviceNumber, nextVerificationDate });
+            metersInfo.push({ service, deviceNumber });
           }
         }
       });

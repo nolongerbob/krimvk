@@ -216,7 +216,7 @@ export default function DirectAccountPage() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg">Квитанция</h3>
-                    <p className="text-sm text-gray-600">Просмотр и печать квитанции</p>
+                    <p className="text-sm text-gray-600">Просмотр и печать квитанции с полными данными</p>
                   </div>
                 </div>
               </CardContent>
@@ -230,35 +230,7 @@ export default function DirectAccountPage() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg">Передача показаний</h3>
-                    <p className="text-sm text-gray-600">Передать показания счетчиков</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow opacity-50">
-              <CardContent className="pt-6">
-                <div className="flex flex-col items-center text-center gap-3">
-                  <div className="p-3 bg-purple-100 rounded-full">
-                    <CreditCard className="h-6 w-6 text-purple-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg">История оплат</h3>
-                    <p className="text-sm text-gray-600">Скоро...</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow opacity-50">
-              <CardContent className="pt-6">
-                <div className="flex flex-col items-center text-center gap-3">
-                  <div className="p-3 bg-amber-100 rounded-full">
-                    <FileText className="h-6 w-6 text-amber-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg">История показаний</h3>
-                    <p className="text-sm text-gray-600">Скоро...</p>
+                    <p className="text-sm text-gray-600">Передать показания счетчиков воды</p>
                   </div>
                 </div>
               </CardContent>

@@ -57,13 +57,11 @@ interface ReceiptData {
     service: string;
     deviceNumber: string;
     norm?: string;
-    nextVerificationDate?: string;
   }>;
   metersInfo?: Array<{
     service: string;
     deviceNumber: string;
     norm?: string;
-    nextVerificationDate?: string;
   }>;
 }
 
@@ -438,10 +436,9 @@ export default function ReceiptViewPage() {
                           const serviceName = meter.service || "Услуга";
                           const deviceNumber = meter.deviceNumber || "—";
                           const norm = meter.norm ? `, норматив: ${meter.norm}` : "";
-                          const verificationDate = meter.nextVerificationDate ? `, дата очередной проверки: ${meter.nextVerificationDate}` : "";
                           return (
                             <li key={idx}>
-                              {serviceName}: прибор учёта № <span className="font-medium text-gray-800">{deviceNumber}</span>{norm}{verificationDate}.
+                              {serviceName}: прибор учёта № <span className="font-medium text-gray-800">{deviceNumber}</span>{norm}.
                             </li>
                           );
                         })}

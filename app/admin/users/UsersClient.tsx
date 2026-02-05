@@ -18,6 +18,7 @@ import {
   CheckCircle,
   XCircle,
   Building,
+  DollarSign,
   Eye,
 } from "lucide-react";
 import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
@@ -193,6 +194,7 @@ export function UsersClient({ users: initialUsers, currentUserId }: UsersClientP
             onClick={() => setDebtFilter("debtors")}
             className={debtFilter === "debtors" ? "bg-red-600 hover:bg-red-700" : ""}
           >
+            <DollarSign className="h-4 w-4 mr-1" />
             Должники ({stats.debtors})
           </Button>
           <Button
@@ -201,6 +203,7 @@ export function UsersClient({ users: initialUsers, currentUserId }: UsersClientP
             onClick={() => setDebtFilter("overpaid")}
             className={debtFilter === "overpaid" ? "bg-blue-600 hover:bg-blue-700" : ""}
           >
+            <DollarSign className="h-4 w-4 mr-1" />
             Переплата ({stats.overpaid})
           </Button>
           <Button
@@ -318,6 +321,15 @@ export function UsersClient({ users: initialUsers, currentUserId }: UsersClientP
                         </div>
                       )}
                       <div className="flex items-center gap-2">
+                        <DollarSign
+                          className={`h-4 w-4 ${
+                            user.totalDebt > 0.01
+                              ? "text-red-500"
+                              : user.totalDebt < -0.01
+                              ? "text-blue-500"
+                              : "text-green-500"
+                          }`}
+                        />
                         <span
                           className={`font-medium ${
                             user.totalDebt > 0.01

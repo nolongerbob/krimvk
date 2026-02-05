@@ -214,16 +214,17 @@ model UserAccount {
 
 // Счетчики воды
 model WaterMeter {
-  id           String   @id @default(cuid())
-  userId       String
-  accountId    String? // Связь с лицевым счетом
-  serialNumber String
-  address      String
-  type         String // горячая/холодная
-  lastReading  Float?
-  installedAt  DateTime @default(now())
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                   String    @id @default(cuid())
+  userId               String
+  accountId            String? // Связь с лицевым счетом
+  serialNumber         String
+  address              String
+  type                 String // горячая/холодная
+  lastReading          Float?
+  nextVerificationDate DateTime? // Дата очередной поверки счетчика
+  installedAt          DateTime  @default(now())
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
   user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   account  UserAccount?   @relation(fields: [accountId], references: [id], onDelete: SetNull)

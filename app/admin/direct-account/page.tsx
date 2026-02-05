@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Key, Receipt, Droplet, CreditCard, AlertCircle, FileText } from "lucide-react";
+import { Loader2, Key, Receipt, Droplet, CreditCard, AlertCircle, FileText, History } from "lucide-react";
 import Link from "next/link";
 
 export default function DirectAccountPage() {
@@ -77,6 +77,28 @@ export default function DirectAccountPage() {
       region,
     });
     window.open(`/admin/direct-account/meters?${params.toString()}`, "_blank");
+  };
+
+  const openPaymentHistory = () => {
+    // Открываем историю платежей в новом окне
+    const params = new URLSearchParams({
+      direct: "true",
+      accountNumber,
+      password,
+      region,
+    });
+    window.open(`/admin/direct-account/payment-history?${params.toString()}`, "_blank");
+  };
+
+  const openMeterHistory = () => {
+    // Открываем историю показаний в новом окне
+    const params = new URLSearchParams({
+      direct: "true",
+      accountNumber,
+      password,
+      region,
+    });
+    window.open(`/admin/direct-account/meter-history?${params.toString()}`, "_blank");
   };
 
   return (
@@ -207,7 +229,7 @@ export default function DirectAccountPage() {
           </Card>
 
           {/* Действия */}
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={openReceipt}>
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center text-center gap-3">
@@ -231,6 +253,34 @@ export default function DirectAccountPage() {
                   <div>
                     <h3 className="font-semibold text-lg">Передача показаний</h3>
                     <p className="text-sm text-gray-600">Передать показания счетчиков воды</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={openPaymentHistory}>
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center gap-3">
+                  <div className="p-3 bg-purple-100 rounded-full">
+                    <CreditCard className="h-6 w-6 text-purple-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">История платежей</h3>
+                    <p className="text-sm text-gray-600">Просмотр истории платежей по счету</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={openMeterHistory}>
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center gap-3">
+                  <div className="p-3 bg-orange-100 rounded-full">
+                    <History className="h-6 w-6 text-orange-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">История показаний</h3>
+                    <p className="text-sm text-gray-600">Просмотр истории показаний счетчиков</p>
                   </div>
                 </div>
               </CardContent>

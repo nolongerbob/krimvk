@@ -10,6 +10,15 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Key, Receipt, Droplet, CreditCard, AlertCircle, FileText, History } from "lucide-react";
 import Link from "next/link";
 
+// Парсер сумм из 1С (пробелы, запятые) — как в ЛК и квитанции
+function parseAmount(value: string | number | null | undefined): number {
+  if (value === null || value === undefined || value === "") return 0;
+  if (typeof value === "number") return isNaN(value) ? 0 : value;
+  const normalized = String(value).replace(/,/g, ".").replace(/\s/g, "");
+  const parsed = parseFloat(normalized);
+  return isNaN(parsed) ? 0 : parsed;
+}
+
 export default function DirectAccountPage() {
   const [accountNumber, setAccountNumber] = useState("");
   const [password, setPassword] = useState("");
@@ -213,15 +222,25 @@ export default function DirectAccountPage() {
                   <p className="font-medium">{accountData?.LSName || accountData?.name || "—"}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Текущая задолженность</p>
+                  <p className="text-sm text-gray-600">
+                    {(() => {
+                      const balance = parseAmount(accountData?.CommonDuty ?? accountData?.commonDuty ?? "0");
+                      if (balance > 0.01) return "Задолженность (к оплате)";
+                      if (balance < -0.01) return "Переплата";
+                      return "Баланс";
+                    })()}
+                  </p>
                   <p className={`font-medium text-lg ${
-                    parseFloat(accountData?.CommonDuty || accountData?.commonDuty || "0") > 0
-                      ? "text-red-600"
-                      : parseFloat(accountData?.CommonDuty || accountData?.commonDuty || "0") < 0
-                      ? "text-green-600"
-                      : "text-gray-900"
+                    (() => {
+                      const balance = parseAmount(accountData?.CommonDuty ?? accountData?.commonDuty ?? "0");
+                      if (balance > 0.01) return "text-red-600";
+                      if (balance < -0.01) return "text-green-600";
+                      return "text-gray-900";
+                    })()
                   }`}>
-                    {parseFloat(accountData?.CommonDuty || accountData?.commonDuty || "0").toFixed(2)} ₽
+                    {parseAmount(accountData?.CommonDuty ?? accountData?.commonDuty ?? "0")
+                      .toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{" "}
+                    ₽
                   </p>
                 </div>
               </div>

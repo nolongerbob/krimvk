@@ -4,7 +4,19 @@ import { prisma, withRetry } from "@/lib/prisma";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { FileText, MessageSquare, Newspaper, Users, AlertCircle, CheckCircle, Clock, Settings, Droplet, FileCheck } from "lucide-react";
+import {
+  FileText,
+  MessageSquare,
+  Newspaper,
+  Users,
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  Settings,
+  Droplet,
+  FileCheck,
+  CreditCard,
+} from "lucide-react";
 import { AdminNotificationsBadge } from "@/components/admin/AdminNotificationsBadge";
 
 export const dynamic = 'force-dynamic';
@@ -254,6 +266,20 @@ export default async function AdminPage() {
           <CardContent>
             <Button asChild className="w-full">
               <Link href="/admin/contracts">Перейти</Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Работа с лицевым счетом (прямой доступ в 1С) */}
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader>
+            <CreditCard className="h-10 w-10 text-indigo-500 mb-2" />
+            <CardTitle>Работа с лицевым счетом</CardTitle>
+            <CardDescription>Прямой доступ к л/с в 1С: квитанция, показания, платежи</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild className="w-full" variant="outline">
+              <Link href="/admin/direct-account">Перейти</Link>
             </Button>
           </CardContent>
         </Card>

@@ -283,29 +283,29 @@ export async function GET(request: NextRequest) {
       console.error("[direct-receipt] getMeteringDeviceHistory error:", err);
     }
 
-    // Fallback: показания из get_data (MeteringDevices/Счетчики и т.д.)
+    // Показания из get_data (MeteringDevices) — как на старом сайте (pdf.php): PastReading, PastDate, Reading, Date, Service; при пустых Past* подставляем Reading/Date
     const rawDevices = data.MeteringDevices ?? data.Devices ?? data.meters ?? data.Счетчики ?? data.DevicesList ?? [];
     const meteringDevices = Array.isArray(rawDevices) ? rawDevices : (typeof rawDevices === "object" && rawDevices !== null ? Object.values(rawDevices) : []) as Array<Record<string, unknown>>;
     if (meteringDevices.length > 0) {
-      if (meterReadings.length === 0) {
-        meteringDevices.forEach((dev) => {
-          const service = String(dev.Service ?? dev.Услуга ?? dev.ServiceName ?? "");
-          const reading = dev.Reading ?? dev.Value ?? dev.Показание ?? dev.LastReading ?? dev.ТекущееПоказание ?? dev.КонечноеПоказание ?? "";
-          const pastReading = dev.PastReading ?? dev.PreviousReading ?? dev.ПредыдущееПоказание ?? dev.Предыдущее ?? dev.НачальноеПоказание ?? dev.Начальное ?? "";
-          const pastDate = dev.PastDate ?? dev.Date ?? dev.ReadingDate ?? dev.Дата;
+      meterReadings.length = 0;
+      meteringDevices.forEach((dev) => {
+          const reading = dev.Reading ?? dev.Value ?? dev.Показание ?? dev.LastReading ?? "";
+          const pastReadingRaw = dev.PastReading ?? dev.PreviousReading ?? dev.ПредыдущееПоказание ?? dev.Предыдущее ?? "";
+          const pastReading = pastReadingRaw !== "" && pastReadingRaw != null ? pastReadingRaw : reading;
+          const pastDateRaw = dev.PastDate ?? dev.Date ?? dev.ReadingDate ?? dev.Дата;
+          const pastDate = pastDateRaw !== "" && pastDateRaw != null ? pastDateRaw : dev.Date ?? dev.Дата;
           const pastDateStr = pastDate ? (typeof pastDate === "string" && pastDate.length >= 10 ? pastDate.slice(0, 10) : String(pastDate)) : undefined;
           const rNum = typeof reading === "number" ? reading : parseFloat(String(reading).replace(",", ".").replace(/\s/g, ""));
-          const pNum = pastReading != null && pastReading !== "" ? (typeof pastReading === "number" ? pastReading : parseFloat(String(pastReading).replace(",", ".").replace(/\s/g, ""))) : NaN;
+          const pNum = pastReading !== "" && pastReading != null ? (typeof pastReading === "number" ? pastReading : parseFloat(String(pastReading).replace(",", ".").replace(/\s/g, ""))) : NaN;
           const volume = !isNaN(rNum) && !isNaN(pNum) ? rNum - pNum : undefined;
           meterReadings.push({
-            Service: service || "—",
+            Service: String(dev.Service ?? dev.Услуга ?? dev.ServiceName ?? "—"),
             PastDate: pastDateStr,
             PastReading: pastReading,
             Reading: reading,
             Volume: volume,
           });
         });
-      }
       const charges = (data.ChargesAndPayments ?? data.chargesAndPayments) as Array<Record<string, unknown>> | undefined;
       if (charges?.length) {
         charges.forEach((c) => {
@@ -313,8 +313,9 @@ export async function GET(request: NextRequest) {
           const key = canonicalServiceKey(String(c.Service ?? ""));
           const dev = meteringDevices.find((d) => canonicalServiceKey(String(d.Service ?? d.Услуга ?? d.ServiceName ?? "")) === key);
           if (!dev) return;
-          const endVal = dev.Reading ?? dev.Value ?? dev.Показание ?? dev.LastReading ?? dev.ТекущееПоказание ?? dev.КонечноеПоказание;
-          const startVal = dev.PastReading ?? dev.PreviousReading ?? dev.ПредыдущееПоказание ?? dev.Предыдущее ?? dev.НачальноеПоказание ?? dev.Начальное;
+          const endVal = dev.Reading ?? dev.Value ?? dev.Показание ?? dev.LastReading;
+          const pastVal = dev.PastReading ?? dev.PreviousReading ?? dev.ПредыдущееПоказание ?? dev.Предыдущее;
+          const startVal = (pastVal !== "" && pastVal != null) ? pastVal : endVal;
           if (c.EndReading == null && endVal != null && endVal !== "") c.EndReading = endVal;
           if (c.StartReading == null && startVal != null && startVal !== "") c.StartReading = startVal;
         });

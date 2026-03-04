@@ -126,6 +126,17 @@ export async function GET(request: NextRequest) {
       toDate
     );
 
+    // Нормализация показаний из ChargesAndPayments (1С может отдавать русские поля)
+    const chargesRaw = (data.ChargesAndPayments ?? data.chargesAndPayments) as Array<Record<string, unknown>> | undefined;
+    if (chargesRaw?.length) {
+      chargesRaw.forEach((c) => {
+        const endVal = c.EndReading ?? c.Reading ?? c.CurrentReading ?? (c as Record<string, unknown>).КонечноеПоказание ?? (c as Record<string, unknown>).Показание ?? (c as Record<string, unknown>).ТекущееПоказание;
+        const startVal = c.StartReading ?? c.PastReading ?? c.PreviousReading ?? (c as Record<string, unknown>).НачальноеПоказание ?? (c as Record<string, unknown>).ПредыдущееПоказание ?? (c as Record<string, unknown>).Предыдущее;
+        if (endVal != null && endVal !== "") c.EndReading = endVal;
+        if (startVal != null && startVal !== "") c.StartReading = startVal;
+      });
+    }
+
     // Период для истории: расширяем на месяц назад и вперёд — показания по счёту
     // могут быть переданы в следующем месяце (как в «Истории показаний»).
     // По умолчанию: предыдущий месяц (платим за прошлый месяц)
@@ -287,18 +298,19 @@ export async function GET(request: NextRequest) {
       if (debug) debug.historyError = err;
     }
 
-    // Fallback: показания из get_data (MeteringDevices), если история пустая или не подставила Нач./Кон.
-    const meteringDevices = (data.MeteringDevices ?? data.Devices ?? data.meters ?? []) as Array<Record<string, unknown>>;
-    if (Array.isArray(meteringDevices) && meteringDevices.length > 0) {
+    // Fallback: показания из get_data (MeteringDevices/Счетчики и т.д.)
+    const rawDevices = data.MeteringDevices ?? data.Devices ?? data.meters ?? data.Счетчики ?? data.DevicesList ?? [];
+    const meteringDevices = Array.isArray(rawDevices) ? rawDevices : (typeof rawDevices === "object" && rawDevices !== null ? Object.values(rawDevices) : []) as Array<Record<string, unknown>>;
+    if (meteringDevices.length > 0) {
       if (meterReadings.length === 0) {
         meteringDevices.forEach((dev) => {
           const service = String(dev.Service ?? dev.Услуга ?? dev.ServiceName ?? "");
-          const reading = dev.Reading ?? dev.Value ?? dev.Показание ?? "";
-          const pastReading = dev.PastReading ?? dev.PreviousReading ?? dev.ПредыдущееПоказание ?? dev.Предыдущее;
+          const reading = dev.Reading ?? dev.Value ?? dev.Показание ?? dev.LastReading ?? dev.ТекущееПоказание ?? dev.КонечноеПоказание ?? "";
+          const pastReading = dev.PastReading ?? dev.PreviousReading ?? dev.ПредыдущееПоказание ?? dev.Предыдущее ?? dev.НачальноеПоказание ?? dev.Начальное ?? "";
           const pastDate = dev.PastDate ?? dev.Date ?? dev.ReadingDate ?? dev.Дата;
           const pastDateStr = pastDate ? (typeof pastDate === "string" && pastDate.length >= 10 ? pastDate.slice(0, 10) : String(pastDate)) : undefined;
-          const rNum = typeof reading === "number" ? reading : parseFloat(String(reading).replace(",", "."));
-          const pNum = pastReading != null && pastReading !== "" ? (typeof pastReading === "number" ? pastReading : parseFloat(String(pastReading).replace(",", "."))) : NaN;
+          const rNum = typeof reading === "number" ? reading : parseFloat(String(reading).replace(",", ".").replace(/\s/g, ""));
+          const pNum = pastReading != null && pastReading !== "" ? (typeof pastReading === "number" ? pastReading : parseFloat(String(pastReading).replace(",", ".").replace(/\s/g, ""))) : NaN;
           const volume = !isNaN(rNum) && !isNaN(pNum) ? rNum - pNum : undefined;
           meterReadings.push({
             Service: service || "—",
@@ -316,12 +328,32 @@ export async function GET(request: NextRequest) {
           const key = canonicalServiceKey(String(c.Service ?? ""));
           const dev = meteringDevices.find((d) => canonicalServiceKey(String(d.Service ?? d.Услуга ?? d.ServiceName ?? "")) === key);
           if (!dev) return;
-          const endVal = dev.Reading ?? dev.Value ?? dev.Показание;
-          const startVal = dev.PastReading ?? dev.PreviousReading ?? dev.ПредыдущееПоказание ?? dev.Предыдущее;
+          const endVal = dev.Reading ?? dev.Value ?? dev.Показание ?? dev.LastReading ?? dev.ТекущееПоказание ?? dev.КонечноеПоказание;
+          const startVal = dev.PastReading ?? dev.PreviousReading ?? dev.ПредыдущееПоказание ?? dev.Предыдущее ?? dev.НачальноеПоказание ?? dev.Начальное;
           if (c.EndReading == null && endVal != null && endVal !== "") c.EndReading = endVal;
           if (c.StartReading == null && startVal != null && startVal !== "") c.StartReading = startVal;
         });
       }
+    }
+
+    // Fallback: блок «Показания ИПУ» из ChargesAndPayments, если есть Нач./Кон. по услугам с приборами
+    if (meterReadings.length === 0 && chargesRaw?.length) {
+      chargesRaw.forEach((c) => {
+        const key = canonicalServiceKey(String(c.Service ?? ""));
+        if (key !== "хвс" && key !== "гвс" && key !== "канализация") return;
+        const endVal = c.EndReading ?? c.Reading;
+        const startVal = c.StartReading ?? c.PastReading;
+        if (endVal == null && startVal == null) return;
+        const service = String(c.Service ?? "");
+        if (!service) return;
+        const vol = c.Volume != null && c.Volume !== "" ? parseFloat(String(c.Volume).replace(",", ".").replace(/\s/g, "")) : NaN;
+        meterReadings.push({
+          Service: service,
+          PastReading: startVal,
+          Reading: endVal ?? startVal,
+          Volume: !isNaN(vol) ? vol : undefined,
+        });
+      });
     }
 
     const res: { success: boolean; data: object; _debug?: typeof debug } = {

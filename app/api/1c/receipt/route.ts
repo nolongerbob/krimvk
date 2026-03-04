@@ -193,6 +193,7 @@ export async function GET(request: NextRequest) {
     // Собираем информацию о счетчиках и нормативах
     const metersInfo: Array<{ service: string; deviceNumber: string; norm?: string }> = [];
     const uniqueDevices = new Set<string>();
+    const meterReadings: Array<{ Service: string; PastDate?: string; PastReading?: number | string; Reading: number | string; Volume?: number }> = [];
 
     try {
       const history = await getMeteringDeviceHistory(
@@ -249,6 +250,37 @@ export async function GET(request: NextRequest) {
       if (flat.length === 0 && history && typeof history === "object") {
         console.warn("[receipt] history flat is empty. history keys:", Object.keys(history as object));
       }
+
+      // Собираем MeterReadings для блока «Показания ИПУ»: по каждому прибору (услуга+номер) последние два показания
+      const byDevice = new Map<string, MeterHistoryItem[]>();
+      flat.forEach((item) => {
+        const deviceNumber = String(item.NumberOfDevice || item.DeviceNumber || item.Number || "");
+        const service = String(item.Service || (item as Record<string, unknown>).Услуга || (item as Record<string, unknown>).ServiceName || "");
+        if (!service) return;
+        const key = `${service}|${deviceNumber || "—"}`;
+        if (!byDevice.has(key)) byDevice.set(key, []);
+        byDevice.get(key)!.push(item);
+      });
+      byDevice.forEach((arr, key) => {
+        arr.sort((a, b) => (b.ReadingDate || b.Date || "").localeCompare(a.ReadingDate || a.Date || ""));
+        const cur = arr[0];
+        const prev = arr[1];
+        const service = cur?.Service ?? (cur as Record<string, unknown>)?.Услуга ?? (cur as Record<string, unknown>)?.ServiceName ?? key.split("|")[0];
+        const reading = cur?.Reading ?? (cur as Record<string, unknown>)?.Value ?? "";
+        const pastReading = prev ? (prev.Reading ?? (prev as Record<string, unknown>)?.Value) : (cur?.PastReading ?? (cur as Record<string, unknown>)?.PreviousReading);
+        const pastDate = prev?.ReadingDate ?? prev?.Date;
+        const pastDateStr = pastDate ? (typeof pastDate === "string" && pastDate.length >= 10 ? pastDate.slice(0, 10) : String(pastDate)) : undefined;
+        const rNum = typeof reading === "number" ? reading : parseFloat(String(reading).replace(",", "."));
+        const pNum = pastReading != null && pastReading !== "" ? (typeof pastReading === "number" ? pastReading : parseFloat(String(pastReading).replace(",", "."))) : NaN;
+        const volume = !isNaN(rNum) && !isNaN(pNum) ? rNum - pNum : undefined;
+        meterReadings.push({
+          Service: String(service),
+          PastDate: pastDateStr,
+          PastReading: pastReading,
+          Reading: reading,
+          Volume: volume,
+        });
+      });
     } catch (e) {
       const err = e instanceof Error ? e.message : String(e);
       console.error("[receipt] getMeteringDeviceHistory or enrich error:", err);
@@ -268,6 +300,9 @@ export async function GET(request: NextRequest) {
         // Добавляем информацию о счетчиках и нормативах
         MetersInfo: metersInfo,
         metersInfo: metersInfo,
+        // Показания ИПУ для блока «Показания» на квитанции
+        MeterReadings: meterReadings,
+        meterReadings: meterReadings,
       },
     };
     if (process.env.NODE_ENV === "development" && debug) res._debug = debug;

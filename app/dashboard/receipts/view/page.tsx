@@ -18,12 +18,27 @@ import { generateSBPQRString, generateSBPURL } from "@/lib/qr-code";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
+interface ExemptionItem {
+  ExemptionCount?: string | number;
+  Percent?: string | number;
+  ExemptionName?: string;
+}
+
 interface ReceiptData {
   LSCode?: string;
   lscode?: string;
   LSName?: string;
   Address?: string;
   address?: string;
+  /** Расчётная площадь */
+  Area?: string;
+  area?: string;
+  /** Количество проживающих (в 1С может быть NumberOfResident) */
+  NumberOfResidents?: string | number;
+  NumberOfResident?: string | number;
+  /** Детализация льгот из 1С */
+  Exemption?: ExemptionItem[];
+  exemption?: ExemptionItem[];
   CommonDuty?: string;
   commonDuty?: string;
   CommonPayment?: string;
@@ -62,6 +77,21 @@ interface ReceiptData {
     service: string;
     deviceNumber: string;
     norm?: string;
+  }>;
+  /** Показания ИПУ для блока «Показания» (из API) */
+  MeterReadings?: Array<{
+    Service: string;
+    PastDate?: string;
+    PastReading?: number | string;
+    Reading: number | string;
+    Volume?: number;
+  }>;
+  meterReadings?: Array<{
+    Service: string;
+    PastDate?: string;
+    PastReading?: number | string;
+    Reading: number | string;
+    Volume?: number;
   }>;
 }
 
@@ -337,6 +367,8 @@ export default function ReceiptViewPage() {
               const periodMonth = periodDate.toLocaleDateString("ru-RU", { month: "long" });
               const periodYear = periodDate.getFullYear();
               const periodStr = `${periodMonth} ${periodYear} г.`;
+              const nextMonthDate = new Date(periodDate.getFullYear(), periodDate.getMonth() + 1, 10);
+              const payByStr = `10.${String(nextMonthDate.getMonth() + 1).padStart(2, "0")}.${nextMonthDate.getFullYear()}`;
               const receiptNum = receiptData.LSCode || accountInfo?.accountNumber || "";
               // В 1С: положительное CommonDuty = долг к оплате (недоплата), отрицательное = переплата
               const isOverpaid = commonDutyAmount < 0;
@@ -351,6 +383,7 @@ export default function ReceiptViewPage() {
                   Счёт-квитанция за услугу водоснабжения и водоотведения №{" "}
                   <span className="break-all font-mono">{receiptNum}</span> за {periodStr}
                 </h1>
+                <p className="text-sm text-gray-600 mt-1">оплата до {payByStr}</p>
               </div>
               <div className="flex flex-col items-start sm:items-end gap-3 flex-shrink-0 print:break-inside-avoid">
                 <div className={`rounded-lg px-4 py-2.5 min-w-0 ${isOverpaid ? "bg-emerald-50 text-emerald-800" : isUnderpaid ? "bg-amber-50 text-amber-800" : "bg-gray-50 text-gray-700"}`}>
@@ -410,17 +443,29 @@ export default function ReceiptViewPage() {
             <div className="mb-5 pb-4 border-b border-gray-200">
               <p className="text-sm font-semibold text-gray-700 mb-1.5">Справочная информация</p>
               <ul className="text-sm text-gray-600 space-y-0.5 list-none">
+                <li>Расчётная площадь: <span className="font-medium text-gray-800">{String(receiptData.Area ?? receiptData.area ?? "—").trim()}</span></li>
+                <li>Проживает: <span className="font-medium text-gray-800">{String(receiptData.NumberOfResidents ?? receiptData.NumberOfResident ?? "—").trim()} чел.</span></li>
                 {(() => {
-                  // Считаем общую сумму льгот из ChargesAndPayments
-                  const totalExemption = (receiptData.ChargesAndPayments || []).reduce((sum, c) => {
-                    return sum + parseAmount(c.Exemption);
-                  }, 0);
-                  
+                  const exemptionList = receiptData.Exemption ?? receiptData.exemption;
+                  if (exemptionList && Array.isArray(exemptionList) && exemptionList.length > 0) {
+                    return (
+                      <li className="mt-1">
+                        <span className="font-medium text-gray-700">Льготы:</span>
+                        <ul className="list-none mt-0.5 space-y-0.5">
+                          {exemptionList.map((ex, idx) => (
+                            <li key={idx} className="text-emerald-700">
+                              {ex.ExemptionCount ?? 0} чел. ({ex.Percent ?? 0}%) {ex.ExemptionName ?? ""}
+                            </li>
+                          ))}
+                        </ul>
+                      </li>
+                    );
+                  }
+                  const totalExemption = (receiptData.ChargesAndPayments || []).reduce((sum, c) => sum + parseAmount(c.Exemption), 0);
                   if (totalExemption > 0) {
                     return <li className="text-emerald-700">Предоставлена льгота: <span className="font-medium">{formatCurrency(totalExemption)} ₽</span></li>;
-                  } else {
-                    return <li>Льгот и договоров рассрочки не имеется.</li>;
                   }
+                  return <li>Льгот и договоров рассрочки не имеется.</li>;
                 })()}
                 {(() => {
                   const metersInfo = receiptData.MetersInfo || receiptData.metersInfo || [];
@@ -461,23 +506,27 @@ export default function ReceiptViewPage() {
                   Расшифровка начислений за {periodStr}
                 </p>
                 <div className="overflow-x-auto rounded-lg border border-gray-200 -mx-1 print:mx-0">
-                  <table className="w-full border-collapse text-xs min-w-[520px] print:text-[10px]">
+                  <table className="w-full border-collapse text-xs min-w-[600px] print:text-[10px]">
                     <thead>
                       <tr className="bg-gray-50">
                         <th className="border-b border-gray-200 px-1.5 py-1.5 text-left font-semibold text-gray-700 min-w-0 break-words">Услуга</th>
+                        <th className="border-b border-gray-200 px-1 py-1.5 text-center font-semibold text-gray-700 w-[1%] whitespace-nowrap">Ед. изм.</th>
                         <th className="border-b border-gray-200 px-1 py-1.5 text-center font-semibold text-gray-700" colSpan={3}>Показания</th>
-                        <th className="border-b border-gray-200 px-1 py-1.5 text-center font-semibold text-gray-700 w-[1%] whitespace-nowrap">Расход</th>
                         <th className="border-b border-gray-200 px-1 py-1.5 text-center font-semibold text-gray-700 w-[1%] whitespace-nowrap">Тариф</th>
                         <th className="border-b border-gray-200 px-1 py-1.5 text-center font-semibold text-gray-700 w-[1%] whitespace-nowrap">Начисл.</th>
                         <th className="border-b border-gray-200 px-1 py-1.5 text-center font-semibold text-gray-700 w-[1%] whitespace-nowrap">Льгота</th>
                         <th className="border-b border-gray-200 px-1 py-1.5 text-center font-semibold text-gray-700 w-[1%] whitespace-nowrap">Перерасч.</th>
                         <th className="border-b border-gray-200 px-1 py-1.5 text-right font-semibold text-gray-700 w-[1%] whitespace-nowrap">Итого, ₽</th>
+                        <th className="border-b border-gray-200 px-1 py-1.5 text-center font-semibold text-gray-700 w-[1%] whitespace-nowrap">Норматив</th>
+                        <th className="border-b border-gray-200 px-1 py-1.5 text-center font-semibold text-gray-700 w-[1%] whitespace-nowrap">Объем потребл.</th>
                       </tr>
                       <tr className="bg-gray-50/80">
-                        <th className="border-b border-gray-200 px-1.5 py-1 text-left font-medium text-gray-600" />
+                        <th className="border-b border-gray-200 px-1.5 py-1" />
+                        <th className="border-b border-gray-200 px-1 py-1" />
                         <th className="border-b border-gray-200 px-0.5 py-1 text-center font-medium text-gray-600">Нач.</th>
                         <th className="border-b border-gray-200 px-0.5 py-1 text-center font-medium text-gray-600">Кон.</th>
                         <th className="border-b border-gray-200 px-0.5 py-1 text-center font-medium text-gray-600">кол-во</th>
+                        <th className="border-b border-gray-200 px-1 py-1" />
                         <th className="border-b border-gray-200 px-1 py-1" />
                         <th className="border-b border-gray-200 px-1 py-1" />
                         <th className="border-b border-gray-200 px-1 py-1" />
@@ -491,20 +540,27 @@ export default function ReceiptViewPage() {
                       {(() => {
                         const startDutyAmount = parseAmount(receiptData.StartCommonDuty);
                         if (startDutyAmount > 0.01) {
+                          const emptyCells = (
+                            <>
+                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
+                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
+                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
+                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
+                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
+                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
+                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">0,00</td>
+                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">0,00</td>
+                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
+                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
+                            </>
+                          );
                           if (receiptData.StartDutys && receiptData.StartDutys.length > 0) {
                             return receiptData.StartDutys.map((duty, i) => {
                               const a = parseAmount(duty.Duty);
                               if (a > 0) return (
                                 <tr key={`sd-${i}`} className="bg-amber-50/50">
                                   <td className="border-b border-gray-100 px-1.5 py-1 text-gray-900 break-words align-top">{duty.Service || "Долг за предыдущий период"}</td>
-                                  <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
-                                  <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
-                                  <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
-                                  <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
-                                  <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
-                                  <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
-                                  <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">0,00</td>
-                                  <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">0,00</td>
+                                  {emptyCells}
                                   <td className="border-b border-gray-100 px-1 py-1 text-right font-medium tabular-nums">{formatCurrency(a)}</td>
                                 </tr>
                               );
@@ -522,34 +578,143 @@ export default function ReceiptViewPage() {
                               <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
                               <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">0,00</td>
                               <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">0,00</td>
+                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
+                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
                               <td className="border-b border-gray-100 px-1 py-1 text-right font-medium tabular-nums">{formatCurrency(startDutyAmount)}</td>
                             </tr>
                           );
                         }
                         return null;
                       })()}
-                      {(receiptData.ChargesAndPayments || []).map((c, i) => {
-                        const startVal = c.StartReading ?? c.PastReading ?? c.PreviousReading;
-                        const endVal = c.EndReading ?? c.Reading ?? c.CurrentReading;
-                        const numStart = startVal != null && startVal !== "" ? Number(startVal) : NaN;
-                        const numEnd = endVal != null && endVal !== "" ? Number(endVal) : NaN;
-                        const qty = !isNaN(numStart) && !isNaN(numEnd) ? (numEnd - numStart) : (c.Volume != null && c.Volume !== "" ? String(c.Volume) : "—");
+                      {(() => {
+                        const charges = receiptData.ChargesAndPayments || [];
+                        const housing = charges.filter((c) => String(c.Service || "").trim() === "Квартплата");
+                        const communal = charges.filter((c) => String(c.Service || "").trim() !== "Квартплата");
                         const fmt = (v: number | string) => (typeof v === "number" ? (Number.isInteger(v) ? String(v) : v.toLocaleString("ru-RU", { minimumFractionDigits: 1, maximumFractionDigits: 2 })) : v);
+                        const rows: React.ReactNode[] = [];
+                        if (housing.length > 0) {
+                          rows.push(
+                            <tr key="gr-h" className="bg-gray-100 font-semibold">
+                              <td colSpan={12} className="border-b border-gray-200 px-1.5 py-1 text-gray-800">Жилищные</td>
+                            </tr>
+                          );
+                          housing.forEach((c, i) => {
+                            const startVal = c.StartReading ?? c.PastReading ?? c.PreviousReading;
+                            const endVal = c.EndReading ?? c.Reading ?? c.CurrentReading;
+                            const numStart = startVal != null && startVal !== "" ? Number(startVal) : NaN;
+                            const numEnd = endVal != null && endVal !== "" ? Number(endVal) : NaN;
+                            const qty = !isNaN(numStart) && !isNaN(numEnd) ? (numEnd - numStart) : (c.Volume != null && c.Volume !== "" ? String(c.Volume) : "—");
+                            rows.push(
+                              <tr key={`h-${i}`} className="hover:bg-gray-50/80">
+                                <td className="border-b border-gray-100 px-1.5 py-1 text-gray-900 break-words align-top">{c.Service}</td>
+                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{c.Unit || "—"}</td>
+                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{startVal != null && startVal !== "" ? fmt(startVal) : "—"}</td>
+                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{endVal != null && endVal !== "" ? fmt(endVal) : "—"}</td>
+                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{fmt(qty)}</td>
+                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{formatCurrency(c.TariffPrice)}</td>
+                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{formatCurrency(c.ChargeFull || c.Charge)}</td>
+                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{parseAmount(c.Exemption) !== 0 ? formatCurrency(c.Exemption) : "0,00"}</td>
+                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{parseAmount(c.Recalculation) !== 0 ? formatCurrency(c.Recalculation) : "0,00"}</td>
+                                <td className="border-b border-gray-100 px-1 py-1 text-right font-medium text-gray-900 tabular-nums">{formatCurrency(c.ChargeFull || c.Charge)}</td>
+                                <td colSpan={2} className="border-b border-gray-100 px-1 py-1 text-center text-gray-500">X</td>
+                              </tr>
+                            );
+                          });
+                        }
+                        if (communal.length > 0) {
+                          rows.push(
+                            <tr key="gr-c" className="bg-gray-100 font-semibold">
+                              <td colSpan={9} className="border-b border-gray-200 px-1.5 py-1 text-gray-800">Коммунальные на индивидуальное потребление</td>
+                              <td className="border-b border-gray-200 px-1 py-1 text-right font-semibold tabular-nums">
+                                {formatCurrency(communal.reduce((s, c) => s + parseAmount(c.ChargeFull || c.Charge), 0))}
+                              </td>
+                              <td colSpan={2} className="border-b border-gray-200 px-1 py-1 text-center font-medium text-gray-600">индив. потребление</td>
+                            </tr>
+                          );
+                          let idx = 0;
+                          communal.forEach((c) => {
+                            const startVal = c.StartReading ?? c.PastReading ?? c.PreviousReading;
+                            const endVal = c.EndReading ?? c.Reading ?? c.CurrentReading;
+                            const numStart = startVal != null && startVal !== "" ? Number(startVal) : NaN;
+                            const numEnd = endVal != null && endVal !== "" ? Number(endVal) : NaN;
+                            const qty = !isNaN(numStart) && !isNaN(numEnd) ? (numEnd - numStart) : (c.Volume != null && c.Volume !== "" ? String(c.Volume) : "—");
+                            rows.push(
+                              <tr key={`c-${idx}`} className="hover:bg-gray-50/80">
+                                <td className="border-b border-gray-100 px-1.5 py-1 text-gray-900 break-words align-top">{c.Service}</td>
+                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{c.Unit || "—"}</td>
+                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{startVal != null && startVal !== "" ? fmt(startVal) : "—"}</td>
+                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{endVal != null && endVal !== "" ? fmt(endVal) : "—"}</td>
+                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{fmt(qty)}</td>
+                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{formatCurrency(c.TariffPrice)}</td>
+                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{formatCurrency(c.ChargeFull || c.Charge)}</td>
+                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{parseAmount(c.Exemption) !== 0 ? formatCurrency(c.Exemption) : "0,00"}</td>
+                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{parseAmount(c.Recalculation) !== 0 ? formatCurrency(c.Recalculation) : "0,00"}</td>
+                                <td className="border-b border-gray-100 px-1 py-1 text-right font-medium text-gray-900 tabular-nums">{formatCurrency(c.ChargeFull || c.Charge)}</td>
+                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{c.Norm || "—"}</td>
+                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">куб.м/чел</td>
+                              </tr>
+                            );
+                            idx++;
+                          });
+                        }
+                        return rows;
+                      })()}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Показания индивидуальных приборов учета (ИПУ) */}
+            {((receiptData.MeterReadings ?? receiptData.meterReadings)?.length ?? 0) > 0 && (
+              <div className="mb-5">
+                <p className="text-sm font-semibold text-gray-700 mb-2">Показания индивидуальных приборов учета (ИПУ)</p>
+                <div className="overflow-x-auto rounded-lg border border-gray-200">
+                  <table className="w-full border-collapse text-xs min-w-[400px] print:text-[10px]">
+                    <thead>
+                      <tr className="bg-gray-50">
+                        <th className="border-b border-gray-200 px-1.5 py-1.5 text-left font-semibold text-gray-700">Вид услуг</th>
+                        <th className="border-b border-gray-200 px-1 py-1.5 text-center font-semibold text-gray-700">Предыдущее</th>
+                        <th className="border-b border-gray-200 px-1 py-1.5 text-center font-semibold text-gray-700">Текущее</th>
+                        <th className="border-b border-gray-200 px-1 py-1.5 text-center font-semibold text-gray-700">Расход</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(receiptData.MeterReadings ?? receiptData.meterReadings ?? []).map((row, idx) => {
+                        const pastVal = row.PastReading != null && row.PastReading !== "" ? String(row.PastReading) : "—";
+                        const curVal = row.Reading != null && row.Reading !== "" ? String(row.Reading) : "—";
+                        const prevDisplay = row.PastDate ? `${row.PastDate} ${pastVal}` : pastVal;
+                        const volume = row.Volume != null && row.Volume !== "" ? String(row.Volume) : "—";
                         return (
-                        <tr key={i} className="hover:bg-gray-50/80">
-                          <td className="border-b border-gray-100 px-1.5 py-1 text-gray-900 break-words align-top">{c.Service}</td>
-                          <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{startVal != null && startVal !== "" ? fmt(startVal) : "—"}</td>
-                          <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{endVal != null && endVal !== "" ? fmt(endVal) : "—"}</td>
-                          <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{fmt(qty)}</td>
-                          <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{c.Volume || "—"} {c.Unit || "м³"}</td>
-                          <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{formatCurrency(c.TariffPrice)}</td>
-                          <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{formatCurrency(c.ChargeFull || c.Charge)}</td>
-                          <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{parseAmount(c.Exemption) !== 0 ? formatCurrency(c.Exemption) : "0,00"}</td>
-                          <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{parseAmount(c.Recalculation) !== 0 ? formatCurrency(c.Recalculation) : "0,00"}</td>
-                          <td className="border-b border-gray-100 px-1 py-1 text-right font-medium text-gray-900 tabular-nums">{formatCurrency(c.ChargeFull || c.Charge)}</td>
-                        </tr>
+                          <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50/80">
+                            <td className="px-1.5 py-1 text-gray-900">{row.Service}</td>
+                            <td className="px-1 py-1 text-center tabular-nums text-gray-700">
+                              <span className="block text-gray-500 text-[10px]">{row.PastDate || ""}</span>
+                              <span>{pastVal}</span>
+                            </td>
+                            <td className="px-1 py-1 text-center tabular-nums text-gray-900">{curVal}</td>
+                            <td className="px-1 py-1 text-center tabular-nums text-gray-700">{volume}</td>
+                          </tr>
                         );
                       })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Долг за предыдущие периоды (ЖКУ / Пени / Всего) */}
+            {receiptData.StartCommonDuty && parseAmount(receiptData.StartCommonDuty) > 0.01 && (
+              <div className="mb-5">
+                <div className="max-w-xs rounded-lg border border-gray-200 overflow-hidden">
+                  <table className="w-full text-sm border-collapse">
+                    <tbody className="text-gray-700">
+                      <tr className="bg-gray-50">
+                        <td colSpan={2} className="py-2 px-3 text-center font-semibold text-gray-800 border-b border-gray-200">Долг за предыдущие периоды</td>
+                      </tr>
+                      <tr className="border-b border-gray-100"><td className="py-1.5 pl-3 w-[60%]">ЖКУ</td><td className="py-1.5 pr-3 text-right tabular-nums">{formatCurrency(receiptData.StartCommonDuty)}</td></tr>
+                      <tr className="border-b border-gray-100"><td className="py-1.5 pl-3">Пени</td><td className="py-1.5 pr-3 text-right tabular-nums">0,00</td></tr>
+                      <tr><td className="py-1.5 pl-3 font-medium">Всего</td><td className="py-1.5 pr-3 text-right tabular-nums font-medium">{formatCurrency(receiptData.StartCommonDuty)}</td></tr>
                     </tbody>
                   </table>
                 </div>
@@ -604,6 +769,7 @@ export default function ReceiptViewPage() {
             <div className="mt-6 pt-5 border-t border-gray-200">
               <div className="grid sm:grid-cols-2 gap-6 text-sm">
                 <div>
+                  <p className="text-gray-600 mb-2">Уважаемые абоненты! Напоминаем, показания индивидуальных (квартирных) приборов учета холодной воды необходимо передавать с 10 по 25 число по тел. +7 (978) 080-03-66 или контролеру на участке. При нарушении сроков представления показаний прибора учета начисления будут производиться расчетным способом.</p>
                   <p className="text-gray-600 mb-3">При несвоевременной оплате взыскание задолженности производится в судебном порядке.</p>
                   <p className="text-gray-500">Сформировано {new Date().toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}. QR-код — оплата через СБП.</p>
                 </div>

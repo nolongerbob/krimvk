@@ -15,7 +15,7 @@ function normService(s: string | undefined): string {
 function canonicalServiceKey(s: string | undefined): string {
   const n = normService(s);
   if (!n) return n;
-  if (/холод|хвс/.test(n)) return "хвс";
+  if (/холод|хвс|водоснабжен/.test(n)) return "хвс";
   if (/горяч|гвс/.test(n)) return "гвс";
   if (/водоотвед|канализ/.test(n)) return "канализация";
   return n;
@@ -47,7 +47,7 @@ function enrichChargesWithReadings(
     const key = canonicalServiceKey(String(c.Service ?? ""));
     const list = byService.get(key);
     if (!list?.length) return;
-    const forEnd = list[1];
+    const forEnd = list[1] ?? list[0];
     const forStart = list[2];
     const endVal = forEnd && ((forEnd.Reading ?? (forEnd as Record<string, unknown>).Value) ?? null);
     let startVal = forStart && ((forStart.Reading ?? (forStart as Record<string, unknown>).Value) ?? null);
@@ -270,6 +270,43 @@ export async function GET(request: NextRequest) {
     } catch (e) {
       const err = e instanceof Error ? e.message : String(e);
       console.error("[direct-receipt] getMeteringDeviceHistory error:", err);
+    }
+
+    // Fallback: показания из get_data (MeteringDevices)
+    const meteringDevices = (data.MeteringDevices ?? data.Devices ?? data.meters ?? []) as Array<Record<string, unknown>>;
+    if (Array.isArray(meteringDevices) && meteringDevices.length > 0) {
+      if (meterReadings.length === 0) {
+        meteringDevices.forEach((dev) => {
+          const service = String(dev.Service ?? dev.Услуга ?? dev.ServiceName ?? "");
+          const reading = dev.Reading ?? dev.Value ?? dev.Показание ?? "";
+          const pastReading = dev.PastReading ?? dev.PreviousReading ?? dev.ПредыдущееПоказание ?? dev.Предыдущее;
+          const pastDate = dev.PastDate ?? dev.Date ?? dev.ReadingDate ?? dev.Дата;
+          const pastDateStr = pastDate ? (typeof pastDate === "string" && pastDate.length >= 10 ? pastDate.slice(0, 10) : String(pastDate)) : undefined;
+          const rNum = typeof reading === "number" ? reading : parseFloat(String(reading).replace(",", "."));
+          const pNum = pastReading != null && pastReading !== "" ? (typeof pastReading === "number" ? pastReading : parseFloat(String(pastReading).replace(",", "."))) : NaN;
+          const volume = !isNaN(rNum) && !isNaN(pNum) ? rNum - pNum : undefined;
+          meterReadings.push({
+            Service: service || "—",
+            PastDate: pastDateStr,
+            PastReading: pastReading,
+            Reading: reading,
+            Volume: volume,
+          });
+        });
+      }
+      const charges = (data.ChargesAndPayments ?? data.chargesAndPayments) as Array<Record<string, unknown>> | undefined;
+      if (charges?.length) {
+        charges.forEach((c) => {
+          if (c.StartReading != null && c.EndReading != null) return;
+          const key = canonicalServiceKey(String(c.Service ?? ""));
+          const dev = meteringDevices.find((d) => canonicalServiceKey(String(d.Service ?? d.Услуга ?? d.ServiceName ?? "")) === key);
+          if (!dev) return;
+          const endVal = dev.Reading ?? dev.Value ?? dev.Показание;
+          const startVal = dev.PastReading ?? dev.PreviousReading ?? dev.ПредыдущееПоказание ?? dev.Предыдущее;
+          if (c.EndReading == null && endVal != null && endVal !== "") c.EndReading = endVal;
+          if (c.StartReading == null && startVal != null && startVal !== "") c.StartReading = startVal;
+        });
+      }
     }
 
     const res = {

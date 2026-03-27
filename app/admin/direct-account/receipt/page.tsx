@@ -36,6 +36,8 @@ interface ReceiptData {
   NumberOfResident?: string | number;
   Exemption?: ExemptionItem[];
   exemption?: ExemptionItem[];
+  ContractNumber?: string;
+  ContractDate?: string;
   CommonDuty?: string;
   commonDuty?: string;
   CommonPayment?: string;
@@ -469,7 +471,24 @@ export default function DirectAccountReceiptPage() {
                   if (totalExemption > 0) {
                     return <li className="text-emerald-700">Предоставлена льгота: <span className="font-medium">{formatCurrency(totalExemption)} ₽</span></li>;
                   }
-                  return <li>Льгот и договоров рассрочки не имеется.</li>;
+                  return <li>Льгот не имеется.</li>;
+                })()}
+                {(() => {
+                  const contractNumber = String(receiptData.ContractNumber ?? "").trim();
+                  const contractDate = String(receiptData.ContractDate ?? "").trim();
+                  if (!contractNumber && !contractDate) {
+                    return <li>Договор рассрочки не оформлен.</li>;
+                  }
+                  return (
+                    <li>
+                      Договор рассрочки:{" "}
+                      <span className="font-medium text-gray-800">
+                        {contractNumber ? `№ ${contractNumber}` : "без номера"}
+                        {contractDate ? ` от ${contractDate}` : ""}
+                      </span>
+                      .
+                    </li>
+                  );
                 })()}
                 {(() => {
                   const metersInfo = receiptData.MetersInfo || receiptData.metersInfo || [];
@@ -650,6 +669,13 @@ export default function DirectAccountReceiptPage() {
                             const numStart = startVal != null && startVal !== "" ? Number(startVal) : NaN;
                             const numEnd = endVal != null && endVal !== "" ? Number(endVal) : NaN;
                             const qty = !isNaN(numStart) && !isNaN(numEnd) ? (numEnd - numStart) : (c.Volume != null && c.Volume !== "" ? String(c.Volume) : "—");
+                            const normNum = parseAmount(c.Norm);
+                            const volumeNum = parseAmount(c.Volume);
+                            const ratio = normNum > 0 ? volumeNum / normNum : 0;
+                            const hasRaisingCoefficient = ratio > 1.01;
+                            const coeffLabel = hasRaisingCoefficient
+                              ? ` (повыш. коэф. ${ratio.toLocaleString("ru-RU", { minimumFractionDigits: 0, maximumFractionDigits: 2 })})`
+                              : "";
                             rows.push(
                               <tr key={`c-${idx}`} className="hover:bg-gray-50/80">
                                 <td className="border-b border-gray-100 px-1.5 py-1 text-gray-900 break-words align-top">{c.Service}</td>
@@ -663,7 +689,9 @@ export default function DirectAccountReceiptPage() {
                                 <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{parseAmount(c.Recalculation) !== 0 ? formatCurrency(c.Recalculation) : "0,00"}</td>
                                 <td className="border-b border-gray-100 px-1 py-1 text-right font-medium text-gray-900 tabular-nums">{formatCurrency(c.ChargeFull || c.Charge)}</td>
                                 <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{c.Norm || "—"}</td>
-                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">куб.м/чел</td>
+                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">
+                                  {c.Volume && c.Volume !== "" ? `${c.Volume}${coeffLabel}` : "—"}
+                                </td>
                               </tr>
                             );
                             idx++;

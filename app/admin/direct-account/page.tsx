@@ -23,6 +23,7 @@ export default function DirectAccountPage() {
   const [accountNumber, setAccountNumber] = useState("");
   const [password, setPassword] = useState("");
   const [region, setRegion] = useState("prog");
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [accountData, setAccountData] = useState<any>(null);
@@ -36,14 +37,17 @@ export default function DirectAccountPage() {
     setIsConnected(false);
 
     try {
-      // Проверяем подключение, получая базовые данные из 1С
-      const response = await fetch(
-        `/api/admin/direct-account/connect?accountNumber=${encodeURIComponent(accountNumber)}&password=${encodeURIComponent(password)}&region=${encodeURIComponent(region)}`
-      );
+      // Проверяем подключение и получаем временный токен серверной сессии
+      const response = await fetch("/api/admin/direct-account/connect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accountNumber, password, region }),
+      });
 
       if (response.ok) {
         const data = await response.json();
         setAccountData(data.data);
+        setSessionToken(data.token || null);
         setIsConnected(true);
       } else {
         const errorData = await response.json().catch(() => ({}));
@@ -61,51 +65,52 @@ export default function DirectAccountPage() {
     setAccountNumber("");
     setPassword("");
     setRegion("prog");
+    setSessionToken(null);
     setAccountData(null);
     setIsConnected(false);
     setError(null);
   };
 
   const openReceipt = () => {
+    if (!sessionToken) return;
     // Открываем квитанцию в новом окне с параметрами лицевого счета
     const params = new URLSearchParams({
       direct: "true",
       accountNumber,
-      password,
-      region,
+      token: sessionToken,
     });
     window.open(`/admin/direct-account/receipt?${params.toString()}`, "_blank");
   };
 
   const openMeters = () => {
+    if (!sessionToken) return;
     // Открываем передачу показаний в новом окне
     const params = new URLSearchParams({
       direct: "true",
       accountNumber,
-      password,
-      region,
+      token: sessionToken,
     });
     window.open(`/admin/direct-account/meters?${params.toString()}`, "_blank");
   };
 
   const openPaymentHistory = () => {
+    if (!sessionToken) return;
     // Открываем историю платежей в новом окне
     const params = new URLSearchParams({
       direct: "true",
       accountNumber,
-      password,
-      region,
+      token: sessionToken,
     });
     window.open(`/admin/direct-account/payment-history?${params.toString()}`, "_blank");
   };
 
   const openMeterHistory = () => {
+    if (!sessionToken) return;
     // Открываем историю показаний в новом окне
     const params = new URLSearchParams({
       direct: "true",
       accountNumber,
-      password,
-      region,
+      token: sessionToken,
     });
     window.open(`/admin/direct-account/meter-history?${params.toString()}`, "_blank");
   };

@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/prisma";
 import { get1CUserData, getMeteringDeviceHistory, formatDateFor1C, getPaymentHistory } from "@/lib/1c-api";
 import { parseMeterHistory, type MeterHistoryItem } from "@/lib/parse-meter-history";
+import { buildMeterReadingsFromDevices, hasValidMeterReadings } from "@/lib/receipt-meter-mapping";
 
 export const dynamic = 'force-dynamic';
 
@@ -303,26 +304,12 @@ export async function GET(request: NextRequest) {
     const rawDevices = data.MeteringDevices ?? data.Devices ?? data.meters ?? data.Счетчики ?? data.DevicesList ?? [];
     const meteringDevices = Array.isArray(rawDevices) ? rawDevices : (typeof rawDevices === "object" && rawDevices !== null ? Object.values(rawDevices) : []) as Array<Record<string, unknown>>;
     if (meteringDevices.length > 0) {
-      // Блок «Показания ИПУ» из get_data (основной источник): как в pdf.php — если empty(PastReading) => Reading, empty(PastDate) => Date
-      meterReadings.length = 0;
-      meteringDevices.forEach((dev) => {
-          const reading = dev.Reading ?? dev.Value ?? dev.Показание ?? dev.LastReading ?? "";
-          const pastReadingRaw = dev.PastReading ?? dev.PreviousReading ?? dev.ПредыдущееПоказание ?? dev.Предыдущее ?? "";
-          const pastReading = pastReadingRaw !== "" && pastReadingRaw != null ? pastReadingRaw : reading;
-          const pastDateRaw = dev.PastDate ?? dev.Date ?? dev.ReadingDate ?? dev.Дата;
-          const pastDate = pastDateRaw !== "" && pastDateRaw != null ? pastDateRaw : dev.Date ?? dev.Дата;
-          const pastDateStr = pastDate ? (typeof pastDate === "string" && pastDate.length >= 10 ? pastDate.slice(0, 10) : String(pastDate)) : undefined;
-          const rNum = typeof reading === "number" ? reading : parseFloat(String(reading).replace(",", ".").replace(/\s/g, ""));
-          const pNum = pastReading !== "" && pastReading != null ? (typeof pastReading === "number" ? pastReading : parseFloat(String(pastReading).replace(",", ".").replace(/\s/g, ""))) : NaN;
-          const volume = !isNaN(rNum) && !isNaN(pNum) ? rNum - pNum : undefined;
-          meterReadings.push({
-            Service: String(dev.Service ?? dev.Услуга ?? dev.ServiceName ?? "—"),
-            PastDate: pastDateStr,
-            PastReading: pastReading,
-            Reading: reading,
-            Volume: volume,
-          });
-        });
+      // Используем get_data только если он реально содержит показания, иначе сохраняем историю
+      const rowsFromDevices = buildMeterReadingsFromDevices(meteringDevices);
+      if (hasValidMeterReadings(rowsFromDevices)) {
+        meterReadings.length = 0;
+        meterReadings.push(...rowsFromDevices);
+      }
       // Подстановка Нач./Кон. в начисления из тех же MeteringDevices
       const charges = (data.ChargesAndPayments ?? data.chargesAndPayments) as Array<Record<string, unknown>> | undefined;
       if (charges?.length) {

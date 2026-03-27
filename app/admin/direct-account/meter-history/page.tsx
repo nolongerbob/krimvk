@@ -24,24 +24,23 @@ interface MeterHistoryItem {
 export default function DirectAccountMeterHistoryPage() {
   const searchParams = useSearchParams();
   const accountNumber = searchParams.get("accountNumber");
-  const password = searchParams.get("password");
-  const region = searchParams.get("region");
+  const token = searchParams.get("token");
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [meterHistory, setMeterHistory] = useState<Record<string, MeterHistoryItem[]>>({});
 
   useEffect(() => {
-    if (accountNumber && password && region) {
+    if (token) {
       fetchMeterHistory();
     } else {
-      setError("Отсутствуют необходимые параметры подключения");
+      setError("Отсутствует токен сессии прямого доступа");
       setLoading(false);
     }
-  }, [accountNumber, password, region]);
+  }, [token]);
 
   const fetchMeterHistory = async () => {
-    if (!accountNumber || !password || !region) return;
+    if (!token) return;
 
     setLoading(true);
     setError(null);
@@ -54,9 +53,7 @@ export default function DirectAccountMeterHistoryPage() {
       const dateFromStr = `${String(dateFrom.getDate()).padStart(2, '0')}.${String(dateFrom.getMonth() + 1).padStart(2, '0')}.${dateFrom.getFullYear()}`;
 
       const params = new URLSearchParams({
-        accountNumber,
-        password,
-        region,
+        token,
         dateFrom: dateFromStr,
         dateTo: dateTo,
       });

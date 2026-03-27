@@ -20,8 +20,7 @@ interface Meter {
 export default function DirectAccountMetersPage() {
   const searchParams = useSearchParams();
   const accountNumber = searchParams.get("accountNumber");
-  const password = searchParams.get("password");
-  const region = searchParams.get("region");
+  const token = searchParams.get("token");
 
   const [meters, setMeters] = useState<Meter[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,25 +35,23 @@ export default function DirectAccountMetersPage() {
   const canSubmit = dayOfMonth >= 6 && dayOfMonth <= 25;
 
   useEffect(() => {
-    if (accountNumber && password && region) {
+    if (token) {
       fetchMeters();
     } else {
-      setError("Отсутствуют необходимые параметры подключения");
+      setError("Отсутствует токен сессии прямого доступа");
       setLoading(false);
     }
-  }, [accountNumber, password, region]);
+  }, [token]);
 
   const fetchMeters = async () => {
-    if (!accountNumber || !password || !region) return;
+    if (!token) return;
 
     setLoading(true);
     setError(null);
 
     try {
       const params = new URLSearchParams({
-        accountNumber,
-        password,
-        region,
+        token,
       });
 
       const response = await fetch(`/api/admin/direct-account/meters?${params.toString()}`);
@@ -98,9 +95,7 @@ export default function DirectAccountMetersPage() {
       }
 
       const params = new URLSearchParams({
-        accountNumber: accountNumber || "",
-        password: password || "",
-        region: region || "",
+        token: token || "",
       });
 
       const response = await fetch(`/api/admin/direct-account/submit-reading?${params.toString()}`, {

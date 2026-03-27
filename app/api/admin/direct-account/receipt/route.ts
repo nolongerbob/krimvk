@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/prisma";
 import { get1CUserData, getMeteringDeviceHistory, formatDateFor1C, getPaymentHistory } from "@/lib/1c-api";
 import { parseMeterHistory, type MeterHistoryItem } from "@/lib/parse-meter-history";
+import { getDirectAccountSession } from "@/lib/direct-account-session";
+import { buildMeterReadingsFromDevices, hasValidMeterReadings } from "@/lib/receipt-meter-mapping";
 
 export const dynamic = 'force-dynamic';
 
@@ -80,11 +82,22 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const accountNumber = searchParams.get("accountNumber");
-    const password = searchParams.get("password");
-    const region = searchParams.get("region");
+    const token = searchParams.get("token");
+    let accountNumber = searchParams.get("accountNumber");
+    let password = searchParams.get("password");
+    let region = searchParams.get("region");
     const dateFrom = searchParams.get("dateFrom");
     const dateTo = searchParams.get("dateTo");
+
+    if (token) {
+      const sessionCtx = getDirectAccountSession(token, session.user.id);
+      if (!sessionCtx) {
+        return NextResponse.json({ error: "Сессия прямого доступа истекла. Подключитесь заново." }, { status: 401 });
+      }
+      accountNumber = sessionCtx.accountNumber;
+      password = sessionCtx.password;
+      region = sessionCtx.region;
+    }
 
     if (!accountNumber || !password || !region) {
       return NextResponse.json(
@@ -287,25 +300,11 @@ export async function GET(request: NextRequest) {
     const rawDevices = data.MeteringDevices ?? data.Devices ?? data.meters ?? data.Счетчики ?? data.DevicesList ?? [];
     const meteringDevices = Array.isArray(rawDevices) ? rawDevices : (typeof rawDevices === "object" && rawDevices !== null ? Object.values(rawDevices) : []) as Array<Record<string, unknown>>;
     if (meteringDevices.length > 0) {
-      meterReadings.length = 0;
-      meteringDevices.forEach((dev) => {
-          const reading = dev.Reading ?? dev.Value ?? dev.Показание ?? dev.LastReading ?? "";
-          const pastReadingRaw = dev.PastReading ?? dev.PreviousReading ?? dev.ПредыдущееПоказание ?? dev.Предыдущее ?? "";
-          const pastReading = pastReadingRaw !== "" && pastReadingRaw != null ? pastReadingRaw : reading;
-          const pastDateRaw = dev.PastDate ?? dev.Date ?? dev.ReadingDate ?? dev.Дата;
-          const pastDate = pastDateRaw !== "" && pastDateRaw != null ? pastDateRaw : dev.Date ?? dev.Дата;
-          const pastDateStr = pastDate ? (typeof pastDate === "string" && pastDate.length >= 10 ? pastDate.slice(0, 10) : String(pastDate)) : undefined;
-          const rNum = typeof reading === "number" ? reading : parseFloat(String(reading).replace(",", ".").replace(/\s/g, ""));
-          const pNum = pastReading !== "" && pastReading != null ? (typeof pastReading === "number" ? pastReading : parseFloat(String(pastReading).replace(",", ".").replace(/\s/g, ""))) : NaN;
-          const volume = !isNaN(rNum) && !isNaN(pNum) ? rNum - pNum : undefined;
-          meterReadings.push({
-            Service: String(dev.Service ?? dev.Услуга ?? dev.ServiceName ?? "—"),
-            PastDate: pastDateStr,
-            PastReading: pastReading,
-            Reading: reading,
-            Volume: volume,
-          });
-        });
+      const rowsFromDevices = buildMeterReadingsFromDevices(meteringDevices);
+      if (hasValidMeterReadings(rowsFromDevices)) {
+        meterReadings.length = 0;
+        meterReadings.push(...rowsFromDevices);
+      }
       const charges = (data.ChargesAndPayments ?? data.chargesAndPayments) as Array<Record<string, unknown>> | undefined;
       if (charges?.length) {
         charges.forEach((c) => {

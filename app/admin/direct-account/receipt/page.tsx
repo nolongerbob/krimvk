@@ -97,8 +97,7 @@ export default function DirectAccountReceiptPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const accountNumber = searchParams.get("accountNumber");
-  const password = searchParams.get("password");
-  const region = searchParams.get("region");
+  const token = searchParams.get("token");
   const dateFrom = searchParams.get("dateFrom");
   const dateTo = searchParams.get("dateTo");
 
@@ -108,25 +107,23 @@ export default function DirectAccountReceiptPage() {
   const [accountInfo, setAccountInfo] = useState<any>(null);
 
   useEffect(() => {
-    if (accountNumber && password && region) {
+    if (token) {
       fetchReceiptData();
     } else {
-      setError("Отсутствуют необходимые параметры подключения");
+      setError("Отсутствует токен сессии прямого доступа");
       setLoading(false);
     }
-  }, [accountNumber, password, region, dateFrom, dateTo]);
+  }, [token, dateFrom, dateTo]);
 
   const fetchReceiptData = async () => {
-    if (!accountNumber || !password || !region) return;
+    if (!token) return;
 
     setLoading(true);
     setError(null);
 
     try {
       const params = new URLSearchParams({
-        accountNumber,
-        password,
-        region,
+        token,
       });
       if (dateFrom) params.append("dateFrom", dateFrom);
       if (dateTo) params.append("dateTo", dateTo);
@@ -139,7 +136,7 @@ export default function DirectAccountReceiptPage() {
         const receiptDataRaw = data.data || data;
         setReceiptData(receiptDataRaw);
         setAccountInfo({
-          accountNumber: receiptDataRaw.accountNumber || receiptDataRaw.LSCode || accountNumber,
+          accountNumber: receiptDataRaw.accountNumber || receiptDataRaw.LSCode || accountNumber || "",
           address: receiptDataRaw.address || receiptDataRaw.Address,
           name: receiptDataRaw.name || receiptDataRaw.LSName,
         });
@@ -355,7 +352,7 @@ export default function DirectAccountReceiptPage() {
         <Card ref={receiptRef} className="bg-white shadow-md print:shadow-none print:block border-gray-200">
           <CardContent className="p-6 sm:p-8 print:p-6 text-gray-900">
             {(() => {
-              const commonDutyAmount = parseAmount(receiptData.CommonDuty);
+              const commonDutyAmount = parseAmount(receiptData.CommonDuty ?? receiptData.commonDuty);
               const lscode = receiptData.LSCode || receiptData.lscode || accountInfo?.accountNumber || "";
               const address = receiptData.Address || receiptData.address || accountInfo?.address || "";
               const commonDuty = receiptData.CommonDuty || receiptData.commonDuty || "0";
@@ -476,7 +473,14 @@ export default function DirectAccountReceiptPage() {
                 })()}
                 {(() => {
                   const metersInfo = receiptData.MetersInfo || receiptData.metersInfo || [];
-                  const metersCount = metersInfo.length;
+                  const realMeters = metersInfo.filter((meter) => {
+                    const n = String(meter.deviceNumber || "").trim();
+                    return n !== "" && n !== "—";
+                  });
+                  const uniqueMeterNumbers = new Set(
+                    realMeters.map((meter) => String(meter.deviceNumber).trim())
+                  );
+                  const metersCount = uniqueMeterNumbers.size;
                   
                   if (metersCount > 0) {
                     return (
@@ -484,7 +488,7 @@ export default function DirectAccountReceiptPage() {
                         <li>
                           Установлено приборов учёта: <span className="font-medium text-gray-800">{metersCount}</span>.
                         </li>
-                        {metersInfo.map((meter, idx) => {
+                        {realMeters.map((meter, idx) => {
                           const serviceName = meter.service || "Услуга";
                           const deviceNumber = meter.deviceNumber || "—";
                           const norm = meter.norm ? `, норматив: ${meter.norm}` : "";
@@ -737,16 +741,6 @@ export default function DirectAccountReceiptPage() {
               }
               const totalRecalc = 0;
               const payments = parseAmount(receiptData.CommonPayment);
-              // Для "Задолженность на 1-е число" используем начало периода: если dateFrom указан, используем его; иначе - предыдущий месяц
-              let d: Date;
-              if (dateFrom) {
-                d = new Date(dateFrom);
-              } else {
-                const today = new Date();
-                d = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-              }
-              const firstDay = new Date(d.getFullYear(), d.getMonth(), 1);
-              const debtLabel = `Задолженность на ${String(firstDay.getDate()).padStart(2, "0")}.${String(firstDay.getMonth() + 1).padStart(2, "0")}.${firstDay.getFullYear()}`;
               // В 1С: положительное CommonDuty = долг к оплате (недоплата), отрицательное = переплата
               const isOverpaid = commonDutyAmount < 0;
               const isUnderpaid = commonDutyAmount > 0;
@@ -762,7 +756,9 @@ export default function DirectAccountReceiptPage() {
                         <tr className="border-b border-gray-100"><td className="py-2 pr-4 pl-3">Начислено за {periodStr}</td><td className="py-2 pr-3 pl-2 text-right tabular-nums whitespace-nowrap">{formatCurrency(totalCharged)}</td></tr>
                         <tr className="border-b border-gray-100"><td className="py-2 pr-4 pl-3">Оплаты за {periodStr}</td><td className="py-2 pr-3 pl-2 text-right tabular-nums whitespace-nowrap">{formatCurrency(payments)}</td></tr>
                         <tr className={`font-semibold ${totalRowStyle}`}>
-                          <td className="py-3 pl-3">Итого</td>
+                          <td className="py-3 pl-3">
+                            {isOverpaid ? "Итого (переплата)" : isUnderpaid ? "Итого (долг)" : "Итого"}
+                          </td>
                           <td className="py-3 pr-3 pl-2 text-right text-base tabular-nums whitespace-nowrap">{formatCurrency(Math.abs(commonDutyAmount))} ₽</td>
                         </tr>
                       </tbody>

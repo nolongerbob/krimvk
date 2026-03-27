@@ -27,8 +27,7 @@ const parseAmount = (value: string | number): number => {
 export default function DirectAccountPaymentHistoryPage() {
   const searchParams = useSearchParams();
   const accountNumber = searchParams.get("accountNumber");
-  const password = searchParams.get("password");
-  const region = searchParams.get("region");
+  const token = searchParams.get("token");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +44,7 @@ export default function DirectAccountPaymentHistoryPage() {
   }, []);
 
   const fetchPaymentHistory = async () => {
-    if (!accountNumber || !password || !region || !dateFrom || !dateTo) {
+    if (!token || !dateFrom || !dateTo) {
       setError("Отсутствуют необходимые параметры");
       return;
     }
@@ -55,9 +54,7 @@ export default function DirectAccountPaymentHistoryPage() {
 
     try {
       const params = new URLSearchParams({
-        accountNumber,
-        password,
-        region,
+        token,
         dateFrom,
         dateTo,
       });
@@ -186,7 +183,7 @@ export default function DirectAccountPaymentHistoryPage() {
     }
   };
 
-  if (!accountNumber || !password || !region) {
+  if (!token) {
     return (
       <div className="min-h-screen bg-gray-50 py-8 px-4">
         <div className="container mx-auto max-w-4xl">

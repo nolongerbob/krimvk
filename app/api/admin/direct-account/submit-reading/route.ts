@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/prisma";
 import { submitMeterReading } from "@/lib/1c-api";
+import { getDirectAccountSession } from "@/lib/direct-account-session";
 
 export const dynamic = 'force-dynamic';
 
@@ -28,9 +29,20 @@ export async function POST(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const accountNumber = searchParams.get("accountNumber");
-    const password = searchParams.get("password");
-    const region = searchParams.get("region");
+    const token = searchParams.get("token");
+    let accountNumber = searchParams.get("accountNumber");
+    let password = searchParams.get("password");
+    let region = searchParams.get("region");
+
+    if (token) {
+      const sessionCtx = getDirectAccountSession(token, session.user.id);
+      if (!sessionCtx) {
+        return NextResponse.json({ error: "Сессия прямого доступа истекла. Подключитесь заново." }, { status: 401 });
+      }
+      accountNumber = sessionCtx.accountNumber;
+      password = sessionCtx.password;
+      region = sessionCtx.region;
+    }
 
     if (!accountNumber || !password || !region) {
       return NextResponse.json(

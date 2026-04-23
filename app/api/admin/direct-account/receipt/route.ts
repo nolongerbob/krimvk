@@ -23,6 +23,33 @@ function canonicalServiceKey(s: string | undefined): string {
   return n;
 }
 
+function normalizeDeviceNumber(v: unknown): string {
+  return String(v ?? "")
+    .trim()
+    .replace(/\s+/g, "")
+    .replace(/[^a-zA-Z0-9а-яА-ЯёЁ]/g, "")
+    .toLowerCase();
+}
+
+function extractNextVerificationDate(meter: Record<string, unknown>): string | undefined {
+  const raw =
+    meter.DateOfNextVerification ||
+    meter.NextVerificationDate ||
+    meter.VerificationDate ||
+    meter.DateVerification ||
+    meter.ДатаПоверки ||
+    meter.СледующаяПоверка ||
+    meter.ДатаСледующейПоверки ||
+    null;
+  if (raw == null || raw === "") return undefined;
+  return String(raw).trim();
+}
+
+function toScalarReading(v: unknown): string | number {
+  if (typeof v === "number" || typeof v === "string") return v;
+  return String(v ?? "");
+}
+
 function enrichChargesWithReadings(
   charges: Array<Record<string, unknown>> | undefined,
   historyFlat: MeterHistoryItem[]
@@ -182,12 +209,29 @@ export async function GET(request: NextRequest) {
     }
 
     // Получаем счетчики из 1С для дат поверки
-    const metersFrom1C = data?.MeteringDevices || data?.Devices || data?.meters || [];
+    const rawMeters = data?.MeteringDevices || data?.Devices || data?.meters || [];
+    const metersFrom1C: Array<Record<string, unknown>> = Array.isArray(rawMeters)
+      ? rawMeters
+      : (typeof rawMeters === "object" && rawMeters !== null ? Object.values(rawMeters) : []);
 
     // Собираем информацию о счетчиках и нормативах
     const metersInfo: Array<{ service: string; deviceNumber: string; norm?: string; nextVerificationDate?: string }> = [];
     const uniqueDevices = new Set<string>();
     const meterReadings: Array<{ Service: string; PastDate?: string; PastReading?: number | string; Reading: number | string; Volume?: number }> = [];
+
+    // ВАЖНО: сначала добавляем данные напрямую из get_data (MeteringDevices),
+    // чтобы дата поверки не терялась, даже если история показаний не совпала по номеру прибора.
+    metersFrom1C.forEach((m) => {
+      const service = String(m.Service || m.ServiceName || (m as Record<string, unknown>).Услуга || "").trim();
+      const deviceNumber = String(m.NumberOfDevice || m.Number || m.DeviceNumber || m.SerialNumber || "").trim();
+      const norm = m.Norm != null && m.Norm !== "" ? String(m.Norm) : undefined;
+      const nextVerificationDate = extractNextVerificationDate(m);
+      if (!service || !deviceNumber) return;
+      const key = `${canonicalServiceKey(service)}|${normalizeDeviceNumber(deviceNumber)}`;
+      if (uniqueDevices.has(key)) return;
+      uniqueDevices.add(key);
+      metersInfo.push({ service, deviceNumber, norm, nextVerificationDate });
+    });
 
     try {
       const history = await getMeteringDeviceHistory(
@@ -204,25 +248,16 @@ export async function GET(request: NextRequest) {
         const deviceNumber = String(item.NumberOfDevice || item.DeviceNumber || item.Number || "");
         const service = String(item.Service || (item as Record<string, unknown>).Услуга || (item as Record<string, unknown>).ServiceName || "");
         if (deviceNumber && service) {
-          const key = `${service}|${deviceNumber}`;
+          const key = `${canonicalServiceKey(service)}|${normalizeDeviceNumber(deviceNumber)}`;
           if (!uniqueDevices.has(key)) {
             uniqueDevices.add(key);
             // Ищем дату поверки в данных счетчиков из 1С
-            const meterFrom1C = metersFrom1C.find((m: any) => {
-              const mNumber = String(m.NumberOfDevice || m.Number || m.DeviceNumber || m.SerialNumber || "");
-              return mNumber === deviceNumber;
+            const meterFrom1C = metersFrom1C.find((m) => {
+              const mNumber = normalizeDeviceNumber(m.NumberOfDevice || m.Number || m.DeviceNumber || m.SerialNumber);
+              return mNumber === normalizeDeviceNumber(deviceNumber);
             });
-            const nextVerificationDate = meterFrom1C
-              ? (meterFrom1C.DateOfNextVerification ||
-                 meterFrom1C.NextVerificationDate ||
-                 meterFrom1C.VerificationDate ||
-                 meterFrom1C.DateVerification ||
-                 meterFrom1C.ДатаПоверки ||
-                 meterFrom1C.СледующаяПоверка ||
-                 meterFrom1C.ДатаСледующейПоверки ||
-                 null)
-              : null;
-            metersInfo.push({ service, deviceNumber, nextVerificationDate: nextVerificationDate || undefined });
+            const nextVerificationDate = meterFrom1C ? extractNextVerificationDate(meterFrom1C) : undefined;
+            metersInfo.push({ service, deviceNumber, nextVerificationDate });
           }
         }
       });
@@ -245,17 +280,8 @@ export async function GET(request: NextRequest) {
                 const mService = String(m.ServiceName || m.Service || "");
                 return canonicalServiceKey(mService) === canonicalServiceKey(service);
               });
-              const nextVerificationDate = meterFrom1C
-                ? (meterFrom1C.DateOfNextVerification ||
-                   meterFrom1C.NextVerificationDate ||
-                   meterFrom1C.VerificationDate ||
-                   meterFrom1C.DateVerification ||
-                   meterFrom1C.ДатаПоверки ||
-                   meterFrom1C.СледующаяПоверка ||
-                   meterFrom1C.ДатаСледующейПоверки ||
-                   null)
-                : null;
-              metersInfo.push({ service, deviceNumber: "—", norm, nextVerificationDate: nextVerificationDate || undefined });
+              const nextVerificationDate = meterFrom1C ? extractNextVerificationDate(meterFrom1C) : undefined;
+              metersInfo.push({ service, deviceNumber: "—", norm, nextVerificationDate });
             }
           }
         });
@@ -286,8 +312,16 @@ export async function GET(request: NextRequest) {
         meterReadings.push({
           Service: String(service),
           PastDate: pastDateStr,
-          PastReading: pastReading,
-          Reading: reading,
+          PastReading:
+            pastReading == null
+              ? undefined
+              : typeof pastReading === "number" || typeof pastReading === "string"
+                ? pastReading
+                : String(pastReading),
+          Reading:
+            typeof reading === "number" || typeof reading === "string"
+              ? reading
+              : String(reading),
           Volume: volume,
         });
       });
@@ -334,8 +368,13 @@ export async function GET(request: NextRequest) {
         const vol = c.Volume != null && c.Volume !== "" ? parseFloat(String(c.Volume).replace(",", ".").replace(/\s/g, "")) : NaN;
         meterReadings.push({
           Service: service,
-          PastReading: startVal,
-          Reading: endVal ?? startVal,
+          PastReading:
+            startVal == null
+              ? undefined
+              : typeof startVal === "number" || typeof startVal === "string"
+                ? startVal
+                : String(startVal),
+          Reading: toScalarReading(endVal ?? startVal),
           Volume: !isNaN(vol) ? vol : undefined,
         });
       });

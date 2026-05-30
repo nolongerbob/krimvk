@@ -10,7 +10,7 @@
 
 set -Eeuo pipefail
 
-REPO_URL="${REPO_URL:-https://github.com/nolongerbob2/krimvk.git}"
+REPO_URL="${REPO_URL:-https://github.com/nolongerbob/krimvk.git}"
 APP_USER="${APP_USER:-krimvk}"
 PROD_DIR="/var/www/krimvk"
 DEV_DIR="/var/www/krimvk-dev"

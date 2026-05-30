@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Локально: напоминание, какие secrets добавить в GitHub
 
-REPO="${GITHUB_REPO:-nolongerbob/krimvk}"
+REPO="${GITHUB_REPO:-nolongerbob2/krimvk}"
 
 cat <<EOF
 GitHub → https://github.com/${REPO}/settings/secrets/actions

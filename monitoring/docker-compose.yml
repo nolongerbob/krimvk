@@ -23,19 +23,18 @@ services:
     restart: unless-stopped
     depends_on:
       - prometheus
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    # host network: datasource http://127.0.0.1:9090 (UFW блокирует 172.17.0.1 из bridge)
+    network_mode: host
     environment:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?set GRAFANA_ADMIN_PASSWORD}
       GF_USERS_ALLOW_SIGN_UP: "false"
-      GF_SERVER_HTTP_PORT: 3000
+      GF_SERVER_HTTP_ADDR: 127.0.0.1
+      GF_SERVER_HTTP_PORT: 3030
     volumes:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - ./grafana/provisioning/dashboards/json:/etc/grafana/provisioning/dashboards/json:ro
-    ports:
-      - "127.0.0.1:3030:3000"
 
   node-exporter:
     image: quay.io/prometheus/node-exporter:v1.8.2

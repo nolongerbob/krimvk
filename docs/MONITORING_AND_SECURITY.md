@@ -101,7 +101,7 @@ ssh -L 3030:127.0.0.1:3030 krimvk@ВАШ_IP_VPS
 
 1. **☰ → Connections → Data sources**
 2. Откройте **Prometheus** (удалите дубликаты с другим URL)
-3. URL: `http://host.docker.internal:9090`
+3. URL: `http://127.0.0.1:9090` (Grafana и Prometheus на host network; не используйте `host.docker.internal` — UFW даёт timeout)
 4. **Save & test** — должно быть зелёное «Successfully queried»
 5. **☰ → Explore** → запрос `up{job="node"}` → должны быть точки
 

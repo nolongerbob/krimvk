@@ -2,63 +2,159 @@
   "annotations": { "list": [] },
   "editable": true,
   "fiscalYearStartMonth": 0,
-  "graphTooltip": 0,
+  "graphTooltip": 1,
   "id": null,
   "links": [],
   "panels": [
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "unit": "percent" } },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 70 },
+              { "color": "red", "value": 90 }
+            ]
+          },
+          "unit": "percent"
+        }
+      },
+      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 0 },
       "id": 1,
+      "options": { "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"] }, "showThresholdLabels": false, "showThresholdMarkers": true },
       "targets": [
         {
-          "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
-          "legendFormat": "CPU %"
+          "expr": "100 - (avg(rate(node_cpu_seconds_total{job=\"node\",instance=\"127.0.0.1:9100\",mode=\"idle\"}[5m])) * 100)",
+          "legendFormat": "CPU"
         }
       ],
       "title": "CPU",
-      "type": "timeseries"
+      "type": "gauge"
     },
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "unit": "percent" } },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 75 },
+              { "color": "red", "value": 90 }
+            ]
+          },
+          "unit": "percent"
+        }
+      },
+      "gridPos": { "h": 8, "w": 6, "x": 6, "y": 0 },
       "id": 2,
+      "options": { "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"] }, "showThresholdLabels": false, "showThresholdMarkers": true },
       "targets": [
         {
-          "expr": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100",
-          "legendFormat": "RAM %"
+          "expr": "(1 - (node_memory_MemAvailable_bytes{job=\"node\",instance=\"127.0.0.1:9100\"} / node_memory_MemTotal_bytes{job=\"node\",instance=\"127.0.0.1:9100\"})) * 100",
+          "legendFormat": "RAM"
         }
       ],
       "title": "Память",
-      "type": "timeseries"
+      "type": "gauge"
     },
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "unit": "percent" } },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 80 },
+              { "color": "red", "value": 95 }
+            ]
+          },
+          "unit": "percent"
+        }
+      },
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 0 },
       "id": 3,
+      "options": { "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"] }, "showThresholdLabels": false, "showThresholdMarkers": true },
       "targets": [
         {
-          "expr": "(1 - (node_filesystem_avail_bytes{mountpoint=\"/\",fstype!~\"tmpfs|overlay\"} / node_filesystem_size_bytes{mountpoint=\"/\",fstype!~\"tmpfs|overlay\"})) * 100",
+          "expr": "(1 - (node_filesystem_avail_bytes{job=\"node\",instance=\"127.0.0.1:9100\",mountpoint=\"/\",fstype!~\"tmpfs|overlay\"} / node_filesystem_size_bytes{job=\"node\",instance=\"127.0.0.1:9100\",mountpoint=\"/\",fstype!~\"tmpfs|overlay\"})) * 100",
           "legendFormat": "Диск /"
         }
       ],
-      "title": "Диск",
+      "title": "Диск /",
+      "type": "gauge"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [
+            { "options": { "0": { "color": "red", "index": 0, "text": "DOWN" } }, "type": "value" },
+            { "options": { "1": { "color": "green", "index": 1, "text": "OK" } }, "type": "value" }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
+        }
+      },
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 0 },
+      "id": 5,
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "center", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "auto" },
+      "targets": [{ "expr": "pg_up{job=\"postgres\",instance=\"127.0.0.1:9187\"}", "legendFormat": "PostgreSQL" }],
+      "title": "База данных",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "percent" }, "overrides": [] },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 8 },
+      "id": 10,
+      "targets": [
+        {
+          "expr": "100 - (avg(rate(node_cpu_seconds_total{job=\"node\",instance=\"127.0.0.1:9100\",mode=\"idle\"}[5m])) * 100)",
+          "legendFormat": "CPU %"
+        }
+      ],
+      "title": "CPU (график)",
       "type": "timeseries"
     },
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "fieldConfig": { "defaults": { "unit": "bytes" } },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 8 },
+      "id": 11,
+      "targets": [
+        {
+          "expr": "node_memory_MemTotal_bytes{job=\"node\",instance=\"127.0.0.1:9100\"} - node_memory_MemAvailable_bytes{job=\"node\",instance=\"127.0.0.1:9100\"}",
+          "legendFormat": "RAM used"
+        }
+      ],
+      "title": "Память (график)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "max": 1, "min": 0 } },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 17 },
       "id": 4,
       "targets": [
         {
-          "expr": "probe_success{job=\"blackbox_http\"}",
+          "expr": "probe_success{job=\"blackbox_http\",instance=~\"http://127.0.0.1.*\"}",
           "legendFormat": "{{ instance }}"
         }
       ],
-      "title": "HTTP проверки (1 = OK)",
+      "title": "Сайт и /api/health (1 = OK)",
       "type": "timeseries"
     }
   ],
@@ -69,5 +165,5 @@
   "time": { "from": "now-6h", "to": "now" },
   "title": "KrimVK — обзор VPS",
   "uid": "krimvk-overview",
-  "version": 1
+  "version": 2
 }

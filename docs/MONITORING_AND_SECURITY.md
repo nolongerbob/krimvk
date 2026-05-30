@@ -93,7 +93,19 @@ ssh -L 3030:127.0.0.1:3030 krimvk@ВАШ_IP_VPS
 | 7587 | Blackbox Exporter |
 | 12708 | Nginx (если включите stub_status) |
 
-В репозитории уже есть дашборд **KrimVK — обзор VPS** (папка KrimVK).
+В репозитории уже есть дашборд **KrimVK — обзор VPS** (папка KrimVK) — **без выпадающих Job/Instance**, сразу с графиками.
+
+Если **Node Exporter Full** пустой и сверху Job/Instance пустые — сначала почините datasource (ниже), затем откройте **KrimVK — обзор VPS**.
+
+### Datasource в Grafana (обязательно)
+
+1. **☰ → Connections → Data sources**
+2. Откройте **Prometheus** (удалите дубликаты с другим URL)
+3. URL: `http://host.docker.internal:9090`
+4. **Save & test** — должно быть зелёное «Successfully queried»
+5. **☰ → Explore** → запрос `up{job="node"}` → должны быть точки
+
+После этого дашборд 1860: Job=`node`, Instance=`127.0.0.1:9100`.
 
 **Красивые графики:** на VPS после `git pull` выполните:
 

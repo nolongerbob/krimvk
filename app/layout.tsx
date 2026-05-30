@@ -4,6 +4,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Providers } from "./providers";
 import { BVIPanel } from "@/components/BVIPanel";
+import { CookieConsentBanner } from "@/components/CookieConsentBanner";
 
 export const metadata: Metadata = {
   title: "КрымВК - Водоканал Крыма",
@@ -42,6 +43,7 @@ export default function RootLayout({
             <Footer />
           </div>
           <BVIPanel />
+          <CookieConsentBanner />
         </Providers>
       </body>
     </html>

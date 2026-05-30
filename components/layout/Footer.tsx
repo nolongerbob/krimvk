@@ -132,6 +132,17 @@ export function Footer() {
 
         <div className="mt-8 pt-8 border-t text-center text-sm text-gray-600">
           <p>&copy; {new Date().getFullYear()} КрымВК. Все права защищены.</p>
+          <div className="mt-2 flex flex-wrap items-center justify-center gap-4">
+            <Link href="/legal/privacy" className="hover:text-primary">
+              Политика ПДн
+            </Link>
+            <Link href="/legal/terms" className="hover:text-primary">
+              Пользовательское соглашение
+            </Link>
+            <Link href="/legal/cookies" className="hover:text-primary">
+              Политика cookie
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

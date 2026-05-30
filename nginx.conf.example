@@ -1,56 +1,135 @@
-# Пример конфигурации Nginx для VPS
+# Пример Nginx: prod (3000) + dev (3001) на одном VPS
 # Скопируйте в /etc/nginx/sites-available/krimvk
+#
+# IP-first (без домена): используйте nginx.conf.ip-first.example
+# или временно proxy на порты 3000/3001 по разным server_name / портам.
 
+upstream krimvk_prod {
+    server 127.0.0.1:3000;
+    keepalive 64;
+}
+
+upstream krimvk_dev {
+    server 127.0.0.1:3001;
+    keepalive 64;
+}
+
+# --- Production ---
 server {
     listen 80;
-    # Если домен еще не привязан, используйте IP или _ (catch-all)
-    # server_name _;  # Для IP адреса
-    # Или после привязки домена:
-    server_name yourdomain.com www.yourdomain.com;
+    server_name yourdomain.ru www.yourdomain.ru;
+    return 301 https://$host$request_uri;
+}
 
-    # Редирект на HTTPS (раскомментируйте после настройки SSL)
-    # return 301 https://$server_name$request_uri;
+server {
+    listen 443 ssl http2;
+    server_name yourdomain.ru www.yourdomain.ru;
 
-    # Для начала можно оставить HTTP
+    ssl_certificate /etc/letsencrypt/live/yourdomain.ru/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/yourdomain.ru/privkey.pem;
+    ssl_session_timeout 1d;
+    ssl_session_cache shared:SSL:10m;
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    client_max_body_size 50M;
+    proxy_read_timeout 300s;
+    proxy_connect_timeout 300s;
+    proxy_send_timeout 300s;
+
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+    location /api/health {
+        proxy_pass http://krimvk_prod;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
     location / {
-        proxy_pass http://localhost:3000;
+        proxy_pass http://krimvk_prod;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
+        proxy_set_header Connection "upgrade";
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_cache_bypass $http_upgrade;
-        
-        # Увеличиваем лимиты для больших файлов
-        client_max_body_size 50M;
-        proxy_read_timeout 300s;
-        proxy_connect_timeout 300s;
-        proxy_send_timeout 300s;
     }
 
-    # Статические файлы из uploads
-    location /uploads {
-        alias /var/www/krimvk/uploads;
-        expires 30d;
-        add_header Cache-Control "public, immutable";
-        
-        # Безопасность
-        add_header X-Content-Type-Options "nosniff";
-    }
-
-    # Статические файлы Next.js
     location /_next/static {
         alias /var/www/krimvk/.next/static;
         expires 365d;
         add_header Cache-Control "public, immutable";
     }
 
-    # Gzip сжатие
     gzip on;
     gzip_vary on;
     gzip_min_length 1024;
     gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml+rss application/json;
 }
 
+# --- Development (staging) ---
+server {
+    listen 80;
+    server_name dev.yourdomain.ru;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name dev.yourdomain.ru;
+
+    ssl_certificate /etc/letsencrypt/live/dev.yourdomain.ru/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/dev.yourdomain.ru/privkey.pem;
+    ssl_session_timeout 1d;
+    ssl_session_cache shared:SSL:10m;
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    client_max_body_size 50M;
+    proxy_read_timeout 300s;
+    proxy_connect_timeout 300s;
+    proxy_send_timeout 300s;
+
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    location /api/health {
+        proxy_pass http://krimvk_dev;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location / {
+        proxy_pass http://krimvk_dev;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    location /_next/static {
+        alias /var/www/krimvk-dev/.next/static;
+        expires 365d;
+        add_header Cache-Control "public, immutable";
+    }
+
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml+rss application/json;
+}

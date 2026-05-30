@@ -372,3 +372,33 @@ npm run build
 pm2 restart krimvk
 ```
 
+## CI/CD (dev + prod на одном VPS)
+
+Подробно: [CI_CD.md](./CI_CD.md)
+
+- `develop` → `/var/www/krimvk-dev`, PM2 `krimvk-dev`, порт `3001`
+- `main` → `/var/www/krimvk`, PM2 `krimvk`, порт `3000`
+- Workflows: `.github/workflows/ci.yml`, `.github/workflows/deploy.yml`
+- Secrets: [GITHUB_SECRETS.md](./GITHUB_SECRETS.md)
+- Nginx dev: `dev.yourdomain.ru` или [nginx.conf.ip-first.example](../nginx.conf.ip-first.example) (prod `:80`, dev `:8080`)
+
+## Соответствие требованиям РФ (обязательно)
+
+1. До запуска production разместите юридические страницы:
+   - `/legal/privacy` (политика ПДн)
+   - `/legal/terms` (пользовательское соглашение)
+   - `/legal/cookies` (политика cookie)
+2. На сайте должен быть активен cookie-consent баннер.
+3. Локализацию и первичную обработку ПДн граждан РФ организуйте на инфраструктуре,
+   соответствующей требованиям 152-ФЗ.
+4. Секреты не хранятся в git. Используйте `.env.example.vps` как шаблон.
+
+## Эксплуатация и восстановление
+
+- Runbook: `docs/PRODUCTION_RUNBOOK.md`
+- Инструкция по GitHub secrets: `docs/GITHUB_SECRETS.md`
+- Скрипты бэкапа:
+  - `scripts/backup-db.sh`
+  - `scripts/backup-uploads.sh`
+  - `scripts/restore-db.sh`
+

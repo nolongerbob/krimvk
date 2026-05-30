@@ -45,6 +45,13 @@ trap 'DEPLOY_FAILED=1; rollback' ERR
 
 log "Начинаем деплой ${APP_NAME} (PORT=${PORT})"
 
+if [[ "$(id -u)" -eq 0 && "${ALLOW_ROOT_DEPLOY:-}" != "1" ]]; then
+  log "Ошибка: деплой от root запрещён (git/PM2 будут у другого пользователя)."
+  log "Выполните: su - krimvk"
+  log "Затем: cd /var/www/krimvk && DEPLOY_BRANCH=main ./scripts/deploy-vps.sh"
+  exit 1
+fi
+
 if [[ ! -f "package.json" ]]; then
   log "Ошибка: package.json не найден. Запускайте из корня проекта."
   exit 1

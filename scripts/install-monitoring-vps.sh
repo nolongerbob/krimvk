@@ -32,6 +32,11 @@ fi
 docker compose --profile core pull
 docker compose --profile core up -d
 
+if command -v curl >/dev/null 2>&1; then
+  bash "${REPO_ROOT}/scripts/download-grafana-dashboards.sh" || echo "Предупреждение: дашборды не скачались (сеть?) — Import вручную: 1860, 9628, 7587"
+  docker compose restart grafana 2>/dev/null || true
+fi
+
 echo ""
 echo "Grafana:  http://127.0.0.1:3030  (с VPS: curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3030/login)"
 echo "С Mac:    ssh -L 3030:127.0.0.1:3030 krimvk@YOUR_VPS_IP"

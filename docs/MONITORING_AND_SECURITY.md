@@ -56,7 +56,27 @@ chmod +x ../scripts/install-monitoring-vps.sh
 ../scripts/install-monitoring-vps.sh
 ```
 
-4. Доступ к Grafana с вашего Mac:
+4. Если `docker compose pull` падает с `TLS handshake timeout` (часто на VPS в РФ):
+
+```bash
+sudo tee /etc/docker/daemon.json <<'EOF'
+{
+  "registry-mirrors": ["https://dockerhub.timeweb.cloud"],
+  "max-concurrent-downloads": 2
+}
+EOF
+sudo systemctl restart docker
+
+export DOCKER_CLIENT_TIMEOUT=600
+export COMPOSE_HTTP_TIMEOUT=600
+cd /var/www/krimvk/monitoring
+docker compose --profile core pull
+docker compose --profile core up -d
+```
+
+Образы Prometheus-стека в `docker-compose.yml` идут с **quay.io**; Grafana — с Docker Hub, ей помогает зеркало. При сбое тяните по одному: `docker pull grafana/grafana:11.2.2`.
+
+5. Доступ к Grafana с вашего Mac:
 
 ```bash
 ssh -L 3030:127.0.0.1:3030 krimvk@ВАШ_IP_VPS
@@ -64,7 +84,7 @@ ssh -L 3030:127.0.0.1:3030 krimvk@ВАШ_IP_VPS
 
 Откройте http://localhost:3030 (логин из `.env`).
 
-5. Дополнительные дашборды: **Dashboards → Import** (ID из Grafana.com):
+6. Дополнительные дашборды: **Dashboards → Import** (ID из Grafana.com):
 
 | ID | Описание |
 |----|----------|
@@ -74,6 +94,23 @@ ssh -L 3030:127.0.0.1:3030 krimvk@ВАШ_IP_VPS
 | 12708 | Nginx (если включите stub_status) |
 
 В репозитории уже есть дашборд **KrimVK — обзор VPS** (папка KrimVK).
+
+**Красивые графики:** на VPS после `git pull` выполните:
+
+```bash
+bash /var/www/krimvk/scripts/download-grafana-dashboards.sh
+cd /var/www/krimvk/monitoring && docker compose restart grafana
+```
+
+Появятся дашборды **Node Exporter Full**, **PostgreSQL**, **Blackbox**. Либо в UI: **Dashboards → Import** → ID `1860`, `9628`, `7587`, datasource **Prometheus**.
+
+**Postgres exporter зависает (`curl :9187` висит):** в `monitoring/.env` используйте `127.0.0.1`, не `host.docker.internal`:
+
+```env
+POSTGRES_EXPORTER_DSN=postgresql://krimvk_metrics:ПАРОЛЬ@127.0.0.1:5432/krimvk?sslmode=disable&connect_timeout=5
+```
+
+Пересоздайте контейнер: `docker compose up -d --force-recreate postgres-exporter`
 
 ## RAM 2 GB vs 4 GB+
 

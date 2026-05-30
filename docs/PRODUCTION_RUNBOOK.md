@@ -33,7 +33,18 @@ pm2 save
 curl -fsS http://127.0.0.1:3000/api/health
 ```
 
-## 4. Резервные копии
+## 4. Мониторинг (Grafana / Prometheus)
+
+Стек в `monitoring/`, установка: [MONITORING_AND_SECURITY.md](./MONITORING_AND_SECURITY.md).
+
+```bash
+cd /var/www/krimvk/monitoring && docker compose --profile core ps
+curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:3030/login
+```
+
+Доступ к дашбордам с локальной машины: `ssh -L 3030:127.0.0.1:3030 krimvk@VPS_IP` → http://localhost:3030
+
+## 5. Резервные копии
 
 Скрипты:
 - `scripts/backup-db.sh`
@@ -47,7 +58,7 @@ curl -fsS http://127.0.0.1:3000/api/health
 30 2 * * * cd /var/www/krimvk && UPLOADS_DIR="/var/www/krimvk/uploads" ./scripts/backup-uploads.sh >> /var/log/krimvk-backup.log 2>&1
 ```
 
-## 5. Инциденты
+## 6. Инциденты
 
 1. Зафиксировать время начала, симптом и затронутые функции.
 2. Проверить `pm2 logs`, `nginx error.log`, `/api/health`.
@@ -57,7 +68,7 @@ curl -fsS http://127.0.0.1:3000/api/health
    - список корректирующих действий;
    - обновление чеклистов/мониторинга.
 
-## 6. Комплаенс РФ (операционно)
+## 7. Комплаенс РФ (операционно)
 
 Перед каждым крупным релизом проверять:
 - доступны `/legal/privacy`, `/legal/terms`, `/legal/cookies`;
@@ -66,8 +77,9 @@ curl -fsS http://127.0.0.1:3000/api/health
 - доступ к production и БД ограничен по принципу least privilege;
 - есть свежие проверенные бэкапы БД и файлов.
 
-## 7. Ссылки на регламенты
+## 8. Ссылки на регламенты
 
+- Мониторинг и безопасность: `docs/MONITORING_AND_SECURITY.md`
 - Hardening: `docs/SERVER_HARDENING.md`
 - Go-live: `docs/GO_LIVE_CHECKLIST.md`
 - GitHub secrets: `docs/GITHUB_SECRETS.md`

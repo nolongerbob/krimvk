@@ -1,6 +1,6 @@
 # VPS Quickstart (nic.ru)
 
-Репозиторий: `git@github-nolongerbob:nolongerbob/krimvk.git` (push с Mac — первый ключ; для `nolongerbob2` см. ниже)
+Репозиторий: `git@github.com:nolongerbob/krimvk.git`
 
 ## На Mac (перед VPS)
 
@@ -24,7 +24,7 @@ git push -u origin develop
 
 ```bash
 ssh root@<VPS_IP>
-git clone https://github.com/nolongerbob/krimvk.git /tmp/krimvk-setup
+git clone git@github.com:nolongerbob/krimvk.git /tmp/krimvk-setup
 cd /tmp/krimvk-setup
 sudo bash scripts/vps-init.sh
 ```

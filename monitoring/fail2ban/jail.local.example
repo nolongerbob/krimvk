@@ -1,0 +1,30 @@
+# /etc/fail2ban/jail.local — скопируйте и адаптируйте
+# sudo cp monitoring/fail2ban/jail.local.example /etc/fail2ban/jail.local
+# sudo systemctl restart fail2ban
+
+[DEFAULT]
+bantime = 1h
+findtime = 10m
+maxretry = 5
+backend = systemd
+
+[sshd]
+enabled = true
+port = ssh
+logpath = %(sshd_log)s
+
+[nginx-http-auth]
+enabled = true
+port = http,https
+logpath = /var/log/nginx/error.log
+
+[nginx-botsearch]
+enabled = true
+port = http,https
+logpath = /var/log/nginx/access.log
+maxretry = 2
+
+[nginx-limit-req]
+enabled = true
+port = http,https
+logpath = /var/log/nginx/error.log

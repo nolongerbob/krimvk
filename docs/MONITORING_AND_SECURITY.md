@@ -133,6 +133,10 @@ POSTGRES_EXPORTER_DSN=postgresql://krimvk_metrics:ПАРОЛЬ@127.0.0.1:5432/kr
 
 На **2 GB** держите только `core`. При нехватке памяти отключите dev-инстанс PM2 (`krimvk-dev`) или увеличьте VPS до 4 GB.
 
+## Мониторинг с телефона (ошибки и push)
+
+См. **[MOBILE_MONITORING.md](./MOBILE_MONITORING.md)** — Telegram, UptimeRobot, Sentry, Uptime Kuma.
+
 ## Алерты (минимум)
 
 1. **Внешний uptime** (бесплатно): [UptimeRobot](https://uptimerobot.com) или [Better Stack](https://betterstack.com) — проверка `https://ваш-домен/api/health` каждые 5 мин, уведомление в Telegram/email.

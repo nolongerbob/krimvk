@@ -51,6 +51,7 @@
 
 ## 8. Контроль перед go-live
 
+- Защита от атак: [WEB_SECURITY.md](./WEB_SECURITY.md) и `sudo bash scripts/harden-vps.sh`
 - `/api/health` отвечает стабильно.
 - CI и deploy workflow проходят без ошибок.
 - Юридические страницы доступны: `/legal/privacy`, `/legal/terms`, `/legal/cookies`.

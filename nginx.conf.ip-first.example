@@ -2,6 +2,9 @@
 # Prod: http://<VPS_IP>/
 # Dev:  http://<VPS_IP>:8080/  (или отдельный IP — настройте DNS/порт)
 
+# Подключите rate limit: sudo cp nginx/krimvk-security.conf /etc/nginx/conf.d/
+# См. docs/WEB_SECURITY.md
+
 upstream krimvk_prod {
     server 127.0.0.1:3000;
     keepalive 64;
@@ -21,7 +24,28 @@ server {
     proxy_connect_timeout 300s;
     proxy_send_timeout 300s;
 
-    # Метрики для Grafana (только localhost)
+    limit_conn krimvk_conn 30;
+
+    location /api/auth/ {
+        limit_req zone=krimvk_auth burst=5 nodelay;
+        proxy_pass http://krimvk_prod;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /api/admin/ {
+        limit_req zone=krimvk_admin burst=20 nodelay;
+        proxy_pass http://krimvk_prod;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
     location /nginx_status {
         stub_status on;
         allow 127.0.0.1;
@@ -29,6 +53,7 @@ server {
     }
 
     location / {
+        limit_req zone=krimvk_general burst=40 nodelay;
         proxy_pass http://krimvk_prod;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;

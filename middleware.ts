@@ -1,31 +1,32 @@
-import { withAuth } from "next-auth/middleware";
-import { NextResponse } from "next/server";
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { getToken } from 'next-auth/jwt';
+import { applyRateLimit, blockScannerPaths } from '@/lib/security/http-guard';
 
-export default withAuth(
-  function middleware(req) {
-    // Дополнительная логика middleware если нужна
-    return NextResponse.next();
-  },
-  {
-    callbacks: {
-      authorized: ({ token, req }) => {
-        // Защищаем только страницы dashboard и admin
-        if (req.nextUrl.pathname.startsWith("/dashboard") || req.nextUrl.pathname.startsWith("/admin")) {
-          return !!token;
-        }
-        return true;
-      },
-    },
-    pages: {
-      signIn: "/login",
-    },
+export async function middleware(req: NextRequest) {
+  const scanBlock = blockScannerPaths(req);
+  if (scanBlock) {
+    return scanBlock;
   }
-);
+
+  const rateLimited = applyRateLimit(req);
+  if (rateLimited) {
+    return rateLimited;
+  }
+
+  const { pathname } = req.nextUrl;
+  if (pathname.startsWith('/dashboard') || pathname.startsWith('/admin')) {
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    if (!token) {
+      const login = new URL('/login', req.url);
+      login.searchParams.set('callbackUrl', pathname);
+      return NextResponse.redirect(login);
+    }
+  }
+
+  return NextResponse.next();
+}
 
 export const config = {
-  matcher: [
-    "/dashboard/:path*",
-    "/admin/:path*",
-  ],
+  matcher: ['/dashboard/:path*', '/admin/:path*', '/api/:path*'],
 };
-

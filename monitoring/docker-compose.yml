@@ -60,12 +60,9 @@ services:
     image: quay.io/prometheus/blackbox-exporter:v0.25.0
     profiles: ["core"]
     restart: unless-stopped
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    network_mode: host
     volumes:
       - ./blackbox/blackbox.yml:/etc/blackbox_exporter/config.yml:ro
-    ports:
-      - "127.0.0.1:9115:9115"
 
   loki:
     image: grafana/loki:3.2.1

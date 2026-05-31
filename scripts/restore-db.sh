@@ -2,10 +2,16 @@
 
 set -Eeuo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/pg-url-for-cli.sh
+source "${SCRIPT_DIR}/lib/pg-url-for-cli.sh"
+
 if [[ -z "${DATABASE_URL:-}" ]]; then
   echo "DATABASE_URL is required"
   exit 1
 fi
+
+PG_URL="$(pg_url_for_cli "${DATABASE_URL}")"
 
 if [[ $# -ne 1 ]]; then
   echo "Usage: DATABASE_URL=... $0 /path/to/db_backup.sql.gz"
@@ -19,5 +25,5 @@ if [[ ! -f "${BACKUP_FILE}" ]]; then
 fi
 
 echo "Restoring DB from: ${BACKUP_FILE}"
-gzip -dc "${BACKUP_FILE}" | psql "${DATABASE_URL}"
+gzip -dc "${BACKUP_FILE}" | psql "${PG_URL}"
 echo "Restore completed"

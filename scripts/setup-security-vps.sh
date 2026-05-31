@@ -10,8 +10,12 @@ fi
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${REPO_ROOT}"
 
+if [[ "$(stat -c '%U' "${REPO_ROOT}")" == "root" ]]; then
+  git config --global --add safe.directory "${REPO_ROOT}" 2>/dev/null || true
+fi
 git pull origin main
 
+export DEBIAN_FRONTEND=noninteractive
 bash scripts/harden-vps.sh
 bash scripts/apply-nginx-rate-limits.sh
 

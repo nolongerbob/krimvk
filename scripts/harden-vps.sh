@@ -35,8 +35,10 @@ systemctl enable fail2ban
 systemctl restart fail2ban
 
 log "unattended-upgrades..."
+export DEBIAN_FRONTEND=noninteractive
 apt-get install -y unattended-upgrades apt-listchanges
-dpkg-reconfigure -plow unattended-upgrades || true
+echo unattended-upgrades unattended-upgrades/enable_auto_updates boolean true | debconf-set-selections
+dpkg-reconfigure -f noninteractive unattended-upgrades || true
 
 log "nginx security snippet..."
 if [[ -f "${REPO_ROOT}/nginx/krimvk-security.conf" ]]; then

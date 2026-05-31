@@ -18,6 +18,12 @@ Cloudflare просит **отключить DNSSEC** у регистратор�
 
 Позже DNSSEC можно включить **через Cloudflare** (DNS → Settings), не в REG.RU.
 
+### Доступ из РФ без VPN
+
+Если сайт **не открывается без VPN** — часто виноват **прокси Cloudflare** (блокируют IP CF) + UFW «только Cloudflare» на VPS.
+
+**Решение:** серое облако в DNS + `scripts/ufw-open-origin.sh` — см. **[RU_ACCESS.md](./RU_ACCESS.md)**.
+
 ---
 
 ## 2. DNS в Cloudflare

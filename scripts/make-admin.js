@@ -1,5 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
-require('dotenv').config({ path: './.env' });
+const { loadEnv } = require('./load-env');
+
+loadEnv();
 
 const prisma = new PrismaClient();
 

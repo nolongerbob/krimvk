@@ -1,5 +1,8 @@
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
+const { loadEnv } = require('./load-env');
+
+loadEnv();
 
 const prisma = new PrismaClient();
 

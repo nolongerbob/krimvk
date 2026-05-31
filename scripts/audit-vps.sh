@@ -21,7 +21,11 @@ section "LISTEN"
 ss -tlnp | grep LISTEN | head -25
 
 section "NGINX RATE LIMITS"
-grep -r limit_req /etc/nginx/sites-enabled/ 2>/dev/null || echo "limit_req: not in sites-enabled"
+if grep -r limit_req /etc/nginx/sites-enabled/ /etc/nginx/sites-available/krimvk 2>/dev/null | grep -q limit_req; then
+  grep -h limit_req /etc/nginx/sites-available/krimvk 2>/dev/null | head -5
+else
+  echo "limit_req: not configured"
+fi
 test -f /etc/nginx/conf.d/krimvk-security.conf && head -3 /etc/nginx/conf.d/krimvk-security.conf || true
 nginx -t 2>&1 | tail -2
 

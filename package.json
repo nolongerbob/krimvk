@@ -22,7 +22,6 @@
     "dadata:add": "node scripts/add-dadata-keys.js",
     "seed:services": "node scripts/seed-services.js",
     "user:create": "node scripts/create-test-user.js",
-    "db:reset": "node scripts/reset-db.js",
     "db:clean": "node scripts/clean-database.js",
     "db:setup:neon": "prisma generate && prisma db push",
     "db:migrate:password-reset": "node scripts/apply-password-reset-token-migration.js",

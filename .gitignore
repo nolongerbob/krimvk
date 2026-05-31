@@ -43,6 +43,9 @@ monitoring/.env
 *.tsbuildinfo
 next-env.d.ts
 
+# deploy artifacts on VPS
+.deploy-backups/
+
 # build outputs
 *.log
 *.cache

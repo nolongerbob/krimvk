@@ -44,11 +44,44 @@ curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:3030/login
 
 Доступ к дашбордам с локальной машины: `ssh -L 3030:127.0.0.1:3030 krimvk@VPS_IP` → http://localhost:3030
 
-## 5. Резервные копии
+## 5. Перезагрузка VPS (reboot)
+
+После `sudo reboot` или обновления ядра — **ничего вручную в коде не нужно**, если раньше настроили автозапуск.
+
+**Порядок (с Mac, через 1–2 мин после reboot):**
+
+```bash
+ssh -i ~/.ssh/krimvk_deploy krimvk@89.111.165.160
+
+# на VPS
+sudo systemctl status nginx --no-pager
+pm2 status                    # krimvk должен быть online
+curl -fsS http://127.0.0.1:3000/api/health
+curl -fsSI https://krimvk.ru/api/health | head -5   # с VPS — через Cloudflare
+
+# если krimvk не поднялся:
+cd /var/www/krimvk
+pm2 resurrect || pm2 start ecosystem.config.js --only krimvk
+pm2 save
+```
+
+**Один раз после первого reboot** (если ещё не делали):
+
+```bash
+sudo -u krimvk pm2 startup systemd -u krimvk --hp /home/krimvk
+# выполнить команду, которую выведет pm2, затем:
+pm2 save
+```
+
+Мониторинг/docker (если есть): `cd /var/www/krimvk/monitoring && docker compose --profile core up -d`
+
+---
+
+## 6. Резервные копии
 
 См. **[BACKUPS.md](./BACKUPS.md)** — `./scripts/setup-backup-cron.sh` (БД + опционально S3 off-site).
 
-## 6. Инциденты
+## 7. Инциденты
 
 1. Зафиксировать время начала, симптом и затронутые функции.
 2. Проверить `pm2 logs`, `nginx error.log`, `/api/health`.
@@ -58,7 +91,7 @@ curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:3030/login
    - список корректирующих действий;
    - обновление чеклистов/мониторинга.
 
-## 7. Комплаенс РФ (операционно)
+## 8. Комплаенс РФ (операционно)
 
 Перед каждым крупным релизом проверять:
 - доступны `/legal/privacy`, `/legal/terms`, `/legal/cookies`;

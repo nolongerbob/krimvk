@@ -26,3 +26,5 @@ curl -fsS -d "KrimVK: тест алерта $(date '+%Y-%m-%d %H:%M:%S')" \
   "${URL}"
 echo ""
 echo "OK — проверьте приложение ntfy на телефоне."
+echo ""
+echo "Это проверка канала. Алерты при падении Node — только uncaughtException/unhandledRejection (см. docs/MOBILE_MONITORING.md)."

@@ -154,25 +154,40 @@ ssh -L 3002:127.0.0.1:3002 krimvk@VPS_IP
 
 ---
 
-## 4. Уже в проекте: Telegram при падении Node
+## 4. ntfy / Telegram при падении Node (VPS)
 
-Если заданы переменные (см. `.env.example.vps`):
+В `.env` на VPS:
 
 ```env
-TELEGRAM_ALERT_BOT_TOKEN=
-TELEGRAM_ALERT_CHAT_ID=
+NTFY_TOPIC=ваш-секретный-topic
+NTFY_SERVER=https://ntfy.sh
 ```
 
-`instrumentation.ts` шлёт в Telegram **необработанные** ошибки процесса Node (краш, unhandled rejection). Это не замена Sentry для ошибок в браузере.
+### Что **приходит** в ntfy
 
-Проверка:
+| Событие | Придёт? |
+|---------|---------|
+| Тест `./scripts/test-ntfy-alert.sh` | ✅ (проверка канала) |
+| `uncaughtException` / `unhandledRejection` в процессе Next (PM2) | ✅ (`instrumentation.ts`) |
+| Ошибка в `try/catch` в API, 500 без краша | ❌ |
+| PM2 restart без падения | ❌ |
+| «Сайт не открывается» | ❌ → UptimeRobot / Uptime Kuma на `/api/health` |
+
+После смены `.env`: `pm2 restart krimvk --update-env` и `pm2 save`.
+
+### Проверка
 
 ```bash
-# на VPS, временно
-export TELEGRAM_ALERT_BOT_TOKEN=...
-export TELEGRAM_ALERT_CHAT_ID=...
-node -e "require('./instrumentation.ts')"
+# 1) Канал (уже делали)
+/var/www/krimvk/scripts/test-ntfy-alert.sh
+
+# 2) Topic в процессе PM2
+pm2 env krimvk | grep NTFY
 ```
+
+Полноценный тест **краша процесса** на production не нужен — достаточно теста канала + UptimeRobot на health.
+
+Опционально Telegram: `TELEGRAM_ALERT_BOT_TOKEN` + `TELEGRAM_ALERT_CHAT_ID` (в РФ часто недоступен).
 
 ---
 

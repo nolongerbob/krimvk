@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { FileText, Plus, Trash2, Edit, Upload, Search, CheckCircle2, XCircle } from "lucide-react";
+import { publicFileHref } from "@/lib/public-file-url";
 import Link from "next/link";
 import {
   Select,
@@ -352,7 +353,7 @@ export function DisclosureClient({ initialDocuments }: DisclosureClientProps) {
               <CardContent>
                 <div className="flex items-center gap-4">
                   <a
-                    href={doc.fileUrl}
+                    href={publicFileHref(doc.fileUrl)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:underline flex items-center gap-2"

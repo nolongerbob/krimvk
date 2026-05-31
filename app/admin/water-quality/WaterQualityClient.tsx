@@ -15,6 +15,7 @@ import {
 import { Droplet, Plus, Trash2, Edit, FileText, Calendar, MapPin, Upload, Building2, Search } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
+import { publicFileHref } from "@/lib/public-file-url";
 
 interface WaterQualityDocument {
   id: string;
@@ -709,7 +710,7 @@ export function WaterQualityClient({ initialDistricts }: WaterQualityClientProps
                                         <FileText className="h-4 w-4 text-blue-600 flex-shrink-0" />
                                         <div className="flex-1 min-w-0">
                                           <a
-                                            href={doc.fileUrl}
+                                            href={publicFileHref(doc.fileUrl)}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="font-medium text-gray-900 hover:text-blue-600 truncate block text-sm"

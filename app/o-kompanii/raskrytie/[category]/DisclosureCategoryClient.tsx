@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { FileText, Search, Download, Calendar } from "lucide-react";
+import { publicFileHref } from "@/lib/public-file-url";
 
 interface DisclosureDocument {
   id: string;
@@ -165,7 +166,7 @@ export function DisclosureCategoryClient({
                     </div>
                   </div>
                   <a
-                    href={doc.fileUrl}
+                    href={publicFileHref(doc.fileUrl)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"

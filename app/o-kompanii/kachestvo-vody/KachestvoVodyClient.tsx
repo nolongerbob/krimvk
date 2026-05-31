@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Droplet, FileText, Calendar, MapPin, Search, Building2, ChevronDown } from "lucide-react";
+import { publicFileHref } from "@/lib/public-file-url";
 
 interface WaterQualityDocument {
   id: string;
@@ -203,7 +204,7 @@ export function KachestvoVodyClient({ districts }: KachestvoVodyClientProps) {
                                     {year.documents.map((doc) => (
                                       <a
                                         key={doc.id}
-                                        href={doc.fileUrl}
+                                        href={publicFileHref(doc.fileUrl)}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors group"

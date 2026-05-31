@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FileCheck, Upload, X, Download } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { publicFileHref } from "@/lib/public-file-url";
 
 interface Contract {
   id: string;
@@ -724,7 +725,7 @@ export function ContractDetails({ contract: initialContract }: ContractDetailsPr
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => window.open(doc.fileUrl, "_blank")}
+                                  onClick={() => window.open(publicFileHref(doc.fileUrl), "_blank")}
                                   className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600"
                                   title="Скачать"
                                 >

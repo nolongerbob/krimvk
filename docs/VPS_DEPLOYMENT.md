@@ -297,6 +297,8 @@ sudo systemctl reload nginx
 
 ### 10. Настройка домена
 
+**Пошагово для REG.RU:** [REG_RU_DOMAIN.md](./REG_RU_DOMAIN.md)
+
 **Если домен еще не привязан:**
 
 1. **Временно используйте IP адрес:**

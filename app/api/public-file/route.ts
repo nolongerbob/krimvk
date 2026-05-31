@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { publicFilePathForS3Key } from '@/lib/public-file-url';
 import { servePublicS3File } from '@/lib/serve-public-s3-file';
 
+export { dynamic } from '@/lib/force-dynamic-route';
 export const runtime = 'nodejs';
 
 /** Старый формат ?key= — редирект на /files/... */

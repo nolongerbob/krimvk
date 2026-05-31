@@ -395,6 +395,29 @@ pm2 restart krimvk
    соответствующей требованиям 152-ФЗ.
 4. Секреты не хранятся в git. Используйте `.env.example.vps` как шаблон.
 
+## ChunkLoadError / nosniff на `/_next/static/*.js`
+
+Браузер получил **HTML вместо JavaScript** (часто 404 после деплоя).
+
+1. На VPS пересобрать и перезапустить:
+
+```bash
+cd /var/www/krimvk
+git pull
+npm run build
+pm2 restart krimvk --update-env
+```
+
+2. Проверить чанк (должен быть `Content-Type: application/javascript`):
+
+```bash
+curl -sI "http://127.0.0.1:3000/_next/static/chunks/webpack.js" | head -5
+```
+
+3. В nginx **не** используйте `alias` на `.next/static`, если после `git pull` не делали `npm run build` — лучше `location /_next/ { proxy_pass ... }` (см. `nginx.conf.ip-first.example`).
+
+4. В браузере жёсткое обновление: Ctrl+Shift+R (или очистить кэш сайта).
+
 ## Эксплуатация и восстановление
 
 - Runbook: `docs/PRODUCTION_RUNBOOK.md`

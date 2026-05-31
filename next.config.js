@@ -72,7 +72,8 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: '/:path*',
+        // Не вешать security headers на /_next/static — при 404 HTML браузер блокирует chunk (nosniff)
+        source: '/((?!_next/static).*)',
         headers: [
           {
             key: 'X-DNS-Prefetch-Control',

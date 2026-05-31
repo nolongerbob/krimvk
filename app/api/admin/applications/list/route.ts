@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/prisma";
 
+export { dynamic } from "@/lib/force-dynamic-route";
+
 // Безопасная функция для парсинга JSON из description
 function safeParseDescription(description: string | null): any | null {
   if (!description) return null;

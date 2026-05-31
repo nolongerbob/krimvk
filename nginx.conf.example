@@ -86,16 +86,20 @@ server {
         proxy_cache_bypass $http_upgrade;
     }
 
-    location /_next/static {
-        alias /var/www/krimvk/.next/static;
-        expires 365d;
-        add_header Cache-Control "public, immutable";
+    # Статику Next отдаёт Node (после deploy обязателен npm run build)
+    location /_next/ {
+        proxy_pass http://krimvk_prod;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 
     gzip on;
     gzip_vary on;
     gzip_min_length 1024;
-    gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml+rss application/json;
+    gzip_types text/plain text/css text/xml text/javascript application/javascript application/x-javascript application/xml+rss application/json;
 }
 
 # --- Development (staging) ---
@@ -145,10 +149,13 @@ server {
         proxy_cache_bypass $http_upgrade;
     }
 
-    location /_next/static {
-        alias /var/www/krimvk-dev/.next/static;
-        expires 365d;
-        add_header Cache-Control "public, immutable";
+    location /_next/ {
+        proxy_pass http://krimvk_dev;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 
     gzip on;

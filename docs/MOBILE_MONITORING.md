@@ -163,29 +163,45 @@ NTFY_TOPIC=ваш-секретный-topic
 NTFY_SERVER=https://ntfy.sh
 ```
 
-### Что **приходит** в ntfy
+### Что **приходит** в ntfy (после обновления)
 
 | Событие | Придёт? |
 |---------|---------|
-| Тест `./scripts/test-ntfy-alert.sh` | ✅ (проверка канала) |
-| `uncaughtException` / `unhandledRejection` в процессе Next (PM2) | ✅ (`instrumentation.ts`) |
-| Ошибка в `try/catch` в API, 500 без краша | ❌ |
-| PM2 restart без падения | ❌ |
-| «Сайт не открывается» | ❌ → UptimeRobot / Uptime Kuma на `/api/health` |
+| Тест `./scripts/test-ntfy-alert.sh` | ✅ канал |
+| `uncaughtException` / `unhandledRejection` | ✅ + **полный stack** |
+| `console.error("...", error)` в API (большинство route) | ✅ + stack |
+| Ответ API **5xx** (если route обёрнут в `withApiRoute`) | ✅ |
+| Ошибка только в браузере (React) | ❌ → Sentry |
+| «Сайт лежит», процесс жив | ❌ → UptimeRobot на `/api/health` |
 
-После смены `.env`: `pm2 restart krimvk --update-env` и `pm2 save`.
+Троттлинг: одна и та же ошибка не чаще чем раз в `NTFY_ALERT_COOLDOWN_MS` (по умолчанию 2 мин).
 
-### Проверка
+В `.env`:
 
-```bash
-# 1) Канал (уже делали)
-/var/www/krimvk/scripts/test-ntfy-alert.sh
-
-# 2) Topic в процессе PM2
-pm2 env krimvk | grep NTFY
+```env
+NTFY_TOPIC=ваш-секретный-topic
+NTFY_ALERT_ENABLED=1
+NTFY_ALERT_STACK=1
+NTFY_ALERT_COOLDOWN_MS=120000
+OPS_TEST_SECRET=длинная-случайная-строка
 ```
 
-Полноценный тест **краша процесса** на production не нужен — достаточно теста канала + UptimeRobot на health.
+После смены: `pm2 restart krimvk --update-env && pm2 save`.
+
+### Проверка полного алерта (stack)
+
+```bash
+# 1) Канал
+/var/www/krimvk/scripts/test-ntfy-alert.sh
+
+# 2) Полный формат (нужен OPS_TEST_SECRET в .env)
+curl -fsS -X POST -H "X-Ops-Secret: $OPS_TEST_SECRET" https://krimvk.ru/api/ops/test-alert
+
+# 3) Переменные в PM2
+pm2 env krimvk | grep -E 'NTFY|OPS_TEST'
+```
+
+Для новых API можно обернуть handler: `export const GET = withApiRoute(async (req) => { ... });` — см. `lib/api-route.ts`.
 
 Опционально Telegram: `TELEGRAM_ALERT_BOT_TOKEN` + `TELEGRAM_ALERT_CHAT_ID` (в РФ часто недоступен).
 

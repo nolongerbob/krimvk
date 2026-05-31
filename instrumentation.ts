@@ -1,6 +1,6 @@
 /**
- * Серверные алерты при необработанных ошибках Node (VPS / PM2).
- * Клиентские ошибки — настройте Sentry (см. docs/MOBILE_MONITORING.md).
+ * Серверные алерты (ntfy / Telegram): краши, API console.error, 5xx.
+ * Клиентский UI — Sentry (docs/MOBILE_MONITORING.md).
  */
 
 export async function register() {
@@ -16,25 +16,6 @@ export async function register() {
     return;
   }
 
-  const { formatServerError } = await import('./lib/telegram-alert');
-  const { sendTelegramAlert } = hasTelegram
-    ? await import('./lib/telegram-alert')
-    : { sendTelegramAlert: async () => false };
-  const { sendNtfyAlert } = hasNtfy
-    ? await import('./lib/ntfy-alert')
-    : { sendNtfyAlert: async () => false };
-
-  const notify = (label: string, err: unknown) => {
-    const text = formatServerError(label, err);
-    void sendTelegramAlert(text);
-    void sendNtfyAlert(text, { title: label, priority: 'high' });
-  };
-
-  process.on('uncaughtException', (err) => {
-    notify('uncaughtException', err);
-  });
-
-  process.on('unhandledRejection', (reason) => {
-    notify('unhandledRejection', reason);
-  });
+  const { installOpsAlerts } = await import('./lib/install-ops-alerts');
+  installOpsAlerts();
 }

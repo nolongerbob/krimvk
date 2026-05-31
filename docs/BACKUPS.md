@@ -21,9 +21,8 @@ cd /var/www/krimvk
 git pull origin main
 
 sudo apt install -y postgresql-client
-# off-site в тот же бакет (ключи уже в .env):
+# off-site в тот же бакет (ключи уже в .env; awscli не нужен — загрузка через Node SDK):
 # echo 'BACKUP_S3_ENABLED=1' >> .env
-# sudo apt install -y awscli
 
 chmod +x scripts/setup-backup-cron.sh scripts/backup-run-daily.sh
 
@@ -83,9 +82,9 @@ S3_RETENTION_DAYS=90
 ```
 
 ```bash
-sudo apt install -y awscli
 ./scripts/backup-run-daily.sh
-aws --endpoint-url=https://storage.yandexcloud.net s3 ls s3://krimvk/backups/db/
+# список в консоли Yandex Object Storage: bucket krimvk → backups/db/
+# опционально aws в shell: ./scripts/install-awscli-v2.sh
 ```
 
 Префикс `backups/db/` отделён от пользовательских файлов в бакете. Права SA: `storage.editor` на бакет достаточно.

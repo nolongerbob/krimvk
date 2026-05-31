@@ -357,7 +357,7 @@ sudo tail -f /var/log/nginx/error.log
 ```bash
 cd /var/www/krimvk
 git pull origin main
-sudo apt install -y postgresql-client   # awscli — если BACKUP_S3_ENABLED=1
+sudo apt install -y postgresql-client   # S3 off-site — через Node, awscli не нужен
 ./scripts/backup-run-daily.sh           # тест
 ./scripts/setup-backup-cron.sh          # cron 02:00, лог logs/backup.log
 ```

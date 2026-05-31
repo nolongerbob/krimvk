@@ -25,7 +25,7 @@ chmod 600 /var/www/krimvk/.env 2>/dev/null || true
 
 # cron только у krimvk
 crontab -l 2>/dev/null | grep -v krimvk-daily-backup | crontab - 2>/dev/null || true
-sudo -u krimvk bash -c "cd '${REPO_ROOT}' && ./scripts/setup-backup-cron.sh"
+CRON_USER=krimvk bash scripts/setup-backup-cron.sh
 
 echo ""
 bash scripts/audit-vps.sh

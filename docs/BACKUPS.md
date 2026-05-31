@@ -6,7 +6,8 @@
 |-----|--------|------|
 | **PostgreSQL** | `backup-db.sh` | `/var/backups/krimvk/db_*.sql.gz` |
 | **uploads** (если локально) | `backup-uploads.sh` | `/var/backups/krimvk/uploads_*.tar.gz` |
-| **uploads на S3** | — | бэкап бакета в [Yandex Cloud](https://cloud.yandex.ru/docs/storage/operations/buckets/backup) |
+| **uploads на S3** | — | versioning / lifecycle в [Yandex Cloud](https://cloud.yandex.ru/docs/storage/operations/buckets/backup) |
+| **дамп БД off-site** | `backup-push-s3.sh` | `s3://<bucket>/backups/db/db_*.sql.gz` (90 дней) |
 
 Хранение на диске VPS: **14 дней** (`RETENTION_DAYS`), старше — удаляются автоматически.
 
@@ -20,12 +21,16 @@ cd /var/www/krimvk
 git pull origin main
 
 sudo apt install -y postgresql-client
+# off-site в тот же бакет (ключи уже в .env):
+# echo 'BACKUP_S3_ENABLED=1' >> .env
+# sudo apt install -y awscli
+
 chmod +x scripts/setup-backup-cron.sh scripts/backup-run-daily.sh
 
 # тест вручную
 ./scripts/backup-run-daily.sh
 
-# cron каждый день в 02:00 MSK (время сервера)
+# cron каждый день в 02:00 (время сервера)
 ./scripts/setup-backup-cron.sh
 ```
 
@@ -67,16 +72,28 @@ ls -lh /var/backups/krimvk/db_*.sql.gz | tail -3
 
 ---
 
-## Копия off-site (рекомендуется)
+## Off-site в Yandex Object Storage (рекомендуется)
 
-Бэкапы только на том же VPS не спасут при поломке диска. Варианты:
+В `.env` на VPS (ключи S3 уже есть для uploads):
 
-1. **rsync/scp на Mac** раз в неделю:
-   ```bash
-   scp krimvk@VPS:/var/backups/krimvk/db_*.sql.gz ~/Backups/krimvk/
-   ```
-2. **Yandex Object Storage** — загрузка `.sql.gz` через `aws s3 cp` (совместимый CLI).
-3. **Второй VPS / NAS** — cron + `rsync`.
+```env
+BACKUP_S3_ENABLED=1
+BACKUP_S3_PREFIX=backups/db
+S3_RETENTION_DAYS=90
+```
+
+```bash
+sudo apt install -y awscli
+./scripts/backup-run-daily.sh
+aws --endpoint-url=https://storage.yandexcloud.net s3 ls s3://krimvk/backups/db/
+```
+
+Префикс `backups/db/` отделён от пользовательских файлов в бакете. Права SA: `storage.editor` на бакет достаточно.
+
+Другие варианты off-site:
+
+1. **scp на Mac** раз в неделю: `scp krimvk@89.111.165.160:/var/backups/krimvk/db_*.sql.gz ~/Backups/krimvk/`
+2. **Второй VPS** — `rsync` по cron.
 
 ---
 
@@ -87,6 +104,9 @@ ls -lh /var/backups/krimvk/db_*.sql.gz | tail -3
 ```env
 BACKUP_DIR=/var/backups/krimvk
 RETENTION_DAYS=14
+BACKUP_S3_ENABLED=1
+BACKUP_S3_PREFIX=backups/db
+S3_RETENTION_DAYS=90
 ```
 
 Другое время cron:

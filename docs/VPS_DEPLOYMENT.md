@@ -352,17 +352,17 @@ sudo tail -f /var/log/nginx/error.log
 
 ## Бэкапы
 
-### База данных
+Полная инструкция: **[BACKUPS.md](./BACKUPS.md)**.
+
 ```bash
-# Ежедневный бэкап (добавить в crontab)
-0 2 * * * pg_dump -U krimvk_user krimvk > /backup/krimvk_$(date +\%Y\%m\%d).sql
+cd /var/www/krimvk
+git pull origin main
+sudo apt install -y postgresql-client   # awscli — если BACKUP_S3_ENABLED=1
+./scripts/backup-run-daily.sh           # тест
+./scripts/setup-backup-cron.sh          # cron 02:00, лог logs/backup.log
 ```
 
-### Файлы
-```bash
-# Бэкап uploads
-0 3 * * * tar -czf /backup/uploads_$(date +\%Y\%m\%d).tar.gz /var/www/krimvk/uploads
-```
+Дампы: `/var/backups/krimvk/db_*.sql.gz` (14 дней на диске). С `BACKUP_S3_ENABLED=1` — копия в Yandex Object Storage (`backups/db/`).
 
 ## Обновление приложения
 

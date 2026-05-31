@@ -25,6 +25,14 @@ mkdir -p "${BACKUP_DIR}" "${REPO_ROOT}/logs"
 
 log "Старт"
 "${REPO_ROOT}/scripts/backup-db.sh"
+LATEST_DB="$(ls -t "${BACKUP_DIR}"/db_*.sql.gz 2>/dev/null | head -1 || true)"
+
+if [[ "${BACKUP_S3_ENABLED:-0}" == "1" ]]; then
+  if [[ -n "${LATEST_DB}" ]]; then
+    log "Off-site: загрузка в S3"
+    "${REPO_ROOT}/scripts/backup-push-s3.sh" "${LATEST_DB}" || log "WARN: S3 upload failed"
+  fi
+fi
 
 STORAGE="${STORAGE_PROVIDER:-local}"
 UPLOADS="${UPLOADS_DIR:-${REPO_ROOT}/uploads}"

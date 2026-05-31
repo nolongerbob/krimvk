@@ -10,6 +10,8 @@ MARKER="# krimvk-daily-backup"
 chmod +x "${REPO_ROOT}/scripts/backup-run-daily.sh"
 chmod +x "${REPO_ROOT}/scripts/backup-db.sh"
 chmod +x "${REPO_ROOT}/scripts/backup-uploads.sh"
+chmod +x "${REPO_ROOT}/scripts/backup-push-s3.sh" 2>/dev/null || true
+chmod +x "${REPO_ROOT}/scripts/restore-db.sh"
 
 sudo mkdir -p /var/backups/krimvk
 sudo chown "$(whoami):$(whoami)" /var/backups/krimvk 2>/dev/null || true

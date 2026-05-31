@@ -46,17 +46,7 @@ curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:3030/login
 
 ## 5. Резервные копии
 
-Скрипты:
-- `scripts/backup-db.sh`
-- `scripts/restore-db.sh`
-- `scripts/backup-uploads.sh`
-
-Пример cron:
-
-```cron
-0 2 * * * cd /var/www/krimvk && DATABASE_URL="postgresql://..." ./scripts/backup-db.sh >> /var/log/krimvk-backup.log 2>&1
-30 2 * * * cd /var/www/krimvk && UPLOADS_DIR="/var/www/krimvk/uploads" ./scripts/backup-uploads.sh >> /var/log/krimvk-backup.log 2>&1
-```
+См. **[BACKUPS.md](./BACKUPS.md)** — `./scripts/setup-backup-cron.sh` (БД + опционально S3 off-site).
 
 ## 6. Инциденты
 

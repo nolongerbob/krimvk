@@ -161,7 +161,7 @@ sudo grep -E 'wp-admin|\.env|phpmyadmin' /var/log/nginx/access.log | tail -20
 
 ## 8. Что не защитит один VPS
 
-- Крупный **DDoS** (нужен CDN/WAF: Cloudflare, QRATOR, DDoS-Guard)  
+- Крупный **DDoS** (нужен CDN/WAF: Cloudflare, QRATOR, DDoS-Guard) — см. [CLOUDFLARE.md](./CLOUDFLARE.md)  
 - **0-day** в зависимостях — держите `npm audit`, обновления  
 - Утечка **секретов** из git — `.gitignore`, ротация ключей  
 

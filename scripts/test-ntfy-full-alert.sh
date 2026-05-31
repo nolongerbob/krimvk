@@ -19,7 +19,32 @@ BASE="${NEXTAUTH_URL:-https://krimvk.ru}"
 BASE="${BASE%/}"
 URL="${BASE}/api/ops/test-alert"
 
+if command -v pm2 >/dev/null 2>&1; then
+  if ! pm2 env krimvk 2>/dev/null | grep -q '^OPS_TEST_SECRET='; then
+    echo "ВНИМАНИЕ: OPS_TEST_SECRET есть в .env, но не в процессе PM2."
+    echo "  pm2 restart krimvk --update-env && pm2 save"
+    echo ""
+  fi
+fi
+
 echo "→ POST ${URL}"
-curl -fsS -X POST -H "X-Ops-Secret: ${OPS_TEST_SECRET}" "${URL}"
+HTTP_CODE="$(curl -sS -o /tmp/krimvk-ops-test-alert.json -w "%{http_code}" -X POST \
+  -H "X-Ops-Secret: ${OPS_TEST_SECRET}" "${URL}")"
+
+if [[ "${HTTP_CODE}" == "403" ]]; then
+  echo "403 forbidden — секрет не совпадает или PM2 не перечитал .env."
+  echo "  pm2 restart krimvk --update-env && pm2 save"
+  echo "  pm2 env krimvk | grep OPS_TEST"
+  cat /tmp/krimvk-ops-test-alert.json 2>/dev/null || true
+  exit 1
+fi
+
+if [[ "${HTTP_CODE}" != "200" ]]; then
+  echo "HTTP ${HTTP_CODE}"
+  cat /tmp/krimvk-ops-test-alert.json 2>/dev/null || true
+  exit 1
+fi
+
+cat /tmp/krimvk-ops-test-alert.json
 echo ""
 echo "OK — в ntfy должно прийти сообщение со stack trace."

@@ -18,7 +18,7 @@
 
 - [ ] `PASSWORD1C_ENCRYPTION_KEY` + `migrate-encrypt-password1c.ts`
 - [ ] Деплой `main`, smoke ЛК + админка
-- [ ] `./scripts/audit-s3-private-prefixes.sh` (старые public-read в S3)
+- [ ] `node scripts/audit-s3-private-prefixes.mjs` (старые public-read в S3, без aws CLI)
 - [ ] `./scripts/audit-public-urls.sh`
 - [ ] `sudo bash scripts/harden-vps.sh` (если не делали)
 

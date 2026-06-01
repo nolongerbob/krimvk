@@ -28,7 +28,8 @@
     "db:deploy:neon": "prisma generate && prisma migrate deploy && node scripts/apply-password-reset-token-migration.js",
     "db:sync:neon": "prisma generate && prisma db push --skip-generate && node scripts/apply-password-reset-token-migration.js",
     "db:update:neon": "prisma generate && node scripts/apply-all-migrations-neon.js",
-    "zayavlenie:fix": "python3 scripts/fix-zayavlenie-docx.py"
+    "zayavlenie:fix": "python3 scripts/fix-zayavlenie-docx.py",
+    "audit:s3-private": "node scripts/audit-s3-private-prefixes.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.958.0",

@@ -19,8 +19,12 @@
 
 ```bash
 set -a && source .env && set +a
+node scripts/audit-s3-private-prefixes.mjs
+# или
 ./scripts/audit-s3-private-prefixes.sh
 ```
+
+AWS CLI не нужен — используется `@aws-sdk/client-s3` из проекта.
 
 При `PUBLIC:` — перевыложите файл или смените ACL в Yandex Object Storage.
 

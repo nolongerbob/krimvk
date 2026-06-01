@@ -1,0 +1,13 @@
+# Фрагмент для sites-available/krimvk при Yandex CDN.
+# CDN ходит на origin.krimvk.ru, Host к источнику — krimvk.ru (в консоли CDN).
+
+# server {
+#     listen 443 ssl;
+#     server_name krimvk.ru www.krimvk.ru origin.krimvk.ru;
+#     ...
+# }
+
+# Опционально: логировать реальный запрос CDN (если Яндекс шлёт X-Forwarded-*)
+# proxy_set_header X-Real-IP $remote_addr;
+# proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+# proxy_set_header X-Forwarded-Proto $scheme;

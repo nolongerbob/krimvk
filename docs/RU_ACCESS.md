@@ -1,5 +1,11 @@
 # Доступ к сайту из РФ (без VPN)
 
+**Рекомендуется для production в РФ:** [YANDEX_CDN.md](./YANDEX_CDN.md) — CDN Yandex Cloud перед VPS (вместо Cloudflare).
+
+Ниже — **прямой IP** без CDN (быстрый откат).
+
+---
+
 ## Почему «не открывается без VPN»
 
 Цепочка сейчас такая:
@@ -63,7 +69,7 @@ curl -fsSI https://krimvk.ru/api/health
 ## Если снова нужен Cloudflare (международный трафик)
 
 - Оранжевое облако + `ufw-cloudflare-origin.sh` — только если CF у ваших пользователей стабильно открыт.
-- Альтернатива в РФ: **DDoS-Guard**, **Selectel CDN**, **QRATOR** — прокси без блокировок CF.
+- CDN в РФ: **[Yandex Cloud CDN](./YANDEX_CDN.md)** (основной вариант), DDoS-Guard, Selectel.
 
 ---
 

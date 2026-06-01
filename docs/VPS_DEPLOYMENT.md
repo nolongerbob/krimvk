@@ -60,6 +60,8 @@ VPS (основной сервер)
 
 **Пошаговая настройка Yandex S3:** [YANDEX_S3_SETUP.md](./YANDEX_S3_SETUP.md) — одна команда `./scripts/setup-yandex-s3.sh --apply-env`
 
+**CDN для доступа из РФ (вместо Cloudflare):** [YANDEX_CDN.md](./YANDEX_CDN.md)
+
 ## Рекомендация
 
 **Для начала: Вариант 1 (локальное хранилище)**

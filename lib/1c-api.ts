@@ -3,6 +3,8 @@
  * URL только из ONE_C_API_BASE_URL (.env), не хардкодить IP в репозитории.
  */
 
+import { is1CAccountPayload, normalize1CResponse } from '@/lib/normalize-1c-response';
+
 function get1cBaseUrl(): string {
   const raw = process.env.ONE_C_API_BASE_URL?.trim();
   if (!raw) {
@@ -74,8 +76,8 @@ export async function get1CUserData(
   const regionPath = getRegion(region);
   const url = new URL(`${get1cBaseUrl()}/${regionPath}/hs/WebAccounts/get_data`);
   
-  url.searchParams.append("WaLsCode", accountNumber);
-  url.searchParams.append("WaPass", password);
+  url.searchParams.append("WaLsCode", accountNumber.trim());
+  url.searchParams.append("WaPass", password.trim());
   
   if (dateFrom) {
     url.searchParams.append("WaDateFrom", formatDateFor1C(dateFrom));
@@ -97,15 +99,30 @@ export async function get1CUserData(
     handleFetchError(error, url.toString());
   }
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    if (response.status === 401 || response.status === 403) {
-      throw new Error("AUTH_ERROR: Неверный номер лицевого счета или пароль");
-    }
-    throw new Error(`1C API error: ${response.status} - ${errorText}`);
+  const rawText = await response.text();
+  let parsed: unknown;
+  try {
+    parsed = rawText ? JSON.parse(rawText) : null;
+  } catch {
+    throw new Error(`1C_PARSE: Ответ не JSON (${response.status}): ${rawText.slice(0, 200)}`);
   }
 
-  return await response.json();
+  if (!response.ok) {
+    if (is1CAccountPayload(parsed)) {
+      return normalize1CResponse(parsed);
+    }
+    if (response.status === 401 || response.status === 403) {
+      throw new Error('AUTH_ERROR: Неверный номер лицевого счета или пароль');
+    }
+    try {
+      normalize1CResponse(parsed);
+    } catch (e) {
+      throw e;
+    }
+    throw new Error(`1C API error: ${response.status} - ${rawText.slice(0, 300)}`);
+  }
+
+  return normalize1CResponse(parsed);
 }
 
 /**

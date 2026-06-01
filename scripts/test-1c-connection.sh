@@ -28,7 +28,7 @@ echo "BASE_URL=$BASE"
 echo "REGION=$REGION"
 echo ""
 
-echo "1) TCP/HTTP до хоста (без учётки):"
+echo "1) Без л/с и пароля (ожидаем 404 + Error in incoming data — сервер ЖИВ):"
 code=$(curl -sS -o /tmp/1c-test-body.txt -w '%{http_code}' --connect-timeout 15 \
   "${BASE}/${REGION}/hs/WebAccounts/get_data" 2>/tmp/1c-test-curl.err || echo "000")
 if [[ -f /tmp/1c-test-curl.err ]] && [[ -s /tmp/1c-test-curl.err ]]; then
@@ -36,6 +36,9 @@ if [[ -f /tmp/1c-test-curl.err ]] && [[ -s /tmp/1c-test-curl.err ]]; then
 fi
 echo "   HTTP $code"
 head -c 200 /tmp/1c-test-body.txt 2>/dev/null; echo ""
+if [[ "$code" == "404" ]] && grep -q 'incoming data' /tmp/1c-test-body.txt 2>/dev/null; then
+  echo "   OK: 1С отвечает, сеть с VPS есть."
+fi
 
 if [[ -n "$LS" && -n "$PASS" ]]; then
   echo ""

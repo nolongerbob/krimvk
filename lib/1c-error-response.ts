@@ -14,7 +14,12 @@ export function jsonFrom1cError(error: unknown): NextResponse {
     );
   }
 
-  if (message.includes('AUTH_ERROR') || message.includes('401') || message.includes('403')) {
+  if (
+    message.includes('AUTH_ERROR') ||
+    message.includes('incoming data') ||
+    message.includes('401') ||
+    message.includes('403')
+  ) {
     return NextResponse.json(
       {
         error: 'Неверный номер лицевого счёта или пароль для 1С.',
@@ -41,6 +46,17 @@ export function jsonFrom1cError(error: unknown): NextResponse {
         hint: 'На VPS: ./scripts/test-1c-connection.sh',
       },
       { status: 503 }
+    );
+  }
+
+  if (message.includes('1C_BUSINESS_ERROR') || message.includes('1C_EMPTY') || message.includes('1C_PARSE')) {
+    return NextResponse.json(
+      {
+        error: '1С вернула ошибку. Проверьте номер лицевого счёта, пароль и регион (обычно prog).',
+        code: '1C_BUSINESS',
+        details: process.env.NODE_ENV === 'development' ? message : undefined,
+      },
+      { status: 502 }
     );
   }
 

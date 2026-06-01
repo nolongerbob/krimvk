@@ -3,26 +3,19 @@ import { cookies } from 'next/headers';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-config';
 import { prisma } from '@/lib/prisma';
+import { createPostVerifyLoginToken } from '@/lib/post-verify-login-token';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * GET — проверка, подтверждён ли email.
- * Проверяет:
- * 1. Текущую сессию (если пользователь авторизован)
- * 2. Cookie pending_verify (устройство регистрации)
- * 3. Query параметр userId (из localStorage на клиенте)
- * Возвращает { verified: boolean, userId?: string }.
+ * GET — подтверждён ли email (только cookie pending_verify или сессия, без userId в query).
+ * loginToken выдаётся только при pending_verify на устройстве регистрации.
  */
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const { searchParams } = new URL(request.url);
-    const userIdFromQuery = searchParams.get('userId'); // Из localStorage на клиенте
-    
     const cookieStore = await cookies();
     const pendingUserId = cookieStore.get('pending_verify')?.value;
-    
-    // Проверяем сессию (если пользователь уже авторизован)
+
     const session = await getServerSession(authOptions);
     if (session?.user?.id) {
       const user = await prisma.user.findUnique({
@@ -30,23 +23,26 @@ export async function GET(request: Request) {
         select: { emailVerified: true },
       });
       if (user?.emailVerified) {
-        return NextResponse.json({ verified: true, userId: session.user.id });
+        return NextResponse.json({ verified: true });
       }
     }
 
-    // Проверяем pending_verify cookie (устройство регистрации)
-    const userIdToCheck = pendingUserId || userIdFromQuery;
-    if (userIdToCheck) {
+    if (pendingUserId) {
       const user = await prisma.user.findUnique({
-        where: { id: userIdToCheck },
+        where: { id: pendingUserId },
         select: { emailVerified: true },
       });
       const verified = !!user?.emailVerified;
-      const res = NextResponse.json({ verified, userId: verified ? userIdToCheck : undefined });
-      if (verified && pendingUserId) {
-        // Очищаем cookie только если она была установлена
-        res.cookies.set('pending_verify', '', { maxAge: 0, path: '/' });
+
+      if (!verified) {
+        return NextResponse.json({ verified: false });
       }
+
+      const res = NextResponse.json({
+        verified: true,
+        loginToken: createPostVerifyLoginToken(pendingUserId),
+      });
+      res.cookies.set('pending_verify', '', { maxAge: 0, path: '/' });
       return res;
     }
 

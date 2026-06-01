@@ -85,6 +85,7 @@ location / {
 | Секреты | только `.env`, chmod 600 |
 | Загрузки | лимит 50M в nginx, валидация типов в API |
 | Health | `/api/health` без лимита |
+| Auto-login после verify | только `loginToken` (HMAC), не `userId` — `lib/post-verify-login-token.ts` |
 
 Лимиты (in-memory, один PM2):
 

@@ -82,32 +82,18 @@ export async function GET(request: Request) {
     const shouldRedirectToLk = (isRegistrationDevice || isSameDeviceWithSession) && process.env.NEXTAUTH_SECRET;
 
     if (shouldRedirectToLk) {
-      const { encode } = await import('next-auth/jwt');
-      const jwt = await encode({
-        token: {
-          sub: verificationToken.user.id,
-          id: verificationToken.user.id,
-          email: verificationToken.user.email,
-          name: verificationToken.user.name || null,
-          role: verificationToken.user.role || 'USER',
-        },
-        secret: process.env.NEXTAUTH_SECRET,
-        maxAge: 30 * 24 * 60 * 60,
+      const { encodeNextAuthSessionToken, setNextAuthSessionCookie } = await import(
+        '@/lib/next-auth-session-cookie'
+      );
+      const jwt = await encodeNextAuthSessionToken({
+        id: verificationToken.user.id,
+        email: verificationToken.user.email,
+        name: verificationToken.user.name,
+        role: verificationToken.user.role || 'USER',
       });
-
-      const isProduction = process.env.NODE_ENV === 'production';
-      const cookieName = isProduction 
-        ? '__Secure-next-auth.session-token' 
-        : 'next-auth.session-token';
 
       const response = NextResponse.redirect(new URL('/verify-email?verified=true', baseUrl));
-      response.cookies.set(cookieName, jwt, {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: 'lax',
-        maxAge: 30 * 24 * 60 * 60,
-        path: '/',
-      });
+      setNextAuthSessionCookie(response, jwt);
       clearPendingVerify(response);
       return response;
     }

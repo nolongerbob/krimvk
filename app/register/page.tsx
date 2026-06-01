@@ -42,11 +42,6 @@ export default function RegisterPage() {
       const data = await response.json();
 
       if (response.ok) {
-        // Сохраняем userId в localStorage для использования после подтверждения
-        if (data.userId) {
-          localStorage.setItem('registeredUserId', data.userId);
-        }
-        
         // Сразу авторизуем пользователя (обновляем сессию на клиенте)
         // Cookie уже установлена на сервере при регистрации
         try {

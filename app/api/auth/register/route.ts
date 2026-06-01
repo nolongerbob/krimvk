@@ -89,11 +89,10 @@ export async function POST(request: Request) {
     }
 
     const res = NextResponse.json(
-      { 
-        message: emailSent 
+      {
+        message: emailSent
           ? 'Регистрация успешна. Пожалуйста, проверьте вашу почту для подтверждения email.'
           : 'Регистрация успешна. Письмо с подтверждением не удалось отправить — запросите повторную отправку в личном кабинете.',
-        userId: user.id,
         emailSent,
       },
       { status: 201 }

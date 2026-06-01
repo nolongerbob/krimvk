@@ -1,28 +1,53 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { encode } from 'next-auth/jwt';
+import {
+  encodeNextAuthSessionToken,
+  setNextAuthSessionCookie,
+} from '@/lib/next-auth-session-cookie';
+import { verifyPostVerifyLoginToken } from '@/lib/post-verify-login-token';
+import { rateLimit } from '@/lib/security/http-guard';
 
-// Force dynamic rendering - this route uses cookies
 export const dynamic = 'force-dynamic';
 
 /**
- * POST - автоматический вход после подтверждения email
- * Принимает userId и создает сессию через NextAuth (только для подтвержденных email)
+ * POST — вход после подтверждения email на устройстве регистрации.
+ * Только с loginToken, выданным сервером (check-email-verified), не userId.
  */
 export async function POST(request: NextRequest) {
-  try {
-    const { userId } = await request.json();
+  const ip =
+    request.headers.get('x-real-ip') ||
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    'unknown';
 
-    if (!userId) {
+  if (!rateLimit(`auto-login:${ip}`, 10, 60_000)) {
+    return NextResponse.json(
+      { error: 'Слишком много попыток. Подождите минуту.' },
+      { status: 429 }
+    );
+  }
+
+  try {
+    const body = await request.json();
+    const loginToken =
+      typeof body.loginToken === 'string' ? body.loginToken : null;
+
+    if (!loginToken) {
       return NextResponse.json(
-        { error: 'User ID не предоставлен' },
+        { error: 'Токен входа не предоставлен' },
         { status: 400 }
       );
     }
 
-    // Проверяем, что пользователь существует и email подтвержден
+    const parsed = verifyPostVerifyLoginToken(loginToken);
+    if (!parsed) {
+      return NextResponse.json(
+        { error: 'Недействительный или просроченный токен входа' },
+        { status: 401 }
+      );
+    }
+
     const user = await prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: parsed.userId },
       select: {
         id: true,
         email: true,
@@ -46,54 +71,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Создаем JWT токен в формате NextAuth
-    const secret = process.env.NEXTAUTH_SECRET;
-    if (!secret) {
-      throw new Error('NEXTAUTH_SECRET is not set');
-    }
-
-    // Создаем токен в правильном формате для NextAuth
-    // Структура должна соответствовать тому, что ожидает jwt callback
-    const token = await encode({
-      token: {
-        sub: user.id, // sub обязателен для NextAuth JWT
-        id: user.id, // id используется в jwt callback
-        email: user.email,
-        name: user.name || null,
-        role: user.role || 'USER',
-      },
-      secret,
-      maxAge: 30 * 24 * 60 * 60, // 30 дней
+    const jwt = await encodeNextAuthSessionToken({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role || 'USER',
     });
 
-    // Определяем имя cookie в зависимости от окружения
-    const isProduction = process.env.NODE_ENV === 'production';
-    const cookieName = isProduction 
-      ? '__Secure-next-auth.session-token'
-      : 'next-auth.session-token';
-
-    // Устанавливаем cookie для NextAuth
     const response = NextResponse.json(
-      { 
+      {
         message: 'Автоматический вход выполнен',
-        user: { 
-          id: user.id, 
-          email: user.email, 
+        user: {
+          email: user.email,
           name: user.name,
           role: user.role,
-        } 
+        },
       },
       { status: 200 }
     );
 
-    response.cookies.set(cookieName, token, {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: 'lax',
-      maxAge: 30 * 24 * 60 * 60, // 30 дней
-      path: '/',
-    });
-
+    setNextAuthSessionCookie(response, jwt);
     return response;
   } catch (error) {
     console.error('Auto-login error:', error);

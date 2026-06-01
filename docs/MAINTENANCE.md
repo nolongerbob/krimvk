@@ -58,6 +58,22 @@ pm2 restart krimvk --update-env
 
 Выключение: `MAINTENANCE_MODE=0` и снова `pm2 restart krimvk --update-env`.
 
+### Сайт всё ещё на maintenance после `maintenance-off.sh`?
+
+Редеплой **не нужен**. Проверьте флаги и `.env`:
+
+```bash
+cd /var/www/krimvk
+./scripts/maintenance-status.sh
+rm -f /tmp/krimvk-maintenance
+sudo rm -f /var/www/krimvk/.maintenance
+sudo sed -i 's/^MAINTENANCE_MODE=.*/MAINTENANCE_MODE=0/' /var/www/krimvk/.env
+pm2 restart krimvk --update-env
+curl -sS -o /dev/null -w "%{http_code}\n" https://krimvk.ru/api/health
+```
+
+Ожидаем **200**, не 307 на `/maintenance.html`.
+
 ## Текст страницы
 
 Файл `public/maintenance.html` — автономный HTML (без Node). Меняйте заголовок и текст там; после деплоя достаточно `git pull` на сервере.

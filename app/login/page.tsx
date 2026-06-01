@@ -20,12 +20,28 @@ function LoginForm() {
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
   const verified = searchParams.get("verified");
 
-  // Автоматический редирект, если пользователь уже авторизован
+  // Полный переход в ЛК (не router.push — иначе middleware без __Secure-cookie зацикливает login↔dashboard)
   useEffect(() => {
-    if (status === "authenticated" && session) {
-      router.push(callbackUrl);
+    if (status !== "authenticated" || !session) return;
+
+    let target = "/dashboard";
+    const raw = callbackUrl || "/dashboard";
+    if (raw.startsWith("/") && !raw.startsWith("//")) {
+      target = raw;
+    } else if (raw.startsWith("http")) {
+      try {
+        const u = new URL(raw);
+        const site = process.env.NEXT_PUBLIC_SITE_URL || "https://krimvk.ru";
+        if (raw.startsWith(site) || u.hostname === "krimvk.ru" || u.hostname === "www.krimvk.ru") {
+          target = `${u.pathname}${u.search}`;
+        }
+      } catch {
+        /* keep /dashboard */
+      }
     }
-  }, [status, session, callbackUrl, router]);
+
+    window.location.replace(target);
+  }, [status, session, callbackUrl]);
 
   // Не показываем форму, пока проверяется сессия или если пользователь уже авторизован
   if (status === "loading") {

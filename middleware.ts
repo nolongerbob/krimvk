@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { getAuthJwtFromRequest } from '@/lib/auth-middleware-token';
 import { canonicalHostRedirect } from '@/lib/canonical-host';
 import { getRedirectBaseUrl } from '@/lib/site-url';
 import { isMaintenanceBypass, isMaintenanceMode } from '@/lib/maintenance';
@@ -32,7 +32,7 @@ export async function middleware(req: NextRequest) {
   }
 
   if (pathname.startsWith('/dashboard') || pathname.startsWith('/admin')) {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    const token = await getAuthJwtFromRequest(req);
     if (!token) {
       const login = new URL('/login', getRedirectBaseUrl());
       login.searchParams.set('callbackUrl', pathname);

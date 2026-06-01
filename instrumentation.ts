@@ -8,6 +8,9 @@ export async function register() {
     return;
   }
 
+  const { applyCanonicalSiteUrl } = await import('./lib/site-url');
+  applyCanonicalSiteUrl();
+
   const hasTelegram =
     process.env.TELEGRAM_ALERT_BOT_TOKEN && process.env.TELEGRAM_ALERT_CHAT_ID;
   const hasNtfy = Boolean(process.env.NTFY_TOPIC);

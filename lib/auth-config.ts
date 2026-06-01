@@ -2,6 +2,9 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { getUserByEmail, verifyPassword } from "./auth";
 import { prisma } from "./prisma";
+import { applyCanonicalSiteUrl } from "./site-url";
+
+applyCanonicalSiteUrl();
 
 // Функция для создания кастомного OAuth провайдера Госуслуг
 function createGosuslugiProvider() {

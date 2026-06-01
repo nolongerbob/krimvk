@@ -23,8 +23,10 @@ export function isAllowedPublicS3Key(key: string): boolean {
   return ALLOWED_KEY_PREFIXES.some((prefix) => key.startsWith(prefix));
 }
 
+import { getSiteBaseUrl } from '@/lib/site-url';
+
 function siteBaseUrl(): string {
-  return (process.env.NEXTAUTH_URL || process.env.SITE_URL || '').replace(/\/$/, '');
+  return getSiteBaseUrl();
 }
 
 /** Относительный путь на сайте: /files/disclosure/doc.pdf */

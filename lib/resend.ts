@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import { getSiteBaseUrl } from '@/lib/site-url';
 
 // Ленивая инициализация — не бросаем ошибку при импорте, чтобы не ломать маршруты
 // если RESEND_API_KEY не задан (напр. на Vercel). Ошибка будет при первой отправке.
@@ -18,10 +19,7 @@ export async function sendVerificationEmail(email: string, token: string, name?:
   // Определяем базовый URL для ссылок
   // На Vercel должен быть установлен NEXTAUTH_URL
   // Если не установлен, пытаемся определить из окружения или используем production URL
-  const baseUrl = process.env.NEXTAUTH_URL || 
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
-    (process.env.NODE_ENV === 'production' ? 'https://krimvk.ru' : 'http://localhost:3000');
-  
+  const baseUrl = getSiteBaseUrl();
   const verificationUrl = `${baseUrl}/verify-email?token=${token}`;
   
   if (process.env.NODE_ENV === 'development') {
@@ -117,10 +115,7 @@ export async function sendPasswordResetEmail(email: string, token: string, name?
   // Определяем базовый URL для ссылок
   // На Vercel должен быть установлен NEXTAUTH_URL
   // Если не установлен, пытаемся определить из окружения или используем production URL
-  const baseUrl = process.env.NEXTAUTH_URL || 
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
-    (process.env.NODE_ENV === 'production' ? 'https://krimvk.ru' : 'http://localhost:3000');
-  
+  const baseUrl = getSiteBaseUrl();
   const resetUrl = `${baseUrl}/reset-password?token=${token}`;
   
   try {

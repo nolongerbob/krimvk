@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-config';
 import { prisma } from '@/lib/prisma';
+import { getSiteBaseUrl } from '@/lib/site-url';
 
 // Force dynamic rendering - this route uses cookies and redirects
 export const dynamic = 'force-dynamic';
@@ -34,10 +35,7 @@ export async function GET(request: Request) {
       // Редиректим на страницу verify-email с параметром already=true
       // Там покажем сообщение, что email уже подтвержден
       // Определяем базовый URL
-      const baseUrl = process.env.NEXTAUTH_URL || 
-        (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
-        (process.env.NODE_ENV === 'production' ? 'https://krimvk.ru' : 'http://localhost:3000');
-      const redirectUrl = new URL('/verify-email?already=true', baseUrl);
+      const redirectUrl = new URL('/verify-email?already=true', getSiteBaseUrl());
       return NextResponse.redirect(redirectUrl);
     }
 
@@ -67,9 +65,7 @@ export async function GET(request: Request) {
       where: { id: verificationToken.id },
     });
 
-    const baseUrl = process.env.NEXTAUTH_URL || 
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
-      (process.env.NODE_ENV === 'production' ? 'https://krimvk.ru' : 'http://localhost:3000');
+    const baseUrl = getSiteBaseUrl();
 
     const cookieStore = await cookies();
     const pendingVerify = cookieStore.get('pending_verify')?.value;

@@ -1,0 +1,25 @@
+# Режим обслуживания (подключите внутри server { } для prod).
+# Скопируйте: sudo cp nginx/maintenance.conf.example /etc/nginx/snippets/krimvk-maintenance.conf
+# В server: include snippets/krimvk-maintenance.conf;
+#
+# Путь к приложению на VPS:
+set $krimvk_app_root /var/www/krimvk;
+
+# Дружелюбная страница, если Node/PM2 не отвечает (502/503/504)
+error_page 502 503 504 @krimvk_maintenance;
+
+location @krimvk_maintenance {
+    root $krimvk_app_root/public;
+    try_files /maintenance.html =503;
+    add_header Cache-Control "no-store" always;
+    add_header Retry-After "3600" always;
+}
+
+location = /maintenance.html {
+    root $krimvk_app_root/public;
+    add_header Cache-Control "no-store" always;
+    add_header Retry-After "3600" always;
+}
+
+# Ручной режим: touch /var/www/krimvk/.maintenance && sudo nginx -s reload
+# (см. scripts/maintenance-on.sh)

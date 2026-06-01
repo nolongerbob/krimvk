@@ -78,6 +78,9 @@ tmp/
 .DS_Store
 water_reports_2025/
 
+# флаг режима обслуживания на VPS (touch .maintenance)
+.maintenance
+
 # uploads (большие файлы должны быть в Blob Storage)
 public/uploads/
 !public/uploads/.gitkeep

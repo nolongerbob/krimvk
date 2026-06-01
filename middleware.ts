@@ -1,9 +1,19 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import { isMaintenanceBypass, isMaintenanceMode } from '@/lib/maintenance';
 import { applyRateLimit, blockScannerPaths } from '@/lib/security/http-guard';
 
 export async function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+
+  if (isMaintenanceMode() && !isMaintenanceBypass(pathname)) {
+    const maintenance = req.nextUrl.clone();
+    maintenance.pathname = '/maintenance.html';
+    maintenance.search = '';
+    return NextResponse.redirect(maintenance, 307);
+  }
+
   const scanBlock = blockScannerPaths(req);
   if (scanBlock) {
     return scanBlock;
@@ -14,7 +24,6 @@ export async function middleware(req: NextRequest) {
     return rateLimited;
   }
 
-  const { pathname } = req.nextUrl;
   if (pathname.startsWith('/dashboard') || pathname.startsWith('/admin')) {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
     if (!token) {
@@ -28,5 +37,7 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/admin/:path*', '/api/:path*'],
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|maintenance\\.html|images/).*)',
+  ],
 };

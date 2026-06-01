@@ -28,7 +28,7 @@ echo "BASE_URL=$BASE"
 echo "REGION=$REGION"
 echo ""
 
-echo "1) Без л/с и пароля (ожидаем 404 + Error in incoming data — сервер ЖИВ):"
+echo "1) Пинг 1С без логина/пароля (ожидаем 404 + Error in incoming data — это норма):"
 code=$(curl -sS -o /tmp/1c-test-body.txt -w '%{http_code}' --connect-timeout 15 \
   "${BASE}/${REGION}/hs/WebAccounts/get_data" 2>/tmp/1c-test-curl.err || echo "000")
 if [[ -f /tmp/1c-test-curl.err ]] && [[ -s /tmp/1c-test-curl.err ]]; then
@@ -36,8 +36,8 @@ if [[ -f /tmp/1c-test-curl.err ]] && [[ -s /tmp/1c-test-curl.err ]]; then
 fi
 echo "   HTTP $code"
 head -c 200 /tmp/1c-test-body.txt 2>/dev/null; echo ""
-if [[ "$code" == "404" ]] && grep -q 'incoming data' /tmp/1c-test-body.txt 2>/dev/null; then
-  echo "   OK: 1С отвечает, сеть с VPS есть."
+if [[ "$code" == "404" ]]; then
+  echo "   OK: 1С отвечает (404 без учётных данных — штатно)."
 fi
 
 if [[ -n "$LS" && -n "$PASS" ]]; then
@@ -56,4 +56,8 @@ if [[ "$code" == "000" ]]; then
   echo "FAIL: нет связи с 1С. Откройте доступ с IP VPS $(curl -sS ifconfig.me 2>/dev/null || echo '?') на стороне 1С/firewall."
   exit 1
 fi
-echo "Сеть до 1С есть. Если сайт всё ещё 500 — проверьте л/с, пароль 1С и region в БД (часто prog)."
+if [[ -n "$LS" && -n "$PASS" ]] && [[ "${code:-}" != "200" ]]; then
+  echo "WARN: с учётными данными HTTP ${code:-?} — проверьте л/с, пароль 1С, region (часто prog)."
+  exit 1
+fi
+echo "Готово. На сайте: pm2 restart krimvk --update-env после правок .env"

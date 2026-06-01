@@ -1,19 +1,53 @@
 /**
  * Утилиты для работы с 1С HTTP-сервисом WebAccounts.
- * URL только из ONE_C_API_BASE_URL (.env), не хардкодить IP в репозитории.
+ * Базовый URL: ONE_C_API_BASE_URL в .env (на prod fallback как до выноса в env).
  */
 
-import { is1CAccountPayload, normalize1CResponse } from '@/lib/normalize-1c-response';
+/** Прежний захардкоженный адрес — fallback, если PM2 не подхватил .env */
+const LEGACY_1C_BASE_URL = 'http://46.172.223.34';
 
-function get1cBaseUrl(): string {
-  const raw = process.env.ONE_C_API_BASE_URL?.trim();
-  if (!raw) {
-    if (process.env.NODE_ENV === 'production') {
-      throw new Error('ONE_C_API_BASE_URL is not set in environment');
-    }
-    throw new Error('ONE_C_API_BASE_URL is not set (configure in .env for dev)');
+function stripEnvUrl(value: string): string {
+  return value.trim().replace(/^['"]|['"]$/g, '').replace(/\/$/, '');
+}
+
+export function get1cBaseUrl(): string {
+  const fromEnv = process.env.ONE_C_API_BASE_URL;
+  if (fromEnv) {
+    const cleaned = stripEnvUrl(fromEnv);
+    if (cleaned) return cleaned;
   }
-  return raw.replace(/\/$/, '');
+  if (process.env.NODE_ENV === 'production') {
+    return LEGACY_1C_BASE_URL;
+  }
+  throw new Error('ONE_C_API_BASE_URL is not set (configure in .env for dev)');
+}
+
+/** URL как на старом PHP-сайте: query вручную, urlencode л/с и пароля */
+function build1cGetUrl(
+  regionPath: string,
+  method: string,
+  params: Record<string, string>
+): string {
+  const base = `${get1cBaseUrl()}/${regionPath}/hs/WebAccounts/${method}`;
+  const query = Object.entries(params)
+    .filter(([, v]) => v !== '')
+    .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
+    .join('&');
+  return query ? `${base}?${query}` : base;
+}
+
+function map1cHttpError(status: number, errorText: string): Error {
+  if (status === 401 || status === 403) {
+    return new Error('AUTH_ERROR: Неверный номер лицевого счета или пароль');
+  }
+  // 1С часто отвечает 404 + "## Error in incoming data." при неверных параметрах
+  if (
+    status === 404 &&
+    /Error in incoming|Data not found|incoming data/i.test(errorText)
+  ) {
+    return new Error('AUTH_ERROR: Неверный номер лицевого счета или пароль');
+  }
+  return new Error(`1C API error: ${status} - ${errorText}`);
 }
 
 /**
@@ -74,21 +108,18 @@ export async function get1CUserData(
   dateTo?: Date
 ): Promise<any> {
   const regionPath = getRegion(region);
-  const url = new URL(`${get1cBaseUrl()}/${regionPath}/hs/WebAccounts/get_data`);
-  
-  url.searchParams.append("WaLsCode", accountNumber.trim());
-  url.searchParams.append("WaPass", password.trim());
-  
-  if (dateFrom) {
-    url.searchParams.append("WaDateFrom", formatDateFor1C(dateFrom));
-  }
-  if (dateTo) {
-    url.searchParams.append("WaDateTo", formatDateFor1C(dateTo));
-  }
+  const params: Record<string, string> = {
+    WaLsCode: accountNumber.trim(),
+    WaPass: password.trim(),
+  };
+  if (dateFrom) params.WaDateFrom = formatDateFor1C(dateFrom);
+  if (dateTo) params.WaDateTo = formatDateFor1C(dateTo);
+
+  const url = build1cGetUrl(regionPath, 'get_data', params);
 
   let response;
   try {
-    response = await fetch(url.toString(), {
+    response = await fetch(url, {
       method: "GET",
       headers: {
         "Accept": "application/json",
@@ -96,33 +127,15 @@ export async function get1CUserData(
       signal: AbortSignal.timeout(30000), // 30 секунд таймаут
     });
   } catch (error: any) {
-    handleFetchError(error, url.toString());
-  }
-
-  const rawText = await response.text();
-  let parsed: unknown;
-  try {
-    parsed = rawText ? JSON.parse(rawText) : null;
-  } catch {
-    throw new Error(`1C_PARSE: Ответ не JSON (${response.status}): ${rawText.slice(0, 200)}`);
+    handleFetchError(error, url);
   }
 
   if (!response.ok) {
-    if (is1CAccountPayload(parsed)) {
-      return normalize1CResponse(parsed);
-    }
-    if (response.status === 401 || response.status === 403) {
-      throw new Error('AUTH_ERROR: Неверный номер лицевого счета или пароль');
-    }
-    try {
-      normalize1CResponse(parsed);
-    } catch (e) {
-      throw e;
-    }
-    throw new Error(`1C API error: ${response.status} - ${rawText.slice(0, 300)}`);
+    const errorText = await response.text();
+    throw map1cHttpError(response.status, errorText);
   }
 
-  return normalize1CResponse(parsed);
+  return await response.json();
 }
 
 /**

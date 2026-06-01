@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/prisma";
 import { get1CUserData } from "@/lib/1c-api";
+import { jsonFrom1cError } from "@/lib/1c-error-response";
 
 export const dynamic = 'force-dynamic';
 
@@ -68,21 +69,14 @@ export async function GET(request: NextRequest) {
     const data = await get1CUserData(
       account.accountNumber,
       account.password1c,
-      account.region,
+      account.region || "prog",
       fromDate,
       toDate
     );
 
     return NextResponse.json({ success: true, data });
-  } catch (error: any) {
-    console.error("Error fetching 1C data:", error);
-    return NextResponse.json(
-      {
-        error: "Ошибка при получении данных из 1С",
-        details: process.env.NODE_ENV === "development" ? error?.message : undefined,
-      },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    return jsonFrom1cError(error);
   }
 }
 

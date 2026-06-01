@@ -62,6 +62,7 @@ export default function DashboardPage() {
   const [changingEmail, setChangingEmail] = useState(false);
   const [newEmail, setNewEmail] = useState("");
   const [emailMessage, setEmailMessage] = useState("");
+  const [accountDataError, setAccountDataError] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -343,10 +344,20 @@ export default function DashboardPage() {
     if (!selectedAccountId) return;
     
     setLoadingData(true);
+    setAccountDataError(null);
     try {
       const response = await fetch(`/api/1c/get-data?accountId=${selectedAccountId}`, {
         credentials: 'include', // Важно для передачи cookies
       });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        setAccountDataError(
+          (err as { error?: string }).error ||
+            "Не удалось загрузить данные из 1С. Попробуйте позже или обратитесь в поддержку."
+        );
+        setAccountData(null);
+        return;
+      }
       if (response.ok) {
         const data = await response.json();
         // Извлекаем финансовые данные из ответа 1С согласно структуре старого сайта
@@ -550,6 +561,12 @@ export default function DashboardPage() {
                         </option>
                       ))}
                     </select>
+                  </div>
+                )}
+
+                {accountDataError && (
+                  <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                    {accountDataError}
                   </div>
                 )}
 

@@ -1,10 +1,16 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
+import { canonicalHostRedirect } from '@/lib/canonical-host';
 import { isMaintenanceBypass, isMaintenanceMode } from '@/lib/maintenance';
 import { applyRateLimit, blockScannerPaths } from '@/lib/security/http-guard';
 
 export async function middleware(req: NextRequest) {
+  const hostRedirect = canonicalHostRedirect(req);
+  if (hostRedirect) {
+    return hostRedirect;
+  }
+
   const { pathname } = req.nextUrl;
 
   if (isMaintenanceMode() && !isMaintenanceBypass(pathname)) {

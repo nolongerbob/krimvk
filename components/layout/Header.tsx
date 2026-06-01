@@ -3,7 +3,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
+import { signOutToHome } from "@/lib/client-sign-out";
 import { Button } from "@/components/ui/button";
 import { Menu, User, LogOut, ChevronDown, Eye, Phone, MessageSquare, X, Home, Briefcase, Newspaper, Mail, Users, FileText, Building2, History, Award, TrendingUp, FileCheck, Shield, Scale, Info, Droplet, Waves, Search as SearchIcon, Settings, AlertTriangle } from "lucide-react";
 import { Search } from "@/components/Search";
@@ -272,7 +273,7 @@ export function Header() {
                     )}
                     <div className="border-t my-1"></div>
                     <button
-                      onClick={() => signOut({ callbackUrl: "/" })}
+                      onClick={() => void signOutToHome()}
                       className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-gray-100 text-sm text-red-600"
                     >
                       <LogOut className="h-4 w-4" />
@@ -643,7 +644,7 @@ export function Header() {
                       className="w-full text-red-600 border-red-200 hover:bg-red-50"
                       size="lg"
                       onClick={() => {
-                        signOut({ callbackUrl: "/" });
+                        void signOutToHome();
                         setMobileMenuOpen(false);
                       }}
                     >

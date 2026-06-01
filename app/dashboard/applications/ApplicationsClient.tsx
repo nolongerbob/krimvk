@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { FileText, Clock, CheckCircle, XCircle, AlertCircle, X, Download, Eye } from "lucide-react";
 import Link from "next/link";
 import { CompletedApplicationDetails } from "@/components/user/CompletedApplicationDetails";
+import { fileHrefForStoredUrl } from "@/lib/file-url";
 
 const statusConfig = {
   PENDING: {
@@ -366,7 +367,7 @@ export function ApplicationsClient({ applications: initialApplications }: Applic
                         {app.files.map((file) => (
                           <a
                             key={file.id}
-                            href={file.filePath}
+                            href={fileHrefForStoredUrl(file.filePath)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center gap-2 text-blue-600 hover:underline text-sm"

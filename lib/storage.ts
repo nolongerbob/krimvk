@@ -3,7 +3,7 @@
  * Позволяет легко переключаться между разными провайдерами
  */
 
-import { publicFileUrlForS3Key, s3KeyFromStoredUrl } from './public-file-url';
+import { s3KeyFromStoredUrl, storedFileUrlForS3Key } from './file-url';
 
 export interface StorageProvider {
   upload(file: File | Buffer, path: string, options?: UploadOptions): Promise<UploadResult>;
@@ -94,7 +94,7 @@ class S3Storage implements StorageProvider {
     // Прямой URL к Yandex без политики GetObject не открывается в браузере.
     // Раздача через /api/public-file (ключи SA), политику бакета не нужна.
     if (process.env.S3_PUBLIC_VIA_PROXY !== '0') {
-      return publicFileUrlForS3Key(key);
+      return storedFileUrlForS3Key(key);
     }
     if (this.publicUrlBase) {
       return `${this.publicUrlBase}/${key}`;

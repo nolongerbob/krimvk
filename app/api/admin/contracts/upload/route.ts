@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
 
     const result = await storage.upload(file, filePath, {
       contentType: file.type || "application/pdf",
-      access: "public",
+      access: "private",
     });
 
     return NextResponse.json({

@@ -7,6 +7,7 @@ import { User, Phone, MapPin, FileText, Building, Settings, Calendar, FileCheck 
 import { ApplicationActions } from "@/components/admin/ApplicationActions";
 import { ApplicationDetails } from "@/components/admin/ApplicationDetails";
 import Link from "next/link";
+import { fileHrefForStoredUrl } from "@/lib/file-url";
 
 interface TechnicalConditionsData {
   type: string;
@@ -447,7 +448,7 @@ export function TechnicalConditionsApplication({ application }: TechnicalConditi
                     {data.uploadedFiles.map((file, index) => (
                       <a
                         key={index}
-                        href={file}
+                        href={fileHrefForStoredUrl(file)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="block text-sm text-blue-600 hover:underline"

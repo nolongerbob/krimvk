@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { User, Phone, MapPin, FileText, Building, Settings, Calendar, Download, Eye, Upload, X, AlertCircle } from "lucide-react";
 import { ApplicationForm } from "@/app/stat-abonentom/application-form";
+import { fileHrefForStoredUrl } from "@/lib/file-url";
 
 interface ApplicationDetailsProps {
   application: {
@@ -724,6 +725,7 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
                       if (!file.startsWith('http') && !file.startsWith('/')) {
                         fileUrl = `/uploads/applications/${file}`;
                       }
+                      fileUrl = fileHrefForStoredUrl(fileUrl);
                       
                       // Извлекаем имя файла
                       let fileName = file;
@@ -800,7 +802,7 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
                           className="flex items-center justify-between p-2 border rounded-lg hover:bg-gray-50"
                         >
                           <a
-                            href={file.filePath}
+                            href={fileHrefForStoredUrl(file.filePath)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center gap-2 text-blue-600 hover:underline flex-1"

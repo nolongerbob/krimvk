@@ -61,7 +61,7 @@ export async function POST(
     // Загружаем файл через абстракцию хранилища
     const result = await storage.upload(file, filePath, {
       contentType: file.type || 'application/octet-stream',
-      access: 'public',
+      access: 'private',
     });
 
     const applicationFile = await withRetry(() =>

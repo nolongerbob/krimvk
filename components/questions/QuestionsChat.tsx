@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Send, MessageSquare, Image as ImageIcon, X } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { fileHrefForStoredUrl } from "@/lib/file-url";
 
 interface Message {
   id: string;
@@ -233,7 +234,7 @@ export function QuestionsChat({ question: initialQuestion }: QuestionsChatProps)
                   {message.imageUrl && (
                     <div className="mb-2 rounded-lg overflow-hidden">
                       <Image
-                        src={message.imageUrl}
+                        src={fileHrefForStoredUrl(message.imageUrl)}
                         alt="Прикрепленное изображение"
                         width={400}
                         height={300}

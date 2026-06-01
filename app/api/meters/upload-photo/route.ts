@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
+import { prisma } from "@/lib/prisma";
 import { storage } from "@/lib/storage";
 
 export const maxDuration = 30;
@@ -28,6 +29,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "ID счетчика не указан" }, { status: 400 });
     }
 
+    const meter = await prisma.waterMeter.findFirst({
+      where: { id: meterId, userId: session.user.id },
+      select: { id: true },
+    });
+    if (!meter) {
+      return NextResponse.json({ error: "Счётчик не найден" }, { status: 404 });
+    }
+
     // Проверяем тип файла
     if (!file.type.startsWith("image/")) {
       return NextResponse.json(
@@ -53,7 +62,7 @@ export async function POST(request: NextRequest) {
     // Загружаем файл через абстракцию хранилища
     const result = await storage.upload(file, filePath, {
       contentType: file.type || 'image/jpeg',
-      access: 'public',
+      access: 'private',
     });
 
     // Возвращаем URL изображения

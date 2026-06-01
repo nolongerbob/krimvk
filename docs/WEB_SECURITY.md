@@ -86,6 +86,9 @@ location / {
 | Загрузки | лимит 50M в nginx, валидация типов в API |
 | Health | `/api/health` без лимита |
 | Auto-login после verify | только `loginToken` (HMAC), не `userId` — `lib/post-verify-login-token.ts` |
+| Приватные файлы | `applications/`, `messages/`, `meters/`, `contracts/` → `/api/files/private/...` с проверкой сессии |
+
+Публично без входа: `disclosure/`, `news/`, `water-quality/`, `pages/`, `posts/` — `/files/...`
 
 Лимиты (in-memory, один PM2):
 

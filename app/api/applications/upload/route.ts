@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     // Загружаем файл через абстракцию хранилища
     const result = await storage.upload(file, filePath, {
       contentType: file.type || 'application/octet-stream',
-      access: 'public',
+      access: 'private',
     });
 
     return NextResponse.json({

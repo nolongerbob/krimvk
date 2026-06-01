@@ -1,5 +1,6 @@
 "use client";
 
+import { fileHrefForStoredUrl } from "@/lib/file-url";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -696,7 +697,7 @@ export function AdminQuestionsChat({ questions: initialQuestions }: AdminQuestio
                   >
                     {msg.isFromAdmin && <p className="text-xs text-gray-500 mb-1">Вы</p>}
                     {msg.imageUrl && (
-                      <Image src={msg.imageUrl} alt="" width={300} height={200} className="rounded-lg mb-2" unoptimized />
+                      <Image src={fileHrefForStoredUrl(msg.imageUrl)} alt="" width={300} height={200} className="rounded-lg mb-2" unoptimized />
                     )}
                     {msg.text && <p className="text-sm whitespace-pre-wrap">{msg.text}</p>}
                     <p className={`text-xs mt-1 ${msg.isFromAdmin ? "text-gray-400" : "text-blue-100"}`}>

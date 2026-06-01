@@ -1,5 +1,7 @@
 "use client";
 
+import { fileHrefForStoredUrl } from "@/lib/file-url";
+
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -153,7 +155,7 @@ export function CompletedApplicationDetails({ application, isTechnicalConditions
                 {files.map((file) => (
                   <a
                     key={file.id}
-                    href={file.filePath}
+                    href={fileHrefForStoredUrl(file.filePath)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg border transition-colors"

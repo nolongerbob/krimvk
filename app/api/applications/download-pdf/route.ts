@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
+import { isAdminUser } from "@/lib/require-admin";
 
 export const dynamic = 'force-dynamic';
 
@@ -31,16 +32,11 @@ export async function GET(request: NextRequest) {
     }
 
     // Проверяем права доступа
-    if (application.userId !== session.user.id) {
-      // Проверяем, является ли пользователь администратором
-      const user = await prisma.user.findUnique({
-        where: { id: session.user.id },
-        select: { role: true },
-      });
-
-      if (user?.role !== "ADMIN") {
-        return NextResponse.json({ error: "Доступ запрещен" }, { status: 403 });
-      }
+    if (
+      application.userId !== session.user.id &&
+      !(await isAdminUser(session.user.id))
+    ) {
+      return NextResponse.json({ error: "Доступ запрещен" }, { status: 403 });
     }
 
     // Парсим данные заявки

@@ -81,6 +81,20 @@ export function applyRateLimit(req: NextRequest): NextResponse | null {
     return null;
   }
 
+  if (path.startsWith('/api/files/private/')) {
+    if (!rateLimit(`files:${ip}`, 80, 60_000)) {
+      return NextResponse.json({ error: 'Слишком много запросов.' }, { status: 429 });
+    }
+    return null;
+  }
+
+  if (path === '/api/address/suggest') {
+    if (!rateLimit(`dadata:${ip}`, 40, 60_000)) {
+      return NextResponse.json({ error: 'Слишком много запросов.' }, { status: 429 });
+    }
+    return null;
+  }
+
   if (path.startsWith('/api/')) {
     if (!rateLimit(`api:${ip}`, 200, 60_000)) {
       return NextResponse.json({ error: 'Слишком много запросов.' }, { status: 429 });

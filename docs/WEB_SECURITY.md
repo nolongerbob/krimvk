@@ -90,6 +90,8 @@ location / {
 | Пароли 1С в БД | AES-256-GCM (`PASSWORD1C_ENCRYPTION_KEY`) — `docs/PASSWORD1C_ENCRYPTION.md` |
 | CSP | `lib/security/csp.ts` + заголовки в `next.config.js` |
 | Админ API/страницы | `requireAdmin()` / `app/admin/layout.tsx` — роль из БД |
+| DaData | только `/api/address/suggest`, сессия + 40 req/min |
+| Статус аудита | [SECURITY_AUDIT_STATUS.md](./SECURITY_AUDIT_STATUS.md) |
 
 Публично без входа: `disclosure/`, `news/`, `water-quality/`, `pages/`, `posts/` — `/files/...`
 

@@ -15,6 +15,15 @@
 
 Файлы, загруженные ранее как `public-read` в бакете, остаются доступны по прямому URL бакета, пока не перевыложены — при необходимости смените ACL в Yandex Object Storage.
 
+## Старые public-read ACL в бакете
+
+```bash
+set -a && source .env && set +a
+./scripts/audit-s3-private-prefixes.sh
+```
+
+При `PUBLIC:` — перевыложите файл или смените ACL в Yandex Object Storage.
+
 ## Проверка
 
 1. Без входа: `curl -I https://krimvk.ru/api/files/private/applications/...` → **401**

@@ -1,22 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-config";
+import { requireAdmin } from "@/lib/require-admin";
 import { prisma, withRetry } from "@/lib/prisma";
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session) {
-      return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
-    }
-
-    // Используем роль из сессии (уже проверена при логине)
-    if (session.user.role !== "ADMIN") {
-      return NextResponse.json({ error: "Доступ запрещен" }, { status: 403 });
-    }
+    const auth = await requireAdmin();
+    if (!auth.ok) return auth.response;
 
     // Простые запросы с обработкой ошибок и переподключением
     const [newApplications, newQuestions, inProgressQuestions] = await Promise.all([

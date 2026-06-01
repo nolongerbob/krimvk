@@ -1,31 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-config";
+import { requireAdmin } from "@/lib/require-admin";
 import { prisma, withRetry } from "@/lib/prisma";
 
 // Изменение роли пользователя
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
-    }
-
-    // Проверяем, что текущий пользователь - админ
-    const currentUser = await withRetry(() =>
-      prisma.user.findUnique({
-        where: { id: session.user.id },
-        select: { role: true },
-      })
-    );
-
-    if (currentUser?.role !== "ADMIN") {
-      return NextResponse.json(
-        { error: "Доступ запрещен" },
-        { status: 403 }
-      );
-    }
+    const auth = await requireAdmin();
+    if (!auth.ok) return auth.response;
 
     const { userId, role } = await request.json();
 
@@ -45,7 +26,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Нельзя изменить свою роль
-    if (userId === session.user.id) {
+    if (userId === auth.admin.userId) {
       return NextResponse.json(
         { error: "Нельзя изменить свою собственную роль" },
         { status: 400 }
@@ -82,7 +63,7 @@ export async function POST(request: NextRequest) {
     );
 
     console.log(
-      `[Role Change] User ${session.user.email} changed role of ${targetUser.email} from ${targetUser.role} to ${role}`
+      `[Role Change] User ${auth.admin.email} changed role of ${targetUser.email} from ${targetUser.role} to ${role}`
     );
 
     return NextResponse.json({
@@ -104,26 +85,8 @@ export async function POST(request: NextRequest) {
 // Получение списка всех администраторов
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
-    }
-
-    // Проверяем, что текущий пользователь - админ
-    const currentUser = await withRetry(() =>
-      prisma.user.findUnique({
-        where: { id: session.user.id },
-        select: { role: true },
-      })
-    );
-
-    if (currentUser?.role !== "ADMIN") {
-      return NextResponse.json(
-        { error: "Доступ запрещен" },
-        { status: 403 }
-      );
-    }
+    const auth = await requireAdmin();
+    if (!auth.ok) return auth.response;
 
     // Получаем список всех администраторов
     const admins = await withRetry(() =>

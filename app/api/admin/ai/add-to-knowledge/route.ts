@@ -1,26 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/get-session";
+import { requireAdmin } from "@/lib/require-admin";
 import { prisma, withRetry } from "@/lib/prisma";
 
 const DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions";
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session) {
-      return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
-    }
-
-    const user = await withRetry(() =>
-      prisma.user.findUnique({
-        where: { id: session.user.id },
-        select: { role: true },
-      })
-    );
-
-    if (user?.role !== "ADMIN") {
-      return NextResponse.json({ error: "Доступ запрещен" }, { status: 403 });
-    }
+    const auth = await requireAdmin();
+    if (!auth.ok) return auth.response;
 
     const { questionId, messages } = await request.json();
 

@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/prisma";
 import { getPaymentHistory } from "@/lib/1c-api";
 import { decryptPassword1c } from "@/lib/password1c-crypto";
+import { isAdminUser } from "@/lib/require-admin";
 
 export const dynamic = 'force-dynamic';
 
@@ -31,13 +32,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Проверяем, является ли пользователь админом
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { role: true },
-    });
-
-    const isAdmin = user?.role === "ADMIN";
+    const isAdmin = await isAdminUser(session.user.id);
 
     // Админ может получать историю оплат для любого лицевого счета, обычный пользователь - только для своих
     const account = await prisma.userAccount.findFirst({

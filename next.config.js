@@ -1,3 +1,5 @@
+const { buildContentSecurityPolicy } = require('./lib/security/csp.js');
+
 /** @type {import('next').NextConfig} */
 const siteUrl =
   process.env.SITE_URL ||
@@ -106,6 +108,14 @@ const nextConfig = {
           {
             key: 'Referrer-Policy',
             value: 'origin-when-cross-origin'
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: buildContentSecurityPolicy(),
           },
         ],
       },

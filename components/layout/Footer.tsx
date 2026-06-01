@@ -142,6 +142,9 @@ export function Footer() {
             <Link href="/legal/cookies" className="hover:text-primary">
               Политика cookie
             </Link>
+            <Link href="/o-kompanii/licenzii" className="hover:text-primary">
+              Лицензии и заключения
+            </Link>
           </div>
         </div>
       </div>

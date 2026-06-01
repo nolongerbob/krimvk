@@ -4,19 +4,14 @@ set -euo pipefail
 
 APP_DIR="${APP_DIR:-$(cd "$(dirname "$0")/.." && pwd)}"
 cd "$APP_DIR"
+# shellcheck source=scripts/lib/maintenance-flag.sh
+source "$(dirname "$0")/lib/maintenance-flag.sh"
 
-touch .maintenance
+FLAG="$(krimvk_maintenance_flag_path "$APP_DIR")"
+touch "$FLAG"
 
 ENV_FILE="${ENV_FILE:-.env}"
-if [[ -f "$ENV_FILE" ]]; then
-  if grep -q '^MAINTENANCE_MODE=' "$ENV_FILE"; then
-    sed -i 's/^MAINTENANCE_MODE=.*/MAINTENANCE_MODE=1/' "$ENV_FILE"
-  else
-    echo 'MAINTENANCE_MODE=1' >> "$ENV_FILE"
-  fi
-else
-  echo "WARN: $ENV_FILE not found — set MAINTENANCE_MODE=1 manually" >&2
-fi
+krimvk_set_maintenance_env 1 "$ENV_FILE"
 
 if command -v pm2 >/dev/null 2>&1; then
   pm2 restart krimvk --update-env 2>/dev/null || true
@@ -29,5 +24,8 @@ if command -v nginx >/dev/null 2>&1; then
 fi
 
 echo "Maintenance ON: visitors see public/maintenance.html"
-echo "  nginx flag: $APP_DIR/.maintenance"
-echo "  app env:    MAINTENANCE_MODE=1 in $ENV_FILE"
+echo "  nginx flag: $FLAG"
+echo "  app env:    MAINTENANCE_MODE=1 in $ENV_FILE (if writable)"
+if [[ "$FLAG" == /tmp/krimvk-maintenance ]]; then
+  echo "  nginx:      add  if (-f /tmp/krimvk-maintenance) { rewrite ^ /maintenance.html break; }  in location /"
+fi

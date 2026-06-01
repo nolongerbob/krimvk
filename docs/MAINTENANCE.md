@@ -32,13 +32,17 @@ sudo cp nginx/maintenance.conf.example /etc/nginx/snippets/krimvk-maintenance.co
 #   include snippets/krimvk-maintenance.conf;
 ```
 
-2. В `location /` **перед** `proxy_pass` добавьте ручной режим:
+2. В `location /` **перед** `proxy_pass` добавьте ручной режим (флаг создаёт `maintenance-on.sh`):
 
 ```nginx
-if (-f /var/www/krimvk/.maintenance) {
+if (-f /tmp/krimvk-maintenance) {
     rewrite ^ /maintenance.html break;
 }
 ```
+
+Если каталог приложения принадлежит `krimvk`, можно дополнительно: `if (-f /var/www/krimvk/.maintenance) { ... }`
+
+**Ошибка «Отказано в доступе» при touch `.maintenance`:** на VPS часто репозиторий от root — скрипт пишет в `/tmp/krimvk-maintenance`. Починить права: `sudo chown -R krimvk:krimvk /var/www/krimvk`
 
 3. Проверка и reload: `sudo nginx -t && sudo systemctl reload nginx`
 

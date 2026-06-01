@@ -21,5 +21,7 @@ location = /maintenance.html {
     add_header Retry-After "3600" always;
 }
 
-# Ручной режим: touch /var/www/krimvk/.maintenance && sudo nginx -s reload
+# Ручной режим (скрипт maintenance-on.sh создаёт /tmp/krimvk-maintenance):
+#   if (-f /tmp/krimvk-maintenance) { rewrite ^ /maintenance.html break; }
+# Альтернатива: /var/www/krimvk/.maintenance (нужны права на запись в каталог)
 # (см. scripts/maintenance-on.sh)

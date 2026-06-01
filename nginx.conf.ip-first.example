@@ -65,6 +65,9 @@ server {
     }
 
     location / {
+        if (-f /tmp/krimvk-maintenance) {
+            rewrite ^ /maintenance.html break;
+        }
         if (-f /var/www/krimvk/.maintenance) {
             rewrite ^ /maintenance.html break;
         }

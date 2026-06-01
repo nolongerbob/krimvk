@@ -2,7 +2,8 @@ import { signOut } from 'next-auth/react';
 
 /** Выход с редиректом на канонический домен (не IP из адресной строки). */
 export async function signOutToHome(): Promise<void> {
-  let callbackUrl = '/';
+  const fromBuild = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '');
+  let callbackUrl = fromBuild ? `${fromBuild}/` : '/';
 
   try {
     const res = await fetch('/api/site-config', { cache: 'no-store' });

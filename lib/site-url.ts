@@ -33,6 +33,22 @@ function isIpBaseUrl(baseUrl: string): boolean {
   }
 }
 
+/** Хост для алертов (без IP в production). */
+export function getSiteHostname(): string {
+  try {
+    return new URL(getSiteBaseUrl()).hostname;
+  } catch {
+    return 'krimvk.ru';
+  }
+}
+
+/**
+ * База для редиректов: канонический домен, не Host из запроса (IP/CDN).
+ */
+export function getRedirectBaseUrl(_requestUrl?: string): string {
+  return getSiteBaseUrl();
+}
+
 /** Канонический URL для ссылок в письмах и публичных href. */
 export function getSiteBaseUrl(): string {
   const candidates = [process.env.SITE_URL, process.env.NEXTAUTH_URL].filter(

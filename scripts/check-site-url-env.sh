@@ -11,7 +11,7 @@ if [[ ! -f "$ENV_FILE" ]]; then
   exit 1
 fi
 
-grep -E '^(SITE_URL|NEXTAUTH_URL)=' "$ENV_FILE" || true
+grep -E '^(SITE_URL|NEXTAUTH_URL|STORAGE_BASE_URL|S3_PUBLIC_URL_BASE|CANONICAL_HOST)=' "$ENV_FILE" || true
 echo ""
 
 NEXT=$(grep '^NEXTAUTH_URL=' "$ENV_FILE" | cut -d= -f2- | tr -d '"' | tr -d "'")

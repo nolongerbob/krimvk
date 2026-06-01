@@ -1,9 +1,18 @@
 /**
- * Утилиты для работы с 1С HTTP-сервисом WebAccounts
- * Базовый URL: http://46.172.223.34
+ * Утилиты для работы с 1С HTTP-сервисом WebAccounts.
+ * URL только из ONE_C_API_BASE_URL (.env), не хардкодить IP в репозитории.
  */
 
-const BASE_URL = "http://46.172.223.34";
+function get1cBaseUrl(): string {
+  const raw = process.env.ONE_C_API_BASE_URL?.trim();
+  if (!raw) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('ONE_C_API_BASE_URL is not set in environment');
+    }
+    throw new Error('ONE_C_API_BASE_URL is not set (configure in .env for dev)');
+  }
+  return raw.replace(/\/$/, '');
+}
 
 /**
  * Форматирует дату в формат DD.MM.YYYY для 1С API
@@ -63,7 +72,7 @@ export async function get1CUserData(
   dateTo?: Date
 ): Promise<any> {
   const regionPath = getRegion(region);
-  const url = new URL(`${BASE_URL}/${regionPath}/hs/WebAccounts/get_data`);
+  const url = new URL(`${get1cBaseUrl()}/${regionPath}/hs/WebAccounts/get_data`);
   
   url.searchParams.append("WaLsCode", accountNumber);
   url.searchParams.append("WaPass", password);
@@ -126,7 +135,7 @@ export async function submitMeterReading(
    *
    * Поэтому формируем строку запроса максимально близко к старому сайту.
    */
-  const baseUrl = `${BASE_URL}/${regionPath}/hs/WebAccounts/set_metering_device_indication`;
+  const baseUrl = `${get1cBaseUrl()}/${regionPath}/hs/WebAccounts/set_metering_device_indication`;
 
   // Полностью повторяем поведение старого сайта:
   // - LSCode триммим и кодируем
@@ -180,7 +189,7 @@ export async function getPaymentHistory(
   region?: string
 ): Promise<any> {
   const regionPath = getRegion(region);
-  const baseUrl = `${BASE_URL}/${regionPath}/hs/WebAccounts/get_payment_history`;
+  const baseUrl = `${get1cBaseUrl()}/${regionPath}/hs/WebAccounts/get_payment_history`;
   
   // Формируем даты в формате ДД.ММ.ГГГГ как на старом сайте
   const formatDate = (date: Date): string => {
@@ -238,7 +247,7 @@ export async function getMeteringDeviceHistory(
   dateTo?: string
 ): Promise<any> {
   const regionPath = getRegion(region);
-  const baseUrl = `${BASE_URL}/${regionPath}/hs/WebAccounts/get_metering_device_history`;
+  const baseUrl = `${get1cBaseUrl()}/${regionPath}/hs/WebAccounts/get_metering_device_history`;
   
   // Формируем URL как на старом сайте: WaLsCode и WaPass кодируются, даты передаются как есть
   const query =

@@ -3,6 +3,8 @@
  * TELEGRAM_ALERT_BOT_TOKEN + TELEGRAM_ALERT_CHAT_ID в .env
  */
 
+import { getSiteHostname } from './site-url';
+
 const MAX_LEN = 4000;
 
 export async function sendTelegramAlert(message: string): Promise<boolean> {
@@ -31,6 +33,6 @@ export async function sendTelegramAlert(message: string): Promise<boolean> {
 
 export function formatServerError(label: string, err: unknown): string {
   const msg = err instanceof Error ? err.message : String(err);
-  const host = process.env.NEXTAUTH_URL || process.env.HOSTNAME || 'krimvk';
+  const host = getSiteHostname();
   return `[${host}] ${label}\n${msg}`;
 }

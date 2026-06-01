@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { publicFilePathForS3Key } from '@/lib/public-file-url';
+import { getRedirectBaseUrl } from '@/lib/site-url';
 import { servePublicS3File } from '@/lib/serve-public-s3-file';
 
 export { dynamic } from '@/lib/force-dynamic-route';
@@ -14,7 +15,7 @@ export async function GET(request: NextRequest) {
 
   const pretty = publicFilePathForS3Key(key);
   if (request.nextUrl.pathname === '/api/public-file') {
-    return NextResponse.redirect(new URL(pretty, request.url), 301);
+    return NextResponse.redirect(new URL(pretty, getRedirectBaseUrl()), 301);
   }
 
   return servePublicS3File(key);

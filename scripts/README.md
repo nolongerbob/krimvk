@@ -7,6 +7,7 @@
 | `deploy-vps.sh` | Деплой на сервере |
 | `maintenance-on.sh` / `maintenance-off.sh` | Страница «Делаем сервис лучше» (см. `docs/MAINTENANCE.md`) |
 | `test-auth-auto-login.sh` | Smoke: auto-login не принимает userId (после деплоя) |
+| `check-site-url-env.sh` / `audit-public-urls.sh` | Нет IP в URL для писем и редиректов (см. `docs/PUBLIC_URLS.md`) |
 | `bootstrap-vps.sh` / `vps-init.sh` | Первичная настройка VPS |
 | `harden-vps.sh` | UFW, fail2ban, автообновления |
 | `setup-security-vps.sh` | Hardening + nginx limits + cron бэкапа |

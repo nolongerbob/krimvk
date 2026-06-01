@@ -1,5 +1,13 @@
 /** @type {import('next').NextConfig} */
+const siteUrl =
+  process.env.SITE_URL ||
+  process.env.NEXTAUTH_URL ||
+  (process.env.NODE_ENV === 'production' ? 'https://krimvk.ru' : 'http://localhost:3000');
+
 const nextConfig = {
+  env: {
+    NEXT_PUBLIC_SITE_URL: siteUrl.replace(/\/$/, ''),
+  },
   // Оптимизация изображений
   images: {
     formats: ['image/avif', 'image/webp'],

@@ -4,6 +4,7 @@
  */
 
 import { sendNtfyAlert } from './ntfy-alert';
+import { getSiteHostname } from './site-url';
 import { sendTelegramAlert } from './telegram-alert';
 
 export type ServerErrorContext = {
@@ -78,7 +79,7 @@ function shouldThrottle(key: string): boolean {
 }
 
 function formatReport(ctx: ServerErrorContext, err: unknown): string {
-  const host = process.env.NEXTAUTH_URL || process.env.HOSTNAME || 'krimvk';
+  const host = getSiteHostname();
   const lines: string[] = [`[${host}] ${ctx.label}`];
 
   if (ctx.method && ctx.path) {

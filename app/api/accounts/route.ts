@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/prisma";
+import { encryptPassword1c } from "@/lib/password1c-crypto";
 
 // Force dynamic rendering - this route uses headers() via getServerSession
 export const dynamic = 'force-dynamic';
@@ -240,7 +241,7 @@ export async function POST(request: NextRequest) {
         address: address,
         name: name,
         phone: phone,
-        password1c: password1c.trim(),
+        password1c: encryptPassword1c(password1c.trim()),
         region: region.trim(),
       },
     });

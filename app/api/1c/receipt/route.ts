@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { get1CUserData, getMeteringDeviceHistory, formatDateFor1C, getPaymentHistory } from "@/lib/1c-api";
 import { parseMeterHistory, type MeterHistoryItem } from "@/lib/parse-meter-history";
 import { buildMeterReadingsFromDevices, hasValidMeterReadings } from "@/lib/receipt-meter-mapping";
+import { decryptPassword1c } from "@/lib/password1c-crypto";
 
 export const dynamic = 'force-dynamic';
 
@@ -109,7 +110,8 @@ export async function GET(request: NextRequest) {
     if (!account) {
       return NextResponse.json({ error: "Лицевой счет не найден" }, { status: 404 });
     }
-    if (!account.password1c) {
+    const password1c = decryptPassword1c(account.password1c);
+    if (!password1c) {
       return NextResponse.json({ error: "Пароль для 1С не установлен. Обратитесь в службу поддержки." }, { status: 400 });
     }
     if (!account.region) {
@@ -121,7 +123,7 @@ export async function GET(request: NextRequest) {
 
     const data = await get1CUserData(
       account.accountNumber,
-      account.password1c,
+      password1c,
       account.region,
       fromDate,
       toDate
@@ -157,7 +159,7 @@ export async function GET(request: NextRequest) {
     try {
       const paymentHistory = await getPaymentHistory(
         account.accountNumber,
-        account.password1c,
+        password1c,
         billStart,
         billEnd,
         account.region
@@ -210,7 +212,7 @@ export async function GET(request: NextRequest) {
     try {
       const history = await getMeteringDeviceHistory(
         account.accountNumber,
-        account.password1c,
+        password1c,
         account.region,
         dateFromStr,
         dateToStr

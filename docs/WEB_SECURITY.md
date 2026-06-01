@@ -87,6 +87,7 @@ location / {
 | Health | `/api/health` без лимита |
 | Auto-login после verify | только `loginToken` (HMAC), не `userId` — `lib/post-verify-login-token.ts` |
 | Приватные файлы | `applications/`, `messages/`, `meters/`, `contracts/` → `/api/files/private/...` с проверкой сессии |
+| Пароли 1С в БД | AES-256-GCM (`PASSWORD1C_ENCRYPTION_KEY`) — `docs/PASSWORD1C_ENCRYPTION.md` |
 
 Публично без входа: `disclosure/`, `news/`, `water-quality/`, `pages/`, `posts/` — `/files/...`
 

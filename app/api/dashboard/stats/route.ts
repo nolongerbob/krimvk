@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/prisma";
 import { get1CUserData } from "@/lib/1c-api";
+import { tryDecryptPassword1c } from "@/lib/password1c-crypto";
 
 export const dynamic = 'force-dynamic';
 
@@ -41,7 +42,8 @@ export async function GET(request: NextRequest) {
 
     // Для каждого лицевого счета получаем данные из 1С
     for (const account of userAccounts) {
-      if (!account.password1c || !account.region) {
+      const password1c = tryDecryptPassword1c(account.password1c);
+      if (!password1c || !account.region) {
         if (process.env.NODE_ENV === "development") {
           console.log(`Skipping account ${account.accountNumber}: missing password or region`);
         }
@@ -57,7 +59,7 @@ export async function GET(request: NextRequest) {
         const data = await Promise.race([
           get1CUserData(
             account.accountNumber,
-            account.password1c,
+            password1c,
             account.region
           ),
           new Promise((_, reject) => 

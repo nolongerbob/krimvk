@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/prisma";
 import { get1CUserData } from "@/lib/1c-api";
+import { decryptPassword1c } from "@/lib/password1c-crypto";
 
 export const dynamic = 'force-dynamic';
 
@@ -43,7 +44,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (!account.password1c) {
+    const password1c = decryptPassword1c(account.password1c);
+    if (!password1c) {
       return NextResponse.json(
         { error: "Пароль для 1С не установлен. Обратитесь в службу поддержки." },
         { status: 400 }
@@ -60,7 +62,7 @@ export async function GET(request: NextRequest) {
     // Получаем данные из 1С
     const data = await get1CUserData(
       account.accountNumber,
-      account.password1c,
+      password1c,
       account.region
     );
 

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { UsersClient } from "./UsersClient";
 import { get1CUserData } from "@/lib/1c-api";
+import { tryDecryptPassword1c } from "@/lib/password1c-crypto";
 
 export const dynamic = 'force-dynamic';
 
@@ -38,7 +39,7 @@ async function calculateUserBalance(userId: string): Promise<{ totalDebt: number
       try {
         const responseData = await get1CUserData(
           account.accountNumber,
-          account.password1c || "",
+          tryDecryptPassword1c(account.password1c) || "",
           account.region || "prog"
         );
 

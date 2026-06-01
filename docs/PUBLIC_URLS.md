@@ -12,8 +12,8 @@ CANONICAL_HOST=krimvk.ru
 S3_PUBLIC_VIA_PROXY=1
 # Не задавайте S3_PUBLIC_URL_BASE с IP; лучше proxy через сайт
 
-# 1С — только в .env, не в git:
-ONE_C_API_BASE_URL=https://...
+# 1С — только в .env, не в git (IP здесь **нормален**, пользователи его не видят):
+ONE_C_API_BASE_URL=http://46.172.223.34
 ```
 
 Проверка:

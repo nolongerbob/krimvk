@@ -15,12 +15,12 @@
 | 7 | Rate limit приватных файлов | `http-guard.ts` → `/api/files/private` |
 | 8 | IDOR: GET файлов заявки только для админа | `requireAdmin()` в `admin/applications/[id]/files` GET |
 | 9 | IDOR: чужие фото в чате | `messages/{userId}/`, `lib/message-image-access.ts`, проверка при create |
+| 10 | JWT `ADMIN` на приватных файлах | `canAccessPrivateS3Key` + `isAdminUser()` из БД |
 
 ## Открыто (аудит 2026-06)
 
 | # | Тема | Где |
 |---|------|-----|
-| — | JWT `ADMIN` на приватных файлах после снятия роли | `lib/authorize-private-file.ts` |
 | — | Пароли 1С в query (direct-account) | `app/api/admin/direct-account/*` |
 | — | Allowlist `region` для 1С | `lib/1c-api.ts` |
 

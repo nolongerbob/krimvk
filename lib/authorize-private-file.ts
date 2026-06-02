@@ -1,3 +1,4 @@
+import { isAdminUser } from '@/lib/admin-role';
 import { prisma } from '@/lib/prisma';
 import { isPrivateS3Key } from '@/lib/s3-file-access';
 import {
@@ -11,10 +12,13 @@ import {
 export async function canAccessPrivateS3Key(
   key: string,
   userId: string,
-  role: string | undefined
+  sessionRole: string | undefined
 ): Promise<boolean> {
   if (!isPrivateS3Key(key)) return false;
-  if (role === 'ADMIN') return true;
+  // JWT role может устареть после снятия админки — подтверждаем в БД (как requireAdmin).
+  if (sessionRole === 'ADMIN' && (await isAdminUser(userId))) {
+    return true;
+  }
 
   if (key.startsWith('applications/user/')) {
     const rest = key.slice('applications/user/'.length);

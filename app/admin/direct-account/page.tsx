@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Key, Receipt, Droplet, CreditCard, AlertCircle, FileText, History } from "lucide-react";
 import Link from "next/link";
+import { ONE_C_REGION_OPTIONS } from "@/lib/1c-regions";
 
 // Парсер сумм из 1С (пробелы, запятые) — как в ЛК и квитанции
 function parseAmount(value: string | number | null | undefined): number {
@@ -22,7 +23,7 @@ function parseAmount(value: string | number | null | undefined): number {
 export default function DirectAccountPage() {
   const [accountNumber, setAccountNumber] = useState("");
   const [password, setPassword] = useState("");
-  const [region, setRegion] = useState("prog");
+  const [region, setRegion] = useState("");
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,6 +36,12 @@ export default function DirectAccountPage() {
     setError(null);
     setAccountData(null);
     setIsConnected(false);
+
+    if (!region) {
+      setError("Выберите район лицевого счёта");
+      setLoading(false);
+      return;
+    }
 
     try {
       // Проверяем подключение и получаем временный токен серверной сессии
@@ -64,7 +71,7 @@ export default function DirectAccountPage() {
   const handleDisconnect = () => {
     setAccountNumber("");
     setPassword("");
-    setRegion("prog");
+    setRegion("");
     setSessionToken(null);
     setAccountData(null);
     setIsConnected(false);
@@ -151,13 +158,14 @@ export default function DirectAccountPage() {
                 <Label htmlFor="region">Регион</Label>
                 <Select value={region} onValueChange={setRegion} disabled={loading}>
                   <SelectTrigger id="region">
-                    <SelectValue placeholder="Выберите регион" />
+                    <SelectValue placeholder="Выберите район" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="prog">Программный доступ (prog)</SelectItem>
-                    <SelectItem value="saki">Саки</SelectItem>
-                    <SelectItem value="evpatoria">Евпатория</SelectItem>
-                    <SelectItem value="chernomor">Черноморское</SelectItem>
+                    {ONE_C_REGION_OPTIONS.map((r) => (
+                      <SelectItem key={r.value} value={r.value}>
+                        {r.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

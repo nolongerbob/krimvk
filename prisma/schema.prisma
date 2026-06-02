@@ -201,7 +201,7 @@ model UserAccount {
   name          String? // ФИО абонента
   phone         String?
   password1c    String? // Пароль для доступа к 1С API - WaPass
-  region        String? // Регион для 1С API (prog или название региона)
+  region        String? // Код района 1С: krasn, saki, pervom, nignegorsk, ruch, sovetskoe, chernomorsk
   isActive      Boolean  @default(true)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

@@ -52,7 +52,7 @@ export function jsonFrom1cError(error: unknown): NextResponse {
   if (message.includes('1C_BUSINESS_ERROR') || message.includes('1C_EMPTY') || message.includes('1C_PARSE')) {
     return NextResponse.json(
       {
-        error: '1С вернула ошибку. Проверьте номер лицевого счёта, пароль и регион (обычно prog).',
+        error: '1С вернула ошибку. Проверьте номер лицевого счёта, пароль и выбранный район.',
         code: '1C_BUSINESS',
         details: process.env.NODE_ENV === 'development' ? message : undefined,
       },
@@ -69,7 +69,7 @@ export function jsonFrom1cError(error: unknown): NextResponse {
     return NextResponse.json(
       {
         error:
-          'Указан недопустимый регион для 1С. Выберите район из списка (prog, saki, evpatoria, chernomor).',
+          'Указан недопустимый район для 1С. Выберите район при добавлении лицевого счёта.',
         code: '1C_REGION',
       },
       { status: 400 }

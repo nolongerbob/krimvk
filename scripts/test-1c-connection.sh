@@ -13,7 +13,7 @@ if [[ -f "$ENV_FILE" ]]; then
 fi
 
 BASE="${ONE_C_API_BASE_URL:-}"
-REGION="${1:-prog}"
+REGION="${1:-saki}"
 LS="${2:-}"
 PASS="${3:-}"
 
@@ -57,7 +57,7 @@ if [[ "$code" == "000" ]]; then
   exit 1
 fi
 if [[ -n "$LS" && -n "$PASS" ]] && [[ "${code:-}" != "200" ]]; then
-  echo "WARN: с учётными данными HTTP ${code:-?} — проверьте л/с, пароль 1С, region (часто prog)."
+  echo "WARN: с учётными данными HTTP ${code:-?} — проверьте л/с, пароль 1С, region (krasn, saki, pervom, …)."
   exit 1
 fi
 echo "Готово. На сайте: pm2 restart krimvk --update-env после правок .env"

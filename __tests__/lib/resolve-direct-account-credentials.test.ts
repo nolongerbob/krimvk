@@ -3,13 +3,13 @@ import { createDirectAccountSession } from '@/lib/direct-account-session';
 
 describe('resolveDirectAccountCredentials', () => {
   it('resolves credentials for valid token', () => {
-    const token = createDirectAccountSession('admin-1', '12345', 'secret', 'prog');
+    const token = createDirectAccountSession('admin-1', '12345', 'secret', 'saki');
     const result = resolveDirectAccountCredentials(token, 'admin-1');
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.credentials.accountNumber).toBe('12345');
       expect(result.credentials.password).toBe('secret');
-      expect(result.credentials.region).toBe('prog');
+      expect(result.credentials.region).toBe('saki');
     }
   });
 
@@ -19,7 +19,7 @@ describe('resolveDirectAccountCredentials', () => {
   });
 
   it('rejects token for another admin', () => {
-    const token = createDirectAccountSession('admin-1', '12345', 'secret', 'prog');
+    const token = createDirectAccountSession('admin-1', '12345', 'secret', 'saki');
     const result = resolveDirectAccountCredentials(token, 'admin-2');
     expect(result.ok).toBe(false);
   });

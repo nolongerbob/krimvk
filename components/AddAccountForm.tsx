@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Loader2, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ONE_C_REGION_OPTIONS } from "@/lib/1c-regions";
 
 interface AddAccountFormProps {
   onAccountAdded: () => void;
@@ -16,16 +17,6 @@ export function AddAccountForm({ onAccountAdded }: AddAccountFormProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const regions = [
-    { value: "krasn", label: "Красногвардейский район" },
-    { value: "saki", label: "Сакский и Симферопольский районы" },
-    { value: "pervom", label: "Первомайский район" },
-    { value: "nignegorsk", label: "Нижнегорский район" },
-    { value: "ruch", label: "Раздольненский район" },
-    { value: "sovetskoe", label: "Советский район" },
-    { value: "chernomorsk", label: "Черноморский район" },
-  ];
-
   const [formData, setFormData] = useState({
     accountNumber: "",
     password1c: "",
@@ -136,7 +127,7 @@ export function AddAccountForm({ onAccountAdded }: AddAccountFormProps) {
               Район <span className="text-red-500">*</span>
             </Label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {regions.map((region) => (
+              {ONE_C_REGION_OPTIONS.map((region) => (
                 <button
                   key={region.value}
                   type="button"

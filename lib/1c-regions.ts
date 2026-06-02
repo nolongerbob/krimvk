@@ -1,13 +1,29 @@
 /**
- * Допустимые сегменты пути 1С: /{region}/hs/WebAccounts/...
- * Совпадают с выбором в ЛК и админке «прямой л/с».
+ * Сегменты пути 1С: /{region}/hs/WebAccounts/...
+ * Список как на старом сайте и в форме добавления л/с (AddAccountForm).
  */
-export const ALLOWED_1C_REGIONS = [
-  'prog',
-  'saki',
-  'evpatoria',
-  'chernomor',
+
+export const ONE_C_REGION_OPTIONS = [
+  { value: 'krasn', label: 'Красногвардейский район' },
+  { value: 'saki', label: 'Сакский и Симферопольский районы' },
+  { value: 'pervom', label: 'Первомайский район' },
+  { value: 'nignegorsk', label: 'Нижнегорский район' },
+  { value: 'ruch', label: 'Раздольненский район' },
+  { value: 'sovetskoe', label: 'Советский район' },
+  { value: 'chernomorsk', label: 'Черноморский район' },
 ] as const;
+
+export const ALLOWED_1C_REGIONS = ONE_C_REGION_OPTIONS.map(
+  (o) => o.value
+) as readonly [
+  'krasn',
+  'saki',
+  'pervom',
+  'nignegorsk',
+  'ruch',
+  'sovetskoe',
+  'chernomorsk',
+];
 
 export type OneCRegion = (typeof ALLOWED_1C_REGIONS)[number];
 
@@ -20,6 +36,12 @@ export class Invalid1cRegionError extends Error {
     super(message);
     this.name = 'Invalid1cRegionError';
   }
+}
+
+export function get1cRegionLabel(code: string | null | undefined): string {
+  if (!code) return '';
+  const found = ONE_C_REGION_OPTIONS.find((o) => o.value === code);
+  return found?.label ?? code;
 }
 
 /** Проверка и нормализация региона перед подстановкой в URL к 1С. */
@@ -36,9 +58,20 @@ export function assertValid1cRegion(region: string | null | undefined): OneCRegi
 
   if (!REGION_SET.has(normalized)) {
     throw new Invalid1cRegionError(
-      `Регион «${normalized}» не поддерживается. Доступны: ${ALLOWED_1C_REGIONS.join(', ')}`
+      `Регион «${normalized}» не поддерживается. Выберите район из списка в личном кабинете.`
     );
   }
 
   return normalized as OneCRegion;
+}
+
+export function isValid1cRegion(
+  region: string | null | undefined
+): region is OneCRegion {
+  try {
+    assertValid1cRegion(region);
+    return true;
+  } catch {
+    return false;
+  }
 }

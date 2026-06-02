@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
     const data = await get1CUserData(
       account.accountNumber,
       password1c,
-      account.region || "prog",
+      account.region,
       fromDate,
       toDate
     );

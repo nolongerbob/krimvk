@@ -37,10 +37,14 @@ async function calculateUserBalance(userId: string): Promise<{ totalDebt: number
     // Для каждого лицевого счета получаем данные из 1С
     for (const account of userAccounts) {
       try {
+        if (!account.region) {
+          continue;
+        }
+
         const responseData = await get1CUserData(
           account.accountNumber,
           tryDecryptPassword1c(account.password1c) || "",
-          account.region || "prog"
+          account.region
         );
 
         if (responseData) {

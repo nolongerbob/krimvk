@@ -13,8 +13,14 @@ describe('assertValid1cRegion', () => {
   });
 
   it('rejects path traversal', () => {
-    expect(() => assertValid1cRegion('../prog')).toThrow(Invalid1cRegionError);
-    expect(() => assertValid1cRegion('prog/extra')).toThrow(Invalid1cRegionError);
+    expect(() => assertValid1cRegion('../saki')).toThrow(Invalid1cRegionError);
+    expect(() => assertValid1cRegion('saki/extra')).toThrow(Invalid1cRegionError);
+  });
+
+  it('rejects legacy invalid codes (prog, evpatoria)', () => {
+    expect(() => assertValid1cRegion('prog')).toThrow(Invalid1cRegionError);
+    expect(() => assertValid1cRegion('evpatoria')).toThrow(Invalid1cRegionError);
+    expect(() => assertValid1cRegion('chernomor')).toThrow(Invalid1cRegionError);
   });
 
   it('rejects unknown region', () => {

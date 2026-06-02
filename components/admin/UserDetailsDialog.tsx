@@ -39,22 +39,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// Маппинг кодов регионов на читаемые названия
-const regionNames: Record<string, string> = {
-  krasn: "Красногвардейский район",
-  saki: "Сакский и Симферопольский районы",
-  pervom: "Первомайский район",
-  nignegorsk: "Нижнегорский район",
-  ruch: "Раздольненский район",
-  evpat: "Евпаторийский район",
-  prog: "Тестовый регион",
-};
+import { get1cRegionLabel } from "@/lib/1c-regions";
 
-// Функция получения читаемого названия региона
-const getRegionName = (regionCode: string | null): string => {
-  if (!regionCode) return "";
-  return regionNames[regionCode] || regionCode;
-};
+const getRegionName = (regionCode: string | null): string =>
+  get1cRegionLabel(regionCode);
 
 interface UserAccount {
   id: string;

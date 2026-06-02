@@ -6,9 +6,17 @@ const siteUrl =
   process.env.NEXTAUTH_URL ||
   (process.env.NODE_ENV === 'production' ? 'https://krimvk.ru' : 'http://localhost:3000');
 
+const assetPrefixRaw = process.env.NEXT_PUBLIC_ASSET_PREFIX?.trim();
+const assetPrefix =
+  assetPrefixRaw && assetPrefixRaw.length > 0
+    ? assetPrefixRaw.replace(/\/$/, '')
+    : undefined;
+
 const nextConfig = {
+  ...(assetPrefix ? { assetPrefix } : {}),
   env: {
     NEXT_PUBLIC_SITE_URL: siteUrl.replace(/\/$/, ''),
+    ...(assetPrefix ? { NEXT_PUBLIC_ASSET_PREFIX: assetPrefix } : {}),
   },
   // Оптимизация изображений
   images: {
@@ -52,8 +60,8 @@ const nextConfig = {
       },
     ],
   },
-  // Сжатие
-  compress: true,
+  // Сжатие только на CDN (gzip-on) или nginx. Двойное gzip (Next + CDN) ломает Safari на HTTP/2.
+  compress: false,
   // Оптимизация production сборки
   swcMinify: true,
   // Отключаем ESLint во время сборки для Vercel

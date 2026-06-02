@@ -1,26 +1,64 @@
 # Yandex Cloud CDN для krimvk.ru (вместо Cloudflare)
 
-CDN в **Yandex Cloud** нормально открывается из РФ. Схема: пользователь → **CDN Яндекса** → ваш VPS **89.111.165.160** (origin).
+> **Актуальная схема (POST на CDN отклонён):** сайт на VPS, статика на `cdn.krimvk.ru` — [YANDEX_STATIC_CDN.md](./YANDEX_STATIC_CDN.md).  
+> DDoS на IP сервера — [YANDEX_DDOS.md](./YANDEX_DDOS.md).
 
-У вас уже есть **Object Storage** в Yandex — CDN включается в том же облаке.
+Ниже — исходный план «весь сайт через CDN» (оставлен для справки).
 
-Документация Яндекса: [CDN — источники](https://yandex.cloud/ru/docs/cdn/concepts/origins), [создание ресурса](https://yandex.cloud/ru/docs/cdn/operations/resources/create-resource).
+Канонический сайт: **https://krimvk.ru** (без www). **www** → редирект на apex (middleware + по желанию CDN/nginx).
+
+Документация: [источники](https://yandex.cloud/ru/docs/cdn/concepts/origins), [HTTP-методы и POST](https://yandex.cloud/ru/docs/cdn/operations/resources/configure-http).
 
 ---
 
-## Схема
+## Пошаговый план (делайте по номерам)
+
+### Сейчас — пока нет POST от поддержки
+
+Пользователи ходят **напрямую на VPS**, CDN для людей **не включать** (POST → 405).
+
+| # | Где | Действие |
+|---|-----|----------|
+| **1** | REG.RU | `@` и `www` → **A** `89.111.165.160`. `origin` → **A** `89.111.165.160`. MX/TXT почты не трогать. |
+| **2** | [Поддержка Yandex](https://console.yandex.cloud/support) | Тикет: включить **POST, PUT, PATCH, DELETE**; основной домен **krimvk.ru**, доп. **www**; origin **origin.krimvk.ru**, Host **krimvk.ru**; Next.js API/NextAuth. Спросить про **ALIAS @ на CDN** при MX на REG.RU. |
+| **3** | VPS | `server_name krimvk.ru www.krimvk.ru origin.krimvk.ru;` certbot для `origin` при HTTPS origin. |
+| **4** | Yandex CDN | Создать/допилить ресурс (шаг 2 ниже): **krimvk.ru** + **www**, gzip-on, slice выкл, кэш только static. **DNS на CDN не переключать.** |
+| **5** | Git / VPS | `git pull`, `npm run build`, `pm2 restart`. Редирект www→apex уже в `lib/canonical-host.ts`. |
+
+### После ответа поддержки «методы включены»
+
+| # | Где | Действие |
+|---|-----|----------|
+| **6** | CLI | `yc cdn resource update <ID> --allowed-http-methods GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS` |
+| **7** | VPS | Проверка: POST → **400** (не 405): см. шаг 3.1. |
+| **8** | DNS | **krimvk.ru (@)** на CDN (ANAME в [Yandex DNS](https://yandex.cloud/ru/docs/dns/) или как скажет поддержка). **www** → CNAME на тот же CDN. |
+| **9** | VPS | nginx: **gzip выкл**; `.env`: `SITE_URL` / `NEXTAUTH_URL` / `CANONICAL_HOST` = `krimvk.ru`. |
+| **10** | CDN | Сброс кэша. Проверка Safari, логин, `curl` health. |
+
+---
+
+## Схема (целевая)
 
 ```text
-Пользователь (РФ)
-    → DNS: krimvk.ru → CNAME на *.cdn.yandexcloud.net
-    → CDN (TLS, кэш статики)
-    → origin.krimvk.ru (A → 89.111.165.160)
-    → nginx → Next.js :3000
+Пользователь → https://krimvk.ru (DNS @ → CDN через ANAME)
+            → CDN (TLS, gzip на edge)
+            → origin.krimvk.ru → nginx (без gzip) → Next.js
+
+https://www.krimvk.ru → 308 → https://krimvk.ru
 ```
 
-**Cloudflare:** отключить оранжевое облако или вернуть NS на REG.RU / перенести DNS в Yandex Cloud.
+**Cloudflare:** выключен. **UFW:** `scripts/ufw-open-origin.sh`.
 
-**UFW на VPS:** оставить `scripts/ufw-open-origin.sh` (80/443 открыты). Отдельного списка IP CDN для UFW у Яндекса нет — origin должен принимать запросы от CDN.
+---
+
+## Защита: что даёт CDN
+
+| Даёт | Не даёт |
+|------|---------|
+| Edge в РФ, кэш static, часть DDoS | Скрытие IP, пока `@` = A на VPS |
+| TLS на краю | POST без заявки в поддержку |
+
+Весь публичный трафик — на **krimvk.ru** через CDN; **www** только редирект.
 
 ---
 
@@ -86,25 +124,93 @@ curl -fsSI -H "Host: origin.krimvk.ru" http://127.0.0.1/api/health
 
 На старте безопаснее: **кэшировать только** `/_next/static/` и статику; всё остальное — bypass.
 
+**Игнорировать query string / cookies** — **выключено** (иначе ломается сессия и ЛК).
+
 ---
 
-## Шаг 4 — DNS для пользователей
+## Шаг 3.1 — Настройки CDN (Safari + Next.js) — обязательно
 
-### Вариант A — DNS в REG.RU (проще для www)
+Симптом: в **Safari** на `www` «голый» сайт, в консоли `Failed to load resource: The network connection was lost` на десятках `/_next/static/*`; **Chrome** на том же www часто ок.
 
-| Имя | Тип | Значение |
-|-----|-----|----------|
-| `www` | **CNAME** | `cl-xxxxx.edgecdn.ru.` (из консоли CDN) |
-| `@` | **A** | `89.111.165.160` **или** перенаправление `@` → `https://www.krimvk.ru` |
+Типичная причина: **двойное сжатие** (Next `compress` + nginx `gzip` + CDN **GZip на edge**) и/или **сегментация (slice)** по HTTP/2.
 
-Многие так делают: **www через CDN**, apex редирект на www.
+| Параметр в консоли CDN | Значение |
+|------------------------|----------|
+| **GZip / Brotli на CDN** | **Включить** (gzip-on) — сжатие **только здесь** |
+| **Сегментация / Optimize delivery / slice** | **Выключить** |
+| **Fetch compressed** | **Выключить** (не путать с gzip-on) |
+| Кэш HTML `/`, `/dashboard`, `/api` | Не кэшировать / TTL 0 |
+| `/_next/static/*` | Долгий TTL (immutable) |
 
-### Вариант B — DNS в Yandex Cloud (apex на CDN)
+На **VPS** (после деплоя с `compress: false` в `next.config.js`):
+
+```bash
+# В /etc/nginx/sites-available/krimvk закомментируйте блок gzip on; ... (см. nginx.conf.example)
+sudo nginx -t && sudo systemctl reload nginx
+pm2 restart krimvk --update-env
+```
+
+Проверка с Mac (Safari и терминал):
+
+```bash
+# Один chunk — 200, text/javascript или css, без PROTOCOL_ERROR
+curl -sI --http2 "https://www.krimvk.ru/_next/static/css/$(curl -s https://www.krimvk.ru | grep -o '_next/static/css/[^"]*\.css' | head -1 | sed 's|_next/static/css/||')"
+
+# Не должно быть двойного Content-Encoding
+curl -sI -H "Accept-Encoding: gzip" "https://www.krimvk.ru/api/health" | grep -i content-encoding
+```
+
+CLI (если есть `yc`):
+
+```bash
+yc cdn resource update <ID> --clear-compression-options
+yc cdn resource update <ID> --gzip-on
+# slice по умолчанию выключен; если включали — отключите в консоли
+```
+
+**Методы HTTP (важно):** у Yandex CDN по умолчанию для клиентов **запрещены** `POST`, `PUT`, `PATCH`, `DELETE`. Галочки в консоли (GET, HEAD, PUT, …) **не включают** их сами по себе — нужна заявка в [техподдержку](https://console.yandex.cloud/support). Иначе все POST (логин, формы, API) получают **405** на `www`, хотя GET/static работают (Chrome «открывается», Safari сыпет static — отдельная тема gzip/slice).
+
+Проверка с VPS:
+
+```bash
+curl -s -o /dev/null -w "%{http_code}\n" -X POST "https://www.krimvk.ru/api/emergency" \
+  -H "Content-Type: application/json" -d '{}'
+# 400 = POST дошёл до Next.js; 405 = режет CDN
+```
+
+После одобрения поддержки:
+
+```bash
+yc cdn resource list
+yc cdn resource update <ID> \
+  --allowed-http-methods GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS
+```
+
+Текст для тикета: Next.js, основной домен `krimvk.ru`, `www` — редирект, origin `origin.krimvk.ru`, POST/PUT/PATCH/DELETE для `/api/*`, NextAuth.
+
+После смены настроек: **сброс кэша CDN** в консоли, в Safari — закрыть вкладки / очистить кэш для сайта.
+
+---
+
+## Шаг 4 — DNS для пользователей (после POST от поддержки)
+
+### Вариант A — DNS в Yandex Cloud (рекомендуется для apex на CDN)
 
 1. Cloud DNS → зона `krimvk.ru`.
 2. NS в REG.RU заменить на NS Яндекса.
 3. Для `@`: запись **ANAME** / alias на CNAME CDN (в Yandex DNS это поддерживается).
 4. `www` → CNAME на тот же CDN.
+5. Редирект www→apex: middleware (уже в коде) и/или правило rewrite в CDN.
+
+### Вариант B — DNS остаётся в REG.RU
+
+Пока `@` = A `89.111.165.160` — **krimvk.ru мимо CDN**. Уточните в тикете, есть ли ALIAS для `@`, или перенесите зону в Yandex DNS (MX Resend скопировать).
+
+| Имя | После включения CDN |
+|-----|---------------------|
+| `@` | ANAME/alias на CDN (Yandex DNS) |
+| `www` | CNAME на CDN |
+| `origin` | A `89.111.165.160` |
 
 Подробнее: [доменные имена CDN](https://yandex.cloud/ru/docs/cdn/concepts/resource#hostnames).
 
@@ -130,7 +236,9 @@ curl -fsSI https://krimvk.ru/api/health
 ## Шаг 6 — `.env` на VPS
 
 ```env
+SITE_URL=https://krimvk.ru
 NEXTAUTH_URL=https://krimvk.ru
+CANONICAL_HOST=krimvk.ru
 ```
 
 После смены DNS:
@@ -172,11 +280,12 @@ CDN в Yandex Cloud платный (трафик + запросы). Для не�
 
 - [ ] `origin.krimvk.ru` → A → 89.111.165.160
 - [ ] CDN-ресурс, источник `origin.krimvk.ru`, Host `krimvk.ru`
-- [ ] Кэш только static, `/api` без кэша
-- [ ] CNAME www (и/или ANAME @) на CDN
-- [ ] Cloudflare выключен
-- [ ] UFW: 80/443 open (`ufw-open-origin.sh`)
-- [ ] Сайт без VPN, health 200
+- [ ] CDN: gzip-on, **без** slice, **без** fetch-compressed; кэш только static
+- [ ] nginx: **gzip выключен**; Next: `compress: false`; `pm2 restart`
+- [ ] `@` (krimvk.ru) на CDN; `www` CNAME на CDN; www → 308 apex
+- [ ] POST от поддержки; `emergency` POST на **krimvk.ru** → **400**
+- [ ] Cloudflare выключен; UFW open
+- [ ] Safari на **krimvk.ru**: стили и ЛК
 
 ---
 

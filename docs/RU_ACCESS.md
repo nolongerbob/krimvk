@@ -1,6 +1,6 @@
 # Доступ к сайту из РФ (без VPN)
 
-**Рекомендуется для production в РФ:** [YANDEX_CDN.md](./YANDEX_CDN.md) — CDN Yandex Cloud перед VPS (вместо Cloudflare).
+**Рекомендуется для production в РФ:** [YANDEX_PROTECTION.md](./YANDEX_PROTECTION.md) (DDoS, боты, WAF) + [CDN_SIMPLE.md](./CDN_SIMPLE.md) (сайт на VPS). Опционально static CDN — [YANDEX_STATIC_CDN.md](./YANDEX_STATIC_CDN.md).
 
 Ниже — **прямой IP** без CDN (быстрый откат).
 

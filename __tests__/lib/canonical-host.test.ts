@@ -32,4 +32,16 @@ describe('canonicalHostRedirect', () => {
     });
     expect(canonicalHostRedirect(req)).toBeNull();
   });
+
+  it('redirects www to apex when canonical is apex', () => {
+    process.env.NODE_ENV = 'production';
+    process.env.CANONICAL_HOST = 'krimvk.ru';
+
+    const req = new NextRequest('https://www.krimvk.ru/login?x=1', {
+      headers: { host: 'www.krimvk.ru' },
+    });
+    const res = canonicalHostRedirect(req);
+    expect(res?.status).toBe(308);
+    expect(res?.headers.get('location')).toBe('https://krimvk.ru/login?x=1');
+  });
 });

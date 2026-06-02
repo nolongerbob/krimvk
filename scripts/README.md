@@ -19,6 +19,7 @@
 | `backup-push-s3.mjs` | Off-site в Yandex S3 |
 | `setup-backup-cron.sh` | Установка cron |
 | `ufw-cloudflare-origin.sh` | Firewall только Cloudflare |
+| `ufw-yandex-sws-origin.sh` | Firewall 80/443 только Smart Web Security |
 | `setup-yandex-s3.sh` | Настройка Object Storage |
 | `test-s3-upload.sh` / `apply-s3-env.sh` | S3 диагностика |
 | `generate-deploy-ssh-key.sh` | Ключ для GitHub Actions |

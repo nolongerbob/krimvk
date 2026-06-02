@@ -147,6 +147,129 @@ pm2 restart krimvk --update-env
 
 Проверка: логин в ЛК, `/api/health`, нет циклов редиректа.
 
+### Чеклист: всё работает и что реально закрыто
+
+**Схема сейчас:** браузер → DNS `krimvk.ru` / `www` → **SWS** (`51.250.116.133`) → **HTTPS** origin `89.111.165.160:443` (SNI `krimvk.ru`) → nginx → Next.js.
+
+| Угроза | Закрыто? | Как |
+|--------|----------|-----|
+| Боты / L7 / WAF / капча на домене | ✅ | SWS профиль `krimvk-prod` |
+| POST, ЛК, API через домен | ✅ | Трафик на SWS, не на CDN |
+| Объёмная L3–L4 на IP VPS | ⚠️ частично | SWS не заменяет Qrator на `89.111.165.160` — см. уровень 2 |
+| Обход SWS по IP / `origin` в DNS | ⚠️ | Прямой заход на VPS возможен — UFW только с IP Yandex (опционально) |
+| Static CDN `cdn.*` | ❌ позже | [YANDEX_STATIC_CDN.md](./YANDEX_STATIC_CDN.md) |
+
+#### 1. DNS и SWS (2 мин)
+
+```bash
+dig +short krimvk.ru A www.krimvk.ru A
+# оба → 51.250.116.133 (IP прокси SWS)
+
+dig +short origin.krimvk.ru A
+# лучше пусто; если A → 89.111.165.160 — обход для ботов возможен
+```
+
+Консоль **Smart Web Security** → `krimvk.ru`:
+
+- Статус **Healthy**, цель `89.111.165.160:443`
+- **Подключение к целевому ресурсу:** **HTTPS**, SNI **`krimvk.ru`** (не HTTP на 443)
+- Профиль **`krimvk-prod`** подключён, логи включены
+
+#### 2. Сайт с интернета (curl)
+
+```bash
+curl -sI https://krimvk.ru/api/health
+# HTTP/2 200
+
+curl -sI https://www.krimvk.ru/
+# 301/308 на https://krimvk.ru/ (канонический хост)
+
+curl -s -o /dev/null -w "POST %{http_code}\n" -X POST "https://krimvk.ru/api/emergency" \
+  -H "Content-Type: application/json" -d '{}'
+# 400 (не 405/502 — POST доходит до приложения)
+
+curl -sI "https://krimvk.ru/.env"
+# 404 (middleware)
+```
+
+#### 3. В браузере (5 мин)
+
+- [ ] Главная, новости, статические страницы
+- [ ] **Вход** `/login` → дашборд `/dashboard` (не чёрный экран / `request-id`)
+- [ ] **Выход** и повторный вход
+- [ ] **Восстановление пароля** (письмо с `send.*` — MX не трогали)
+- [ ] Форма **аварийной заявки** `/emergency` (отправка)
+- [ ] В админке: **загрузка файла** (правило `allow-uploads`)
+- [ ] С телефона без VPN (РФ), при возможности Safari
+
+#### 4. VPS (SSH, раз в неделю или после деплоя)
+
+```bash
+pm2 status
+# krimvk online, ↺ не растёт
+
+curl -s -o /dev/null -w "%{http_code}\n" -H "Host: krimvk.ru" http://127.0.0.1:3000/api/health
+# 200
+
+sudo nginx -t
+grep -r real_ip /etc/nginx/conf.d/ /etc/nginx/sites-enabled/krimvk 2>/dev/null | head -5
+# set_real_ip_from 51.250.116.133; real_ip_header X-Forwarded-For;
+
+sudo ufw status
+sudo fail2ban-client status
+```
+
+Деплой только от пользователя **krimvk**: `./scripts/deploy-vps.sh` (не `sudo npm run build`).
+
+#### 5. SWS не режет людей (логи)
+
+Консоль → профиль → **логи** / Cloud Logging: смотреть **ALLOW** для обычных визитов, **CAPTCHA/DENY** — единично.
+
+Если жители жалуются на капчу или блок:
+
+1. Найти **request-id** с экрана → событие в логах SWS.  
+2. Ослабить точечно (ARL, Smart Protection), не отключать SWS целиком — [YANDEX_SWS_MAXIMUM.md](./YANDEX_SWS_MAXIMUM.md) §7.
+
+#### 6. Защита самого сервера (IP VPS), не только домена
+
+Удаление **`origin`** в REG.RU убирает подсказку в DNS, но IP **`89.111.165.160`** всё равно сканируют. Два слоя:
+
+| Мера | Что даёт |
+|------|----------|
+| **UFW: 80/443 только с SWS** | Прямой HTTP(S) на IP с интернета не доходит; сайт только через SWS |
+| **DDoS Protection (Qrator)** | Объёмный L3–L4 на IP — см. уровень 2 выше |
+
+**Перед UFW:** SWS стабилен (`curl` через `51.250.116.133` → 200), открыта запасная SSH-сессия.
+
+```bash
+cd /var/www/krimvk
+# опционально: только ваш IP для SSH и прямого 443
+# sudo ADMIN_IP=ВАШ_ДОМАШНИЙ_IP bash scripts/ufw-yandex-sws-origin.sh
+sudo bash scripts/ufw-yandex-sws-origin.sh
+```
+
+Подсети в скрипте — из [списка IP Yandex Cloud](https://yandex.cloud/ru/docs/security/ip-list) (Smart Web Security). Если после обновления у Yandex сайт упал — сверьте диапазоны в доке и в скрипте.
+
+**Certbot:** HTTP-01 на :80 с интернета перестанет работать → `certbot certonly --dns-reg.ru ...` или временно откат UFW на обновление сертификата.
+
+**Проверка:**
+
+```bash
+# с Mac — сайт жив
+curl -fsSI https://krimvk.ru/api/health
+
+# с Mac — прямой IP (должен отказать / таймаут)
+curl -m 5 -sSI https://89.111.165.160/ -k --resolve krimvk.ru:443:89.111.165.160 || echo "blocked OK"
+```
+
+nginx `set_real_ip_from` — те же подсети + `51.250.116.133/32` (`nginx/yandex-sws-real-ip.conf.example`).
+
+#### 7. Что ещё не «покрыто» (нормально)
+
+- **Qrator / DDoS Protection** на сам IP — отдельный тикет (уровень 2).  
+- **CDN** только для `/_next/static` — отдельный этап.  
+- **100%** скрытие IP — без UFW + Qrator не достижимо; сканеры всё равно «стучатся», но не попадают в приложение.
+
 ### Шаг 5 — POST
 
 Трафик идёт **на SWS → VPS**, не на CDN Yandex с запретом POST. ЛК должен работать. Проверка:

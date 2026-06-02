@@ -1,5 +1,9 @@
 import { prisma } from '@/lib/prisma';
 import { isPrivateS3Key } from '@/lib/s3-file-access';
+import {
+  isLegacyMessageImageKey,
+  isUserOwnedMessageImageKey,
+} from '@/lib/message-image-access';
 
 /**
  * Доступ к приватным файлам в S3 (после входа).
@@ -31,14 +35,22 @@ export async function canAccessPrivateS3Key(
   }
 
   if (key.startsWith('messages/')) {
-    const msg = await prisma.message.findFirst({
-      where: {
-        imageUrl: { contains: key },
-        question: { userId },
-      },
-      select: { id: true },
-    });
-    return Boolean(msg);
+    if (isUserOwnedMessageImageKey(key, userId)) {
+      return true;
+    }
+    // Старые ключи без userId в пути — только если уже привязаны к сообщению пользователя
+    if (isLegacyMessageImageKey(key)) {
+      const msg = await prisma.message.findFirst({
+        where: {
+          imageUrl: { contains: key },
+          question: { userId },
+          isFromAdmin: false,
+        },
+        select: { id: true },
+      });
+      return Boolean(msg);
+    }
+    return false;
   }
 
   if (key.startsWith('meters/')) {

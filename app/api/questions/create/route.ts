@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/prisma";
+import { assertMessageImageUrlOwnedByUser } from "@/lib/message-image-access";
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,6 +20,13 @@ export async function POST(request: NextRequest) {
     
     if (!hasText && !hasImage) {
       return NextResponse.json({ error: "Сообщение не может быть пустым" }, { status: 400 });
+    }
+
+    if (hasImage) {
+      const imageCheck = assertMessageImageUrlOwnedByUser(imageUrl as string, session.user.id);
+      if (!imageCheck.ok) {
+        return NextResponse.json({ error: imageCheck.error }, { status: 400 });
+      }
     }
 
     // Проверяем, существует ли пользователь

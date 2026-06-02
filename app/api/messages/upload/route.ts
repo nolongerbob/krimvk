@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/prisma";
 import { storage } from "@/lib/storage";
+import { buildMessageImageS3Key } from "@/lib/message-image-access";
 
 export async function POST(request: NextRequest) {
   try {
@@ -49,7 +50,7 @@ export async function POST(request: NextRequest) {
     const timestamp = Date.now();
     const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
     const fileName = `${timestamp}_${originalName}`;
-    const filePath = `messages/${fileName}`;
+    const filePath = buildMessageImageS3Key(session.user.id, fileName);
 
     // Загружаем файл через абстракцию хранилища
     const result = await storage.upload(file, filePath, {

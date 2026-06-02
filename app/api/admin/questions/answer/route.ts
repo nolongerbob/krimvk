@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-config";
 import { requireAdmin } from "@/lib/require-admin";
 import { prisma } from "@/lib/prisma";
+import { assertMessageImageUrlOwnedByUser } from "@/lib/message-image-access";
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,6 +18,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Сообщение не может быть пустым" }, { status: 400 });
     }
 
+    if (hasImage) {
+      const imageCheck = assertMessageImageUrlOwnedByUser(
+        imageUrl as string,
+        auth.admin.userId
+      );
+      if (!imageCheck.ok) {
+        return NextResponse.json({ error: imageCheck.error }, { status: 400 });
+      }
+    }
+
     // Создаем сообщение от админа
     const message = await prisma.message.create({
       data: {
@@ -26,7 +35,7 @@ export async function POST(request: NextRequest) {
         text: hasText ? (text as string).trim() : "",
         imageUrl: hasImage ? (imageUrl as string) : null,
         isFromAdmin: true,
-        authorId: session.user.id,
+        authorId: auth.admin.userId,
       },
     });
 

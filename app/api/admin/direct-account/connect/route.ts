@@ -50,50 +50,11 @@ async function handleConnect(
   });
 }
 
-export async function GET(request: NextRequest) {
-  try {
-    const auth = await requireAdmin();
-    if (!auth.ok) return auth.response;
-
-    const { searchParams } = new URL(request.url);
-    const accountNumber = searchParams.get("accountNumber");
-    const password = searchParams.get("password");
-    const region = searchParams.get("region");
-
-    return await handleConnect(auth.admin.userId, accountNumber, password, region);
-  } catch (error: any) {
-    console.error("Error connecting to direct account:", error);
-
-    // Обрабатываем специфичные ошибки 1С
-    if (error.message?.includes("AUTH_ERROR")) {
-      return NextResponse.json(
-        { error: "Неверный номер лицевого счета или пароль" },
-        { status: 401 }
-      );
-    }
-
-    if (error.message?.includes("TIMEOUT")) {
-      return NextResponse.json(
-        { error: "Сервер 1С не отвечает. Проверьте доступность сервера или используйте VPN." },
-        { status: 504 }
-      );
-    }
-
-    if (error.message?.includes("CONNECTION_REFUSED") || error.message?.includes("NETWORK_ERROR")) {
-      return NextResponse.json(
-        { error: "Не удалось подключиться к серверу 1С. Возможно, требуется VPN или сервер недоступен." },
-        { status: 503 }
-      );
-    }
-
-    return NextResponse.json(
-      {
-        error: "Ошибка при подключении к лицевому счету",
-        details: process.env.NODE_ENV === "development" ? error?.message : undefined,
-      },
-      { status: 500 }
-    );
-  }
+export async function GET() {
+  return NextResponse.json(
+    { error: "Используйте POST с JSON: accountNumber, password, region" },
+    { status: 405 }
+  );
 }
 
 export async function POST(request: NextRequest) {

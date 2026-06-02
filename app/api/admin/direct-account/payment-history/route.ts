@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-config";
 import { requireAdmin } from "@/lib/require-admin";
-import { prisma } from "@/lib/prisma";
 import { getPaymentHistory } from "@/lib/1c-api";
-import { getDirectAccountSession } from "@/lib/direct-account-session";
+import { directAccountCredentialsFromToken } from "@/lib/direct-account-route";
 
 export const dynamic = 'force-dynamic';
 
@@ -14,34 +11,25 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const auth = await requireAdmin();
-    if (!auth.ok) return auth.response
+    if (!auth.ok) return auth.response;
 
     const { searchParams } = new URL(request.url);
     const token = searchParams.get("token");
-    let accountNumber = searchParams.get("accountNumber");
-    let password = searchParams.get("password");
-    let region = searchParams.get("region");
     const dateFrom = searchParams.get("dateFrom");
     const dateTo = searchParams.get("dateTo");
 
-    if (token) {
-      const sessionCtx = getDirectAccountSession(token, session.user.id);
-      if (!sessionCtx) {
-        return NextResponse.json({ error: "Сессия прямого доступа истекла. Подключитесь заново." }, { status: 401 });
-      }
-      accountNumber = sessionCtx.accountNumber;
-      password = sessionCtx.password;
-      region = sessionCtx.region;
-    }
+    const creds = directAccountCredentialsFromToken(token, auth.admin);
+    if (!creds.ok) return creds.response;
 
-    if (!accountNumber || !password || !region || !dateFrom || !dateTo) {
+    const { accountNumber, password, region } = creds.credentials;
+
+    if (!dateFrom || !dateTo) {
       return NextResponse.json(
-        { error: "Отсутствуют необходимые параметры" },
+        { error: "Укажите dateFrom и dateTo" },
         { status: 400 }
       );
     }
 
-    // Формируем даты
     const fromDate = new Date(dateFrom);
     const toDate = new Date(dateTo);
 
@@ -52,7 +40,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Запрашиваем историю платежей из 1С
     const data = await getPaymentHistory(
       accountNumber,
       password,

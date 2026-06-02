@@ -16,12 +16,12 @@
 | 8 | IDOR: GET файлов заявки только для админа | `requireAdmin()` в `admin/applications/[id]/files` GET |
 | 9 | IDOR: чужие фото в чате | `messages/{userId}/`, `lib/message-image-access.ts`, проверка при create |
 | 10 | JWT `ADMIN` на приватных файлах | `canAccessPrivateS3Key` + `isAdminUser()` из БД |
+| 11 | Пароли 1С в URL + `session` в direct-account | token-only API, POST connect, `resolve-direct-account-credentials` |
 
 ## Открыто (аудит 2026-06)
 
 | # | Тема | Где |
 |---|------|-----|
-| — | Пароли 1С в query (direct-account) | `app/api/admin/direct-account/*` |
 | — | Allowlist `region` для 1С | `lib/1c-api.ts` |
 
 ## Операционно (на VPS)

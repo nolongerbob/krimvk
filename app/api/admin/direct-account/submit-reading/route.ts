@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-config";
 import { requireAdmin } from "@/lib/require-admin";
-import { prisma } from "@/lib/prisma";
 import { submitMeterReading } from "@/lib/1c-api";
-import { getDirectAccountSession } from "@/lib/direct-account-session";
+import { directAccountCredentialsFromToken } from "@/lib/direct-account-route";
 
 export const dynamic = 'force-dynamic';
 
@@ -14,30 +11,13 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const auth = await requireAdmin();
-    if (!auth.ok) return auth.response
+    if (!auth.ok) return auth.response;
 
-    const { searchParams } = new URL(request.url);
-    const token = searchParams.get("token");
-    let accountNumber = searchParams.get("accountNumber");
-    let password = searchParams.get("password");
-    let region = searchParams.get("region");
+    const token = new URL(request.url).searchParams.get("token");
+    const creds = directAccountCredentialsFromToken(token, auth.admin);
+    if (!creds.ok) return creds.response;
 
-    if (token) {
-      const sessionCtx = getDirectAccountSession(token, session.user.id);
-      if (!sessionCtx) {
-        return NextResponse.json({ error: "Сессия прямого доступа истекла. Подключитесь заново." }, { status: 401 });
-      }
-      accountNumber = sessionCtx.accountNumber;
-      password = sessionCtx.password;
-      region = sessionCtx.region;
-    }
-
-    if (!accountNumber || !password || !region) {
-      return NextResponse.json(
-        { error: "Отсутствуют необходимые параметры" },
-        { status: 400 }
-      );
-    }
+    const { accountNumber, password, region } = creds.credentials;
 
     const body = await request.json();
     const { submissions } = body;

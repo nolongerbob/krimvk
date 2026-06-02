@@ -74,44 +74,28 @@ export default function DirectAccountPage() {
   const openReceipt = () => {
     if (!sessionToken) return;
     // Открываем квитанцию в новом окне с параметрами лицевого счета
-    const params = new URLSearchParams({
-      direct: "true",
-      accountNumber,
-      token: sessionToken,
-    });
+    const params = new URLSearchParams({ token: sessionToken });
     window.open(`/admin/direct-account/receipt?${params.toString()}`, "_blank");
   };
 
   const openMeters = () => {
     if (!sessionToken) return;
     // Открываем передачу показаний в новом окне
-    const params = new URLSearchParams({
-      direct: "true",
-      accountNumber,
-      token: sessionToken,
-    });
+    const params = new URLSearchParams({ token: sessionToken });
     window.open(`/admin/direct-account/meters?${params.toString()}`, "_blank");
   };
 
   const openPaymentHistory = () => {
     if (!sessionToken) return;
     // Открываем историю платежей в новом окне
-    const params = new URLSearchParams({
-      direct: "true",
-      accountNumber,
-      token: sessionToken,
-    });
+    const params = new URLSearchParams({ token: sessionToken });
     window.open(`/admin/direct-account/payment-history?${params.toString()}`, "_blank");
   };
 
   const openMeterHistory = () => {
     if (!sessionToken) return;
     // Открываем историю показаний в новом окне
-    const params = new URLSearchParams({
-      direct: "true",
-      accountNumber,
-      token: sessionToken,
-    });
+    const params = new URLSearchParams({ token: sessionToken });
     window.open(`/admin/direct-account/meter-history?${params.toString()}`, "_blank");
   };
 

@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-config";
 import { requireAdmin } from "@/lib/require-admin";
-import { prisma } from "@/lib/prisma";
 import { getMeteringDeviceHistory } from "@/lib/1c-api";
-import { getDirectAccountSession } from "@/lib/direct-account-session";
+import { directAccountCredentialsFromToken } from "@/lib/direct-account-route";
 
 export const dynamic = 'force-dynamic';
 
@@ -14,34 +11,18 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const auth = await requireAdmin();
-    if (!auth.ok) return auth.response
+    if (!auth.ok) return auth.response;
 
     const { searchParams } = new URL(request.url);
     const token = searchParams.get("token");
-    let accountNumber = searchParams.get("accountNumber");
-    let password = searchParams.get("password");
-    let region = searchParams.get("region");
     const dateFrom = searchParams.get("dateFrom");
     const dateTo = searchParams.get("dateTo");
 
-    if (token) {
-      const sessionCtx = getDirectAccountSession(token, session.user.id);
-      if (!sessionCtx) {
-        return NextResponse.json({ error: "Сессия прямого доступа истекла. Подключитесь заново." }, { status: 401 });
-      }
-      accountNumber = sessionCtx.accountNumber;
-      password = sessionCtx.password;
-      region = sessionCtx.region;
-    }
+    const creds = directAccountCredentialsFromToken(token, auth.admin);
+    if (!creds.ok) return creds.response;
 
-    if (!accountNumber || !password || !region) {
-      return NextResponse.json(
-        { error: "Отсутствуют необходимые параметры" },
-        { status: 400 }
-      );
-    }
+    const { accountNumber, password, region } = creds.credentials;
 
-    // Если даты не указаны, используем последние 12 месяцев
     let finalDateFrom = dateFrom;
     let finalDateTo = dateTo;
 
@@ -49,12 +30,10 @@ export async function GET(request: NextRequest) {
       const today = new Date();
       const twelveMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 11, 1);
 
-      // Формат даты: ДД.ММ.ГГГГ
       finalDateFrom = `${String(twelveMonthsAgo.getDate()).padStart(2, '0')}.${String(twelveMonthsAgo.getMonth() + 1).padStart(2, '0')}.${twelveMonthsAgo.getFullYear()}`;
       finalDateTo = `${String(today.getDate()).padStart(2, '0')}.${String(today.getMonth() + 1).padStart(2, '0')}.${today.getFullYear()}`;
     }
 
-    // Запрашиваем историю показаний из 1С
     const history = await getMeteringDeviceHistory(
       accountNumber,
       password,
@@ -63,7 +42,6 @@ export async function GET(request: NextRequest) {
       finalDateTo
     );
 
-    // Логируем структуру ответа для отладки
     if (process.env.NODE_ENV === 'development') {
       console.log('[admin meter-history API] Raw history response:', {
         type: typeof history,

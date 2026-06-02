@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/require-admin";
 import { get1CUserData } from "@/lib/1c-api";
 import { createDirectAccountSession } from "@/lib/direct-account-session";
+import { assertValid1cRegion, Invalid1cRegionError } from "@/lib/1c-regions";
 
 export const dynamic = 'force-dynamic';
 
@@ -28,20 +29,21 @@ async function handleConnect(
     );
   }
 
-  if (!region) {
-    return NextResponse.json(
-      { error: "Не указан регион" },
-      { status: 400 }
-    );
+  let regionSafe: string;
+  try {
+    regionSafe = assertValid1cRegion(region);
+  } catch (e) {
+    const msg = e instanceof Invalid1cRegionError ? e.message : "Недопустимый регион";
+    return NextResponse.json({ error: msg }, { status: 400 });
   }
 
   const data = await get1CUserData(
     accountNumber,
     password,
-    region
+    regionSafe
   );
 
-  const token = createDirectAccountSession(sessionUserId, accountNumber, password, region);
+  const token = createDirectAccountSession(sessionUserId, accountNumber, password, regionSafe);
 
   return NextResponse.json({
     success: true,

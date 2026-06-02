@@ -60,9 +60,18 @@ export function jsonFrom1cError(error: unknown): NextResponse {
     );
   }
 
-  if (message.includes('Регион обязателен')) {
+  if (
+    message.includes('Регион обязателен') ||
+    message.includes('Invalid1cRegionError') ||
+    message.includes('Недопустимый формат региона') ||
+    message.includes('не поддерживается')
+  ) {
     return NextResponse.json(
-      { error: 'Не указан регион для лицевого счёта (поле region).', code: '1C_REGION' },
+      {
+        error:
+          'Указан недопустимый регион для 1С. Выберите район из списка (prog, saki, evpatoria, chernomor).',
+        code: '1C_REGION',
+      },
       { status: 400 }
     );
   }

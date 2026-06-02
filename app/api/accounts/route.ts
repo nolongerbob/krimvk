@@ -157,6 +157,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const { assertValid1cRegion, Invalid1cRegionError } = await import("@/lib/1c-regions");
+    let regionSafe: string;
+    try {
+      regionSafe = assertValid1cRegion(region);
+    } catch (e) {
+      const msg = e instanceof Invalid1cRegionError ? e.message : "Недопустимый район";
+      return NextResponse.json({ error: msg }, { status: 400 });
+    }
+
     // Проверяем, не существует ли уже такой лицевой счет у пользователя
     const existingAccount = await prisma.userAccount.findFirst({
       where: {
@@ -180,7 +189,7 @@ export async function POST(request: NextRequest) {
       data = await get1CUserData(
         accountNumber.trim(),
         password1c.trim(),
-        region.trim()
+        regionSafe
       );
     } catch (error: any) {
       console.error("Error fetching data from 1C:", error);
@@ -242,7 +251,7 @@ export async function POST(request: NextRequest) {
         name: name,
         phone: phone,
         password1c: encryptPassword1c(password1c.trim()),
-        region: region.trim(),
+        region: regionSafe,
       },
     });
 

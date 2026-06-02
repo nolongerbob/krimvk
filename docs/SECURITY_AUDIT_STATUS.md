@@ -17,12 +17,13 @@
 | 9 | IDOR: чужие фото в чате | `messages/{userId}/`, `lib/message-image-access.ts`, проверка при create |
 | 10 | JWT `ADMIN` на приватных файлах | `canAccessPrivateS3Key` + `isAdminUser()` из БД |
 | 11 | Пароли 1С в URL + `session` в direct-account | token-only API, POST connect, `resolve-direct-account-credentials` |
+| 12 | Allowlist `region` для 1С (path injection) | `lib/1c-regions.ts`, `getRegion()` в `lib/1c-api.ts` |
 
 ## Открыто (аудит 2026-06)
 
 | # | Тема | Где |
 |---|------|-----|
-| — | Allowlist `region` для 1С | `lib/1c-api.ts` |
+| — | Telegram debug/DELETE без auth | `app/api/telegram/emergencies` |
 
 ## Операционно (на VPS)
 

@@ -3,6 +3,8 @@
  * Базовый URL: ONE_C_API_BASE_URL в .env (на prod fallback как до выноса в env).
  */
 
+import { assertValid1cRegion } from '@/lib/1c-regions';
+
 /** Прежний захардкоженный адрес — fallback, если PM2 не подхватил .env */
 const LEGACY_1C_BASE_URL = 'http://46.172.223.34';
 
@@ -71,13 +73,10 @@ export function formatDateForHistory(date: Date): string {
 }
 
 /**
- * Получить регион для API (обязательный параметр)
+ * Получить регион для API (allowlist, без ../ и лишних сегментов пути)
  */
 export function getRegion(region?: string | null): string {
-  if (!region) {
-    throw new Error("Регион обязателен для работы с 1С API");
-  }
-  return region;
+  return assertValid1cRegion(region);
 }
 
 /**
@@ -174,7 +173,7 @@ export async function submitMeterReading(
   // - показание просто как число в строке
   const query =
     `WaLsCode=${encodeURIComponent(accountNumber.trim())}` +
-    `&WaPass=${password}` +
+    `&WaPass=${encodeURIComponent(password)}` +
     `&WaNumberOfDevice=${deviceNumber.replace(/\s/g, "%20")}` +
     `&WaReading=${reading.toString()}`;
 

@@ -1,7 +1,10 @@
 # Защита krimvk.ru: DDoS, боты, WAF (Yandex + VPS)
 
-Схема: **DNS → (опционально) Smart Web Security → VPS nginx → Next.js**.  
-Сайт на **A → VPS** ([CDN_SIMPLE.md](./CDN_SIMPLE.md)), POST не через CDN.
+> **SWS отключён (экономия):** DNS снова **A → VPS** `89.111.165.160` — [DISABLE_SWS.md](./DISABLE_SWS.md).  
+> Ниже — справка, если включите SWS снова.
+
+Схема без SWS: **DNS → VPS nginx → Next.js** ([CDN_SIMPLE.md](./CDN_SIMPLE.md)).  
+С SWS: **DNS → прокси Yandex → VPS**.
 
 ---
 

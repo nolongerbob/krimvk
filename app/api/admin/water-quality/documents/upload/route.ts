@@ -4,6 +4,10 @@ import { authOptions } from "@/lib/auth-config";
 import { requireAdmin } from "@/lib/require-admin";
 import { prisma } from "@/lib/prisma";
 import { storage } from "@/lib/storage";
+import {
+  validateWaterQualityFile,
+  WATER_QUALITY_MAX_BYTES,
+} from "@/lib/security/validate-upload";
 
 export const maxDuration = 300; // Увеличиваем время для очень больших файлов (5 минут)
 
@@ -47,7 +51,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // НЕТ ОГРАНИЧЕНИЯ ПО ВЕСУ - убираем проверку размера файла
+    if (file.size > WATER_QUALITY_MAX_BYTES) {
+      return NextResponse.json(
+        { error: "Размер файла не должен превышать 200MB" },
+        { status: 400 }
+      );
+    }
+
+    const typeError = await validateWaterQualityFile(file);
+    if (typeError) {
+      return NextResponse.json({ error: typeError }, { status: 400 });
+    }
 
     // Генерируем уникальное имя файла
     const timestamp = Date.now();

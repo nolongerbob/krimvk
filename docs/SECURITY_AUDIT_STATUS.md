@@ -26,6 +26,9 @@
 | 18 | Спам чата / поиск / OCR / PDF | `http-guard.ts` лимиты |
 | 19 | Перебор email при регистрации | `auth/register` — ответ как у «успеха» |
 | 20 | Счётчики: фото + analyze-image | `validate-image-upload` на meters API |
+| 21 | Публичные файлы: inline HTML/SVG | `lib/content-disposition.ts`, `serve-s3-file.ts` |
+| 22 | Water-quality upload без типа/лимита | `validate-water-quality`, max 200MB |
+| 23 | DOMPurify в devDependencies | перенос в `dependencies` + overrides npm audit |
 
 ## Открыто (аудит 2026-06)
 
@@ -35,11 +38,11 @@
 
 ## Операционно (на VPS)
 
-- [ ] `PASSWORD1C_ENCRYPTION_KEY` + `migrate-encrypt-password1c.ts`
-- [ ] Деплой `main`, smoke ЛК + админка
-- [ ] `node scripts/audit-s3-private-prefixes.mjs` (старые public-read в S3, без aws CLI)
-- [ ] `./scripts/audit-public-urls.sh`
-- [ ] `sudo bash scripts/harden-vps.sh` (если не делали)
+- [x] `PASSWORD1C_ENCRYPTION_KEY` + миграция `password1c` (сделано на проде)
+- [ ] Деплой `main` после каждого security-коммита + smoke ЛК/админка
+- [ ] `npm run audit:s3-private` — периодически, если меняли ACL в S3
+- [ ] `npm run audit:public-urls` — нет ли старых публичных URL в коде/БД
+- [x] `harden-vps.sh` (уже применялся)
 
 ## По желанию
 

@@ -67,3 +67,11 @@ export async function validateDisclosureFile(file: File): Promise<string | null>
   }
   return null;
 }
+
+/** Отчёты качества воды — те же офисные форматы, что раскрытие информации. */
+export async function validateWaterQualityFile(file: File): Promise<string | null> {
+  return validateDisclosureFile(file);
+}
+
+/** Защита от забивания диска (админ может грузить большие PDF). */
+export const WATER_QUALITY_MAX_BYTES = 200 * 1024 * 1024;

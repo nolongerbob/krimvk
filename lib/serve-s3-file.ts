@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { safeContentDisposition } from '@/lib/content-disposition';
 import { isAllowedPublicS3Key } from '@/lib/s3-file-access';
 import { getS3Object } from '@/lib/s3-server';
 
@@ -27,13 +28,15 @@ export async function serveS3File(
 
     const bytes = await result.Body.transformToByteArray();
     const fileName = key.split('/').pop() || 'file';
+    const contentType = result.ContentType || 'application/octet-stream';
 
     return new NextResponse(bytes, {
       status: 200,
       headers: {
-        'Content-Type': result.ContentType || 'application/octet-stream',
+        'Content-Type': contentType,
         'Content-Length': String(bytes.byteLength),
-        'Content-Disposition': `inline; filename="${fileName.replace(/"/g, '')}"`,
+        'Content-Disposition': safeContentDisposition(contentType, fileName),
+        'X-Content-Type-Options': 'nosniff',
         'Cache-Control':
           cache === 'private'
             ? 'private, no-store'

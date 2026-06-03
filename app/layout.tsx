@@ -5,6 +5,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Providers } from "./providers";
 import { BVIPanel } from "@/components/BVIPanel";
 import { CookieConsentBanner } from "@/components/CookieConsentBanner";
+import { onest } from "@/lib/fonts";
 
 export const metadata: Metadata = {
   title: "КрымВК - Водоканал Крыма",
@@ -27,7 +28,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ru">
+    <html lang="ru" className={onest.variable}>
       <head>
         <link href="/bvi/css/bvi.min.css" rel="stylesheet" />
         <link rel="icon" href="/images/logo.png" type="image/png" sizes="32x32" />
@@ -35,7 +36,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/images/logo.png" sizes="180x180" />
         <link rel="shortcut icon" href="/images/logo.png" type="image/png" />
       </head>
-      <body className="font-sans antialiased">
+      <body className={`${onest.className} font-sans antialiased`}>
         <Providers>
           <div className="flex min-h-screen flex-col">
             <Header />

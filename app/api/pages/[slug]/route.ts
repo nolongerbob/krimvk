@@ -13,7 +13,7 @@ export async function GET(
         isActive: true, // Только активные страницы
       },
       include: {
-        author: { select: { name: true, email: true } },
+        author: { select: { name: true } },
         parent: { select: { id: true, title: true, slug: true } },
       },
     });

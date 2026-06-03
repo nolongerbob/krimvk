@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-config";
+import { getAppSession } from "@/lib/get-app-session";
 import { prisma } from "@/lib/prisma";
 
 // GET - получить счетчики по лицевому счету
@@ -9,7 +8,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getAppSession(request);
 
     if (!session) {
       return NextResponse.json({ error: "Не авторизован" }, { status: 401 });

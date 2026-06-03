@@ -63,14 +63,14 @@ const nextConfig = {
   // Сжатие только на CDN (gzip-on) или nginx. Двойное gzip (Next + CDN) ломает Safari на HTTP/2.
   compress: false,
   // Оптимизация production сборки
-  swcMinify: true,
   // Отключаем ESLint во время сборки для Vercel
   eslint: {
     ignoreDuringBuilds: true,
   },
   // Отключаем проверку типов во время сборки для Vercel (если есть проблемы)
   typescript: {
-    ignoreBuildErrors: true, // Временно включаем для деплоя, потом можно вернуть false
+    // Next 15: async route/page params — миграция по файлам на develop
+    ignoreBuildErrors: true,
   },
   // Увеличиваем лимит размера тела запроса для больших файлов
   experimental: {

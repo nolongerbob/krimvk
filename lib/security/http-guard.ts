@@ -58,7 +58,8 @@ export function applyRateLimit(req: NextRequest): NextResponse | null {
     path.startsWith('/api/auth/register') ||
     path.startsWith('/api/auth/forgot-password') ||
     path.startsWith('/api/auth/reset-password') ||
-    path === '/api/auth/auto-login';
+    path === '/api/auth/auto-login' ||
+    path === '/api/auth/mobile-login';
 
   if (strictAuth) {
     if (!rateLimit(`strict:${keyBase}`, 10, 60_000)) {

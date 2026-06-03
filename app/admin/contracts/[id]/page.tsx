@@ -11,8 +11,9 @@ export const dynamic = 'force-dynamic';
 export default async function ContractViewPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = await params;
   const session = await getSession();
 
   if (!session) {
@@ -40,7 +41,7 @@ export default async function ContractViewPage({
   try {
     const rawContract = await withRetry(() =>
       prisma.contract.findUnique({
-        where: { id: params.id },
+        where: { id },
         include: {
           documents: {
             orderBy: { uploadedAt: "desc" },

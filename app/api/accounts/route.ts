@@ -1,134 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-config";
+import { withApiRoute } from "@/lib/api-route";
+import { getAppSession } from "@/lib/get-app-session";
+import { formatUserAccountsForApi } from "@/lib/format-user-accounts";
 import { prisma } from "@/lib/prisma";
 import { encryptPassword1c } from "@/lib/password1c-crypto";
 
-// Force dynamic rendering - this route uses headers() via getServerSession
 export const dynamic = 'force-dynamic';
 
-// GET - получить все лицевые счета пользователя
-export async function GET(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-
-    if (!session || !session.user || !session.user.id) {
-      console.error("No session or user ID", {
-        hasSession: !!session,
-        hasUser: !!session?.user,
-        hasUserId: !!session?.user?.id,
-        sessionKeys: session ? Object.keys(session) : [],
-        userKeys: session?.user ? Object.keys(session.user) : [],
-      });
-      return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
-    }
-
-    const userId = session.user.id;
-    console.log("Fetching accounts for user:", userId);
-    
-    let accounts;
-    try {
-      accounts = await prisma.userAccount.findMany({
-        where: { 
-          userId: userId,
-          isActive: true,
-        },
-        include: {
-          meters: {
-            include: {
-              readings: {
-                orderBy: { readingDate: "desc" },
-                take: 1,
-              },
-            },
-          },
-        },
-        orderBy: { createdAt: "desc" },
-      });
-      console.log("Found accounts:", accounts.length);
-    } catch (dbError: any) {
-      console.error("Database error:", dbError);
-      console.error("Error code:", dbError?.code);
-      console.error("Error meta:", dbError?.meta);
-      throw dbError;
-    }
-
-    // Простая сериализация
-    const formattedAccounts = accounts.map((account) => {
-      try {
-        const meters = (account.meters || []).map((meter) => {
-          const readings = (meter.readings || []).map((reading) => {
-            // Безопасная конвертация даты
-            let readingDateStr: string;
-            try {
-              if (!reading.readingDate) {
-                readingDateStr = new Date().toISOString();
-              } else if (reading.readingDate instanceof Date) {
-                readingDateStr = reading.readingDate.toISOString();
-              } else {
-                readingDateStr = new Date(reading.readingDate).toISOString();
-              }
-            } catch (e) {
-              console.error('Error converting date:', reading.readingDate, e);
-              readingDateStr = new Date().toISOString();
-            }
-
-            return {
-              value: Number(reading.value) || 0,
-              readingDate: readingDateStr,
-            };
-          });
-
-          return {
-            id: String(meter.id),
-            serialNumber: String(meter.serialNumber || ''),
-            type: String(meter.type || ''),
-            address: String(meter.address || ''),
-            lastReading: meter.lastReading !== null && meter.lastReading !== undefined ? Number(meter.lastReading) : null,
-            readings,
-          };
-        });
-
-        return {
-          id: String(account.id),
-          accountNumber: String(account.accountNumber || ''),
-          address: String(account.address || ''),
-          name: account.name ? String(account.name) : null,
-          phone: account.phone ? String(account.phone) : null,
-          meters,
-        };
-      } catch (err) {
-        console.error('Error formatting account:', account.id, err);
-        return null;
-      }
-    }).filter((acc): acc is NonNullable<typeof acc> => acc !== null);
-
-    console.log("Formatted accounts count:", formattedAccounts.length);
-    
-    return NextResponse.json({ accounts: formattedAccounts });
-  } catch (error: any) {
-    console.error("Error fetching accounts:", error);
-    console.error("Error stack:", error?.stack);
-    console.error("Error details:", {
-      message: error?.message,
-      code: error?.code,
-      meta: error?.meta,
-    });
-    return NextResponse.json(
-      { 
-        error: "Ошибка при загрузке лицевых счетов",
-        details: process.env.NODE_ENV === 'development' ? error?.message : undefined,
-        stack: process.env.NODE_ENV === 'development' ? error?.stack : undefined,
-      },
-      { status: 500 }
-    );
+async function getAccounts(request: NextRequest) {
+  const session = await getAppSession(request);
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
   }
+
+  const accounts = await prisma.userAccount.findMany({
+    where: { userId: session.user.id, isActive: true },
+    include: {
+      meters: {
+        include: {
+          readings: { orderBy: { readingDate: "desc" }, take: 1 },
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return NextResponse.json({ accounts: formatUserAccountsForApi(accounts) });
 }
+
+export const GET = withApiRoute(getAccounts, "GET /api/accounts");
 
 // POST - добавить новый лицевой счет
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getAppSession(request);
 
     if (!session) {
       return NextResponse.json({ error: "Не авторизован" }, { status: 401 });

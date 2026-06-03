@@ -1,30 +1,16 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-config";
-import { prisma } from "@/lib/prisma";
+import { NextRequest, NextResponse } from 'next/server';
+import { withApiRoute } from '@/lib/api-route';
+import { getAppSession } from '@/lib/get-app-session';
+import { prisma } from '@/lib/prisma';
 
-// Force dynamic rendering - this route uses headers() via getServerSession
 export const dynamic = 'force-dynamic';
 
-/**
- * GET - получить данные профиля пользователя
- */
-export async function GET(request: NextRequest) {
+async function getProfile(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getAppSession(request);
 
-    // Логируем для отладки
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[profile] Session check:', {
-        hasSession: !!session,
-        hasUser: !!session?.user,
-        userId: session?.user?.id,
-        email: session?.user?.email,
-      });
-    }
-
-    if (!session || !session.user || !session.user.id) {
-      return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
     }
 
     const user = await prisma.user.findUnique({
@@ -41,35 +27,33 @@ export async function GET(request: NextRequest) {
     });
 
     if (!user) {
-      return NextResponse.json({ error: "Пользователь не найден" }, { status: 404 });
+      return NextResponse.json({ error: 'Пользователь не найден' }, { status: 404 });
     }
 
     return NextResponse.json({ user });
   } catch (error) {
-    if (process.env.NODE_ENV === "development") {
-      console.error("Error fetching user profile:", error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error fetching user profile:', error);
     }
     return NextResponse.json(
-      { error: "Ошибка при загрузке профиля" },
+      { error: 'Ошибка при загрузке профиля' },
       { status: 500 }
     );
   }
 }
 
-/**
- * PUT - обновить данные профиля пользователя
- */
+export const GET = withApiRoute(getProfile, 'GET /api/user/profile');
+
 export async function PUT(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getAppSession(request);
 
-    if (!session || !session.user || !session.user.id) {
-      return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
     }
 
     const { name, phone } = await request.json();
 
-    // Обновляем только разрешенные поля (email нельзя менять)
     const updatedUser = await prisma.user.update({
       where: { id: session.user.id },
       data: {
@@ -90,11 +74,11 @@ export async function PUT(request: NextRequest) {
       user: updatedUser,
     });
   } catch (error) {
-    if (process.env.NODE_ENV === "development") {
-      console.error("Error updating user profile:", error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error updating user profile:', error);
     }
     return NextResponse.json(
-      { error: "Ошибка при обновлении профиля" },
+      { error: 'Ошибка при обновлении профиля' },
       { status: 500 }
     );
   }

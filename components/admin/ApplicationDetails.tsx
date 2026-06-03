@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { User, Phone, MapPin, FileText, Building, Settings, Calendar, Download, Eye, Upload, X, AlertCircle } from "lucide-react";
+import { User, Phone, MapPin, FileText, Building, Settings, Calendar, Download, Eye, AlertCircle } from "lucide-react";
 import { ApplicationForm } from "@/app/stat-abonentom/application-form";
 import { fileHrefForStoredUrl } from "@/lib/file-url";
+import { ApplicationAdminFiles } from "@/components/admin/application-details/ApplicationAdminFiles";
+import { ApplicationStatusBadge } from "@/components/admin/application-details/ApplicationStatusBadge";
 
 interface ApplicationDetailsProps {
   application: {
@@ -34,20 +35,8 @@ interface ApplicationDetailsProps {
   };
 }
 
-interface ApplicationFile {
-  id: string;
-  fileName: string;
-  filePath: string;
-  fileSize: number;
-  mimeType: string;
-  uploadedAt: Date;
-}
-
 export function ApplicationDetails({ application }: ApplicationDetailsProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [adminFiles, setAdminFiles] = useState<ApplicationFile[]>([]);
-  const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   
   let data: any = null;
   
@@ -77,82 +66,6 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
   }
 
   const isTechnicalConditions = data && data.type === "technical_conditions";
-
-  // Загружаем файлы, загруженные админом
-  useEffect(() => {
-    if (isOpen) {
-      fetchAdminFiles();
-    }
-  }, [isOpen, application.id]);
-
-  const fetchAdminFiles = async () => {
-    try {
-      const response = await fetch(`/api/admin/applications/${application.id}/files`);
-      if (response.ok) {
-        const result = await response.json();
-        setAdminFiles(result.files || []);
-      }
-    } catch (error) {
-      console.error("Error fetching admin files:", error);
-    }
-  };
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const response = await fetch(`/api/admin/applications/${application.id}/upload`, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        setAdminFiles([...adminFiles, result.file]);
-        if (fileInputRef.current) {
-          fileInputRef.current.value = "";
-        }
-      } else {
-        const error = await response.json();
-        alert(error.error || "Ошибка при загрузке файла");
-      }
-    } catch (error) {
-      console.error("Error uploading file:", error);
-      alert("Ошибка при загрузке файла");
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleDeleteFile = async (fileId: string) => {
-    if (!confirm("Вы уверены, что хотите удалить этот файл?")) {
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `/api/admin/applications/${application.id}/files?fileId=${fileId}`,
-        {
-          method: "DELETE",
-        }
-      );
-
-      if (response.ok) {
-        setAdminFiles(adminFiles.filter((f) => f.id !== fileId));
-      } else {
-        const error = await response.json();
-        alert(error.error || "Ошибка при удалении файла");
-      }
-    } catch (error) {
-      console.error("Error deleting file:", error);
-      alert("Ошибка при удалении файла");
-    }
-  };
 
   const handleDownloadPDF = async () => {
     if (!isTechnicalConditions) return;
@@ -330,7 +243,10 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Детали заявки</DialogTitle>
+          <div className="flex flex-wrap items-center gap-2">
+            <DialogTitle>Детали заявки</DialogTitle>
+            <ApplicationStatusBadge status={application.status} />
+          </div>
           <DialogDescription>
             Полная информация о заявке от {
               (() => {
@@ -761,73 +677,7 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
               </Card>
             )}
 
-            {/* Документы, загруженные админом */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  Документы, загруженные администратором ({adminFiles.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {/* Кнопка загрузки файла */}
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handleFileUpload}
-                      disabled={uploading}
-                      className="hidden"
-                      id={`file-upload-${application.id}`}
-                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                    />
-                    <Button
-                      variant="outline"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={uploading}
-                      className="flex items-center gap-2"
-                    >
-                      <Upload className="h-4 w-4" />
-                      {uploading ? "Загрузка..." : "Загрузить документ"}
-                    </Button>
-                  </div>
-
-                  {/* Список загруженных файлов */}
-                  {adminFiles.length > 0 && (
-                    <div className="space-y-2">
-                      {adminFiles.map((file) => (
-                        <div
-                          key={file.id}
-                          className="flex items-center justify-between p-2 border rounded-lg hover:bg-gray-50"
-                        >
-                          <a
-                            href={fileHrefForStoredUrl(file.filePath)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 text-blue-600 hover:underline flex-1"
-                          >
-                            <FileText className="h-4 w-4" />
-                            <span>{file.fileName}</span>
-                            <span className="text-xs text-gray-500">
-                              ({(file.fileSize / 1024).toFixed(1)} KB)
-                            </span>
-                          </a>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteFile(file.id)}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+            <ApplicationAdminFiles applicationId={application.id} active={isOpen} />
           </div>
         ) : (
           <div className="space-y-4">

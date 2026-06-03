@@ -64,9 +64,9 @@ async function getDisclosureDocuments(category: string) {
 export default async function DisclosureCategoryPage({
   params,
 }: {
-  params: { category: string };
+  params: Promise<{ category: string }>;
 }) {
-  const category = params.category;
+  const { category } = await params;
   
   if (!categoryNames[category]) {
     notFound();

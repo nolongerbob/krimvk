@@ -9,11 +9,12 @@ import { formatPublicAuthorName } from "@/lib/format-public-author";
 export default async function NewsDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = await params;
   const news = await prisma.news.findUnique({
     where: { 
-      id: params.id,
+      id,
       published: true, // Только опубликованные новости
     },
     include: {

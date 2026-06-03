@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-config";
+import { withApiRoute } from "@/lib/api-route";
+import { getAppSession } from "@/lib/get-app-session";
 import { prisma } from "@/lib/prisma";
 import { get1CUserData } from "@/lib/1c-api";
 import { jsonFrom1cError } from "@/lib/1c-error-response";
@@ -8,15 +8,11 @@ import { decryptPassword1c } from "@/lib/password1c-crypto";
 
 export const dynamic = 'force-dynamic';
 
-/**
- * GET - получить данные пользователя из 1С
- * Проксирует запрос к 1С API
- */
-export async function GET(request: NextRequest) {
+async function getHandler(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getAppSession(request);
 
-    if (!session || !session.user || !session.user.id) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "Не авторизован" }, { status: 401 });
     }
 
@@ -32,7 +28,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Получаем лицевой счет пользователя
     const account = await prisma.userAccount.findFirst({
       where: {
         id: accountId,
@@ -63,11 +58,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Формируем даты
     const fromDate = dateFrom ? new Date(dateFrom) : undefined;
     const toDate = dateTo ? new Date(dateTo) : undefined;
 
-    // Запрашиваем данные из 1С
     const data = await get1CUserData(
       account.accountNumber,
       password1c,
@@ -82,4 +75,4 @@ export async function GET(request: NextRequest) {
   }
 }
 
-
+export const GET = withApiRoute(getHandler, "GET /api/1c/get-data");

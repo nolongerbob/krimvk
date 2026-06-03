@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
+import { getAppSession } from "@/lib/get-app-session";
 import { prisma } from '@/lib/prisma';
 import { createPostVerifyLoginToken } from '@/lib/post-verify-login-token';
 
@@ -16,7 +15,7 @@ export async function GET() {
     const cookieStore = await cookies();
     const pendingUserId = cookieStore.get('pending_verify')?.value;
 
-    const session = await getServerSession(authOptions);
+    const session = await getAppSession(request);
     if (session?.user?.id) {
       const user = await prisma.user.findUnique({
         where: { id: session.user.id },

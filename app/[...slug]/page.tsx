@@ -31,9 +31,10 @@ type PostWithRelations = Prisma.PostGetPayload<{
 export default async function DynamicPagePage({
   params,
 }: {
-  params: { slug: string[] };
+  params: Promise<{ slug: string[] }>;
 }) {
-  const slugArray = Array.isArray(params?.slug) ? params.slug : [];
+  const resolved = await params;
+  const slugArray = Array.isArray(resolved?.slug) ? resolved.slug : [];
   if (slugArray.length === 0) notFound();
   const fullSlug = "/" + slugArray.join("/");
 

@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
+import { getAppSession } from "@/lib/get-app-session";
 import { prisma } from '@/lib/prisma';
 import { getSiteBaseUrl } from '@/lib/site-url';
 
@@ -69,7 +68,7 @@ export async function GET(request: Request) {
 
     const cookieStore = await cookies();
     const pendingVerify = cookieStore.get('pending_verify')?.value;
-    const session = await getServerSession(authOptions);
+    const session = await getAppSession(request);
     // Устройство, где регистрировался: есть cookie pending_verify=userId
     const isRegistrationDevice = pendingVerify === verificationToken.userId;
     // Тот же браузер, уже был вход (например, повторная отправка из ЛК): есть сессия этого пользователя

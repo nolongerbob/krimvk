@@ -2,6 +2,8 @@
 
 Обновляйте после крупных релизов.
 
+**Ветка разработки:** `develop` (порт 3001 / `krimvk-dev`). Прод `main` на VPS не меняется до merge и smoke.
+
 ## Закрыто
 
 | # | Тема | Коммит / где |
@@ -14,51 +16,48 @@
 | 6 | DaData без анонимного доступа | `/api/address/suggest` + сессия + rate limit |
 | 7 | Rate limit приватных файлов | `http-guard.ts` → `/api/files/private` |
 | 8 | IDOR: GET файлов заявки только для админа | `requireAdmin()` в `admin/applications/[id]/files` GET |
-| 9 | IDOR: чужие фото в чате | `messages/{userId}/`, `lib/message-image-access.ts`, проверка при create |
+| 9 | IDOR: чужие фото в чате | `messages/{userId}/`, `lib/message-image-access.ts` |
 | 10 | JWT `ADMIN` на приватных файлах | `canAccessPrivateS3Key` + `isAdminUser()` из БД |
-| 11 | Пароли 1С в URL + `session` в direct-account | token-only API, POST connect, `resolve-direct-account-credentials` |
-| 12 | Allowlist `region` для 1С (path injection) | `lib/1c-regions.ts`, `getRegion()` в `lib/1c-api.ts` |
-| 13 | Telegram debug/DELETE, скрейп без лимита | `app/api/telegram/emergencies`, кэш 2 мин, rate limit |
-| 14 | Спам формы аварии | `/api/emergency` лимит 5/15 мин + длины полей |
+| 11 | Пароли 1С в URL + `session` в direct-account | token-only API, POST connect |
+| 12 | Allowlist `region` для 1С | `lib/1c-regions.ts` |
+| 13 | Telegram debug/DELETE, скрейп без лимита | кэш 2 мин, rate limit |
+| 14 | Спам формы аварии | `/api/emergency` лимит 5/15 мин |
 | 15 | Email автора в публичных новостях | `lib/format-public-author.ts` |
-| 16 | SVG / подделка MIME в загрузках картинок | `lib/security/validate-image-upload.ts` |
-| 17 | Публичные админ-загрузки без allowlist (posts/pages) | `lib/security/validate-upload.ts` |
-| 18 | Спам чата / поиск / OCR / PDF | `http-guard.ts` лимиты |
-| 19 | Перебор email при регистрации | `auth/register` — ответ как у «успеха» |
-| 20 | Счётчики: фото + analyze-image | `validate-image-upload` на meters API |
-| 21 | Публичные файлы: inline HTML/SVG | `lib/content-disposition.ts`, `serve-s3-file.ts` |
-| 22 | Water-quality upload без типа/лимита | `validate-water-quality`, max 200MB |
-| 23 | DOMPurify в devDependencies | перенос в `dependencies` + overrides npm audit |
+| 16 | SVG / подделка MIME в загрузках | `validate-image-upload.ts` |
+| 17 | Публичные админ-загрузки без allowlist | `validate-upload.ts` |
+| 18 | Спам чата / поиск / OCR / PDF | `http-guard.ts` |
+| 19 | Перебор email при регистрации | `auth/register` |
+| 20 | Счётчики: фото + analyze-image | `validate-image-upload` |
+| 21 | Публичные файлы: inline HTML/SVG | `lib/content-disposition.ts` |
+| 22 | Water-quality upload | `validate-water-quality`, max 200MB |
+| 23 | DOMPurify в dependencies | `package.json` |
+| 24 | Единый mobile auth | `POST /api/auth/mobile-login`, `getAppSession` + Bearer |
+| 27 | Email в API страниц | `app/api/pages/[slug]` без email в author |
+| 28 | PII в логах accounts | убраны `console.log` с userId |
+| 25 | S3 `uploads/` частично | legacy private under `uploads/applications/` blocked in `isAllowedPublicS3Key` |
+| 29 | ЛК: один overview вместо водопада | `GET /api/dashboard/overview`, `hooks/use-dashboard-overview.ts` |
+| 30 | Mobile auth | `POST /api/auth/mobile-login`, Bearer в `getAppSession` |
+| 31 | ISR главная/новости | `revalidate = 120` на `/`, `/news` |
+| 32 | Ошибки UI | `app/error.tsx`, `app/global-error.tsx` |
 
-## Открыто (аудит 2026-06)
+## Открыто
 
-| # | Тема | Где |
-|---|------|-----|
-| — | (критичных пунктов нет) | — |
+| # | Серьёзность | Тема |
+|---|-------------|------|
+| 26 | Средняя | `npm audit` — периодически на `develop`; критичные — по мере выхода патчей |
+| — | Низкая | Полное удаление `uploads/` из PUBLIC после миграции URL в БД |
+| — | Низкая | `typescript.ignoreBuildErrors: false` после миграции async `params` |
 
-## Операционно (на VPS)
+## Операционно (develop / после merge в main)
 
-- [x] `PASSWORD1C_ENCRYPTION_KEY` + миграция `password1c` (сделано на проде)
-- [ ] Деплой `main` после каждого security-коммита + smoke ЛК/админка
-- [ ] `npm run audit:s3-private` — периодически, если меняли ACL в S3
-- [ ] `npm run audit:public-urls` — нет ли старых публичных URL в коде/БД
-- [x] `harden-vps.sh` (уже применялся)
+- [ ] Smoke: `./scripts/smoke-local.sh` (по умолчанию `http://127.0.0.1:3001`)
+- [ ] `npm run audit:s3-private` при изменении S3
+- [ ] `npm run audit:public-urls`
+- [ ] Деплой **только** после merge develop → main (прод не трогать до этого)
 
-## По желанию
-
-- [x] Верификация email — **оставляем как есть** (баннер + gate на auto-login)
-- [ ] Redis rate limit вместо in-memory (несколько PM2-инстансов)
-- [ ] CDN/WAF ([CLOUDFLARE.md](./CLOUDFLARE.md))
-- [ ] Убрать дублирующие `role !== ADMIN` в `app/admin/*/page.tsx` (уже есть `layout`)
-- [ ] `npm audit` / обновление зависимостей
-- [ ] Локальные правки 1С (`normalize-1c-response`) — отдельный PR
-
-## Проверка после деплоя
+## Проверка после деплоя на staging/prod
 
 ```bash
 curl -sI https://krimvk.ru/api/address/suggest -X POST -H 'Content-Type: application/json' -d '{"query":"симф"}' | head -1
-# ожидается 401 без cookie
-
 curl -sI "https://krimvk.ru/files/applications/test" | head -1
-# ожидается 403
 ```

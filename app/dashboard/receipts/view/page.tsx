@@ -15,8 +15,6 @@ const QRCodeSVG = dynamic(() => import("qrcode.react").then((mod) => mod.QRCodeS
   loading: () => <div className="w-[130px] h-[130px] bg-gray-200 animate-pulse rounded"></div>
 });
 import { generateSBPQRString, generateSBPURL } from "@/lib/qr-code";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
 
 interface ExemptionItem {
   ExemptionCount?: string | number;
@@ -161,6 +159,9 @@ export default function ReceiptViewPage() {
       const scale = openForPrint ? 2.5 : 2; // Выше разрешение для печати
       const jpegQuality = openForPrint ? 0.95 : 0.9; // Выше качество JPEG для печати
       
+      const { default: html2canvas } = await import("html2canvas");
+      const { default: jsPDF } = await import("jspdf");
+
       // Создаем canvas из HTML элемента с оптимизированными настройками
       const canvas = await html2canvas(receiptRef.current, {
         scale: scale, // Высокое разрешение для четкости

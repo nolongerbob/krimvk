@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-config";
+import { getAppSession } from "@/lib/get-app-session";
 import { prisma } from "@/lib/prisma";
 import { storage } from "@/lib/storage";
 import { validateImageUpload } from "@/lib/security/validate-image-upload";
@@ -12,7 +11,7 @@ export const maxDuration = 30;
  */
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getAppSession(request);
 
     if (!session) {
       return NextResponse.json({ error: "Не авторизован" }, { status: 401 });

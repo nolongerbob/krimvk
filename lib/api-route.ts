@@ -4,14 +4,17 @@
 import type { NextRequest } from 'next/server';
 import { reportServerError } from './report-server-error';
 
-type RouteContext = { params?: Record<string, string | string[]> };
+type RouteContext = {
+  params: Promise<Record<string, string | string[]>>;
+};
+
 type RouteHandler = (
   req: NextRequest,
   context: RouteContext
 ) => Promise<Response> | Response;
 
 export function withApiRoute(
-  handler: RouteHandler,
+  handler: (req: NextRequest) => Promise<Response> | Response,
   routeLabel?: string
 ): RouteHandler {
   return async (req, context) => {
@@ -19,7 +22,7 @@ export function withApiRoute(
     const label = routeLabel ?? `${req.method} ${path}`;
 
     try {
-      const res = await handler(req, context);
+      const res = await handler(req);
       if (res.status >= 500) {
         let hint: string | undefined;
         try {

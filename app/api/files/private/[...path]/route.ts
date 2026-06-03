@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
+import { getAppSession } from "@/lib/get-app-session";
 import { canAccessPrivateS3Key } from '@/lib/authorize-private-file';
 import { isPrivateS3Key } from '@/lib/s3-file-access';
 import { serveS3File } from '@/lib/serve-s3-file';
@@ -11,7 +10,7 @@ export const runtime = 'nodejs';
 type RouteContext = { params: { path: string[] } };
 
 export async function GET(request: NextRequest, context: RouteContext) {
-  const session = await getServerSession(authOptions);
+  const session = await getAppSession(request);
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
   }

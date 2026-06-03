@@ -6,8 +6,12 @@ export const PUBLIC_S3_PREFIXES = [
   'news/',
   'pages/',
   'posts/',
+  /** @deprecated legacy — только старые объекты; новые загрузки: posts/, pages/, news/ */
   'uploads/',
 ] as const;
+
+/** Префиксы legacy uploads/, которые должны быть приватными (не отдавать с /files/). */
+const LEGACY_PRIVATE_UPLOAD_PREFIXES = ['uploads/applications/', 'uploads/messages/', 'uploads/meters/', 'uploads/contracts/'] as const;
 
 export const PRIVATE_S3_PREFIXES = [
   'applications/',
@@ -31,5 +35,9 @@ export function isPrivateS3Key(key: string): boolean {
 }
 
 export function isAllowedPublicS3Key(key: string): boolean {
-  return isPublicS3Key(key);
+  if (!isPublicS3Key(key)) return false;
+  if (LEGACY_PRIVATE_UPLOAD_PREFIXES.some((p) => key.startsWith(p))) {
+    return false;
+  }
+  return true;
 }

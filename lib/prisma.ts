@@ -32,40 +32,29 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient({
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 
 // Функция для безопасного выполнения запросов с переподключением
+function isConnectionError(error: { code?: string; message?: string }): boolean {
+  const errorCode = error?.code;
+  const errorMessage = error?.message || '';
+  return (
+    errorCode === 'P1001' ||
+    errorCode === 'P1017' ||
+    errorCode === 'P2024' ||
+    errorMessage.includes('Server has closed the connection') ||
+    errorMessage.includes('Connection closed') ||
+    errorMessage.includes('Timed out fetching a new connection') ||
+    errorMessage.includes('Error { kind: Closed')
+  );
+}
+
 export async function withRetry<T>(
   operation: () => Promise<T>,
   retries = 5
 ): Promise<T> {
   for (let i = 0; i < retries; i++) {
     try {
-      // Проверяем, подключены ли мы
-      try {
-        await prisma.$queryRaw`SELECT 1`;
-      } catch (checkError: any) {
-        // Если не подключены, подключаемся
-        if (checkError?.code === 'P1001' || checkError?.message?.includes('closed')) {
-          await prisma.$disconnect().catch(() => {});
-          await new Promise((resolve) => setTimeout(resolve, 500));
-          await prisma.$connect();
-        }
-      }
-      
       return await operation();
     } catch (error: any) {
-      const errorCode = error?.code;
-      const errorMessage = error?.message || '';
-      
-      // Обрабатываем ошибки подключения
-      const isConnectionError = 
-        errorCode === 'P1001' || // Connection error
-        errorCode === 'P1017' || // Server has closed the connection
-        errorCode === 'P2024' || // Connection pool timeout
-        errorMessage.includes('Server has closed the connection') ||
-        errorMessage.includes('Connection closed') ||
-        errorMessage.includes('Timed out fetching a new connection') ||
-        errorMessage.includes('Error { kind: Closed');
-      
-      if (isConnectionError && i < retries - 1) {
+      if (isConnectionError(error) && i < retries - 1) {
         console.log(`[withRetry] Ошибка подключения (попытка ${i + 1}/${retries}), переподключаюсь...`);
         
         try {

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-config";
+import { getAppSession } from "@/lib/get-app-session";
 import { prisma } from "@/lib/prisma";
 import { verifyPassword, hashPassword } from "@/lib/auth";
 
@@ -9,7 +8,7 @@ import { verifyPassword, hashPassword } from "@/lib/auth";
  */
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getAppSession(request);
 
     if (!session || !session.user || !session.user.id) {
       return NextResponse.json({ error: "Не авторизован" }, { status: 401 });

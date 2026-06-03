@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-config";
+import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/require-admin";
 import { prisma } from "@/lib/prisma";
 
@@ -21,11 +20,16 @@ export async function POST(request: NextRequest) {
         title,
         content,
         imageUrl: imageUrl || null,
-        authorId: session.user.id,
+        authorId: auth.admin.userId,
         published: published || false,
         publishedAt: published ? new Date() : null,
       },
     });
+
+    if (published) {
+      revalidatePath("/");
+      revalidatePath("/news");
+    }
 
     return NextResponse.json({ success: true, news });
   } catch (error) {

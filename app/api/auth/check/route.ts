@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth-config';
-
+import { getAppSession } from "@/lib/get-app-session";
 // Force dynamic rendering - this route uses headers() via getServerSession
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getAppSession(request);
     
     // Логируем для отладки
     if (process.env.NODE_ENV === 'development') {
@@ -21,6 +19,7 @@ export async function GET(request: NextRequest) {
     }
     
     return NextResponse.json({ 
+      success: !!session,
       authenticated: !!session, 
       user: session?.user || null 
     }, { status: 200 });

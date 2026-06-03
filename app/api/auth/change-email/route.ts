@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
+import { getAppSession } from "@/lib/get-app-session";
 import { prisma } from '@/lib/prisma';
 import { sendVerificationEmail } from '@/lib/resend';
 import { getUserByEmail } from '@/lib/auth';
@@ -16,7 +15,7 @@ const changeEmailSchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getAppSession(request);
     
     if (!session || !session.user || !session.user.id) {
       return NextResponse.json(

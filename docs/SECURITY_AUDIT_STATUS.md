@@ -18,12 +18,20 @@
 | 10 | JWT `ADMIN` на приватных файлах | `canAccessPrivateS3Key` + `isAdminUser()` из БД |
 | 11 | Пароли 1С в URL + `session` в direct-account | token-only API, POST connect, `resolve-direct-account-credentials` |
 | 12 | Allowlist `region` для 1С (path injection) | `lib/1c-regions.ts`, `getRegion()` в `lib/1c-api.ts` |
+| 13 | Telegram debug/DELETE, скрейп без лимита | `app/api/telegram/emergencies`, кэш 2 мин, rate limit |
+| 14 | Спам формы аварии | `/api/emergency` лимит 5/15 мин + длины полей |
+| 15 | Email автора в публичных новостях | `lib/format-public-author.ts` |
+| 16 | SVG / подделка MIME в загрузках картинок | `lib/security/validate-image-upload.ts` |
+| 17 | Публичные админ-загрузки без allowlist (posts/pages) | `lib/security/validate-upload.ts` |
+| 18 | Спам чата / поиск / OCR / PDF | `http-guard.ts` лимиты |
+| 19 | Перебор email при регистрации | `auth/register` — ответ как у «успеха» |
+| 20 | Счётчики: фото + analyze-image | `validate-image-upload` на meters API |
 
 ## Открыто (аудит 2026-06)
 
 | # | Тема | Где |
 |---|------|-----|
-| — | Telegram debug/DELETE без auth | `app/api/telegram/emergencies` |
+| — | (критичных пунктов нет) | — |
 
 ## Операционно (на VPS)
 
@@ -35,6 +43,8 @@
 
 ## По желанию
 
+- [x] Верификация email — **оставляем как есть** (баннер + gate на auto-login)
+- [ ] Redis rate limit вместо in-memory (несколько PM2-инстансов)
 - [ ] CDN/WAF ([CLOUDFLARE.md](./CLOUDFLARE.md))
 - [ ] Убрать дублирующие `role !== ADMIN` в `app/admin/*/page.tsx` (уже есть `layout`)
 - [ ] `npm audit` / обновление зависимостей

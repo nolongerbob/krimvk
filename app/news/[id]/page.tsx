@@ -4,6 +4,7 @@ import { Calendar, User, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Image from "next/image";
+import { formatPublicAuthorName } from "@/lib/format-public-author";
 
 export default async function NewsDetailPage({
   params,
@@ -44,7 +45,9 @@ export default async function NewsDetailPage({
           <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
             <div className="flex items-center gap-2">
               <User className="h-4 w-4" />
-              <span>{news.author.name || news.author.email}</span>
+              <span>
+                {formatPublicAuthorName(news.author.name, news.author.email)}
+              </span>
             </div>
             {news.publishedAt && (
               <div className="flex items-center gap-2">

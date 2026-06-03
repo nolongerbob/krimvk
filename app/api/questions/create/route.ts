@@ -22,6 +22,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Сообщение не может быть пустым" }, { status: 400 });
     }
 
+    if (hasText && (text as string).trim().length > 10_000) {
+      return NextResponse.json({ error: "Слишком длинное сообщение" }, { status: 400 });
+    }
+
     if (hasImage) {
       const imageCheck = assertMessageImageUrlOwnedByUser(imageUrl as string, session.user.id);
       if (!imageCheck.ok) {

@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/prisma";
 import { storage } from "@/lib/storage";
+import { validateImageUpload } from "@/lib/security/validate-image-upload";
 
 export const maxDuration = 30;
 
@@ -37,12 +38,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Счётчик не найден" }, { status: 404 });
     }
 
-    // Проверяем тип файла
-    if (!file.type.startsWith("image/")) {
-      return NextResponse.json(
-        { error: "Файл должен быть изображением" },
-        { status: 400 }
-      );
+    const imageError = await validateImageUpload(file);
+    if (imageError) {
+      return NextResponse.json({ error: imageError }, { status: 400 });
     }
 
     // Проверяем размер файла (макс 10MB)

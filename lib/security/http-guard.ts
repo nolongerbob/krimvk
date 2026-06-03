@@ -95,6 +95,51 @@ export function applyRateLimit(req: NextRequest): NextResponse | null {
     return null;
   }
 
+  if (path === '/api/telegram/emergencies') {
+    if (!rateLimit(`telegram:${ip}`, 20, 60_000)) {
+      return NextResponse.json({ error: 'Слишком много запросов.' }, { status: 429 });
+    }
+    return null;
+  }
+
+  if (path === '/api/emergency') {
+    if (!rateLimit(`emergency:${ip}`, 5, 15 * 60_000)) {
+      return NextResponse.json(
+        { error: 'Слишком много обращений. Попробуйте позже.' },
+        { status: 429 }
+      );
+    }
+    return null;
+  }
+
+  if (path === '/api/search') {
+    if (!rateLimit(`search:${ip}`, 40, 60_000)) {
+      return NextResponse.json({ error: 'Слишком много запросов.' }, { status: 429 });
+    }
+    return null;
+  }
+
+  if (path === '/api/questions/create') {
+    if (!rateLimit(`questions:${ip}`, 30, 60_000)) {
+      return NextResponse.json({ error: 'Слишком много сообщений.' }, { status: 429 });
+    }
+    return null;
+  }
+
+  if (path === '/api/meters/analyze-image') {
+    if (!rateLimit(`meter-ai:${ip}`, 20, 60 * 60_000)) {
+      return NextResponse.json({ error: 'Слишком много запросов.' }, { status: 429 });
+    }
+    return null;
+  }
+
+  if (path === '/api/applications/fill-pdf') {
+    if (!rateLimit(`fill-pdf:${ip}`, 15, 60 * 60_000)) {
+      return NextResponse.json({ error: 'Слишком много запросов.' }, { status: 429 });
+    }
+    return null;
+  }
+
   if (path.startsWith('/api/')) {
     if (!rateLimit(`api:${ip}`, 200, 60_000)) {
       return NextResponse.json({ error: 'Слишком много запросов.' }, { status: 429 });

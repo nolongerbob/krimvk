@@ -21,6 +21,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Опишите проблему" }, { status: 400 });
     }
 
+    const phoneTrim = phone.trim();
+    const addressTrim = address.trim();
+    const descriptionTrim = description.trim();
+
+    if (phoneTrim.length > 32) {
+      return NextResponse.json({ error: "Слишком длинный номер телефона" }, { status: 400 });
+    }
+    if (addressTrim.length > 500) {
+      return NextResponse.json({ error: "Слишком длинный адрес" }, { status: 400 });
+    }
+    if (descriptionTrim.length > 5000) {
+      return NextResponse.json({ error: "Слишком длинное описание" }, { status: 400 });
+    }
+    if (name && name.trim().length > 200) {
+      return NextResponse.json({ error: "Слишком длинное имя" }, { status: 400 });
+    }
+    if (email && email.trim().length > 254) {
+      return NextResponse.json({ error: "Слишком длинный email" }, { status: 400 });
+    }
+
     // Если userId указан, проверяем, что пользователь существует
     if (userId) {
       const session = await getServerSession(authOptions);
@@ -41,10 +61,10 @@ export async function POST(request: NextRequest) {
     const emergencyReport = await prisma.emergencyReport.create({
       data: {
         name: name?.trim() || null,
-        phone: phone.trim(),
+        phone: phoneTrim,
         email: email?.trim() || null,
-        address: address.trim(),
-        description: description.trim(),
+        address: addressTrim,
+        description: descriptionTrim,
         userId: userId || null,
         status: "PENDING",
       },

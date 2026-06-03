@@ -41,6 +41,11 @@ export default function RegisterPage() {
 
       const data = await response.json();
 
+      if (response.ok && data.registered === false) {
+        setError(data.message || "Проверьте почту или войдите в существующий аккаунт.");
+        return;
+      }
+
       if (response.ok) {
         // Сразу авторизуем пользователя (обновляем сессию на клиенте)
         // Cookie уже установлена на сервере при регистрации

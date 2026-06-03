@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth-config";
 import { requireAdmin } from "@/lib/require-admin";
 import { prisma } from "@/lib/prisma";
 import { storage } from "@/lib/storage";
+import { validateContractFile } from "@/lib/security/validate-upload";
 
 export const maxDuration = 30;
 
@@ -26,17 +27,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const allowedTypes = [
-      "application/pdf",
-      "application/msword",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    ];
-
-    if (!allowedTypes.includes(file.type)) {
-      return NextResponse.json(
-        { error: "Недопустимый тип файла. Разрешены: PDF, DOC, DOCX" },
-        { status: 400 }
-      );
+    const typeError = validateContractFile(file);
+    if (typeError) {
+      return NextResponse.json({ error: typeError }, { status: 400 });
     }
 
     const timestamp = Date.now();

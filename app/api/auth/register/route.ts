@@ -39,8 +39,12 @@ export async function POST(request: Request) {
 
     if (existingUser) {
       return NextResponse.json(
-        { error: 'Пользователь с таким email уже существует' },
-        { status: 400 }
+        {
+          registered: false,
+          message:
+            'Если указанный email ещё не зарегистрирован, на него отправлено письмо. Если аккаунт уже есть — войдите или восстановите пароль.',
+        },
+        { status: 200 }
       );
     }
 
@@ -90,6 +94,7 @@ export async function POST(request: Request) {
 
     const res = NextResponse.json(
       {
+        registered: true,
         message: emailSent
           ? 'Регистрация успешна. Пожалуйста, проверьте вашу почту для подтверждения email.'
           : 'Регистрация успешна. Письмо с подтверждением не удалось отправить — запросите повторную отправку в личном кабинете.',

@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth-config";
 import { requireAdmin } from "@/lib/require-admin";
 import { prisma, withRetry } from "@/lib/prisma";
 import { storage } from "@/lib/storage";
+import { validateUserApplicationFile } from "@/lib/security/validate-upload";
 
 export const maxDuration = 30;
 
@@ -38,6 +39,11 @@ export async function POST(
         { error: "Размер файла не должен превышать 50MB" },
         { status: 400 }
       );
+    }
+
+    const typeError = await validateUserApplicationFile(file);
+    if (typeError) {
+      return NextResponse.json({ error: typeError }, { status: 400 });
     }
 
     const timestamp = Date.now();

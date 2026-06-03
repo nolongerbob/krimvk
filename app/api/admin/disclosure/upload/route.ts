@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth-config";
 import { requireAdmin } from "@/lib/require-admin";
 import { prisma } from "@/lib/prisma";
 import { storage } from "@/lib/storage";
+import { validateDisclosureFile } from "@/lib/security/validate-upload";
 
 export const maxDuration = 300; // 5 минут для больших файлов
 
@@ -33,6 +34,11 @@ export async function POST(request: NextRequest) {
         { error: "Категория документа обязательна" },
         { status: 400 }
       );
+    }
+
+    const typeError = await validateDisclosureFile(file);
+    if (typeError) {
+      return NextResponse.json({ error: typeError }, { status: 400 });
     }
 
     // Генерируем уникальное имя файла

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
 import { storage } from "@/lib/storage";
+import { validateUserApplicationFile } from "@/lib/security/validate-upload";
+import { validateImageUpload } from "@/lib/security/validate-image-upload";
 
 export const maxDuration = 30;
 
@@ -28,21 +30,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Проверяем тип файла
-    const allowedTypes = [
-      "application/pdf",
-      "application/msword",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "image/jpeg",
-      "image/jpg",
-      "image/png",
-    ];
-    
-    if (!allowedTypes.includes(file.type)) {
-      return NextResponse.json(
-        { error: "Недопустимый тип файла. Разрешены: PDF, DOC, DOCX, JPG, PNG" },
-        { status: 400 }
-      );
+    const typeError = await validateUserApplicationFile(file);
+    if (typeError) {
+      return NextResponse.json({ error: typeError }, { status: 400 });
     }
 
     // Генерируем уникальное имя файла

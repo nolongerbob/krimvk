@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, User, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { formatPublicAuthorName } from "@/lib/format-public-author";
 
 interface NewsItem {
   id: string;
@@ -64,7 +65,9 @@ export function NewsSection({ news }: NewsSectionProps) {
                   <div className="flex items-center gap-4 text-xs text-gray-600">
                     <div className="flex items-center gap-1">
                       <User className="h-3 w-3" />
-                      <span className="truncate">{item.author.name || item.author.email}</span>
+                      <span className="truncate">
+                        {formatPublicAuthorName(item.author.name, item.author.email)}
+                      </span>
                     </div>
                     {item.publishedAt && (
                       <div className="flex items-center gap-1">

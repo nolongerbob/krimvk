@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth-config";
 import { requireAdmin } from "@/lib/require-admin";
 import { prisma } from "@/lib/prisma";
 import { storage } from "@/lib/storage";
+import { validatePublicAttachment } from "@/lib/security/validate-upload";
 
 export const maxDuration = 30;
 
@@ -37,6 +38,11 @@ export async function POST(
         { error: "Размер файла не должен превышать 50MB" },
         { status: 400 }
       );
+    }
+
+    const typeError = await validatePublicAttachment(file);
+    if (typeError) {
+      return NextResponse.json({ error: typeError }, { status: 400 });
     }
 
     // Генерируем уникальное имя файла

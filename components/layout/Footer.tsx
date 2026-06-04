@@ -31,11 +31,9 @@ export function Footer() {
   }, []);
 
   return (
-    <footer 
-      className={`border-t bg-gray-50 mt-auto transition-all duration-700 ease-out ${
-        isVisible 
-          ? "translate-y-0 opacity-100" 
-          : "translate-y-20 opacity-0"
+    <footer
+      className={`site-footer bvi-no-styles bvi-preserve-ui border-t bg-gray-50 mt-auto transition-all duration-700 ease-out ${
+        isVisible ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0"
       }`}
     >
       <div className="container py-12 px-4">
@@ -107,19 +105,19 @@ export function Footer() {
             <h3 className="font-semibold mb-4">Контакты</h3>
             <ul className="space-y-3 text-sm">
               <li className="flex items-center space-x-2">
-                <Phone className="h-4 w-4 text-gray-600" />
+                <Phone className="bvi-no-styles h-5 w-5 shrink-0 text-gray-600" aria-hidden />
                 <a href="tel:+79780800366" className="text-gray-600 hover:text-primary">
                   +7 (978) 080-03-66
                 </a>
               </li>
               <li className="flex items-center space-x-2">
-                <Mail className="h-4 w-4 text-gray-600" />
+                <Mail className="bvi-no-styles h-5 w-5 shrink-0 text-gray-600" aria-hidden />
                 <a href="mailto:sakwcompany@mail.ru" className="text-gray-600 hover:text-primary">
                   sakwcompany@mail.ru
                 </a>
               </li>
               <li className="flex items-start space-x-2">
-                <MapPin className="h-4 w-4 text-gray-600 mt-1" />
+                <MapPin className="bvi-no-styles mt-0.5 h-5 w-5 shrink-0 text-gray-600" aria-hidden />
                 <span className="text-gray-600">
                   ул. Механизаторов, 9<br />
                   с. Лесновка, Сакский район<br />

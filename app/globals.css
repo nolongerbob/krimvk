@@ -227,6 +227,10 @@ main {
   animation: page-fade-in 0.5s ease-out;
 }
 
+body.bvi-active .bvi-body {
+  overflow-x: clip;
+}
+
 /* Кастомные стили для панели BVI */
 .bvi-panel {
   border-radius: 1rem !important;

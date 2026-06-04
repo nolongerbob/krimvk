@@ -41,7 +41,7 @@ function SideMenuLink({
     <Link
       href={href}
       onClick={onClose}
-      className={`block px-8 py-3 text-[22px] leading-tight font-normal transition-colors ${
+      className={`header-side-menu-item block px-8 py-3 text-[22px] leading-tight font-normal transition-colors ${
         active ? "text-primary" : "text-gray-900 hover:text-primary"
       }`}
     >
@@ -77,7 +77,7 @@ function SideMenuExpandable({
         className="flex w-full items-center justify-between gap-4 px-8 py-3 text-left"
       >
         <span
-          className={`text-[22px] leading-tight font-normal transition-colors ${
+          className={`header-side-menu-item text-[22px] leading-tight font-normal transition-colors ${
             sectionActive ? "text-primary" : "text-gray-900"
           }`}
         >
@@ -96,7 +96,7 @@ function SideMenuExpandable({
           {sections.flatMap((section) =>
             section.links.map((link) => {
               const active = !link.href.startsWith("tel:") && isPathActive(pathname, link.href);
-              const className = `block px-8 py-2.5 pl-12 text-[17px] leading-snug transition-colors ${
+              const className = `header-side-menu-sublink block px-8 py-2.5 pl-12 text-[17px] leading-snug transition-colors ${
                 active ? "text-primary font-medium" : "text-gray-700 hover:text-primary"
               }`;
 
@@ -133,13 +133,13 @@ export function HeaderSideMenu({ isOpen, onClose, pathname, session, navLinks }:
   return (
     <>
       <div
-        className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm 2xl:hidden animate-in fade-in duration-300"
+        className="header-side-menu-backdrop fixed inset-0 z-40 bg-black/20 backdrop-blur-sm 2xl:hidden animate-in fade-in duration-300"
         onClick={onClose}
         aria-hidden
       />
 
       <div
-        className="fixed inset-y-0 right-0 z-50 flex w-[min(100%,520px)] flex-col bg-white 2xl:hidden animate-in slide-in-from-right duration-300"
+        className="header-side-menu-panel bvi-no-styles fixed inset-y-0 right-0 z-50 flex w-[min(100%,520px)] flex-col bg-white 2xl:hidden animate-in slide-in-from-right duration-300"
         role="dialog"
         aria-modal="true"
         aria-label="Навигация"
@@ -199,7 +199,7 @@ export function HeaderSideMenu({ isOpen, onClose, pathname, session, navLinks }:
                 title: "Телефоны",
                 links: [
                   { href: "tel:+79780800366", label: "+7 (978) 080-03-66" },
-                  { href: "tel:+79787415759", label: "+7 (978) 741-57-59" },
+                  { href: "tel:+79884648724", label: "+7 (988) 464-87-24" },
                   { href: "tel:+79787013050", label: "АДС: +7 (978) 701-30-50" },
                   { href: "tel:+79787460990", label: "АДС: +7 (978) 746-09-90" },
                 ],
@@ -217,7 +217,7 @@ export function HeaderSideMenu({ isOpen, onClose, pathname, session, navLinks }:
               <Link
                 href="/dashboard"
                 onClick={onClose}
-                className="block py-1.5 text-[20px] text-gray-900 hover:text-primary transition-colors"
+                className="header-side-menu-footer-link block py-1.5 text-[20px] text-gray-900 hover:text-primary transition-colors"
               >
                 Личный кабинет
               </Link>
@@ -225,7 +225,7 @@ export function HeaderSideMenu({ isOpen, onClose, pathname, session, navLinks }:
                 <Link
                   href="/admin"
                   onClick={onClose}
-                  className="block py-1.5 text-[20px] text-gray-900 hover:text-primary transition-colors"
+                  className="header-side-menu-footer-link block py-1.5 text-[20px] text-gray-900 hover:text-primary transition-colors"
                 >
                   Админ-панель
                 </Link>
@@ -236,7 +236,7 @@ export function HeaderSideMenu({ isOpen, onClose, pathname, session, navLinks }:
                   void signOutToHome();
                   onClose();
                 }}
-                className="block py-1.5 text-[20px] text-gray-500 hover:text-primary transition-colors"
+                className="header-side-menu-footer-link block py-1.5 text-[20px] text-gray-500 hover:text-primary transition-colors"
               >
                 Выйти
               </button>
@@ -246,14 +246,14 @@ export function HeaderSideMenu({ isOpen, onClose, pathname, session, navLinks }:
               <Link
                 href="/login"
                 onClick={onClose}
-                className="block py-1.5 text-[20px] text-gray-900 hover:text-primary transition-colors"
+                className="header-side-menu-footer-link block py-1.5 text-[20px] text-gray-900 hover:text-primary transition-colors"
               >
                 Войти
               </Link>
               <Link
                 href="/register"
                 onClick={onClose}
-                className="block py-1.5 text-[20px] text-gray-900 hover:text-primary transition-colors"
+                className="header-side-menu-footer-link block py-1.5 text-[20px] text-gray-900 hover:text-primary transition-colors"
               >
                 Регистрация
               </Link>
@@ -278,7 +278,7 @@ export function HeaderSideMenuToggle({
     <Button
       variant="ghost"
       size="icon"
-      className="2xl:hidden h-10 w-10 rounded-full hover:bg-gray-100"
+      className="header-side-menu-toggle 2xl:hidden h-10 w-10 rounded-full hover:bg-gray-100"
       onClick={onToggle}
       aria-label="Ещё"
       aria-expanded={isOpen}

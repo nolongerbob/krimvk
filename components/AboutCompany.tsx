@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useRef, useLayoutEffect } from "react";
-import Image from "next/image";
+import { useState, useRef, useLayoutEffect, useEffect } from "react";
 import { Building2, Users, Award, TrendingUp, ChevronLeft, ChevronRight, Droplet, Wrench, Rocket, UserCog, Shield, BookOpen, Construction, Cpu, Waves, Globe, Zap, Leaf } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ReactNode } from "react";
@@ -220,10 +219,52 @@ export function AboutCompany({ embedded = false }: { embedded?: boolean }) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
   const [panelHeight, setPanelHeight] = useState(MIN_PANEL_HEIGHT);
+  const [isBviActive, setIsBviActive] = useState(false);
+  const [bviImagesHidden, setBviImagesHidden] = useState(false);
   const measureRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const syncBvi = () => {
+      const bviOn =
+        document.documentElement.classList.contains("bvi-active") ||
+        document.body.classList.contains("bvi-active");
+      const imagesMode = document.querySelector(".bvi-body")?.getAttribute("data-bvi-images");
+      setIsBviActive(bviOn);
+      setBviImagesHidden(bviOn && imagesMode === "false");
+    };
+    syncBvi();
+    const observer = new MutationObserver(syncBvi);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    const bviBody = document.querySelector(".bvi-body");
+    if (bviBody) {
+      observer.observe(bviBody, {
+        attributes: true,
+        attributeFilter: ["data-bvi-images"],
+      });
+    }
+    window.addEventListener("bvi-layout-updated", syncBvi);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("bvi-layout-updated", syncBvi);
+    };
+  }, []);
 
   useLayoutEffect(() => {
     const measurePanels = () => {
+      if (
+        document.documentElement.classList.contains("bvi-active") ||
+        document.body.classList.contains("bvi-active")
+      ) {
+        return;
+      }
+
       const root = measureRef.current;
       if (!root) return;
 
@@ -244,8 +285,15 @@ export function AboutCompany({ embedded = false }: { embedded?: boolean }) {
 
     measurePanels();
     window.addEventListener("resize", measurePanels);
-    return () => window.removeEventListener("resize", measurePanels);
-  }, []);
+    window.addEventListener("bvi-layout-updated", measurePanels);
+    return () => {
+      window.removeEventListener("resize", measurePanels);
+      window.removeEventListener("bvi-layout-updated", measurePanels);
+    };
+  }, [isBviActive]);
+
+  const syncedPanelHeight =
+    !isBviActive && panelHeight > 0 ? panelHeight : undefined;
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % galleryImages.length);
@@ -257,12 +305,14 @@ export function AboutCompany({ embedded = false }: { embedded?: boolean }) {
 
   const activeInfo = companyInfo[activeTab];
   const Icon = activeInfo.icon;
+  const mainImageSrc = galleryImages[currentImageIndex];
+  const showMainImage = !imageErrors.has(currentImageIndex);
 
   const Wrapper = embedded ? "div" : "section";
 
   return (
     <Wrapper className={cn(embedded ? "py-8 md:py-10 bg-white w-full" : "py-16 bg-white")}>
-      <div className="container relative mx-auto px-4">
+      <div className="about-company-section container relative mx-auto px-4">
         <h2 className={cn("font-semibold text-center tracking-tight", embedded ? "text-3xl md:text-4xl mb-8 md:mb-10" : "text-4xl mb-12")}>О компании</h2>
 
         {/* Скрытый замер всех табов — подбираем высоту без скролла */}
@@ -278,104 +328,116 @@ export function AboutCompany({ embedded = false }: { embedded?: boolean }) {
           ))}
         </div>
         
-        <div className="grid grid-cols-1 gap-x-8 gap-y-6 lg:grid-cols-2 lg:gap-x-10 lg:items-stretch">
-          {/* Табы — верхняя строка слева */}
-          <div className="order-1 flex flex-wrap gap-2 lg:order-none">
-            {companyInfo.map((info, index) => {
-              const TabIcon = info.icon;
-              return (
-                <button
-                  key={info.id}
-                  onClick={() => setActiveTab(index)}
-                  className={cn(
-                    "flex items-center gap-2 px-5 py-4 rounded-none transition-colors duration-200",
-                    activeTab === index
-                      ? "bg-blue-600 text-white shadow-soft-lg"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+        <div
+          className={cn(
+            "about-company-layout grid grid-cols-1 gap-x-8 gap-y-6 lg:gap-x-10",
+            !bviImagesHidden && "lg:grid-cols-2 lg:items-stretch"
+          )}
+        >
+          <div className="about-company-main flex min-w-0 flex-col gap-6">
+            <div className="about-company-tabs flex flex-wrap gap-2">
+              {companyInfo.map((info, index) => {
+                const TabIcon = info.icon;
+                return (
+                  <button
+                    key={info.id}
+                    type="button"
+                    onClick={() => setActiveTab(index)}
+                    className={cn(
+                      "about-company-tab bvi-no-styles flex items-center gap-2 rounded-none px-5 py-4 transition-colors duration-200",
+                      activeTab === index
+                        ? "bg-blue-600 text-white shadow-soft-lg"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    )}
+                  >
+                    <TabIcon className="about-company-tab-icon-svg h-4 w-4 shrink-0" />
+                    <span className="about-company-tab-label text-sm font-medium">{info.title}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <Card
+              className="about-company-panel flex flex-col rounded-none hover:translate-y-0"
+              style={syncedPanelHeight ? { height: syncedPanelHeight } : undefined}
+            >
+              <CardContent className="flex h-full min-h-0 flex-col p-6">
+                <div className="mb-4 flex h-14 shrink-0 items-center gap-3">
+                  <div className="rounded-none bg-blue-100 p-3">
+                    <Icon className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <h3 className="line-clamp-2 text-2xl font-bold leading-tight">{activeInfo.title}</h3>
+                </div>
+                <div className="about-company-panel-content min-h-0 flex-1 overflow-hidden text-base leading-relaxed text-gray-700">
+                  {typeof activeInfo.content === "string" ? (
+                    <p>{activeInfo.content}</p>
+                  ) : (
+                    activeInfo.content
                   )}
-                >
-                  <TabIcon className="h-4 w-4" />
-                  <span className="text-sm font-medium">{info.title}</span>
-                </button>
-              );
-            })}
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
-          {/* Заголовок галереи — верхняя строка справа */}
-          <h3 className="order-4 inline-flex items-center self-center px-5 py-4 text-base font-semibold lg:order-none lg:self-end">
+          {!bviImagesHidden && (
+            <div className="about-company-aside flex min-w-0 flex-col gap-4">
+          <h3 className="about-company-gallery-label inline-flex items-center self-center px-5 py-4 text-base font-semibold lg:self-end">
             Галерея
           </h3>
 
-          {/* Текстовый блок — фиксированная высота как у галереи */}
-          <Card
-            className="order-2 flex flex-col rounded-none hover:translate-y-0 lg:order-none"
-            style={{ height: panelHeight }}
-          >
-            <CardContent className="flex h-full min-h-0 flex-col p-6">
-              <div className="mb-4 flex h-14 shrink-0 items-center gap-3">
-                <div className="rounded-none bg-blue-100 p-3">
-                  <Icon className="h-6 w-6 text-blue-600" />
-                </div>
-                <h3 className="line-clamp-2 text-2xl font-bold leading-tight">{activeInfo.title}</h3>
-              </div>
-              <div className="min-h-0 flex-1 overflow-hidden text-base leading-relaxed text-gray-700">
-                {typeof activeInfo.content === "string" ? (
-                  <p>{activeInfo.content}</p>
-                ) : (
-                  activeInfo.content
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Галерея — та же фиксированная высота */}
           <div
-            className="order-5 flex flex-col gap-4 lg:order-none"
-            style={{ height: panelHeight }}
+            className={cn(
+              "about-company-gallery flex flex-col gap-4",
+              !isBviActive && "min-h-[360px]",
+              !isBviActive && !syncedPanelHeight && "lg:min-h-[640px]"
+            )}
+            style={syncedPanelHeight ? { height: syncedPanelHeight } : undefined}
           >
-            <Card className="relative min-h-0 flex-1 overflow-hidden rounded-none hover:translate-y-0">
-              <div className="relative h-full w-full bg-gradient-to-br from-blue-100 to-cyan-100">
-                {!imageErrors.has(currentImageIndex) ? (
-                  <Image
-                    src={galleryImages[currentImageIndex]}
-                    alt={`Фото ${currentImageIndex + 1}`}
-                    fill
-                    className="object-cover"
-                    unoptimized
-                    onError={() => {
-                      setImageErrors((prev) => new Set(prev).add(currentImageIndex));
-                    }}
-                  />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-200 to-cyan-200">
-                    <div className="text-center text-gray-600">
-                      <Building2 className="h-16 w-16 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">Фото {currentImageIndex + 1}</p>
+            {!isBviActive && (
+              <Card className="about-company-gallery-card relative min-h-[360px] flex-1 overflow-hidden rounded-none hover:translate-y-0">
+                <div className="about-company-gallery-viewer relative h-full min-h-[360px] w-full bg-gradient-to-br from-blue-100 to-cyan-100">
+                  {showMainImage && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={mainImageSrc}
+                      alt={`Фото ${currentImageIndex + 1}`}
+                      className="about-company-gallery-img about-company-gallery-img--hero bvi-no-style absolute inset-0 z-[1] h-full w-full object-cover"
+                      onError={() => {
+                        setImageErrors((prev) => new Set(prev).add(currentImageIndex));
+                      }}
+                    />
+                  )}
+                  {!showMainImage && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-200 to-cyan-200">
+                      <div className="text-center text-gray-600">
+                        <Building2 className="h-16 w-16 mx-auto mb-2 opacity-50" />
+                        <p className="text-sm">Фото {currentImageIndex + 1}</p>
+                      </div>
                     </div>
+                  )}
+                  <div className="pointer-events-none absolute inset-0 z-10 flex items-end justify-center bg-gradient-to-t from-black/50 to-transparent p-4">
+                    <p className="font-medium text-white">
+                      {currentImageIndex + 1} / {galleryImages.length}
+                    </p>
                   </div>
-                )}
-                <div className="pointer-events-none absolute inset-0 z-10 flex items-end justify-center bg-gradient-to-t from-black/50 to-transparent p-4">
-                  <p className="font-medium text-white">
-                    {currentImageIndex + 1} / {galleryImages.length}
-                  </p>
-                </div>
 
-                <button
-                  onClick={prevImage}
-                  className="absolute left-4 top-1/2 z-20 -translate-y-1/2 rounded-none bg-white/80 p-2 shadow-lg transition-colors hover:bg-white"
-                  aria-label="Предыдущее фото"
-                >
-                  <ChevronLeft className="h-6 w-6 text-gray-800" />
-                </button>
-                <button
-                  onClick={nextImage}
-                  className="absolute right-4 top-1/2 z-20 -translate-y-1/2 rounded-none bg-white/80 p-2 shadow-lg transition-colors hover:bg-white"
-                  aria-label="Следующее фото"
-                >
-                  <ChevronRight className="h-6 w-6 text-gray-800" />
-                </button>
-              </div>
-            </Card>
+                  <button
+                    onClick={prevImage}
+                    className="absolute left-4 top-1/2 z-20 -translate-y-1/2 rounded-none bg-white/80 p-2 shadow-lg transition-colors hover:bg-white"
+                    aria-label="Предыдущее фото"
+                  >
+                    <ChevronLeft className="h-6 w-6 text-gray-800" />
+                  </button>
+                  <button
+                    onClick={nextImage}
+                    className="absolute right-4 top-1/2 z-20 -translate-y-1/2 rounded-none bg-white/80 p-2 shadow-lg transition-colors hover:bg-white"
+                    aria-label="Следующее фото"
+                  >
+                    <ChevronRight className="h-6 w-6 text-gray-800" />
+                  </button>
+                </div>
+              </Card>
+            )}
 
             <div className="grid shrink-0 grid-cols-3 gap-2">
               {galleryImages.map((image, index) => (
@@ -390,12 +452,11 @@ export function AboutCompany({ embedded = false }: { embedded?: boolean }) {
                   )}
                 >
                   {!imageErrors.has(index) ? (
-                    <Image
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
                       src={image}
                       alt={`Миниатюра ${index + 1}`}
-                      fill
-                      className="object-cover"
-                      unoptimized
+                      className="about-company-gallery-img bvi-no-style absolute inset-0 z-[1] h-full w-full object-cover"
                       onError={() => {
                         setImageErrors((prev) => new Set(prev).add(index));
                       }}
@@ -409,6 +470,8 @@ export function AboutCompany({ embedded = false }: { embedded?: boolean }) {
               ))}
             </div>
           </div>
+            </div>
+          )}
         </div>
       </div>
     </Wrapper>

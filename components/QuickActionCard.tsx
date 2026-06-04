@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Droplet, CreditCard, FileText, Wrench, AlertTriangle } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface QuickActionCardProps {
   iconName: "Droplet" | "CreditCard" | "FileText" | "Wrench" | "AlertTriangle";
@@ -31,11 +32,15 @@ const iconMap = {
   AlertTriangle,
 };
 
-const cardClass =
-  "group flex h-full flex-col cursor-pointer rounded-none bg-white transition-all hover:shadow-lg";
+const cardBaseClass =
+  "quick-action-card bvi-no-styles bvi-preserve-ui group flex h-full min-h-0 flex-col cursor-pointer overflow-hidden rounded-none border border-gray-200 bg-white transition-all hover:shadow-lg";
+
+function cardClassName(isEmergency?: boolean) {
+  return cn(cardBaseClass, isEmergency && "quick-action-card--emergency");
+}
 
 const actionButtonClass =
-  "w-full pointer-events-none rounded-none hover:scale-100 active:scale-100";
+  "bvi-no-styles w-full max-w-full box-border pointer-events-none rounded-none hover:scale-100 active:scale-100";
 
 function QuickActionCardContent({
   iconName,
@@ -46,18 +51,21 @@ function QuickActionCardContent({
 }: Pick<QuickActionCardProps, "iconName" | "title" | "description" | "iconColor" | "isEmergency">) {
   const Icon = iconMap[iconName];
   const iconClassName = isEmergency
-    ? "h-10 w-10 text-red-500"
-    : `h-10 w-10 ${iconColor}`;
+    ? "quick-action-card-icon-svg text-red-500"
+    : cn("quick-action-card-icon-svg", iconColor);
 
   return (
     <CardHeader className="flex flex-1 flex-col p-5 pb-2">
-      <div className="mb-2 flex h-12 items-center">
+      <div className="quick-action-card-icon mb-3 flex h-14 w-14 shrink-0 items-center justify-center">
         <Icon
-          className={`${iconClassName} transition-transform duration-500 ease-out group-hover:scale-110`}
+          className={cn(
+            "h-9 w-9 transition-transform duration-500 ease-out group-hover:scale-110",
+            iconClassName
+          )}
         />
       </div>
-      <CardTitle className="mb-1.5 min-h-[2.75rem] text-lg leading-tight line-clamp-2">{title}</CardTitle>
-      <CardDescription className="mb-0 min-h-[2rem] line-clamp-2">{description}</CardDescription>
+      <CardTitle className="mb-1.5 text-lg leading-snug">{title}</CardTitle>
+      <CardDescription className="mb-0 leading-snug">{description}</CardDescription>
     </CardHeader>
   );
 }
@@ -77,7 +85,7 @@ function QuickActionCardFooter({
   const btnClass = `${actionButtonClass} ${accent}`;
 
   return (
-    <CardContent className="mt-auto px-5 pt-0 pb-3">
+    <CardContent className="quick-action-card-footer mt-auto shrink-0 px-5 pt-0 pb-4">
       <Button
         asChild={!disabled}
         className={btnClass}
@@ -106,8 +114,8 @@ export function QuickActionCard({
 
   if (publicAccess) {
     return (
-      <Link href={href} className="block h-full">
-        <Card className={cardClass}>
+      <Link href={href} className="quick-action-card-link block h-full min-h-0">
+        <Card className={cardClassName(isEmergency)}>
           <QuickActionCardContent
             iconName={iconName}
             title={title}
@@ -127,7 +135,8 @@ export function QuickActionCard({
 
   if (isLoading) {
     return (
-      <Card className={`${cardClass} h-full`}>
+      <div className="quick-action-card-link flex h-full min-h-0 flex-col">
+      <Card className={cn(cardClassName(), "flex-1")}>
         <QuickActionCardContent
           iconName={iconName}
           title={title}
@@ -140,13 +149,14 @@ export function QuickActionCard({
           disabled
         />
       </Card>
+      </div>
     );
   }
 
   if (!isAuthenticated) {
     return (
-      <Link href="/login" className="block h-full">
-        <Card className={`${cardClass} opacity-75`}>
+      <Link href="/login" className="quick-action-card-link block h-full min-h-0">
+        <Card className={cn(cardClassName(), "opacity-75")}>
           <QuickActionCardContent
             iconName={iconName}
             title={title}
@@ -160,8 +170,8 @@ export function QuickActionCard({
   }
 
   return (
-    <Link href={href} className="block h-full">
-      <Card className={cardClass}>
+    <Link href={href} className="quick-action-card-link block h-full min-h-0">
+      <Card className={cardClassName()}>
         <QuickActionCardContent
           iconName={iconName}
           title={title}

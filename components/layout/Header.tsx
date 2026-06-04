@@ -100,7 +100,7 @@ export function Header() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white">
+    <header id="site-header" className="site-header-root bvi-no-styles sticky top-0 z-50 w-full bg-white">
       <div className="relative">
       <div data-header-inner className="relative w-full flex h-16 lg:h-[4.5rem] items-stretch pr-0">
         <div className="flex flex-1 min-w-0 items-stretch border-b border-gray-200 pl-3 sm:pl-4 lg:pl-6 xl:pl-8">
@@ -120,7 +120,7 @@ export function Header() {
         </div>
 
         {/* Центр: Навигация */}
-        <nav className="hidden 2xl:flex absolute left-1/2 -translate-x-[calc(50%+5.5rem)] top-0 h-full items-stretch gap-8 lg:gap-9 xl:gap-10">
+        <nav className="header-desktop-nav hidden 2xl:flex absolute left-1/2 -translate-x-[calc(50%+5.5rem)] top-0 h-full items-stretch gap-8 lg:gap-9 xl:gap-10">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
@@ -173,7 +173,7 @@ export function Header() {
 
         {/* Правая часть */}
         <div className="flex items-stretch h-full flex-shrink-0 z-10 ml-auto">
-          <div className="hidden 2xl:flex items-stretch h-full border-b border-gray-200">
+          <div className="header-desktop-toolbar hidden 2xl:flex items-stretch h-full border-b border-gray-200">
             <div className={headerSquareBtn}>
               <Search inHeader />
             </div>
@@ -206,7 +206,7 @@ export function Header() {
           ) : session ? (
             <div
               className={cn(
-                "relative hidden h-full border-b border-l border-gray-200 2xl:flex",
+                "header-desktop-auth relative hidden h-full border-b border-l border-gray-200 2xl:flex",
                 megaMenu === "profile" && "bg-gray-50"
               )}
               onMouseEnter={() => openMegaMenu("profile")}
@@ -235,7 +235,7 @@ export function Header() {
                 href="/login"
                 className={cn(
                   buttonVariants({ variant: "ghost" }),
-                  "hidden 2xl:inline-flex self-stretch h-full min-h-full rounded-none border-b border-l border-gray-200 px-4 lg:px-5 text-base py-0 hover:scale-100 active:scale-100"
+                  "header-desktop-auth-link hidden 2xl:inline-flex self-stretch h-full min-h-full rounded-none border-b border-l border-gray-200 px-4 lg:px-5 text-base py-0 hover:scale-100 active:scale-100"
                 )}
               >
                 Войти
@@ -244,7 +244,7 @@ export function Header() {
                 href="/register"
                 className={cn(
                   buttonVariants({ variant: "default" }),
-                  "hidden 2xl:inline-flex self-stretch h-full min-h-full rounded-none border-b-0 px-6 lg:px-10 text-base py-0 hover:scale-100 active:scale-100"
+                  "header-desktop-auth-link hidden 2xl:inline-flex self-stretch h-full min-h-full rounded-none border-b-0 px-6 lg:px-10 text-base py-0 hover:scale-100 active:scale-100"
                 )}
               >
                 Регистрация
@@ -252,7 +252,7 @@ export function Header() {
             </>
           )}
 
-          <div className="flex items-center self-center px-2 2xl:hidden">
+          <div className="header-mobile-toggle flex items-center self-center px-2 2xl:hidden">
             <HeaderSideMenuToggle
               isOpen={mobileMenuOpen}
               onToggle={() => {
@@ -266,7 +266,7 @@ export function Header() {
 
       {megaMenu && (
         <div
-          className="hidden 2xl:block absolute left-0 right-0 top-full z-40"
+          className="header-mega-dropdown hidden 2xl:block absolute left-0 right-0 top-full z-40"
           onMouseEnter={() => openMegaMenu(megaMenu)}
           onMouseLeave={scheduleCloseMegaMenu}
         >

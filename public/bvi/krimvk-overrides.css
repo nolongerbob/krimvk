@@ -1,0 +1,1009 @@
+/**
+ * Подключается ПОСЛЕ bvi.min.css
+ */
+
+html.bvi-active {
+  --bvi-root-px: 16px;
+  --bvi-header-px: clamp(16px, var(--bvi-root-px, 16px), 22px);
+  --bvi-gap: 1.5rem;
+  --bvi-gap-lg: 2rem;
+  --bvi-page-pad: clamp(1rem, 3vw, 2rem);
+}
+
+html body.bvi-active .bvi-body {
+  font-size: var(--bvi-root-px, 16px) !important;
+  line-height: 1.65 !important;
+  letter-spacing: normal !important;
+  padding-left: var(--bvi-page-pad) !important;
+  padding-right: var(--bvi-page-pad) !important;
+}
+
+/* Просторнее: контейнеры и секции не сжимаем */
+html body.bvi-active .bvi-body .container {
+  width: 100% !important;
+  max-width: min(100%, 90rem) !important;
+  padding-left: var(--bvi-page-pad) !important;
+  padding-right: var(--bvi-page-pad) !important;
+}
+
+html body.bvi-active .bvi-body [class*='max-w-3xl'],
+html body.bvi-active .bvi-body [class*='max-w-4xl'],
+html body.bvi-active .bvi-body [class*='max-w-5xl'],
+html body.bvi-active .bvi-body [class*='max-w-6xl'],
+html body.bvi-active .bvi-body [class*='max-w-7xl'] {
+  max-width: min(100%, 80rem) !important;
+}
+
+html body.bvi-active .bvi-body section {
+  padding-top: 2.5rem !important;
+  padding-bottom: 2.5rem !important;
+}
+
+html body.bvi-active .bvi-body .grid {
+  gap: var(--bvi-gap) !important;
+}
+
+html body.bvi-active .bvi-body .gap-4 {
+  gap: var(--bvi-gap) !important;
+}
+
+html body.bvi-active .bvi-body .gap-6,
+html body.bvi-active .bvi-body .gap-8 {
+  gap: var(--bvi-gap-lg) !important;
+}
+
+html body.bvi-active .bvi-body [class*='space-y-'] > * + * {
+  margin-top: 1em !important;
+}
+
+/* Масштаб через inherit, не px на каждый узел от isvek */
+html body.bvi-active .bvi-body *:not(.bvi-panel):not(.bvi-panel *):not(.bvi-no-styles):not(.bvi-no-styles *) {
+  font-size: inherit !important;
+  line-height: inherit !important;
+}
+
+html body.bvi-active .bvi-body .bvi-no-styles,
+html body.bvi-active .bvi-body .bvi-no-styles * {
+  font-size: inherit !important;
+  line-height: inherit !important;
+}
+
+html body.bvi-active .bvi-body h1 {
+  font-size: 1.75em !important;
+}
+
+html body.bvi-active .bvi-body h2 {
+  font-size: 1.5em !important;
+}
+
+html body.bvi-active .bvi-body h3 {
+  font-size: 1.3em !important;
+}
+
+html body.bvi-active .bvi-body h4 {
+  font-size: 1.15em !important;
+}
+
+/* ——— isvek красит все button — отключаем внутри .bvi-preserve-ui ——— */
+html body.bvi-active .bvi-body[data-bvi-theme='white'] .bvi-preserve-ui button.bvi-no-styles,
+html body.bvi-active .bvi-body[data-bvi-theme='white'] .bvi-preserve-ui .bvi-no-styles {
+  background-color: #fff !important;
+  color: #111827 !important;
+  border-color: #111827 !important;
+  box-shadow: none !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='black'] .bvi-preserve-ui button.bvi-no-styles,
+html body.bvi-active .bvi-body[data-bvi-theme='black'] .bvi-preserve-ui .bvi-no-styles {
+  background-color: #000 !important;
+  color: #fff !important;
+  border-color: #fff !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='blue'] .bvi-preserve-ui button.bvi-no-styles,
+html body.bvi-active .bvi-body[data-bvi-theme='blue'] .bvi-preserve-ui .bvi-no-styles {
+  background-color: #9dd1ff !important;
+  color: #063462 !important;
+  border-color: #063462 !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='brown'] .bvi-preserve-ui button.bvi-no-styles,
+html body.bvi-active .bvi-body[data-bvi-theme='brown'] .bvi-preserve-ui .bvi-no-styles {
+  background-color: #f7f3d6 !important;
+  color: #4d4b43 !important;
+  border-color: #4d4b43 !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='green'] .bvi-preserve-ui button.bvi-no-styles,
+html body.bvi-active .bvi-body[data-bvi-theme='green'] .bvi-preserve-ui .bvi-no-styles {
+  background-color: #3b2716 !important;
+  color: #a9e44d !important;
+  border-color: #a9e44d !important;
+}
+
+/* Иконки lucide: не перекрашивать в сплошной чёрный */
+html body.bvi-active .bvi-body .bvi-preserve-ui svg,
+html body.bvi-active .bvi-body svg.bvi-no-styles {
+  box-shadow: none !important;
+  filter: none !important;
+  outline: none !important;
+  background: transparent !important;
+}
+
+html body.bvi-active .bvi-body .quick-action-card-icon-svg {
+  width: 2.25rem !important;
+  height: 2.25rem !important;
+  flex-shrink: 0 !important;
+  fill: none !important;
+}
+
+/* Иконки по расцветке BVI */
+html body.bvi-active .bvi-body[data-bvi-theme='white'] .quick-action-card-icon {
+  background-color: #fff !important;
+  border: 2px solid #000 !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='white'] .quick-action-card-icon-svg {
+  color: #000 !important;
+  stroke: #000 !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='black'] .quick-action-card {
+  background-color: #000 !important;
+  color: #fff !important;
+  border-color: #fff !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='black'] .quick-action-card-icon {
+  background-color: #fff !important;
+  border: 2px solid #000 !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='black'] .quick-action-card-icon-svg {
+  color: #000 !important;
+  stroke: #000 !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='blue'] .quick-action-card {
+  background-color: #9dd1ff !important;
+  color: #063462 !important;
+  border-color: #063462 !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='blue'] .quick-action-card-icon {
+  background-color: #e8f4ff !important;
+  border: 2px solid #063462 !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='blue'] .quick-action-card-icon-svg {
+  color: #063462 !important;
+  stroke: #063462 !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='brown'] .quick-action-card {
+  background-color: #f7f3d6 !important;
+  color: #4d4b43 !important;
+  border-color: #4d4b43 !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='brown'] .quick-action-card-icon {
+  background-color: #fff !important;
+  border: 2px solid #4d4b43 !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='brown'] .quick-action-card-icon-svg {
+  color: #4d4b43 !important;
+  stroke: #4d4b43 !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='green'] .quick-action-card {
+  background-color: #3b2716 !important;
+  color: #a9e44d !important;
+  border-color: #a9e44d !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='green'] .quick-action-card-icon {
+  background-color: #fff !important;
+  border: 2px solid #a9e44d !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='green'] .quick-action-card-icon-svg {
+  color: #3b2716 !important;
+  stroke: #3b2716 !important;
+}
+
+html body.bvi-active .bvi-body * {
+  text-shadow: none !important;
+}
+
+/* ——— Шапка: масштаб умеренно + два ряда ——— */
+html body.bvi-active #site-header {
+  position: sticky;
+  z-index: 100;
+  top: var(--bvi-panel-offset, 0px);
+  font-size: var(--bvi-header-px, 16px) !important;
+  line-height: 1.45 !important;
+  box-shadow: 0 1px 0 currentColor;
+  overflow: visible !important;
+}
+
+html body.bvi-active #site-header * {
+  font-size: inherit !important;
+  line-height: inherit !important;
+}
+
+/* BVI: только логотип + «⋯», навигация в боковом меню (как на мобильном) */
+html body.bvi-active #site-header .header-desktop-nav,
+html body.bvi-active #site-header .header-desktop-toolbar,
+html body.bvi-active #site-header .header-desktop-auth,
+html body.bvi-active #site-header .header-desktop-auth-link {
+  display: none !important;
+}
+
+html body.bvi-active #site-header [data-header-inner] {
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  height: auto !important;
+  min-height: 4.25rem !important;
+  overflow: visible !important;
+}
+
+html body.bvi-active #site-header [data-header-inner] > div:first-of-type {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+html body.bvi-active #site-header [data-header-inner] > div:last-of-type {
+  flex: 0 0 auto !important;
+}
+
+html body.bvi-active #site-header a.bg-blue-600,
+html body.bvi-active #site-header .bg-blue-600 {
+  background-color: #2563eb !important;
+  color: #fff !important;
+}
+
+html body.bvi-active #site-header .header-mega-dropdown {
+  display: none !important;
+}
+
+html body.bvi-active #site-header .header-mobile-toggle {
+  display: flex !important;
+  margin-left: auto;
+}
+
+html body.bvi-active #site-header .header-side-menu-toggle {
+  display: inline-flex !important;
+}
+
+html body.bvi-active .header-side-menu-backdrop {
+  display: block !important;
+}
+
+html body.bvi-active .header-side-menu-panel {
+  display: flex !important;
+  font-size: var(--bvi-root-px, 16px) !important;
+  line-height: 1.45 !important;
+  z-index: 100001 !important;
+}
+
+html body.bvi-active .header-side-menu-backdrop {
+  z-index: 100000 !important;
+}
+
+html body.bvi-active .header-side-menu-panel a,
+html body.bvi-active .header-side-menu-panel button,
+html body.bvi-active .header-side-menu-panel span {
+  font-size: inherit !important;
+  line-height: inherit !important;
+}
+
+html body.bvi-active .header-side-menu-item {
+  font-size: 1.35em !important;
+}
+
+html body.bvi-active .header-side-menu-sublink {
+  font-size: 1.05em !important;
+}
+
+html body.bvi-active .header-side-menu-footer-link {
+  font-size: 1.25em !important;
+}
+
+html body.bvi-active #site-header .header-mega-menu {
+  max-height: min(70vh, 32rem) !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+html body.bvi-active #site-header .header-mega-menu-inner {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+}
+
+html body.bvi-active #site-header .header-mega-menu-grid {
+  grid-template-columns: 1fr !important;
+  gap: 1.25rem !important;
+}
+
+@media (min-width: 1536px) and (max-width: 1919px) {
+  html body.bvi-active #site-header .header-mega-menu-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+html body.bvi-active #site-header .header-mega-menu p,
+html body.bvi-active #site-header .header-mega-menu a,
+html body.bvi-active #site-header .header-mega-menu span {
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+  max-width: 100% !important;
+}
+
+html body.bvi-active #site-header .header-mega-menu a {
+  display: block !important;
+  background-color: transparent !important;
+}
+
+html body.bvi-active #site-header .header-mega-menu ul {
+  width: 100% !important;
+}
+
+html body.bvi-active #site-header[data-bvi-theme='white'] {
+  background-color: #fff !important;
+  color: #000 !important;
+}
+
+html body.bvi-active #site-header[data-bvi-theme='black'] {
+  background-color: #000 !important;
+  color: #fff !important;
+}
+
+html body.bvi-active #site-header[data-bvi-theme='blue'] {
+  background-color: #9dd1ff !important;
+  color: #063462 !important;
+}
+
+html body.bvi-active #site-header[data-bvi-theme='brown'] {
+  background-color: #f7f3d6 !important;
+  color: #4d4b43 !important;
+}
+
+html body.bvi-active #site-header[data-bvi-theme='green'] {
+  background-color: #3b2716 !important;
+  color: #a9e44d !important;
+}
+
+html body.bvi-active #site-header [class*='border-gray'] {
+  border-color: currentColor !important;
+}
+
+html body.bvi-active #site-header svg {
+  box-shadow: none !important;
+  filter: none !important;
+  background: transparent !important;
+}
+
+html body.bvi-active #site-header img {
+  filter: none !important;
+}
+
+/* ——— Быстрые действия: всегда 2×2, крупные блоки (не 4 узких колонки) ——— */
+html body.bvi-active .bvi-body .quick-actions-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  grid-template-rows: repeat(2, minmax(20rem, auto)) !important;
+  align-items: stretch !important;
+  gap: var(--bvi-gap-lg) !important;
+  width: 100% !important;
+  max-width: 72rem !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+@media (max-width: 520px) {
+  html body.bvi-active .bvi-body .quick-actions-grid {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto !important;
+  }
+}
+
+html body.bvi-active .bvi-body .quick-actions-grid > .quick-action-card-link,
+html body.bvi-active .bvi-body .quick-actions-grid > .quick-action-card {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  min-height: 20rem !important;
+}
+
+html body.bvi-active .bvi-body .quick-action-card {
+  display: flex !important;
+  flex: 1 1 auto !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  min-height: 20rem !important;
+  overflow: hidden !important;
+  background-color: #fff !important;
+  color: inherit !important;
+}
+
+html body.bvi-active .bvi-body .quick-action-card [class*='p-5'] {
+  padding: 1.5rem 1.75rem !important;
+}
+
+html body.bvi-active .bvi-body .quick-action-card-icon {
+  width: 4rem !important;
+  height: 4rem !important;
+  margin-bottom: 0.75rem !important;
+}
+
+html body.bvi-active .bvi-body .quick-action-card-icon-svg {
+  width: 2.75rem !important;
+  height: 2.75rem !important;
+}
+
+html body.bvi-active .bvi-body .quick-action-card-footer {
+  padding-bottom: 1.25rem !important;
+}
+
+html body.bvi-active .bvi-body .quick-action-card button {
+  min-height: 3.5rem !important;
+  padding: 0.75rem 1rem !important;
+  font-size: 1.05em !important;
+}
+
+html body.bvi-active .bvi-body .quick-action-card > div {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+}
+
+html body.bvi-active .bvi-body .quick-action-card-footer {
+  flex-shrink: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+html body.bvi-active .bvi-body .quick-action-card button {
+  position: static !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  height: auto !important;
+  min-height: 3rem !important;
+  padding: 0.55rem 0.75rem !important;
+  white-space: normal !important;
+  text-align: center !important;
+  border-width: 2px !important;
+  border-style: solid !important;
+}
+
+html body.bvi-active .bvi-body .quick-action-card button.border-red-600,
+html body.bvi-active .bvi-body .quick-action-card button.text-red-600 {
+  color: #dc2626 !important;
+  border-color: #dc2626 !important;
+}
+
+html body.bvi-active .bvi-body .quick-action-card button.border-blue-600,
+html body.bvi-active .bvi-body .quick-action-card button.text-blue-600 {
+  color: #2563eb !important;
+  border-color: #2563eb !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='white'] .quick-action-card button,
+html body.bvi-active .bvi-body[data-bvi-theme='black'] .quick-action-card button {
+  background-color: transparent !important;
+  color: inherit !important;
+  border-color: currentColor !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='blue'] .quick-action-card button {
+  background-color: #e8f4ff !important;
+  color: #063462 !important;
+  border-color: #063462 !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='brown'] .quick-action-card button {
+  background-color: #fff !important;
+  color: #4d4b43 !important;
+  border-color: #4d4b43 !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='green'] .quick-action-card button {
+  background-color: #fff !important;
+  color: #3b2716 !important;
+  border-color: #a9e44d !important;
+}
+
+/* ——— О компании: на всю ширину, колонкой ——— */
+html body.bvi-active .bvi-body .about-company-section {
+  width: 100% !important;
+  max-width: 100% !important;
+  padding-left: var(--bvi-page-pad) !important;
+  padding-right: var(--bvi-page-pad) !important;
+}
+
+html body.bvi-active .bvi-body .about-company-layout {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  gap: var(--bvi-gap-lg) !important;
+  grid-template-columns: none !important;
+  grid-template-rows: none !important;
+}
+
+html body.bvi-active .bvi-body .about-company-layout > * {
+  width: 100% !important;
+  max-width: 100% !important;
+  grid-column: auto !important;
+  grid-row: auto !important;
+}
+
+html body.bvi-active .bvi-body .about-company-main,
+html body.bvi-active .bvi-body .about-company-aside {
+  display: contents !important;
+}
+
+html body.bvi-active .bvi-body .about-company-tabs {
+  order: 1 !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: stretch !important;
+  gap: 0.75rem 1rem !important;
+  width: 100% !important;
+}
+
+html body.bvi-active .bvi-body .about-company-gallery-label {
+  order: 2 !important;
+}
+
+html body.bvi-active .bvi-body .about-company-panel {
+  order: 3 !important;
+}
+
+html body.bvi-active .bvi-body .about-company-gallery {
+  order: 4 !important;
+}
+
+html body.bvi-active .bvi-body .about-company-tab {
+  flex: 1 1 calc(50% - 0.5rem) !important;
+  width: auto !important;
+  min-width: 10.5rem !important;
+  max-width: 100% !important;
+  min-height: 4rem !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 0.65rem !important;
+  padding: 1rem 1.25rem !important;
+  box-sizing: border-box !important;
+  border: 2px solid currentColor !important;
+}
+
+@media (min-width: 1024px) {
+  html body.bvi-active .bvi-body .about-company-tab {
+    flex: 0 1 auto !important;
+    min-width: 12rem !important;
+  }
+}
+
+html body.bvi-active .bvi-body .about-company-tab-label,
+html body.bvi-active .bvi-body .about-company-tab-icon-svg {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+html body.bvi-active .bvi-body .about-company-tab-icon-svg {
+  box-sizing: content-box !important;
+  padding: 0.45rem !important;
+  fill: none !important;
+}
+
+html body.bvi-active .bvi-body .about-company-tab.bg-blue-600 {
+  background-color: #2563eb !important;
+  color: #fff !important;
+  border-color: #1d4ed8 !important;
+}
+
+html body.bvi-active .bvi-body .about-company-tab.bg-blue-600 .about-company-tab-label,
+html body.bvi-active .bvi-body .about-company-tab.text-white .about-company-tab-label {
+  color: #fff !important;
+}
+
+html body.bvi-active .bvi-body .about-company-tab.bg-blue-600 .about-company-tab-icon-svg {
+  background-color: #fff !important;
+  border: 2px solid #1d4ed8 !important;
+  color: #2563eb !important;
+  stroke: #2563eb !important;
+}
+
+html body.bvi-active .bvi-body .about-company-tab.bg-gray-100,
+html body.bvi-active .bvi-body .about-company-tab[class*='bg-gray'] {
+  background-color: #f3f4f6 !important;
+  color: #374151 !important;
+  border-color: #6b7280 !important;
+}
+
+html body.bvi-active .bvi-body .about-company-tab.bg-gray-100 .about-company-tab-label,
+html body.bvi-active .bvi-body .about-company-tab[class*='bg-gray'] .about-company-tab-label,
+html body.bvi-active .bvi-body .about-company-tab.text-gray-700 .about-company-tab-label {
+  color: #374151 !important;
+}
+
+html body.bvi-active .bvi-body .about-company-tab.bg-gray-100 .about-company-tab-icon-svg,
+html body.bvi-active .bvi-body .about-company-tab[class*='bg-gray'] .about-company-tab-icon-svg {
+  background-color: #fff !important;
+  border: 2px solid #6b7280 !important;
+  color: #374151 !important;
+  stroke: #374151 !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='white'] .about-company-tab.bg-blue-600 {
+  background-color: #000 !important;
+  color: #fff !important;
+  border-color: #000 !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='white'] .about-company-tab.bg-blue-600 .about-company-tab-label {
+  color: #fff !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='white'] .about-company-tab.bg-blue-600 .about-company-tab-icon-svg {
+  background-color: #fff !important;
+  border-color: #000 !important;
+  color: #000 !important;
+  stroke: #000 !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='white'] .about-company-tab.bg-gray-100,
+html body.bvi-active .bvi-body[data-bvi-theme='white'] .about-company-tab[class*='bg-gray'] {
+  background-color: #fff !important;
+  color: #000 !important;
+  border-color: #000 !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='white'] .about-company-tab.bg-gray-100 .about-company-tab-label,
+html body.bvi-active .bvi-body[data-bvi-theme='white'] .about-company-tab[class*='bg-gray'] .about-company-tab-label {
+  color: #000 !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='white'] .about-company-tab.bg-gray-100 .about-company-tab-icon-svg,
+html body.bvi-active .bvi-body[data-bvi-theme='white'] .about-company-tab[class*='bg-gray'] .about-company-tab-icon-svg {
+  background-color: #fff !important;
+  border-color: #000 !important;
+  color: #000 !important;
+  stroke: #000 !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='black'] .about-company-tab.bg-blue-600 {
+  background-color: #fff !important;
+  color: #000 !important;
+  border-color: #fff !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='black'] .about-company-tab.bg-blue-600 .about-company-tab-label {
+  color: #000 !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='black'] .about-company-tab.bg-blue-600 .about-company-tab-icon-svg {
+  background-color: #000 !important;
+  border-color: #fff !important;
+  color: #fff !important;
+  stroke: #fff !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='black'] .about-company-tab.bg-gray-100,
+html body.bvi-active .bvi-body[data-bvi-theme='black'] .about-company-tab[class*='bg-gray'] {
+  background-color: #000 !important;
+  color: #fff !important;
+  border-color: #fff !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='black'] .about-company-tab.bg-gray-100 .about-company-tab-label,
+html body.bvi-active .bvi-body[data-bvi-theme='black'] .about-company-tab[class*='bg-gray'] .about-company-tab-label {
+  color: #fff !important;
+}
+
+/* Синяя / коричневая / зелёная темы: isvek красит кнопки в цвет фона — явный контраст */
+html body.bvi-active .bvi-body[data-bvi-theme='blue'] .about-company-tab.bg-blue-600 {
+  background-color: #063462 !important;
+  color: #9dd1ff !important;
+  border-color: #9dd1ff !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='blue'] .about-company-tab.bg-blue-600 .about-company-tab-label {
+  color: #9dd1ff !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='blue'] .about-company-tab.bg-blue-600 .about-company-tab-icon-svg {
+  background-color: #9dd1ff !important;
+  border-color: #063462 !important;
+  color: #063462 !important;
+  stroke: #063462 !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='blue'] .about-company-tab.bg-gray-100,
+html body.bvi-active .bvi-body[data-bvi-theme='blue'] .about-company-tab[class*='bg-gray'] {
+  background-color: #e8f4ff !important;
+  color: #063462 !important;
+  border-color: #063462 !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='blue'] .about-company-tab.bg-gray-100 .about-company-tab-label,
+html body.bvi-active .bvi-body[data-bvi-theme='blue'] .about-company-tab[class*='bg-gray'] .about-company-tab-label {
+  color: #063462 !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='blue'] .about-company-tab.bg-gray-100 .about-company-tab-icon-svg,
+html body.bvi-active .bvi-body[data-bvi-theme='blue'] .about-company-tab[class*='bg-gray'] .about-company-tab-icon-svg {
+  background-color: #fff !important;
+  border-color: #063462 !important;
+  color: #063462 !important;
+  stroke: #063462 !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='brown'] .about-company-tab.bg-blue-600 {
+  background-color: #4d4b43 !important;
+  color: #f7f3d6 !important;
+  border-color: #f7f3d6 !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='brown'] .about-company-tab.bg-blue-600 .about-company-tab-label {
+  color: #f7f3d6 !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='brown'] .about-company-tab.bg-blue-600 .about-company-tab-icon-svg {
+  background-color: #f7f3d6 !important;
+  border-color: #4d4b43 !important;
+  color: #4d4b43 !important;
+  stroke: #4d4b43 !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='brown'] .about-company-tab.bg-gray-100,
+html body.bvi-active .bvi-body[data-bvi-theme='brown'] .about-company-tab[class*='bg-gray'] {
+  background-color: #f7f3d6 !important;
+  color: #4d4b43 !important;
+  border-color: #4d4b43 !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='brown'] .about-company-tab.bg-gray-100 .about-company-tab-label,
+html body.bvi-active .bvi-body[data-bvi-theme='brown'] .about-company-tab[class*='bg-gray'] .about-company-tab-label {
+  color: #4d4b43 !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='brown'] .about-company-tab.bg-gray-100 .about-company-tab-icon-svg,
+html body.bvi-active .bvi-body[data-bvi-theme='brown'] .about-company-tab[class*='bg-gray'] .about-company-tab-icon-svg {
+  background-color: #fff !important;
+  border-color: #4d4b43 !important;
+  color: #4d4b43 !important;
+  stroke: #4d4b43 !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='green'] .about-company-tab.bg-blue-600 {
+  background-color: #a9e44d !important;
+  color: #3b2716 !important;
+  border-color: #3b2716 !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='green'] .about-company-tab.bg-blue-600 .about-company-tab-label {
+  color: #3b2716 !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='green'] .about-company-tab.bg-blue-600 .about-company-tab-icon-svg {
+  background-color: #3b2716 !important;
+  border-color: #a9e44d !important;
+  color: #a9e44d !important;
+  stroke: #a9e44d !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='green'] .about-company-tab.bg-gray-100,
+html body.bvi-active .bvi-body[data-bvi-theme='green'] .about-company-tab[class*='bg-gray'] {
+  background-color: #3b2716 !important;
+  color: #a9e44d !important;
+  border-color: #a9e44d !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='green'] .about-company-tab.bg-gray-100 .about-company-tab-label,
+html body.bvi-active .bvi-body[data-bvi-theme='green'] .about-company-tab[class*='bg-gray'] .about-company-tab-label {
+  color: #a9e44d !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-theme='green'] .about-company-tab.bg-gray-100 .about-company-tab-icon-svg,
+html body.bvi-active .bvi-body[data-bvi-theme='green'] .about-company-tab[class*='bg-gray'] .about-company-tab-icon-svg {
+  background-color: #fff !important;
+  border-color: #a9e44d !important;
+  color: #3b2716 !important;
+  stroke: #3b2716 !important;
+}
+
+html body.bvi-active .bvi-body .about-company-gallery-label {
+  display: flex !important;
+  width: 100% !important;
+  min-height: 4rem !important;
+  align-items: center !important;
+  margin-top: 0.25rem !important;
+  padding: 0.75rem 1rem !important;
+  border: 2px solid currentColor !important;
+  box-sizing: border-box !important;
+}
+
+html body.bvi-active .bvi-body .about-company-panel,
+html body.bvi-active .bvi-body .about-company-gallery {
+  height: auto !important;
+  min-height: auto !important;
+}
+
+html body.bvi-active .bvi-body .about-company-panel > div,
+html body.bvi-active .bvi-body .about-company-panel-content {
+  overflow: visible !important;
+  max-height: none !important;
+  min-height: auto !important;
+}
+
+/* BVI: только миниатюры, без большого просмотрщика */
+html body.bvi-active .bvi-body .about-company-gallery-card,
+html body.bvi-active .bvi-body .about-company-gallery-viewer {
+  display: none !important;
+}
+
+html body.bvi-active .bvi-body .about-company-gallery {
+  min-height: auto !important;
+  gap: 0.75rem !important;
+}
+
+/* Галерея скрыта при «изображения выкл.» (дубль для SSR до гидрации) */
+html body.bvi-active .bvi-body[data-bvi-images='false'] .about-company-gallery,
+html body.bvi-active .bvi-body[data-bvi-images='false'] .about-company-gallery-label {
+  display: none !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-images='grayscale'] .about-company-gallery .grid .about-company-gallery-img.bvi-no-style,
+html body.bvi-active .bvi-body[data-bvi-images='true'] .about-company-gallery .grid .about-company-gallery-img.bvi-no-style {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 1 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  visibility: visible !important;
+  display: block !important;
+  opacity: 1 !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-images='grayscale'] .about-company-gallery .grid .about-company-gallery-img.bvi-no-style {
+  filter: grayscale(100%) !important;
+  -webkit-filter: grayscale(100%) !important;
+}
+
+html body.bvi-active .bvi-body[data-bvi-images='true'] .about-company-gallery .grid .about-company-gallery-img.bvi-no-style {
+  filter: none !important;
+  -webkit-filter: none !important;
+}
+
+html body.bvi-active .bvi-body .about-company-gallery .grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 0.75rem !important;
+}
+
+html body.bvi-active .bvi-body .about-company-gallery .grid button {
+  min-height: 5.5rem !important;
+  height: auto !important;
+}
+
+/* ——— Футер: масштаб как у .bvi-body, 4 колонки в ряд ——— */
+html body.bvi-active footer.site-footer {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  opacity: 1 !important;
+  transform: none !important;
+  font-size: var(--bvi-root-px, 16px) !important;
+  line-height: 1.5 !important;
+}
+
+html body.bvi-active footer.site-footer * {
+  font-size: inherit !important;
+  line-height: inherit !important;
+}
+
+html body.bvi-active footer.site-footer h3 {
+  font-size: 1.15em !important;
+  font-weight: 600 !important;
+}
+
+html body.bvi-active footer.site-footer .container {
+  width: 100% !important;
+  max-width: min(100%, 96rem) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: var(--bvi-page-pad) !important;
+  padding-right: var(--bvi-page-pad) !important;
+  padding-top: 1.5rem !important;
+  padding-bottom: 1.5rem !important;
+  box-sizing: border-box !important;
+}
+
+html body.bvi-active footer.site-footer .grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 1.25rem 1.75rem !important;
+  width: 100% !important;
+  align-items: start !important;
+}
+
+@media (min-width: 640px) {
+  html body.bvi-active footer.site-footer .grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}
+
+html body.bvi-active footer.site-footer .grid > div {
+  min-width: 0 !important;
+}
+
+html body.bvi-active footer.site-footer .mt-8 {
+  margin-top: 1.25rem !important;
+  padding-top: 1rem !important;
+}
+
+html body.bvi-active footer.site-footer .mt-8 .flex {
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+  gap: 0.75rem 1.25rem !important;
+}
+
+html body.bvi-active footer.site-footer li.flex {
+  align-items: flex-start !important;
+  gap: 0.65rem !important;
+}
+
+html body.bvi-active footer.site-footer a,
+html body.bvi-active footer.site-footer span,
+html body.bvi-active footer.site-footer p {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* ——— Общее ——— */
+html body.bvi-active .bvi-body [class*='line-clamp'] {
+  display: block !important;
+  -webkit-box-orient: unset !important;
+  -webkit-line-clamp: unset !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
+  white-space: normal !important;
+}
+
+html body.bvi-active .bvi-body [class*='min-h-']:not(.quick-action-card):not(.about-company-panel):not(.about-company-gallery):not(.about-company-gallery-viewer):not(.about-company-gallery-card) {
+  min-height: auto !important;
+}
+
+html body.bvi-active .bvi-body p,
+html body.bvi-active .bvi-body li,
+html body.bvi-active .bvi-body h1,
+html body.bvi-active .bvi-body h2,
+html body.bvi-active .bvi-body h3,
+html body.bvi-active .bvi-body h4 {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+html body.bvi-active .bvi-panel {
+  max-height: min(50vh, 100%);
+  overflow-y: auto;
+  font-size: 1rem !important;
+}
+
+html body.bvi-active .bvi-panel * {
+  font-size: inherit !important;
+}
+
+html body.bvi-active .bvi-panel .bvi-blocks {
+  flex-wrap: wrap !important;
+}

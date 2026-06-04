@@ -100,7 +100,7 @@ export default async function HomePage() {
       <section className="flex flex-1 flex-col bg-gray-50 pt-10 pb-16 md:pt-12 md:pb-20 lg:pb-24">
         <div className="container mx-auto flex flex-1 flex-col justify-center px-4">
           <h2 className="text-3xl md:text-4xl font-semibold text-center mb-8 md:mb-10 tracking-tight animate-fade-in">Быстрые действия</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pb-0">
+          <div className="quick-actions-grid grid auto-rows-fr grid-cols-1 items-stretch gap-4 pb-0 md:grid-cols-2 lg:grid-cols-4">
             <QuickActionCard
               iconName="Droplet"
               title="Передать показания"
@@ -168,8 +168,8 @@ export default async function HomePage() {
                   </div>
                   <div className="flex min-h-[88px] flex-col items-center justify-start space-y-1 text-center">
                     <Phone className="h-5 w-5 shrink-0 text-blue-500" />
-                    <a href="tel:+79787415759" className="text-lg font-medium text-gray-900 hover:text-primary">
-                      +7 (978) 741-57-59
+                    <a href="tel:+79884648724" className="text-lg font-medium text-gray-900 hover:text-primary">
+                      +7 (988) 464-87-24
                     </a>
                     <p className="max-w-sm text-sm text-gray-600">с 8:00 до 17:00 по будням, в пятницу c 8:00 до 16:00</p>
                   </div>

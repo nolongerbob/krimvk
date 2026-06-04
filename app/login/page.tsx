@@ -9,9 +9,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { AuthBrandPanel, AuthSplitLayout } from "@/components/auth/AuthBrandPanel";
-import { AuthOrDivider } from "@/components/auth/AuthOrDivider";
-import { GosuslugiIcon } from "@/components/auth/GosuslugiIcon";
-import { authButtonClass, authFieldClass, authOutlineButtonClass } from "@/components/auth/auth-styles";
+import { authButtonClass, authFieldClass } from "@/components/auth/auth-styles";
 
 export const dynamic = "force-dynamic";
 
@@ -210,18 +208,6 @@ function LoginForm() {
             {isLoading ? "Вход..." : "Войти"}
           </Button>
         </form>
-
-        <AuthOrDivider />
-
-        <Button
-          type="button"
-          variant="outline"
-          className={cn(authButtonClass, authOutlineButtonClass)}
-          onClick={() => signIn("gosuslugi", { callbackUrl })}
-        >
-          <GosuslugiIcon className="mr-2 h-5 w-5" />
-          Войти через Госуслуги
-        </Button>
 
         <p className="mt-6 text-center text-sm lg:text-left">
           <span className="text-gray-600">Нет аккаунта? </span>

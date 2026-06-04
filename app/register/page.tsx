@@ -5,12 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { signIn } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { AuthSplitLayout } from "@/components/auth/AuthBrandPanel";
-import { AuthOrDivider } from "@/components/auth/AuthOrDivider";
-import { GosuslugiIcon } from "@/components/auth/GosuslugiIcon";
-import { authButtonClass, authFieldClass, authOutlineButtonClass } from "@/components/auth/auth-styles";
+import { authButtonClass, authFieldClass } from "@/components/auth/auth-styles";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -174,18 +171,6 @@ export default function RegisterPage() {
             {isLoading ? "Регистрация..." : "Зарегистрироваться"}
           </Button>
         </form>
-
-        <AuthOrDivider />
-
-        <Button
-          type="button"
-          variant="outline"
-          className={cn(authButtonClass, authOutlineButtonClass)}
-          onClick={() => signIn("gosuslugi", { callbackUrl: "/dashboard" })}
-        >
-          <GosuslugiIcon className="mr-2 h-5 w-5" />
-          Зарегистрироваться через Госуслуги
-        </Button>
 
         <p className="mt-6 text-center text-sm lg:text-left">
           <span className="text-gray-600">Уже есть аккаунт? </span>

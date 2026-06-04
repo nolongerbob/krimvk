@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { getAppSession } from "@/lib/get-app-session";
+import { getAppSession } from '@/lib/get-app-session';
 import { prisma } from '@/lib/prisma';
 import { createPostVerifyLoginToken } from '@/lib/post-verify-login-token';
 
@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
  * GET — подтверждён ли email (только cookie pending_verify или сессия, без userId в query).
  * loginToken выдаётся только при pending_verify на устройстве регистрации.
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const cookieStore = await cookies();
     const pendingUserId = cookieStore.get('pending_verify')?.value;

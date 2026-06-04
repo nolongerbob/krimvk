@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { AuthSplitLayout } from "@/components/auth/AuthBrandPanel";
@@ -23,7 +22,6 @@ export default function RegisterPage() {
   });
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,31 +49,22 @@ export default function RegisterPage() {
       const data = await response.json();
 
       if (response.ok && data.registered === false) {
-        setError(data.message || "Проверьте почту или войдите в существующий аккаунт.");
+        setError(
+          data.message ||
+            "Аккаунт с этим email уже зарегистрирован. Войдите или восстановите пароль."
+        );
         setIsLoading(false);
         return;
       }
 
-      if (response.ok) {
-        try {
-          const result = await signIn("credentials", {
-            email: formData.email,
-            password: formData.password,
-            redirect: false,
-          });
-
-          if (result?.ok) {
-            router.push("/verify-email?waiting=true");
-          } else {
-            router.push("/verify-email?waiting=true");
-          }
-        } catch {
-          router.push("/verify-email?waiting=true");
-        }
-      } else {
-        setError(data.error || "Ошибка регистрации");
-        setIsLoading(false);
+      if (response.ok && data.registered) {
+        // Полный переход: cookies сессии и pending_verify выставляет API регистрации
+        window.location.href = "/verify-email?waiting=true";
+        return;
       }
+
+      setError(data.error || "Ошибка регистрации");
+      setIsLoading(false);
     } catch {
       setError("Произошла ошибка. Попробуйте позже.");
       setIsLoading(false);
@@ -169,7 +158,9 @@ export default function RegisterPage() {
               type="password"
               required
               value={formData.confirmPassword}
-              onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, confirmPassword: e.target.value })
+              }
               className={authFieldClass}
               placeholder="••••••••"
             />

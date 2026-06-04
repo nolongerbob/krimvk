@@ -87,7 +87,9 @@ export async function GET(request: Request) {
         role: verificationToken.user.role || 'USER',
       });
 
-      const response = NextResponse.redirect(new URL('/verify-email?verified=true', baseUrl));
+      const response = NextResponse.redirect(
+        new URL('/dashboard?emailVerified=true', baseUrl)
+      );
       setNextAuthSessionCookie(response, jwt);
       clearPendingVerify(response);
       return response;

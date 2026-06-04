@@ -91,8 +91,8 @@ export default function VerifyEmailPage() {
         return;
       }
       setMessage("Email успешно подтвержден! Переходим в личный кабинет...");
-      const timer = setTimeout(goDashboard, 2000);
-      return () => clearTimeout(timer);
+      goDashboard();
+      return;
     }
 
     const alreadyVerified = searchParams.get("already");

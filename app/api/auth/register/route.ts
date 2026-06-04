@@ -38,14 +38,63 @@ export async function POST(request: Request) {
     }
 
     if (existingUser) {
-      return NextResponse.json(
+      if (existingUser.emailVerified) {
+        return NextResponse.json(
+          {
+            registered: false,
+            reason: 'exists_verified',
+            message:
+              'Аккаунт с этим email уже зарегистрирован. Войдите или восстановите пароль.',
+          },
+          { status: 200 }
+        );
+      }
+
+      // Email есть, но не подтверждён — повторно отправляем письмо и ведём на страницу ожидания
+      await prisma.emailVerificationToken.deleteMany({
+        where: { userId: existingUser.id },
+      });
+      const token = crypto.randomBytes(32).toString('hex');
+      const expires = new Date();
+      expires.setHours(expires.getHours() + 24);
+      await prisma.emailVerificationToken.create({
+        data: { userId: existingUser.id, token, expires },
+      });
+
+      let emailSent = false;
+      try {
+        await sendVerificationEmail(
+          existingUser.email,
+          token,
+          existingUser.name || undefined
+        );
+        emailSent = true;
+      } catch (emailError) {
+        console.error(
+          '[register] Повторная отправка письма:',
+          (emailError as Error)?.message ?? emailError
+        );
+      }
+
+      const res = NextResponse.json(
         {
-          registered: false,
-          message:
-            'Если указанный email ещё не зарегистрирован, на него отправлено письмо. Если аккаунт уже есть — войдите или восстановите пароль.',
+          registered: true,
+          resent: true,
+          emailSent,
+          message: emailSent
+            ? 'На ваш email отправлено письмо для подтверждения. Перейдите по ссылке в письме.'
+            : 'Не удалось отправить письмо. Попробуйте позже или войдите, если аккаунт уже активен.',
         },
         { status: 200 }
       );
+      res.cookies.set('pending_verify', existingUser.id, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 24 * 60 * 60,
+        path: '/',
+      });
+      return res;
     }
 
     // Создаем пользователя (email еще не подтвержден)

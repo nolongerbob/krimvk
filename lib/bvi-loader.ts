@@ -110,6 +110,67 @@ function dedupeBviPanels() {
   for (let i = 1; i < panels.length; i++) {
     panels[i]?.remove();
   }
+  const fixedLinks = document.querySelectorAll('.bvi-link-fixed-top');
+  for (let i = 1; i < fixedLinks.length; i++) {
+    fixedLinks[i]?.remove();
+  }
+}
+
+/** Сбрасывает накопленные click-слушатели isvek на #bvi-plugin-trigger (каждый new Bvi() добавляет ещё один). */
+function resetBviTriggerElement(): void {
+  const el = document.getElementById(BVI_TRIGGER_ID);
+  if (!el?.parentNode) return;
+  const fresh = el.cloneNode(true) as HTMLAnchorElement;
+  fresh.id = BVI_TRIGGER_ID;
+  el.parentNode.replaceChild(fresh, el);
+}
+
+let bviPanelCloseHandler: ((event: Event) => void) | null = null;
+let bviPanelDedupeObserver: MutationObserver | null = null;
+
+function bindBviPanelCloseFix(): void {
+  if (bviPanelCloseHandler) return;
+
+  bviPanelCloseHandler = (event: Event) => {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    if (!target.closest('.bvi-panel [data-bvi="close"]')) return;
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    closeBviPanel();
+  };
+
+  document.addEventListener('click', bviPanelCloseHandler, true);
+}
+
+function unbindBviPanelCloseFix(): void {
+  if (!bviPanelCloseHandler) return;
+  document.removeEventListener('click', bviPanelCloseHandler, true);
+  bviPanelCloseHandler = null;
+}
+
+function observeBviPanelDedupe(): void {
+  bviPanelDedupeObserver?.disconnect();
+  bviPanelDedupeObserver = new MutationObserver(() => {
+    if (document.querySelectorAll('.bvi-panel').length > 1) {
+      dedupeBviPanels();
+    }
+  });
+  bviPanelDedupeObserver.observe(document.body, { childList: true, subtree: true });
+}
+
+function disconnectBviPanelDedupeObserver(): void {
+  bviPanelDedupeObserver?.disconnect();
+  bviPanelDedupeObserver = null;
+}
+
+/** Полное выключение BVI (кнопка «Обычная версия сайта»). */
+export function closeBviPanel(): void {
+  if (typeof document === 'undefined') return;
+  clearBviCookies();
+  teardownBviDom();
+  resetBviTriggerElement();
 }
 
 /** Снимает обёртку BVI с DOM (настройки в cookie сохраняются). */
@@ -119,6 +180,7 @@ export function teardownBviDom(): void {
   document.querySelectorAll('.bvi-panel').forEach((el) => el.remove());
   document.querySelectorAll('.bvi-link-fixed-top').forEach((el) => el.remove());
   document.querySelectorAll('.bvi-body').forEach((el) => unwrapBviBody(el));
+  document.querySelectorAll('.bvi-speech').forEach((el) => el.remove());
 
   document.body.classList.remove('bvi-active', 'bvi-noscroll');
   document.documentElement.classList.remove('bvi-active');
@@ -128,6 +190,8 @@ export function teardownBviDom(): void {
 
   clearBviLayoutFixes();
   stopBviSpeech();
+  disconnectBviPanelDedupeObserver();
+  unbindBviPanelCloseFix();
 }
 
 export function isBviPanelActive(): boolean {
@@ -276,12 +340,15 @@ function activateBviPanel(): void {
   bviActivateInFlight = true;
   try {
     teardownBviDom();
+    resetBviTriggerElement();
     writeBviCookiesForActivation();
     installBviSpeechFix();
+    bindBviPanelCloseFix();
     window.__bviInstance = createBviInstance();
     applySpeechFixToInstance(window.__bviInstance);
     primeSpeechVoices();
     dedupeBviPanels();
+    observeBviPanelDedupe();
     document.documentElement.classList.add('bvi-active');
 
     if (document.querySelectorAll('.bvi-panel').length === 0) {
@@ -302,7 +369,7 @@ function activateBviPanel(): void {
 /** Включает BVI только по действию пользователя. */
 export async function openBviPanel(): Promise<void> {
   if (typeof window === 'undefined') return;
-  if (document.querySelectorAll('.bvi-panel').length > 0) return;
+  if (isBviPanelActive()) return;
 
   await loadStylesheet(BVI_CSS);
   await loadStylesheet(BVI_KRIMVK_CSS);

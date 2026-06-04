@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Loader2, Droplet, CreditCard, FileText, Wrench } from "lucide-react";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import DashboardTour from "@/components/DashboardTour";
 import { useDashboardOverview } from "@/hooks/use-dashboard-overview";
@@ -108,13 +108,17 @@ export default function DashboardPage() {
         }
         
         if (!data.authenticated && status === "authenticated") {
-          // Сессия не найдена на сервере, но клиент думает что авторизован
-          // Это может произойти после подтверждения email, если cookie не применилась
-          console.log("[Dashboard] Session mismatch, refreshing...");
-          // Даем небольшую задержку для применения cookie
-          setTimeout(() => {
-            window.location.reload();
-          }, 500);
+          // После выхода React Session может отставать от сервера — не reload, а сброс
+          try {
+            await fetch("/api/auth/clear-session", {
+              method: "POST",
+              credentials: "include",
+            });
+          } catch {
+            /* ignore */
+          }
+          await signOut({ redirect: false });
+          router.replace("/login?callbackUrl=/dashboard");
         }
       } catch (error) {
         console.error("[Dashboard] Error checking session:", error);

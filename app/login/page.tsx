@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, Suspense, useEffect } from "react";
-import { signIn, useSession } from "next-auth/react";
+import { signIn, signOut, useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,23 +39,57 @@ function LoginForm() {
   useEffect(() => {
     if (status !== "authenticated" || !session) return;
 
-    let target = "/dashboard";
-    const raw = callbackUrl || "/dashboard";
-    if (raw.startsWith("/") && !raw.startsWith("//")) {
-      target = raw;
-    } else if (raw.startsWith("http")) {
-      try {
-        const u = new URL(raw);
-        const site = process.env.NEXT_PUBLIC_SITE_URL || "https://krimvk.ru";
-        if (raw.startsWith(site) || u.hostname === "krimvk.ru" || u.hostname === "www.krimvk.ru") {
-          target = `${u.pathname}${u.search}`;
-        }
-      } catch {
-        /* keep /dashboard */
-      }
-    }
+    let cancelled = false;
 
-    window.location.replace(target);
+    const resolveTarget = () => {
+      let target = "/dashboard";
+      const raw = callbackUrl || "/dashboard";
+      if (raw.startsWith("/") && !raw.startsWith("//")) {
+        target = raw;
+      } else if (raw.startsWith("http")) {
+        try {
+          const u = new URL(raw);
+          const site = process.env.NEXT_PUBLIC_SITE_URL || "https://krimvk.ru";
+          if (
+            raw.startsWith(site) ||
+            u.hostname === "krimvk.ru" ||
+            u.hostname === "www.krimvk.ru"
+          ) {
+            target = `${u.pathname}${u.search}`;
+          }
+        } catch {
+          /* keep /dashboard */
+        }
+      }
+      return target;
+    };
+
+    (async () => {
+      try {
+        const res = await fetch("/api/auth/check", {
+          credentials: "include",
+          cache: "no-store",
+        });
+        const data = await res.json();
+        if (cancelled) return;
+
+        if (!data.authenticated) {
+          // Клиент ещё «authenticated» после выхода — сбрасываем без редиректа
+          await signOut({ redirect: false });
+          return;
+        }
+
+        window.location.replace(resolveTarget());
+      } catch {
+        if (!cancelled) {
+          window.location.replace(resolveTarget());
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [status, session, callbackUrl]);
 
   if (status === "loading") {
@@ -88,10 +122,13 @@ function LoginForm() {
         }
         setIsLoading(false);
       } else if (result?.ok) {
-        const targetUrl = callbackUrl || "/dashboard";
-        setTimeout(() => {
-          window.location.href = targetUrl;
-        }, 100);
+        let targetUrl = "/dashboard";
+        const raw = callbackUrl || "/dashboard";
+        if (raw.startsWith("/") && !raw.startsWith("//")) {
+          targetUrl = raw;
+        }
+        window.location.replace(targetUrl);
+        return;
       } else {
         setIsLoading(false);
       }

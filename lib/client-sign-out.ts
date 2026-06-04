@@ -17,5 +17,11 @@ export async function signOutToHome(): Promise<void> {
     // fallback: относительный /
   }
 
+  try {
+    await fetch('/api/auth/clear-session', { method: 'POST', credentials: 'include' });
+  } catch {
+    // continue with NextAuth signOut
+  }
+
   await signOut({ callbackUrl, redirect: true });
 }

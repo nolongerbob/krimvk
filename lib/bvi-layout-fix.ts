@@ -24,6 +24,27 @@ let panelClickHandler: ((e: Event) => void) | null = null;
 let lastSyncedKey = '';
 let syncUiRaf = 0;
 
+export function readBviFontSizeFromBody(): number {
+  if (typeof document === 'undefined') return 16;
+
+  const wrapper = document.querySelector('.bvi-body');
+  if (!wrapper) return 16;
+
+  const fontAttr =
+    wrapper.getAttribute('data-bvi-fontsize') ??
+    wrapper.getAttribute('data-bvi-fontSize');
+  const parsed = fontAttr ? Number.parseInt(fontAttr, 10) : 16;
+
+  return Math.min(
+    BVI_FONT_SIZE_MAX,
+    Math.max(BVI_FONT_SIZE_MIN, Number.isFinite(parsed) ? parsed : 16)
+  );
+}
+
+export function resetBviUiSyncCache(): void {
+  lastSyncedKey = '';
+}
+
 /** Синхронизирует масштаб (rem) и тему шапки с .bvi-body. */
 export function syncBviUiFromBody(): void {
   if (typeof document === 'undefined') return;
@@ -35,12 +56,10 @@ export function syncBviUiFromBody(): void {
     const wrapper = document.querySelector('.bvi-body');
     if (!wrapper) return;
 
-    const fontAttr = wrapper.getAttribute('data-bvi-fontsize');
-    const parsed = fontAttr ? Number.parseInt(fontAttr, 10) : 16;
-    const size = Math.min(
-      BVI_FONT_SIZE_MAX,
-      Math.max(BVI_FONT_SIZE_MIN, Number.isFinite(parsed) ? parsed : 16)
-    );
+    const size = readBviFontSizeFromBody();
+    const fontAttr =
+      wrapper.getAttribute('data-bvi-fontsize') ??
+      wrapper.getAttribute('data-bvi-fontSize');
     const theme = wrapper.getAttribute('data-bvi-theme') ?? 'white';
     const key = `${size}:${theme}`;
 

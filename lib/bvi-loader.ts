@@ -21,7 +21,12 @@ declare global {
 
 import {
   applyBviLayoutFixes,
+  BVI_FONT_SIZE_MAX,
+  BVI_FONT_SIZE_MIN,
   clearBviLayoutFixes,
+  readBviFontSizeFromBody,
+  resetBviUiSyncCache,
+  syncBviUiFromBody,
 } from '@/lib/bvi-layout-fix';
 import {
   BVI_ASSET_VERSION,
@@ -126,7 +131,56 @@ function resetBviTriggerElement(): void {
 }
 
 let bviPanelCloseHandler: ((event: Event) => void) | null = null;
+let bviFontSizeFixHandler: ((event: Event) => void) | null = null;
 let bviPanelDedupeObserver: MutationObserver | null = null;
+
+function applyBviFontSize(size: number): void {
+  const clamped = Math.min(
+    BVI_FONT_SIZE_MAX,
+    Math.max(BVI_FONT_SIZE_MIN, Math.round(size))
+  );
+  const wrapper = document.querySelector('.bvi-body');
+  if (wrapper) {
+    wrapper.setAttribute('data-bvi-fontsize', String(clamped));
+  }
+  setBviCookie('fontSize', clamped);
+  resetBviUiSyncCache();
+  syncBviUiFromBody();
+}
+
+function bindBviFontSizeFix(): void {
+  if (bviFontSizeFixHandler) return;
+
+  bviFontSizeFixHandler = (event: Event) => {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    if (!target.closest('.bvi-panel')) return;
+
+    const isPlus = target.closest('.bvi-fontSize-plus');
+    const isMinus = target.closest('.bvi-fontSize-minus');
+    if (!isPlus && !isMinus) return;
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+
+    const current = readBviFontSizeFromBody();
+    if (isPlus && current < BVI_FONT_SIZE_MAX) {
+      applyBviFontSize(current + 1);
+      return;
+    }
+    if (isMinus && current > BVI_FONT_SIZE_MIN) {
+      applyBviFontSize(current - 1);
+    }
+  };
+
+  document.addEventListener('click', bviFontSizeFixHandler, true);
+}
+
+function unbindBviFontSizeFix(): void {
+  if (!bviFontSizeFixHandler) return;
+  document.removeEventListener('click', bviFontSizeFixHandler, true);
+  bviFontSizeFixHandler = null;
+}
 
 function bindBviPanelCloseFix(): void {
   if (bviPanelCloseHandler) return;
@@ -192,6 +246,7 @@ export function teardownBviDom(): void {
   stopBviSpeech();
   disconnectBviPanelDedupeObserver();
   unbindBviPanelCloseFix();
+  unbindBviFontSizeFix();
 }
 
 export function isBviPanelActive(): boolean {
@@ -344,6 +399,7 @@ function activateBviPanel(): void {
     writeBviCookiesForActivation();
     installBviSpeechFix();
     bindBviPanelCloseFix();
+    bindBviFontSizeFix();
     window.__bviInstance = createBviInstance();
     applySpeechFixToInstance(window.__bviInstance);
     primeSpeechVoices();

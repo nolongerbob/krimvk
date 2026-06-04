@@ -3,7 +3,7 @@ import "./globals.css";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Providers } from "./providers";
-import { BVIPanel } from "@/components/BVIPanel";
+import { BviPlugin } from "@/components/BviPlugin";
 import { CookieConsentBanner } from "@/components/CookieConsentBanner";
 import { onest } from "@/lib/fonts";
 
@@ -43,7 +43,7 @@ export default function RootLayout({
             <main className="flex flex-1 flex-col">{children}</main>
             <Footer />
           </div>
-          <BVIPanel />
+          <BviPlugin />
           <CookieConsentBanner />
         </Providers>
       </body>

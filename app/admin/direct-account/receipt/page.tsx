@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Download, Printer, ArrowLeft, Smartphone, Phone, MapPin, Clock } from "lucide-react";
+import { Loader2, Download, Printer, ArrowLeft, Phone, MapPin, Clock } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -14,7 +14,7 @@ const QRCodeSVG = dynamic(() => import("qrcode.react").then((mod) => mod.QRCodeS
   ssr: false,
   loading: () => <div className="w-[130px] h-[130px] bg-gray-200 animate-pulse rounded"></div>
 });
-import { generateSBPQRString, generateSBPURL } from "@/lib/qr-code";
+import { generateSBPQRString } from "@/lib/qr-code";
 
 interface ExemptionItem {
   ExemptionCount?: string | number;
@@ -237,38 +237,6 @@ export default function DirectAccountReceiptPage() {
     await generatePDF(false);
   };
 
-  const handleQRClick = () => {
-    if (!receiptData) return;
-    const lscode = receiptData.LSCode || receiptData.lscode || accountInfo?.accountNumber || "";
-    const address = receiptData.Address || receiptData.address || accountInfo?.address || "";
-    // В QR отправляем только сумму долга (переплата -> 0)
-    const commonDutyAmount = parseAmount(receiptData.CommonDuty || receiptData.commonDuty || "0");
-    const amountToPay = commonDutyAmount > 0 ? commonDutyAmount : 0;
-    
-    if (!lscode || !address) {
-      console.error("Недостаточно данных для генерации QR-кода:", { lscode, address, receiptData });
-      return;
-    }
-    
-    // Период оплаты по правилу (до 5-го — позапрошлый, с 5-го — прошлый), если dateFrom не задан
-    let periodDate: Date;
-    if (dateFrom) {
-      periodDate = new Date(dateFrom);
-    } else {
-      const today = new Date();
-      const monthOffset = today.getDate() < 5 ? -2 : -1;
-      periodDate = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
-    }
-    const paymPeriod = `${String(periodDate.getMonth() + 1).padStart(2, "0")}.${periodDate.getFullYear()}`;
-    const periodStr = periodDate.toLocaleDateString("ru-RU", { month: "long", year: "numeric" });
-    const purpose = `Оплата услуг водоснабжения и водоотведения за ${periodStr}. Л/с ${lscode}`.trim();
-
-    const sbpURL = generateSBPURL(lscode, address, amountToPay, paymPeriod, purpose);
-    console.log("SBP URL:", sbpURL);
-    console.log("QR String:", generateSBPQRString(lscode, address, amountToPay, paymPeriod, purpose));
-    window.open(sbpURL, "_blank");
-  };
-
   const parseAmount = (value: string | number | null | undefined): number => {
     if (value === null || value === undefined || value === "") return 0;
     if (typeof value === "number") return isNaN(value) ? 0 : value;
@@ -325,19 +293,6 @@ export default function DirectAccountReceiptPage() {
             Закрыть
           </Button>
           <div className="flex flex-wrap gap-2">
-            {(() => {
-              const lscode = receiptData?.LSCode || receiptData?.lscode || accountInfo?.accountNumber;
-              const addr = receiptData?.Address || receiptData?.address || accountInfo?.address;
-              if (lscode && addr) {
-                return (
-                  <Button onClick={handleQRClick} className="gap-2">
-                    <Smartphone className="h-4 w-4" />
-                    Оплатить по QR
-                  </Button>
-                );
-              }
-              return null;
-            })()}
             <Button variant="outline" onClick={handleDownloadPDF} className="gap-2">
               <Download className="h-4 w-4" />
               Скачать PDF
@@ -399,7 +354,7 @@ export default function DirectAccountReceiptPage() {
                 </div>
                 {lscode && address && (
                   <div className="flex flex-col items-start sm:items-end">
-                    <div onClick={handleQRClick} className="cursor-pointer p-2 bg-white border border-gray-200 rounded-lg hover:border-sky-300 hover:shadow-sm transition-all print:border-gray-300" title="Оплата через СБП">
+                    <div className="p-2 bg-white border border-gray-200 rounded-lg print:border-gray-300">
                       <QRCodeSVG
                         value={(() => {
                           const today = new Date();
@@ -415,7 +370,9 @@ export default function DirectAccountReceiptPage() {
                         includeMargin={false}
                       />
                     </div>
-                    <p className="text-xs text-gray-500 mt-1.5 print:hidden">Нажмите или отсканируйте для оплаты</p>
+                    <p className="mt-1.5 max-w-[11rem] text-center text-xs text-gray-600">
+                      Отсканируйте в приложении вашего банка
+                    </p>
                   </div>
                 )}
               </div>
@@ -429,7 +386,7 @@ export default function DirectAccountReceiptPage() {
                 <p>296560, с. Лесновка Сакского района, ул. Механизаторов, 9</p>
                 <p>ИНН 9107000240, КПП 910701001 · П/с <span className="break-all font-mono">40702810725190003625</span></p>
                 <p>Банк: Филиал «Центральный» Банка ВТБ (ПАО), БИК 044525411, корр. счёт <span className="break-all font-mono">30101810145250000411</span></p>
-                <p>Тел.: +7 (978) 080-03-66, +7 (978) 741-57-59</p>
+                <p>Тел.: +7 (978) 080-03-66, +7 (988) 464-87-24</p>
               </div>
             </div>
 
@@ -811,7 +768,7 @@ export default function DirectAccountReceiptPage() {
                     <span className="mr-1">Тел.:</span>
                     <a href="tel:+79780800366" className="text-sky-600 hover:underline print:text-inherit whitespace-nowrap">+7 (978) 080-03-66</a>
                     <span>,</span>
-                    <a href="tel:+79787415759" className="text-sky-600 hover:underline print:text-inherit whitespace-nowrap">+7 (978) 741-57-59</a>
+                    <a href="tel:+79884648724" className="text-sky-600 hover:underline print:text-inherit whitespace-nowrap">+7 (988) 464-87-24</a>
                     <span>,</span>
                     <a href="tel:+79787013050" className="text-sky-600 hover:underline print:text-inherit whitespace-nowrap">+7 (978) 701-30-50</a>
                     <span> (аварийная)</span>

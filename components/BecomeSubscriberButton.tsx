@@ -3,6 +3,7 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 
 interface BecomeSubscriberButtonProps {
@@ -20,7 +21,7 @@ export function BecomeSubscriberButton({ className }: BecomeSubscriberButtonProp
     return (
       <Button
         size="lg"
-        className={className}
+        className={cn("rounded-none hover:scale-100 active:scale-100", className)}
         onClick={handleClick}
       >
         Стать абонентом

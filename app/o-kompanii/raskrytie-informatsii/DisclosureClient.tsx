@@ -1,49 +1,23 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { FileText, Search, Download, Calendar } from "lucide-react";
-import { publicFileHref } from "@/lib/public-file-url";
-
-interface DisclosureDocument {
-  id: string;
-  title: string;
-  fileName: string;
-  fileUrl: string;
-  fileSize: number;
-  mimeType: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import { FileText, Search } from "lucide-react";
+import {
+  DisclosureDocumentCard,
+  type DisclosureDocumentItem,
+} from "@/components/DisclosureDocumentCard";
 
 interface DisclosureClientProps {
-  initialDocuments: DisclosureDocument[];
-}
-
-function formatFileSize(bytes: number): string {
-  if (bytes === 0) return "0 Bytes";
-  const k = 1024;
-  const sizes = ["Bytes", "KB", "MB", "GB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
-}
-
-function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleDateString("ru-RU", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  initialDocuments: DisclosureDocumentItem[];
 }
 
 export function DisclosureClient({ initialDocuments }: DisclosureClientProps) {
-  const [documents, setDocuments] = useState<DisclosureDocument[]>(initialDocuments);
+  const [documents, setDocuments] = useState<DisclosureDocumentItem[]>(initialDocuments);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Поиск на сервере при изменении запроса
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (searchQuery.trim()) {
@@ -66,100 +40,68 @@ export function DisclosureClient({ initialDocuments }: DisclosureClientProps) {
     return () => clearTimeout(timeoutId);
   }, [searchQuery, initialDocuments]);
 
-  // Локальная фильтрация для быстрого отклика
   const filteredDocuments = useMemo(() => {
     if (!searchQuery.trim()) return documents;
-    
+
     const query = searchQuery.toLowerCase().trim();
-    return documents.filter((doc) =>
-      doc.title.toLowerCase().includes(query) ||
-      doc.fileName.toLowerCase().includes(query)
+    return documents.filter(
+      (doc) =>
+        doc.title.toLowerCase().includes(query) ||
+        doc.fileName.toLowerCase().includes(query)
     );
   }, [documents, searchQuery]);
 
   return (
-    <div className="container py-12 px-4 max-w-6xl">
-      {/* Заголовок */}
-      <div className="text-center mb-12 animate-fade-in">
-        <div className="inline-flex items-center justify-center w-20 h-20 bg-blue-100 rounded-full mb-6">
-          <FileText className="h-10 w-10 text-blue-600" />
+    <div className="flex min-h-[calc(100dvh-4rem)] flex-col bg-gray-50 py-8 md:py-12 pb-14 lg:min-h-[calc(100dvh-4.5rem)]">
+      <div className="container max-w-6xl flex-1 px-4">
+        <div className="mb-10 text-center animate-fade-in md:mb-12">
+          <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-none bg-blue-100">
+            <FileText className="h-7 w-7 text-blue-600" />
+          </div>
+          <h1 className="mx-auto mb-3 max-w-3xl text-center text-3xl font-semibold tracking-tight text-gray-900 md:text-4xl">
+            Раскрытие информации
+          </h1>
+          <p className="mx-auto max-w-3xl text-center text-base text-gray-600 md:text-lg">
+            Документы и отчёты в соответствии с требованиями законодательства
+          </p>
         </div>
-        <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">
-          Раскрытие информации
-        </h1>
-        <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-          Документы и отчеты в соответствии с требованиями законодательства
-        </p>
-      </div>
 
-      {/* Поиск */}
-      <div className="mb-8">
-        <div className="relative max-w-2xl mx-auto">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-          <Input
-            type="text"
-            placeholder="Поиск по названию документа..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 py-6 text-lg"
-          />
+        <div className="mb-8">
+          <div className="relative mx-auto max-w-2xl">
+            <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Поиск по названию документа..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="rounded-none py-6 pl-10 text-base md:text-lg"
+            />
+          </div>
         </div>
-      </div>
 
-      {/* Список документов */}
-      {loading ? (
-        <div className="text-center py-12">
-          <p className="text-gray-500">Поиск...</p>
-        </div>
-      ) : filteredDocuments.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">
-              {searchQuery ? "Документы не найдены" : "Документы отсутствуют"}
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-4">
-          {filteredDocuments.map((doc) => (
-            <Card key={doc.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-start justify-between">
-                  <span className="flex-1">{doc.title}</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                  <div className="flex flex-col gap-2 text-sm text-gray-600">
-                    <div className="flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
-                      <span>{doc.fileName}</span>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <span>{formatFileSize(doc.fileSize)}</span>
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        <span>{formatDate(doc.createdAt)}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <a
-                    href={publicFileHref(doc.fileUrl)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    <Download className="h-4 w-4" />
-                    Скачать
-                  </a>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+        {loading ? (
+          <div className="py-12 text-center">
+            <p className="text-gray-500">Поиск...</p>
+          </div>
+        ) : filteredDocuments.length === 0 ? (
+          <Card className="rounded-none border border-gray-200 shadow-none">
+            <CardContent className="py-12 text-center">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-none bg-gray-100">
+                <FileText className="h-6 w-6 text-gray-400" />
+              </div>
+              <p className="text-gray-500">
+                {searchQuery ? "Документы не найдены" : "Документы отсутствуют"}
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-4">
+            {filteredDocuments.map((doc) => (
+              <DisclosureDocumentCard key={doc.id} doc={doc} />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
-

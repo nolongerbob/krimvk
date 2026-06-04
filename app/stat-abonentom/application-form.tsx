@@ -6,7 +6,7 @@ type PersonType = "individual" | "legal" | null;
 export function ApplicationForm({ formData, personType = null, isPreview = false }: { formData: any; personType?: PersonType; isPreview?: boolean }) {
   const isLegal = personType === "legal";
   const containerClass = isPreview 
-    ? "border rounded-lg p-6 bg-white mb-4 max-h-[600px] overflow-y-auto"
+    ? "border rounded-none p-6 bg-white mb-4 max-h-[600px] overflow-y-auto"
     : "bg-white";
   
   const containerStyle = isPreview ? {} : {

@@ -4,8 +4,9 @@ import { Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect, useCallback } from "react";
 import { getCookie, setCookie, stringToBoolean } from "@/lib/bvi-utils";
+import { cn } from "@/lib/utils";
 
-export function BVIButton() {
+export function BVIButton({ className }: { className?: string }) {
   const [isActive, setIsActive] = useState(false);
 
   // Проверяем, активна ли панель при загрузке
@@ -64,7 +65,10 @@ export function BVIButton() {
       onClick={handleOpen}
       variant="ghost"
       size="icon"
-      className="h-9 w-9 focus:outline-none focus-visible:outline-none active:outline-none"
+      className={cn(
+        "h-9 w-9 rounded-none hover:scale-100 active:scale-100 focus:outline-none focus-visible:outline-none active:outline-none",
+        className
+      )}
       aria-label="Версия для слабовидящих"
       title="Версия для слабовидящих"
     >

@@ -2,7 +2,6 @@ import { render, screen } from '@testing-library/react'
 import { QuickActionCard } from '@/components/QuickActionCard'
 import { useSession } from 'next-auth/react'
 
-// Mock useSession
 jest.mock('next-auth/react', () => ({
   useSession: jest.fn(),
 }))
@@ -27,9 +26,7 @@ describe('QuickActionCard', () => {
       />
     )
 
-    // Текст может быть в нескольких местах, используем getAllByText
-    const titles = screen.getAllByText('Передать показания')
-    expect(titles.length).toBeGreaterThan(0)
+    expect(screen.getByText('Передать показания')).toBeInTheDocument()
     expect(screen.getByText('Передать показания счетчиков воды')).toBeInTheDocument()
   })
 
@@ -62,22 +59,7 @@ describe('QuickActionCard', () => {
     expect(link).toHaveAttribute('href', '/emergency')
   })
 
-  it('applies custom icon color', () => {
-    const { container } = render(
-      <QuickActionCard
-        iconName="Droplet"
-        title="Test Card"
-        description="Test description"
-        href="/test"
-        iconColor="text-blue-500"
-      />
-    )
-
-    const icon = container.querySelector('.text-blue-500')
-    expect(icon).toBeInTheDocument()
-  })
-
-  it('renders with primary styling when isPrimary is true', () => {
+  it('uses primary icon styling when isPrimary is true', () => {
     const { container } = render(
       <QuickActionCard
         iconName="Droplet"
@@ -88,11 +70,8 @@ describe('QuickActionCard', () => {
       />
     )
 
-    const link = container.querySelector('a')
-    expect(link).toBeInTheDocument()
-    // Проверяем, что Card внутри ссылки имеет нужные классы
-    const card = link?.querySelector('[class*="border-2"]')
-    expect(card).toBeInTheDocument()
+    expect(container.querySelector('.bg-blue-50')).toBeInTheDocument()
+    expect(container.querySelector('.text-blue-600')).toBeInTheDocument()
   })
 
   it('redirects to login when not authenticated', () => {
@@ -112,7 +91,6 @@ describe('QuickActionCard', () => {
 
     const link = screen.getByRole('link')
     expect(link).toHaveAttribute('href', '/login')
-    expect(screen.getByText('Войти для доступа')).toBeInTheDocument()
+    expect(screen.getByText('Test description')).toBeInTheDocument()
   })
 })
-

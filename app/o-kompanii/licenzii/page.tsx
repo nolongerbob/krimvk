@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { Metadata } from "next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, Scale, FolderOpen, Mail } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { FileText, Scale, Mail, Info } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Лицензии и заключения",
@@ -9,112 +11,125 @@ export const metadata: Metadata = {
     "Лицензии на деятельность и официальные заключения ООО «Крымская Водная Компания»",
 };
 
+const emptyCardClass =
+  "rounded-none border border-gray-200 border-l-4 border-l-gray-300 shadow-none";
+
+function EmptyDocumentState({
+  icon: Icon,
+  title,
+  description,
+}: {
+  icon: typeof FileText;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="flex min-h-[11rem] flex-col items-center justify-center rounded-none border border-dashed border-gray-300 bg-gray-50 px-6 py-10 text-center">
+      <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-none bg-gray-100">
+        <Icon className="h-6 w-6 text-gray-400" />
+      </div>
+      <p className="text-sm font-medium text-gray-700">{title}</p>
+      <p className="mt-2 text-sm text-gray-500">{description}</p>
+    </div>
+  );
+}
+
 export default function LicenziiPage() {
   return (
-    <div className="container py-12 px-4 max-w-5xl">
-      <div className="text-center mb-12 animate-fade-in">
-        <div className="inline-flex items-center justify-center w-20 h-20 bg-blue-100 rounded-full mb-6">
-          <Scale className="h-10 w-10 text-blue-600" />
-        </div>
-        <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">
-          Лицензии и заключения
-        </h1>
-        <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-          Официальные документы ООО «Крымская Водная Компания»: лицензии на виды
-          деятельности и заключения по результатам проверок и экспертиз.
-        </p>
-      </div>
-
-      <Card className="mb-8 animate-fade-in animate-delay-100 shadow-lg border-l-4 border-l-amber-500 bg-gradient-to-br from-amber-50 to-orange-50">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <FolderOpen className="h-6 w-6 text-amber-600" />
-            <CardTitle className="text-2xl">Раздел в подготовке</CardTitle>
+    <div className="flex min-h-[calc(100dvh-4rem)] flex-col bg-gray-50 py-8 md:py-12 pb-14 lg:min-h-[calc(100dvh-4.5rem)]">
+      <div className="container max-w-5xl flex-1 px-4">
+        <div className="mb-10 text-center animate-fade-in md:mb-12">
+          <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-none bg-blue-100">
+            <Scale className="h-7 w-7 text-blue-600" />
           </div>
-          <CardDescription className="text-base text-amber-900/80">
-            Документы будут опубликованы после загрузки и проверки юридическим
-            отделом.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-gray-700 leading-relaxed">
-            На этой странице появятся сканы и реквизиты действующих лицензий, а
-            также заключения государственных органов и экспертных организаций.
-            Сейчас раздел намеренно оставлен пустым — материалы готовятся к
-            публикации.
+          <h1 className="mx-auto mb-3 max-w-3xl text-center text-3xl font-semibold tracking-tight text-gray-900 md:text-4xl">
+            Лицензии и заключения
+          </h1>
+          <p className="mx-auto max-w-3xl text-center text-base text-gray-600 md:text-lg">
+            Официальные документы ООО «Крымская Водная Компания»: лицензии на виды деятельности и
+            заключения по результатам проверок и экспертиз.
           </p>
-        </CardContent>
-      </Card>
+        </div>
 
-      <div className="grid gap-8 md:grid-cols-2">
-        <Card className="animate-fade-in animate-delay-200 shadow-lg border-l-4 border-l-blue-500">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <FileText className="h-6 w-6 text-blue-600" />
-              <CardTitle className="text-xl">Лицензии</CardTitle>
-            </div>
-            <CardDescription>
-              Разрешительная документация на водоснабжение и водоотведение
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-6 py-10 text-center">
-              <FileText className="mx-auto h-10 w-10 text-gray-400 mb-3" />
-              <p className="text-sm font-medium text-gray-700">
-                Пока нет опубликованных документов
-              </p>
-              <p className="mt-2 text-sm text-gray-500">
-                Здесь будут лицензии с номером, сроком действия и ссылкой на
-                скачивание.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <Alert className="mb-8 rounded-none border-blue-200 bg-blue-50 animate-fade-in animate-delay-100">
+          <Info className="h-4 w-4 text-blue-600" />
+          <AlertDescription className="text-sm text-blue-800">
+            <span className="font-semibold">Раздел в подготовке.</span> Документы будут опубликованы
+            после загрузки и проверки юридическим отделом. На этой странице появятся сканы и
+            реквизиты действующих лицензий, а также заключения государственных органов и экспертных
+            организаций.
+          </AlertDescription>
+        </Alert>
 
-        <Card className="animate-fade-in animate-delay-300 shadow-lg border-l-4 border-l-green-500">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <Scale className="h-6 w-6 text-green-600" />
-              <CardTitle className="text-xl">Заключения</CardTitle>
-            </div>
-            <CardDescription>
-              Официальные заключения по проверкам и экспертизам
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-6 py-10 text-center">
-              <Scale className="mx-auto h-10 w-10 text-gray-400 mb-3" />
-              <p className="text-sm font-medium text-gray-700">
-                Пока нет опубликованных документов
-              </p>
-              <p className="mt-2 text-sm text-gray-500">
-                Здесь будут заключения с датой, органом выдачи и файлом для
-                ознакомления.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+        <div className="grid gap-6 md:grid-cols-2 md:items-stretch md:gap-8">
+          <Card className={cn(emptyCardClass, "flex h-full flex-col animate-fade-in animate-delay-200")}>
+            <CardHeader className="pb-4">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-none bg-gray-100">
+                  <FileText className="h-5 w-5 text-gray-500" />
+                </div>
+                <div className="min-w-0">
+                  <CardTitle className="text-xl font-semibold">Лицензии</CardTitle>
+                  <CardDescription className="mt-1 min-h-[2.75rem]">
+                    Разрешительная документация на водоснабжение и водоотведение
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="flex flex-1 flex-col pt-0">
+              <EmptyDocumentState
+                icon={FileText}
+                title="Пока нет опубликованных документов"
+                description="Здесь будут лицензии с номером, сроком действия и ссылкой на скачивание."
+              />
+            </CardContent>
+          </Card>
 
-      <Card className="mt-8 animate-fade-in animate-delay-400 shadow-lg">
-        <CardContent className="pt-6">
-          <p className="text-sm text-gray-600 text-center">
-            По вопросам предоставления копий документов обращайтесь в абонентский
-            отдел:{" "}
+          <Card className={cn(emptyCardClass, "flex h-full flex-col animate-fade-in animate-delay-300")}>
+            <CardHeader className="pb-4">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-none bg-gray-100">
+                  <Scale className="h-5 w-5 text-gray-500" />
+                </div>
+                <div className="min-w-0">
+                  <CardTitle className="text-xl font-semibold">Заключения</CardTitle>
+                  <CardDescription className="mt-1 min-h-[2.75rem]">
+                    Официальные заключения по проверкам и экспертизам
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="flex flex-1 flex-col pt-0">
+              <EmptyDocumentState
+                icon={Scale}
+                title="Пока нет опубликованных документов"
+                description="Здесь будут заключения с датой, органом выдачи и файлом для ознакомления."
+              />
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="mt-8 rounded-none border border-gray-200 bg-white px-6 py-6 text-center animate-fade-in animate-delay-400">
+          <p className="text-sm text-gray-600">
+            По вопросам предоставления копий документов обращайтесь в абонентский отдел:
+          </p>
+          <p className="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm">
             <a
               href="mailto:sakwcompany@mail.ru"
-              className="inline-flex items-center gap-1 text-primary hover:underline"
+              className="inline-flex items-center gap-1.5 text-blue-600 hover:underline"
             >
-              <Mail className="h-4 w-4" />
-              sakwcompany@mail.ru
+              <Mail className="h-4 w-4 shrink-0" />
+              <span>sakwcompany@mail.ru</span>
             </a>
-            {" · "}
-            <Link href="/contact" className="text-primary hover:underline">
+            <span className="hidden text-gray-300 sm:inline" aria-hidden>
+              ·
+            </span>
+            <Link href="/contact" className="text-blue-600 hover:underline">
               Контакты
             </Link>
           </p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

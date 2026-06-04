@@ -4,35 +4,62 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { signOutToHome } from "@/lib/client-sign-out";
-import { Button } from "@/components/ui/button";
-import { Menu, User, LogOut, ChevronDown, Eye, Phone, MessageSquare, X, Home, Briefcase, Newspaper, Mail, Users, FileText, Building2, History, Award, TrendingUp, FileCheck, Shield, Scale, Info, Droplet, Waves, Search as SearchIcon, Settings, AlertTriangle } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { User, ChevronDown, Phone } from "lucide-react";
 import { Search } from "@/components/Search";
 import { BVIButton } from "@/components/BVIButton";
-import { useState, useEffect } from "react";
-import { AdminNotifications } from "@/components/admin/AdminNotifications";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { HeaderMegaMenu, type MegaMenuId } from "@/components/layout/HeaderMegaMenu";
+import { HeaderPhoneMenu } from "@/components/layout/HeaderPhoneMenu";
+import { HeaderProfileMenu } from "@/components/layout/HeaderProfileMenu";
+import { HeaderSideMenu, HeaderSideMenuToggle } from "@/components/layout/HeaderSideMenu";
+import { useState, useEffect, useRef } from "react";
+
+function NavUnderline({ active }: { active: boolean }) {
+  return (
+    <span
+      aria-hidden
+      className={`absolute -bottom-1.5 h-[2px] bg-gray-400 transition-[width,left] duration-500 ease-in-out ${
+        active
+          ? "left-0 w-full"
+          : "left-full w-0 group-hover/nav:left-0 group-hover/nav:w-full"
+      }`}
+    />
+  );
+}
+
+function navItemClass(active: boolean) {
+  return `relative flex items-center h-full px-1.5 text-base font-medium whitespace-nowrap transition-colors group/nav ${
+    active ? "text-primary font-semibold" : "text-gray-900 hover:text-primary"
+  }`;
+}
+
+function NavItemLabel({ children }: { children: React.ReactNode }) {
+  return <span className="relative inline-flex items-center gap-1">{children}</span>;
+}
+
+const headerSquareBtn =
+  "flex h-full w-14 lg:w-[4.5rem] shrink-0 items-center justify-center border-l border-gray-200 rounded-none hover:bg-gray-50 transition-colors focus:outline-none focus-visible:outline-none";
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [megaMenu, setMegaMenu] = useState<MegaMenuId | "phone" | "profile" | null>(null);
+  const megaMenuCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pathname = usePathname();
   const { data: session, status } = useSession();
+
+  const openMegaMenu = (menu: MegaMenuId | "phone" | "profile") => {
+    if (megaMenuCloseTimer.current) {
+      clearTimeout(megaMenuCloseTimer.current);
+      megaMenuCloseTimer.current = null;
+    }
+    setMegaMenu(menu);
+  };
+
+  const scheduleCloseMegaMenu = () => {
+    if (megaMenuCloseTimer.current) clearTimeout(megaMenuCloseTimer.current);
+    megaMenuCloseTimer.current = setTimeout(() => setMegaMenu(null), 200);
+  };
 
   // Блокируем скролл когда меню открыто
   useEffect(() => {
@@ -46,6 +73,17 @@ export function Header() {
     };
   }, [mobileMenuOpen]);
 
+  useEffect(() => {
+    return () => {
+      if (megaMenuCloseTimer.current) clearTimeout(megaMenuCloseTimer.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    setMegaMenu(null);
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
 
   const isActive = (path: string) => {
     if (path === "/") {
@@ -57,620 +95,210 @@ export function Header() {
   const navLinks = [
     { href: "/", label: "Главная" },
     { href: "/services", label: "Услуги" },
-    { href: "/avarii", label: "Аварии" },
     { href: "/news", label: "Новости" },
     { href: "/contact", label: "Контакты" },
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-gradient-to-br from-blue-200 via-blue-100 to-cyan-100">
-      <div className="w-full flex h-20 lg:h-24 items-center justify-between px-3 sm:px-4 md:px-6 lg:px-14">
-        {/* Левая часть: Логотип + Навигация */}
-        <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-8 flex-1 min-w-0">
+    <header className="sticky top-0 z-50 w-full bg-white">
+      <div className="relative">
+      <div data-header-inner className="relative w-full flex h-16 lg:h-[4.5rem] items-stretch pr-0">
+        <div className="flex flex-1 min-w-0 items-stretch border-b border-gray-200 pl-3 sm:pl-4 lg:pl-6 xl:pl-8">
+        {/* Левая часть: Логотип */}
+        <div className="flex items-center flex-shrink-0 z-10 self-center">
           <Link href="/" className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
             <Image
               src="/images/logo.png"
               alt="Крымская Водная Компания"
-              width={60}
-              height={60}
-              className="h-10 w-10 sm:h-12 sm:w-12 lg:h-16 lg:w-16"
+              width={48}
+              height={48}
+              className="h-10 w-10 sm:h-11 sm:w-11 lg:h-12 lg:w-12"
             />
-            <span className="text-lg sm:text-xl lg:text-2xl font-bold hidden sm:inline lg:inline">КрымВК</span>
+            <span className="text-base sm:text-lg lg:text-xl font-bold hidden sm:inline text-gray-900">КрымВК</span>
           </Link>
+        </div>
+        </div>
 
-          <nav className="hidden xl:flex items-center space-x-6">
+        {/* Центр: Навигация */}
+        <nav className="hidden 2xl:flex absolute left-1/2 -translate-x-[calc(50%+5.5rem)] top-0 h-full items-stretch gap-8 lg:gap-9 xl:gap-10">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`text-sm font-medium transition-colors whitespace-nowrap ${
-                  isActive(link.href)
-                    ? "text-primary font-semibold"
-                    : "hover:text-primary"
-                }`}
+                className={navItemClass(isActive(link.href))}
               >
-                {link.label}
+                <NavItemLabel>
+                  {link.label}
+                  <NavUnderline active={isActive(link.href)} />
+                </NavItemLabel>
               </Link>
             ))}
             
             {/* Абонентам */}
-            <div className="group relative">
+            <div
+              className="relative h-full"
+              onMouseEnter={() => openMegaMenu("abonenty")}
+              onMouseLeave={scheduleCloseMegaMenu}
+            >
               <button
-                className={`text-sm font-medium transition-colors flex items-center gap-1 whitespace-nowrap ${
-                  pathname.startsWith("/abonenty")
-                    ? "text-primary font-semibold"
-                    : "hover:text-primary"
-                }`}
+                type="button"
+                className={navItemClass(pathname.startsWith("/abonenty"))}
               >
-                Абонентам
-                <ChevronDown className="h-4 w-4" />
+                <NavItemLabel>
+                  Абонентам
+                  <ChevronDown className={`h-5 w-5 transition-transform duration-200 ${megaMenu === "abonenty" ? "rotate-180" : ""}`} />
+                  <NavUnderline active={pathname.startsWith("/abonenty") || megaMenu === "abonenty"} />
+                </NavItemLabel>
               </button>
-              <div className="absolute top-full left-0 mt-1 w-72 bg-white rounded-md shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                <div className="py-2">
-                  <div className="px-3 py-1.5 text-xs font-semibold text-gray-500">Услуги и подключение</div>
-                  <Link href="/abonenty/tehnologicheskoe-prisoedinenie" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    Подключение
-                  </Link>
-                  <Link href="/abonenty/kalkulyator-stoimosti-podklyucheniya" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    Калькулятор стоимости подключения
-                  </Link>
-                  <Link href="/abonenty/platy-uslugi/otkachka" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    Заявка на откачку сточных вод
-                  </Link>
-                  <div className="border-t my-1"></div>
-                  <div className="px-3 py-1.5 text-xs font-semibold text-gray-500">Тарифы</div>
-                  <Link href="/abonenty/tarify-podklyuchenie" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    Тарифы на подключение
-                  </Link>
-                  <Link href="/abonenty/tarify-vodosnabzhenie-vodootvedenie" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    Тарифы на водоснабжение и водоотведение
-                  </Link>
-                </div>
-              </div>
             </div>
 
             {/* О компании */}
-            <div className="group relative">
+            <div
+              className="relative h-full"
+              onMouseEnter={() => openMegaMenu("company")}
+              onMouseLeave={scheduleCloseMegaMenu}
+            >
               <button
-                className={`text-sm font-medium transition-colors flex items-center gap-1 whitespace-nowrap ${
-                  pathname.startsWith("/o-kompanii")
-                    ? "text-primary font-semibold"
-                    : "hover:text-primary"
-                }`}
+                type="button"
+                className={navItemClass(pathname.startsWith("/o-kompanii"))}
               >
-                О компании
-                <ChevronDown className="h-4 w-4" />
+                <NavItemLabel>
+                  О компании
+                  <ChevronDown className={`h-5 w-5 transition-transform duration-200 ${megaMenu === "company" ? "rotate-180" : ""}`} />
+                  <NavUnderline active={pathname.startsWith("/o-kompanii") || megaMenu === "company"} />
+                </NavItemLabel>
               </button>
-              <div className="absolute top-full left-0 mt-1 w-72 bg-white rounded-md shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                <div className="py-2">
-                  <Link href="/o-kompanii/licenzii" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    Лицензии и заключения
-                  </Link>
-                  <Link href="/o-kompanii/istoriya" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    История предприятия
-                  </Link>
-                  <Link href="/o-kompanii/kachestvo-vody" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    Качество питьевой воды
-                  </Link>
-                  <div className="border-t my-1"></div>
-                  <div className="group/sub relative">
-                    <div className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center justify-between">
-                      Раскрытие информации
-                      <ChevronDown className="h-3 w-3 rotate-[-90deg]" />
-                    </div>
-                    <div className="absolute left-full top-0 ml-1 w-64 bg-white rounded-md shadow-lg border border-gray-200 opacity-0 invisible group-hover/sub:opacity-100 group-hover/sub:visible transition-all duration-200 z-50">
-                      <div className="py-2">
-                        <Link href="/o-kompanii/raskrytie/uchreditelnye-dokumenty" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                          Учредительные документы
-                        </Link>
-                        <Link href="/o-kompanii/raskrytie/normativnye-dokumenty" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                          Нормативные документы
-                        </Link>
-                        <Link href="/o-kompanii/raskrytie/informaciya-raskrytie" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                          Информация, подлежащая раскрытию
-                        </Link>
-                        <Link href="/o-kompanii/raskrytie/zashchita-personalnyh-dannyh" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                          Защита персональных данных
-                        </Link>
-                        <Link href="/o-kompanii/raskrytie/antikorrupciya" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                          Антикоррупционная политика
-                        </Link>
-                        <Link href="/o-kompanii/raskrytie/investicionnaya-programma" className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                          Инвестиционная программа
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
           </nav>
-        </div>
 
-        {/* Правая часть: Поиск и кнопки входа/регистрации */}
-        <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4 flex-shrink-0">
-          {/* Поиск */}
-          <div className="hidden xl:block">
-            <Search />
-          </div>
-          
-          {/* Кнопка версии для слабовидящих */}
-          <div className="hidden xl:block">
-            <BVIButton />
-          </div>
-          
-          {/* Позвоните нам - выпадающее меню */}
-          <div className="group relative hidden xl:block">
-            <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs xl:text-sm px-2 xl:px-3 focus:outline-none focus-visible:outline-none active:outline-none">
-              <Phone className="h-3 w-3 xl:h-4 xl:w-4" />
-              <span className="whitespace-nowrap">Позвоните нам</span>
-            </Button>
-            <div className="absolute top-full right-0 mt-1 w-72 lg:w-80 bg-white rounded-md shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-              <div className="py-2">
-                <div className="px-3 py-1.5 text-xs font-semibold text-gray-500">Прием показаний водомеров ХВС</div>
-                <a href="tel:+79780800366" className="block px-3 py-2.5 hover:bg-gray-100">
-                  <span className="font-medium text-sm block">+7 (978) 080-03-66</span>
-                  <span className="text-xs text-gray-500 leading-relaxed">с 8:00 до 17:00 по будням, в пятницу c 8:00 до 16:00</span>
-                </a>
-                <a href="tel:+79787415759" className="block px-3 py-2.5 hover:bg-gray-100">
-                  <span className="font-medium text-sm block">+7 (978) 741-57-59</span>
-                  <span className="text-xs text-gray-500 leading-relaxed">с 8:00 до 17:00 по будням, в пятницу c 8:00 до 16:00</span>
-                </a>
-                <div className="border-t my-1"></div>
-                <div className="px-3 py-1.5 text-xs font-semibold text-red-600">Аварийно-диспетчерская служба</div>
-                <a href="tel:+79787013050" className="block px-3 py-2.5 hover:bg-gray-100">
-                  <span className="font-medium text-sm text-red-600 block">+7 (978) 701-30-50</span>
-                  <span className="text-xs text-gray-500">Круглосуточно</span>
-                </a>
-                <a href="tel:+79787460990" className="block px-3 py-2.5 hover:bg-gray-100">
-                  <span className="font-medium text-sm text-red-600 block">+7 (978) 746-09-90</span>
-                  <span className="text-xs text-gray-500">Круглосуточно</span>
-                </a>
-                <div className="border-t my-1"></div>
-                <div className="px-3 py-1.5 text-xs font-semibold text-gray-500">Онлайн-чат</div>
-                <Link href={session ? "/dashboard/questions" : "/login?callbackUrl=/dashboard/questions"} className="flex items-center gap-2 px-3 py-2.5 hover:bg-gray-100">
-                  <MessageSquare className="h-4 w-4 text-blue-600" />
-                  <span className="font-medium text-sm">Написать в чате</span>
-                </Link>
-              </div>
+        {/* Правая часть */}
+        <div className="flex items-stretch h-full flex-shrink-0 z-10 ml-auto">
+          <div className="hidden 2xl:flex items-stretch h-full border-b border-gray-200">
+            <div className={headerSquareBtn}>
+              <Search inHeader />
+            </div>
+
+            <div
+              className={cn(
+                "relative flex h-full w-14 shrink-0 border-l border-gray-200 lg:w-[4.5rem]",
+                megaMenu === "phone" && "bg-gray-50"
+              )}
+              onMouseEnter={() => openMegaMenu("phone")}
+              onMouseLeave={scheduleCloseMegaMenu}
+            >
+              <button
+                type="button"
+                className={`${headerSquareBtn} w-full border-l-0`}
+                aria-label="Позвоните нам"
+                aria-expanded={megaMenu === "phone"}
+              >
+                <Phone className="h-5 w-5 lg:h-6 lg:w-6" />
+              </button>
+            </div>
+
+            <div className={headerSquareBtn}>
+              <BVIButton className="h-full w-full rounded-none hover:bg-transparent hover:scale-100 active:scale-100 [&_svg]:h-5 [&_svg]:w-5 lg:[&_svg]:h-6 lg:[&_svg]:w-6" />
             </div>
           </div>
 
           {status === "loading" ? (
-            <div className="hidden xl:block w-20 h-9 bg-gray-200 animate-pulse rounded"></div>
+            <div className="hidden 2xl:block h-full w-28 animate-pulse border-b border-l border-gray-200 bg-gray-200" />
           ) : session ? (
-            <>
-              <div className="group relative hidden xl:block">
-                <Button variant="ghost" size="sm" className="flex items-center gap-2 text-xs xl:text-sm focus:outline-none focus-visible:outline-none active:outline-none">
-                  <User className="h-3 w-3 xl:h-4 xl:w-4" />
-                  <span className="max-w-[100px] xl:max-w-[150px] truncate">
-                    {session.user.name || session.user.email}
-                  </span>
-                </Button>
-                <div className="absolute top-full right-0 mt-1 w-64 min-w-[240px] bg-white rounded-md shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                  <div className="py-2">
-                    <div className="px-3 py-2.5 border-b">
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium">{session.user.name || "Пользователь"}</p>
-                        <p className="text-xs text-gray-500 break-all">{session.user.email}</p>
-                      </div>
-                    </div>
-                    <Link href="/dashboard" className="block px-3 py-2.5 hover:bg-gray-100 text-sm">
-                      Личный кабинет
-                    </Link>
-                    <Link href="/dashboard/settings" className="flex items-center gap-2 px-3 py-2.5 hover:bg-gray-100 text-sm">
-                      <Settings className="h-4 w-4" />
-                      Настройки
-                    </Link>
-                    {(session.user.role === "ADMIN" || session.user?.role === "ADMIN") && (
-                      <>
-                        <div className="border-t my-1"></div>
-                        <Link href="/admin" className="flex items-center justify-between px-3 py-2.5 hover:bg-gray-100 text-sm">
-                          <span>Админ-панель</span>
-                          <AdminNotifications />
-                        </Link>
-                      </>
-                    )}
-                    <div className="border-t my-1"></div>
-                    <button
-                      onClick={() => void signOutToHome()}
-                      className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-gray-100 text-sm text-red-600"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      Выйти
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="xl:hidden"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            <div
+              className={cn(
+                "relative hidden h-full border-b border-l border-gray-200 2xl:flex",
+                megaMenu === "profile" && "bg-gray-50"
+              )}
+              onMouseEnter={() => openMegaMenu("profile")}
+              onMouseLeave={scheduleCloseMegaMenu}
+            >
+              <button
+                type="button"
+                className="flex h-full items-center gap-2 px-4 text-base transition-colors hover:bg-gray-50 focus:outline-none lg:px-5"
+                aria-expanded={megaMenu === "profile"}
               >
-                <Menu className="h-5 w-5" />
-              </Button>
-            </>
+                <User className="h-5 w-5" />
+                <span className="max-w-[100px] truncate xl:max-w-[150px]">
+                  {session.user.name || session.user.email}
+                </span>
+                <ChevronDown
+                  className={cn(
+                    "h-5 w-5 transition-transform duration-200",
+                    megaMenu === "profile" && "rotate-180"
+                  )}
+                />
+              </button>
+            </div>
           ) : (
             <>
-              <Button asChild variant="ghost" size="sm" className="hidden xl:inline-flex text-xs xl:text-sm focus:outline-none focus-visible:outline-none active:outline-none">
-                <Link href="/login">Войти</Link>
-              </Button>
-              <Button asChild size="sm" className="hidden xl:inline-flex text-xs xl:text-sm focus:outline-none focus-visible:outline-none active:outline-none">
-                <Link href="/register">Регистрация</Link>
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="xl:hidden"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              <Link
+                href="/login"
+                className={cn(
+                  buttonVariants({ variant: "ghost" }),
+                  "hidden 2xl:inline-flex self-stretch h-full min-h-full rounded-none border-b border-l border-gray-200 px-4 lg:px-5 text-base py-0 hover:scale-100 active:scale-100"
+                )}
               >
-                <Menu className="h-5 w-5" />
-              </Button>
+                Войти
+              </Link>
+              <Link
+                href="/register"
+                className={cn(
+                  buttonVariants({ variant: "default" }),
+                  "hidden 2xl:inline-flex self-stretch h-full min-h-full rounded-none border-b-0 px-6 lg:px-10 text-base py-0 hover:scale-100 active:scale-100"
+                )}
+              >
+                Регистрация
+              </Link>
             </>
           )}
+
+          <div className="flex items-center self-center px-2 2xl:hidden">
+            <HeaderSideMenuToggle
+              isOpen={mobileMenuOpen}
+              onToggle={() => {
+                setMegaMenu(null);
+                setMobileMenuOpen((open) => !open);
+              }}
+            />
+          </div>
         </div>
       </div>
 
-      {/* Мобильное меню - полноэкранное slide-in */}
-      {mobileMenuOpen && (
-        <>
-          {/* Затемнение фона */}
-          <div 
-            className="fixed inset-0 bg-black/50 z-40 xl:hidden animate-in fade-in"
-            onClick={() => setMobileMenuOpen(false)}
-          />
-          
-          {/* Само меню */}
-          <div className="fixed inset-y-0 right-0 w-full max-w-sm bg-white shadow-xl z-50 xl:hidden transform transition-transform duration-300 ease-out animate-in slide-in-from-right">
-            <div className="flex flex-col h-full">
-              {/* Заголовок меню */}
-              <div className="flex items-center justify-between p-4 border-b bg-gradient-to-br from-blue-200 via-blue-100 to-cyan-100">
-                <h2 className="text-lg font-bold text-gray-900">Меню</h2>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="rounded-full"
-                >
-                  <X className="h-5 w-5" />
-                </Button>
-              </div>
-
-              {/* Контент меню с прокруткой */}
-              <div className="flex-1 overflow-y-auto">
-                <div className="p-4 space-y-1">
-                  {/* Основные ссылки */}
-                  {navLinks.map((link) => {
-                    const iconMap: { [key: string]: any } = {
-                      "/": Home,
-                      "/services": Briefcase,
-                      "/avarii": AlertTriangle,
-                      "/news": Newspaper,
-                      "/contact": Mail,
-                    };
-                    const Icon = iconMap[link.href] || Home;
-                    
-                    return (
-                      <Link
-                        key={link.href}
-                        href={link.href}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
-                          isActive(link.href)
-                            ? "bg-blue-100 text-blue-700 font-medium"
-                            : "text-gray-700 hover:bg-gray-100"
-                        }`}
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        <Icon className="h-5 w-5 flex-shrink-0" />
-                        <span className="text-base">{link.label}</span>
-                      </Link>
-                    );
-                  })}
-
-                  {/* Абонентам - аккордеон */}
-                  <Accordion type="single" collapsible className="w-full mt-2">
-                    <AccordionItem value="abonenty" className="border-none">
-                      <AccordionTrigger className="px-4 py-3 hover:no-underline rounded-lg hover:bg-gray-100">
-                        <div className="flex items-center gap-3">
-                          <Users className="h-5 w-5 text-blue-600" />
-                          <span className="text-base font-medium text-gray-900">Абонентам</span>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="pb-2">
-                        <div className="space-y-1 pl-4">
-                          <Link
-                            href="/abonenty/tarify-podklyuchenie"
-                            className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all"
-                            onClick={() => setMobileMenuOpen(false)}
-                          >
-                            <FileText className="h-4 w-4 flex-shrink-0" />
-                            <span className="text-sm">Тарифы на подключение</span>
-                          </Link>
-                          <Link
-                            href="/abonenty/tarify-vodosnabzhenie-vodootvedenie"
-                            className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all"
-                            onClick={() => setMobileMenuOpen(false)}
-                          >
-                            <FileText className="h-4 w-4 flex-shrink-0" />
-                            <span className="text-sm">Тарифы на водоснабжение и водоотведение</span>
-                          </Link>
-                          <Link
-                            href="/abonenty/tehnologicheskoe-prisoedinenie"
-                            className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all"
-                            onClick={() => setMobileMenuOpen(false)}
-                          >
-                            <FileText className="h-4 w-4 flex-shrink-0" />
-                            <span className="text-sm">Подключение</span>
-                          </Link>
-                          <Link
-                            href="/abonenty/kalkulyator-stoimosti-podklyucheniya"
-                            className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all"
-                            onClick={() => setMobileMenuOpen(false)}
-                          >
-                            <FileText className="h-4 w-4 flex-shrink-0" />
-                            <span className="text-sm">Калькулятор стоимости подключения</span>
-                          </Link>
-                          <Link
-                            href="/abonenty/platy-uslugi/otkachka"
-                            className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all"
-                            onClick={() => setMobileMenuOpen(false)}
-                          >
-                            <Droplet className="h-4 w-4 flex-shrink-0" />
-                            <span className="text-sm">Заявка на откачку сточных вод</span>
-                          </Link>
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-
-                  {/* О компании - аккордеон */}
-                  <Accordion type="single" collapsible className="w-full">
-                    <AccordionItem value="about" className="border-none">
-                      <AccordionTrigger className="px-4 py-3 hover:no-underline rounded-lg hover:bg-gray-100">
-                        <div className="flex items-center gap-3">
-                          <Building2 className="h-5 w-5 text-blue-600" />
-                          <span className="text-base font-medium text-gray-900">О компании</span>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="pb-2">
-                        <div className="space-y-1 pl-4">
-                          <Link
-                            href="/o-kompanii/vakansii"
-                            className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all"
-                            onClick={() => setMobileMenuOpen(false)}
-                          >
-                            <Briefcase className="h-4 w-4 flex-shrink-0" />
-                            <span className="text-sm">Вакансии</span>
-                          </Link>
-                          <Link
-                            href="/o-kompanii/istoriya"
-                            className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all"
-                            onClick={() => setMobileMenuOpen(false)}
-                          >
-                            <History className="h-4 w-4 flex-shrink-0" />
-                            <span className="text-sm">История предприятия</span>
-                          </Link>
-                          <Link
-                            href="/o-kompanii/kachestvo-vody"
-                            className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all"
-                            onClick={() => setMobileMenuOpen(false)}
-                          >
-                            <Droplet className="h-4 w-4 flex-shrink-0" />
-                            <span className="text-sm">Качество питьевой воды</span>
-                          </Link>
-                          <Link
-                            href="/o-kompanii/licenzii"
-                            className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all"
-                            onClick={() => setMobileMenuOpen(false)}
-                          >
-                            <FileCheck className="h-4 w-4 flex-shrink-0" />
-                            <span className="text-sm">Лицензии и заключения</span>
-                          </Link>
-                          <Link
-                            href="/o-kompanii/razvitie"
-                            className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all"
-                            onClick={() => setMobileMenuOpen(false)}
-                          >
-                            <TrendingUp className="h-4 w-4 flex-shrink-0" />
-                            <span className="text-sm">Развитие</span>
-                          </Link>
-                          
-                          {/* Подменю: Раскрытие информации */}
-                          <Accordion type="single" collapsible className="w-full mt-2">
-                            <AccordionItem value="raskrytie" className="border-none">
-                              <AccordionTrigger className="px-4 py-2 hover:no-underline rounded-lg hover:bg-gray-50">
-                                <div className="flex items-center gap-3">
-                                  <Info className="h-4 w-4 text-gray-600" />
-                                  <span className="text-sm font-medium text-gray-700">Раскрытие информации</span>
-                                </div>
-                              </AccordionTrigger>
-                              <AccordionContent className="pb-2">
-                                <div className="space-y-1 pl-4">
-                                  <Link
-                                    href="/o-kompanii/raskrytie/uchreditelnye-dokumenty"
-                                    className="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-700 transition-all text-sm"
-                                    onClick={() => setMobileMenuOpen(false)}
-                                  >
-                                    <FileText className="h-3.5 w-3.5 flex-shrink-0" />
-                                    <span>Учредительные документы</span>
-                                  </Link>
-                                  <Link
-                                    href="/o-kompanii/raskrytie/normativnye-dokumenty"
-                                    className="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-700 transition-all text-sm"
-                                    onClick={() => setMobileMenuOpen(false)}
-                                  >
-                                    <FileText className="h-3.5 w-3.5 flex-shrink-0" />
-                                    <span>Нормативные документы</span>
-                                  </Link>
-                                  <Link
-                                    href="/o-kompanii/raskrytie/informaciya-raskrytie"
-                                    className="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-700 transition-all text-sm"
-                                    onClick={() => setMobileMenuOpen(false)}
-                                  >
-                                    <FileText className="h-3.5 w-3.5 flex-shrink-0" />
-                                    <span>Информация, подлежащая раскрытию</span>
-                                  </Link>
-                                  <Link
-                                    href="/o-kompanii/raskrytie/zashchita-personalnyh-dannyh"
-                                    className="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-700 transition-all text-sm"
-                                    onClick={() => setMobileMenuOpen(false)}
-                                  >
-                                    <Shield className="h-3.5 w-3.5 flex-shrink-0" />
-                                    <span>Защита персональных данных</span>
-                                  </Link>
-                                  <Link
-                                    href="/o-kompanii/raskrytie/antikorrupciya"
-                                    className="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-700 transition-all text-sm"
-                                    onClick={() => setMobileMenuOpen(false)}
-                                  >
-                                    <Scale className="h-3.5 w-3.5 flex-shrink-0" />
-                                    <span>Антикоррупционная политика</span>
-                                  </Link>
-                                  <Link
-                                    href="/o-kompanii/raskrytie/investicionnaya-programma"
-                                    className="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-700 transition-all text-sm"
-                                    onClick={() => setMobileMenuOpen(false)}
-                                  >
-                                    <FileText className="h-3.5 w-3.5 flex-shrink-0" />
-                                    <span>Инвестиционная программа</span>
-                                  </Link>
-                                </div>
-                              </AccordionContent>
-                            </AccordionItem>
-                          </Accordion>
-
-                          {/* Подменю: Водоснабжение */}
-                          <Accordion type="single" collapsible className="w-full mt-2">
-                            <AccordionItem value="vodosnabzhenie" className="border-none">
-                              <AccordionTrigger className="px-4 py-2 hover:no-underline rounded-lg hover:bg-gray-50">
-                                <div className="flex items-center gap-3">
-                                  <Droplet className="h-4 w-4 text-gray-600" />
-                                  <span className="text-sm font-medium text-gray-700">Водоснабжение</span>
-                                </div>
-                              </AccordionTrigger>
-                              <AccordionContent className="pb-2">
-                                <div className="space-y-1 pl-4">
-                                  <Link
-                                    href="/o-kompanii/vodosnabzhenie/struktura"
-                                    className="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-700 transition-all text-sm"
-                                    onClick={() => setMobileMenuOpen(false)}
-                                  >
-                                    <FileText className="h-3.5 w-3.5 flex-shrink-0" />
-                                    <span>Структура водоснабжения</span>
-                                  </Link>
-                                  <Link
-                                    href="/o-kompanii/vodosnabzhenie/kachestvo-vody"
-                                    className="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-700 transition-all text-sm"
-                                    onClick={() => setMobileMenuOpen(false)}
-                                  >
-                                    <Droplet className="h-3.5 w-3.5 flex-shrink-0" />
-                                    <span>Качество воды</span>
-                                  </Link>
-                                </div>
-                              </AccordionContent>
-                            </AccordionItem>
-                          </Accordion>
-
-                          {/* Подменю: Канализование */}
-                          <Accordion type="single" collapsible className="w-full mt-2">
-                            <AccordionItem value="kanalizovanie" className="border-none">
-                              <AccordionTrigger className="px-4 py-2 hover:no-underline rounded-lg hover:bg-gray-50">
-                                <div className="flex items-center gap-3">
-                                  <Waves className="h-4 w-4 text-gray-600" />
-                                  <span className="text-sm font-medium text-gray-700">Водоотведение</span>
-                                </div>
-                              </AccordionTrigger>
-                              <AccordionContent className="pb-2">
-                                <div className="space-y-1 pl-4">
-                                  <Link
-                                    href="/o-kompanii/kanalizovanie/struktura"
-                                    className="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-700 transition-all text-sm"
-                                    onClick={() => setMobileMenuOpen(false)}
-                                  >
-                                    <FileText className="h-3.5 w-3.5 flex-shrink-0" />
-                                    <span>Структура водоотведения</span>
-                                  </Link>
-                                </div>
-                              </AccordionContent>
-                            </AccordionItem>
-                          </Accordion>
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-
-                  {/* Поиск в мобильном меню */}
-                  <div className="pt-4 border-t mt-4">
-                    <div className="px-4">
-                      <div className="w-full">
-                        <Search mobileMode={true} />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Футер меню с кнопками входа/регистрации */}
-              <div className="p-4 border-t bg-gray-50 space-y-2">
-                {session ? (
-                  <>
-                    <div className="px-2 py-2 text-sm bg-white rounded-lg mb-2">
-                      <p className="font-medium text-gray-900">{session.user.name || session.user.email}</p>
-                      <p className="text-xs text-gray-500 truncate">{session.user.email}</p>
-                    </div>
-                    <Button asChild className="w-full" size="lg">
-                      <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-                        <User className="h-4 w-4 mr-2" />
-                        Личный кабинет
-                      </Link>
-                    </Button>
-                    {(session.user.role === "ADMIN" || session.user?.role === "ADMIN") && (
-                      <Button asChild variant="outline" className="w-full border-purple-200 text-purple-700 hover:bg-purple-50" size="lg">
-                        <Link href="/admin" onClick={() => setMobileMenuOpen(false)}>
-                          <Shield className="h-4 w-4 mr-2" />
-                          Админ-панель
-                        </Link>
-                      </Button>
-                    )}
-                    <Button asChild variant="outline" className="w-full" size="lg">
-                      <Link href="/dashboard/settings" onClick={() => setMobileMenuOpen(false)}>
-                        <Settings className="h-4 w-4 mr-2" />
-                        Настройки
-                      </Link>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="w-full text-red-600 border-red-200 hover:bg-red-50"
-                      size="lg"
-                      onClick={() => {
-                        void signOutToHome();
-                        setMobileMenuOpen(false);
-                      }}
-                    >
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Выйти
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button asChild className="w-full" size="lg">
-                      <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                        Войти
-                      </Link>
-                    </Button>
-                    <Button asChild variant="outline" className="w-full" size="lg">
-                      <Link href="/register" onClick={() => setMobileMenuOpen(false)}>
-                        Регистрация
-                      </Link>
-                    </Button>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-        </>
+      {megaMenu && (
+        <div
+          className="hidden 2xl:block absolute left-0 right-0 top-full z-40"
+          onMouseEnter={() => openMegaMenu(megaMenu)}
+          onMouseLeave={scheduleCloseMegaMenu}
+        >
+          {megaMenu === "phone" ? (
+            <HeaderPhoneMenu session={session ?? null} onLinkClick={() => setMegaMenu(null)} />
+          ) : megaMenu === "profile" ? (
+            session ? (
+              <HeaderProfileMenu
+                session={session}
+                pathname={pathname}
+                onLinkClick={() => setMegaMenu(null)}
+              />
+            ) : null
+          ) : (
+            <HeaderMegaMenu
+              menu={megaMenu}
+              pathname={pathname}
+              onLinkClick={() => setMegaMenu(null)}
+            />
+          )}
+        </div>
       )}
+      </div>
+
+
+      <HeaderSideMenu
+        isOpen={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+        pathname={pathname}
+        session={session ?? null}
+        navLinks={navLinks}
+      />
     </header>
   );
 }

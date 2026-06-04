@@ -1,14 +1,13 @@
 import { prisma, withRetry } from "@/lib/prisma";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, User, ArrowRight } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import Image from "next/image";
-import { formatPublicAuthorName } from "@/lib/format-public-author";
+import { Newspaper } from "lucide-react";
+import { NewsCard } from "@/components/NewsCard";
 
 export const revalidate = 120;
 
 export default async function NewsPage() {
-  // Загружаем только опубликованные новости
   let news: Array<{
     id: string;
     title: string;
@@ -40,74 +39,45 @@ export default async function NewsPage() {
   }
 
   return (
-    <div className="container py-8 px-4">
-      <div className="mb-8 animate-fade-in">
-        <h1 className="text-4xl font-bold mb-4">Новости</h1>
-        <p className="text-gray-600 text-lg">
-          Актуальные новости и события компании
-        </p>
-      </div>
-
-      {news.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <p className="text-gray-500 text-lg">Пока нет новостей</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {news.map((item) => (
-            <Link key={item.id} href={`/news/${item.id}`} className="block">
-              <Card className="flex flex-col overflow-hidden group cursor-pointer h-full transition-[transform,box-shadow] duration-500 ease-out hover:shadow-lg hover:-translate-y-1">
-                {item.imageUrl && (
-                  <div className="relative w-full h-48 overflow-hidden bg-gray-200">
-                    <Image
-                      src={item.imageUrl}
-                      alt={item.title}
-                      fill
-                      className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-                      unoptimized={item.imageUrl.includes('blob.vercel-storage.com')}
-                    />
-                  </div>
-                )}
-                <CardHeader className="flex-1">
-                  <CardTitle className="text-xl mb-2 line-clamp-2">{item.title}</CardTitle>
-                  <div className="flex items-center gap-4 text-xs text-gray-600">
-                    <div className="flex items-center gap-1">
-                      <User className="h-3 w-3" />
-                      <span className="truncate">
-                        {formatPublicAuthorName(item.author.name, item.author.email)}
-                      </span>
-                    </div>
-                    {item.publishedAt && (
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        <span>
-                          {new Date(item.publishedAt).toLocaleDateString("ru-RU", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          })}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </CardHeader>
-                <CardContent className="flex-1 flex flex-col">
-                  <p className="text-gray-700 text-sm line-clamp-3 mb-4 flex-1">
-                    {item.content}
-                  </p>
-                  <div className="text-blue-600 group-hover:text-blue-800 font-medium text-sm flex items-center gap-1 pointer-events-none">
-                    Читать далее
-                    <ArrowRight className="h-3 w-3" />
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+    <div className="flex min-h-[calc(100dvh-4rem)] flex-col bg-gray-50 py-12 md:py-14 lg:min-h-[calc(100dvh-4.5rem)]">
+      <div className="container mx-auto flex flex-1 flex-col px-4">
+        <div className="mb-8 shrink-0 animate-fade-in md:mb-10">
+          <h1 className="mb-3 text-3xl font-semibold tracking-tight md:text-4xl">Новости</h1>
+          <p className="text-base text-gray-600 md:text-lg">
+            Актуальные новости и события компании
+          </p>
         </div>
-      )}
+
+        {news.length === 0 ? (
+          <div className="flex flex-1 flex-col items-center justify-center py-6 md:py-10">
+            <Card className="w-full max-w-xl rounded-none border bg-white shadow-none">
+              <CardContent className="flex flex-col items-center px-8 py-14 text-center md:px-10 md:py-16">
+                <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-md bg-cyan-100">
+                  <Newspaper className="h-7 w-7 text-cyan-600" />
+                </div>
+                <p className="mb-2 text-xl font-semibold text-gray-900">Пока нет новостей</p>
+                <p className="mb-8 max-w-sm text-base text-gray-600">
+                  Мы готовим материалы — загляните позже или воспользуйтесь другими разделами сайта
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  <Button asChild className="rounded-none hover:scale-100 active:scale-100">
+                    <Link href="/">Перейти на главную</Link>
+                  </Button>
+                  <Button asChild variant="outline" className="rounded-none hover:scale-100 active:scale-100">
+                    <Link href="/services">Посмотреть услуги</Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
+            {news.map((item) => (
+              <NewsCard key={item.id} item={item} />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
-

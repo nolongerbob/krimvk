@@ -29,9 +29,38 @@ import {
 import { AddressInput } from "@/components/AddressInput";
 import { ApplicationForm } from "./application-form";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 type PersonType = "individual" | "legal" | null;
 type Step = "stages" | "type" | "abonent" | "object" | "params" | "documents";
+
+const connectionStages = [
+  {
+    title: "Получение Технических Условий (ТУ)",
+    description: "Подача заявления в производственно-технический отдел (ПТО)",
+    duration: "Срок выдачи: 14 рабочих дней",
+  },
+  {
+    title: "Заключение договора о подключении",
+    description: "У вас есть 1 год с момента получения ТУ для заключения договора",
+  },
+  {
+    title: "Проектирование",
+    description: "Разработка проектно-сметной документации на строительство сетей",
+  },
+  {
+    title: "Строительство сетей",
+    description: "Прокладка труб водопровода/канализации согласно согласованному проекту",
+  },
+  {
+    title: "Врезка и пуск",
+    description: "Получение разрешения на врезку и подключение к сетям",
+  },
+  {
+    title: "Заключение абонентского договора",
+    description: "Оформление договора на водоснабжение и водоотведение",
+  },
+] as const;
 
 const W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
 const XML_NS = "http://www.w3.org/XML/1998/namespace";
@@ -702,12 +731,13 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
-      <div className="mb-8 text-center">
-        <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+    <div className="bg-gray-50 py-8 md:py-12">
+      <div className="container mx-auto max-w-7xl px-4">
+      <div className="mb-8 text-center md:mb-10">
+        <h1 className="mb-3 text-3xl font-semibold tracking-tight text-gray-900 md:text-4xl">
           Стать абонентом
         </h1>
-        <p className="text-xl text-gray-600">
+        <p className="text-base text-gray-600 md:text-lg">
           Заполните форму для подключения к системам водоснабжения и водоотведения
         </p>
       </div>
@@ -744,84 +774,99 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
       )}
 
       {/* Прогресс-бар */}
-      <Card className="mb-6">
-        <CardContent className="p-6 overflow-x-auto">
-          <div className="flex items-center w-full min-w-[660px]">
-            {steps.map((step, index) => {
-              const StepIcon = step.icon;
-              const isActive = step.id === currentStep;
-              const isCompleted = getCurrentStepIndex() > index;
-              const isAccessible = index === 0 || getCurrentStepIndex() >= index - 1;
+      <Card className="mb-6 rounded-none shadow-none">
+        <CardContent className="overflow-x-auto p-4 md:p-5">
+          <div className="min-w-[620px]">
+            <div className="flex items-center">
+              {steps.map((step, index) => {
+                const StepIcon = step.icon;
+                const isActive = step.id === currentStep;
+                const isCompleted = getCurrentStepIndex() > index;
+                const isAccessible = index === 0 || getCurrentStepIndex() >= index - 1;
 
-              return (
-                <Fragment key={step.id}>
-                  {/* Круг и подпись — фиксированная ширина, чтобы соединительные линии были одинаковые */}
-                  <div className="flex flex-col items-center flex-shrink-0 w-[100px] sm:w-[120px]">
-                    <button
-                      onClick={() => {
-                        if (isAccessible) {
-                          setCurrentStep(step.id as Step);
-                          setError(null);
-                        }
-                      }}
-                      disabled={!isAccessible}
-                      className={`w-12 h-12 rounded-full flex items-center justify-center transition-all flex-shrink-0 ${
-                        isActive
-                          ? "bg-blue-600 text-white scale-110"
-                          : isCompleted
-                          ? "bg-green-500 text-white"
-                          : isAccessible
-                          ? "bg-gray-200 text-gray-600 hover:bg-gray-300"
-                          : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                      }`}
-                    >
-                      <StepIcon className="h-5 w-5" />
-                    </button>
-                    <span
-                      className={`mt-2 text-xs font-medium text-center leading-tight ${
-                        isActive ? "text-blue-600" : "text-gray-600"
-                      }`}
-                    >
-                      {step.label}
-                    </span>
-                  </div>
-                  {/* Соединительная линия — flex-1, все одинаковой длины, выровнена по центру круга */}
-                  {index < steps.length - 1 && (
-                    <div
-                      className={`flex-1 h-1 min-w-[12px] mx-1 self-start mt-6 ${
-                        isCompleted ? "bg-green-500" : "bg-gray-200"
-                      }`}
-                      aria-hidden
-                    />
-                  )}
-                </Fragment>
-              );
-            })}
+                return (
+                  <Fragment key={step.id}>
+                    <div className="flex w-[88px] shrink-0 justify-center sm:w-[100px]">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (isAccessible) {
+                            setCurrentStep(step.id as Step);
+                            setError(null);
+                          }
+                        }}
+                        disabled={!isAccessible}
+                        className={cn(
+                          "relative z-10 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-none border bg-white transition-colors sm:h-11 sm:w-11",
+                          isActive && "border-cyan-300 bg-cyan-100 text-blue-600",
+                          !isActive && isCompleted && "border-green-300 bg-green-50 text-green-600",
+                          !isActive && !isCompleted && isAccessible && "border-gray-200 text-gray-400 hover:border-gray-300 hover:bg-gray-50",
+                          !isAccessible && "cursor-not-allowed border-gray-200 text-gray-300"
+                        )}
+                      >
+                        <StepIcon className="h-5 w-5" />
+                      </button>
+                    </div>
+                    {index < steps.length - 1 && (
+                      <div
+                        className={cn(
+                          "relative z-0 mx-1 h-px min-w-[12px] flex-1",
+                          isCompleted ? "bg-green-400" : "bg-gray-200"
+                        )}
+                        aria-hidden
+                      />
+                    )}
+                  </Fragment>
+                );
+              })}
+            </div>
+            <div className="mt-2 flex">
+              {steps.map((step, index) => {
+                const isActive = step.id === currentStep;
+                return (
+                  <Fragment key={`${step.id}-label`}>
+                    <div className="flex w-[88px] shrink-0 justify-center sm:w-[100px]">
+                      <span
+                        className={cn(
+                          "text-center text-[11px] font-medium leading-tight sm:text-xs",
+                          isActive ? "text-blue-600" : "text-gray-500"
+                        )}
+                      >
+                        {step.label}
+                      </span>
+                    </div>
+                    {index < steps.length - 1 && <div className="mx-1 min-w-[12px] flex-1" aria-hidden />}
+                  </Fragment>
+                );
+              })}
+            </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Форма */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">
-            {steps.find((s) => s.id === currentStep)?.label}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+      <Card className="rounded-none shadow-none [&_button]:rounded-none [&_button]:hover:scale-100 [&_button]:active:scale-100 [&_input:not([type=checkbox]):not([type=radio])]:rounded-none [&_select]:rounded-none [&_textarea]:rounded-none">
+        {currentStep !== "stages" && (
+          <CardHeader>
+            <CardTitle className="text-2xl font-semibold tracking-tight">
+              {steps.find((s) => s.id === currentStep)?.label}
+            </CardTitle>
+          </CardHeader>
+        )}
+        <CardContent className={currentStep === "stages" ? "pt-6" : undefined}>
           {error && (
-            <Alert variant="destructive" className="mb-6">
+            <Alert variant="destructive" className="mb-6 rounded-none">
               <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
                     {error}
                     {error.includes("войти в систему") && (
-                      <div className="mt-4 flex gap-3">
-                        <Button asChild size="sm">
+                      <div className="mt-4 flex flex-wrap gap-3">
+                        <Button asChild size="sm" className="rounded-none hover:scale-100 active:scale-100">
                           <Link href={`/login?callbackUrl=${encodeURIComponent('/stat-abonentom')}`}>
                             Войти
                           </Link>
                         </Button>
-                        <Button asChild size="sm" variant="outline">
+                        <Button asChild size="sm" variant="outline" className="rounded-none hover:scale-100 active:scale-100">
                           <Link href={`/register?callbackUrl=${encodeURIComponent('/stat-abonentom')}`}>
                             Зарегистрироваться
                           </Link>
@@ -835,98 +880,48 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
           {/* Шаг 0: Этапы подключения */}
           {currentStep === "stages" && (
             <div className="space-y-6">
-              <p className="text-gray-600 mb-6">
-                Ознакомьтесь с процессом подключения к системам водоснабжения и водоотведения
+              <p className="text-base text-gray-600">
+                Ознакомьтесь с процессом подключения к системам водоснабжения и водоотведения. После этого вы
+                перейдёте к заполнению заявки.
               </p>
-              
-              <div className="space-y-4">
-                {/* Этап 1 */}
-                <div className="bg-white rounded-lg p-4 border-l-4 border-l-blue-500 shadow-sm">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-bold text-blue-600">1</span>
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg mb-1">Получение Технических Условий (ТУ)</h3>
-                      <p className="text-sm text-gray-600 mb-2">Подача заявления в производственно-технический отдел (ПТО)</p>
-                      <div className="flex items-center gap-2 text-xs text-gray-500">
-                        <Clock className="h-3 w-3" />
-                        <span>Срок выдачи: 14 рабочих дней</span>
+
+              <div className="relative ml-1 border border-gray-200 bg-white p-6 md:p-8">
+                <div className="absolute bottom-6 left-[23px] top-6 w-px bg-gray-200 md:bottom-8 md:left-[27px] md:top-8" aria-hidden />
+                <div className="space-y-8">
+                  {connectionStages.map((stage, index) => {
+                    const isHighlighted = index === 0;
+                    return (
+                      <div key={stage.title} className="relative flex gap-4 md:gap-5">
+                        <div
+                          className={cn(
+                            "relative z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-xs font-medium md:h-7 md:w-7",
+                            isHighlighted
+                              ? "border-blue-500 bg-blue-50 text-blue-600"
+                              : "border-gray-300 bg-white text-gray-500"
+                          )}
+                        >
+                          {index + 1}
+                        </div>
+                        <div className="min-w-0 flex-1 pt-0">
+                          <h3 className="mb-1 text-base font-semibold text-gray-900 md:text-lg">{stage.title}</h3>
+                          <p className="text-sm leading-relaxed text-gray-500">{stage.description}</p>
+                          {"duration" in stage && stage.duration && (
+                            <div className="mt-2 flex items-center gap-2 text-xs text-gray-400">
+                              <Clock className="h-3 w-3 shrink-0" />
+                              <span>{stage.duration}</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Этап 2 */}
-                <div className="bg-white rounded-lg p-4 border-l-4 border-l-green-500 shadow-sm">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-bold text-green-600">2</span>
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg mb-1">Заключение договора о подключении</h3>
-                      <p className="text-sm text-gray-600">У вас есть 1 год с момента получения ТУ для заключения договора</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Этап 3 */}
-                <div className="bg-white rounded-lg p-4 border-l-4 border-l-purple-500 shadow-sm">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-bold text-purple-600">3</span>
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg mb-1">Проектирование</h3>
-                      <p className="text-sm text-gray-600">Разработка проектно-сметной документации на строительство сетей</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Этап 4 */}
-                <div className="bg-white rounded-lg p-4 border-l-4 border-l-orange-500 shadow-sm">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-bold text-orange-600">4</span>
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg mb-1">Строительство сетей</h3>
-                      <p className="text-sm text-gray-600">Прокладка труб водопровода/канализации согласно согласованному проекту</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Этап 5 */}
-                <div className="bg-white rounded-lg p-4 border-l-4 border-l-red-500 shadow-sm">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-bold text-red-600">5</span>
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg mb-1">Врезка и пуск</h3>
-                      <p className="text-sm text-gray-600">Получение разрешения на врезку и подключение к сетям</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Этап 6 */}
-                <div className="bg-white rounded-lg p-4 border-l-4 border-l-cyan-500 shadow-sm">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-8 h-8 bg-cyan-100 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-bold text-cyan-600">6</span>
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg mb-1">Заключение абонентского договора</h3>
-                      <p className="text-sm text-gray-600">Оформление договора на водоснабжение и водоотведение</p>
-                    </div>
-                  </div>
+                    );
+                  })}
                 </div>
               </div>
 
-              <div className="mt-6 pt-4 border-t border-gray-200">
-                <Button asChild variant="outline" size="sm" className="w-full">
+              <div className="border-t border-gray-200 pt-4">
+                <Button asChild variant="outline" size="sm" className="w-full rounded-none hover:scale-100 active:scale-100">
                   <Link href="/abonenty/platy-uslugi/podklyuchenie">
-                    <FileText className="h-4 w-4 mr-2" />
+                    <FileText className="mr-2 h-4 w-4" />
                     Подробная информация о каждом этапе
                   </Link>
                 </Button>
@@ -946,7 +941,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                     setPersonType("individual");
                     setError(null);
                   }}
-                  className={`p-8 border-2 rounded-lg text-left transition-all ${
+                  className={`p-8 border-2 rounded-none text-left transition-all ${
                     personType === "individual"
                       ? "border-blue-500 bg-blue-50 shadow-lg"
                       : "border-gray-200 hover:border-gray-300"
@@ -963,7 +958,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                     setPersonType("legal");
                     setError(null);
                   }}
-                  className={`p-8 border-2 rounded-lg text-left transition-all ${
+                  className={`p-8 border-2 rounded-none text-left transition-all ${
                     personType === "legal"
                       ? "border-blue-500 bg-blue-50 shadow-lg"
                       : "border-gray-200 hover:border-gray-300"
@@ -1033,8 +1028,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                   type="text"
                   value={formData.birthDate}
                   onChange={(e) => {
-                    let value = e.target.value.replace(/[^0-9.]/g, ''); // Только цифры и точки
-                    // Автоматически добавляем точки
+                    let value = e.target.value.replace(/[^0-9.]/g, '');
                     if (value.length === 2 && !value.includes('.')) {
                       value = value + '.';
                     } else if (value.length === 5 && value.split('.').length === 2) {
@@ -1325,7 +1319,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                       setFormData({ ...formData, objectType: e.target.value })
                     }
                     required
-                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 py-2 border rounded-none focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="">Выберите тип объекта</option>
                     <option value="residential">Жилой дом</option>
@@ -1343,7 +1337,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                     onChange={(e) =>
                       setFormData({ ...formData, objectPurpose: e.target.value })
                     }
-                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 py-2 border rounded-none focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="">Выберите назначение</option>
                     <option value="residential">Жилое</option>
@@ -1404,6 +1398,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                   onChange={(value: string) =>
                     setFormData({ ...formData, objectAddress: value })
                   }
+                  className="!rounded-none"
                 />
               </div>
 
@@ -1436,7 +1431,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                       setFormData({ ...formData, requestBasis: e.target.value })
                     }
                     required
-                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 py-2 border rounded-none focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="">Выберите основание</option>
                     <option value="owner">Правообладатель земельного участка</option>
@@ -1456,7 +1451,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                       setFormData({ ...formData, constructionType: e.target.value })
                     }
                     required
-                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 py-2 border rounded-none focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="">Выберите тип работ</option>
                     <option value="новое строительство">Новое строительство</option>
@@ -1476,7 +1471,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                       setFormData({ ...formData, resourceType: e.target.value })
                     }
                     required
-                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 py-2 border rounded-none focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="">Выберите вид ресурсов</option>
                     <option value="получение питьевой воды">Получение питьевой воды</option>
@@ -1656,7 +1651,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                         setFormData({ ...formData, objectType: e.target.value })
                       }
                       required
-                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full px-3 py-2 border rounded-none focus:outline-none focus:ring-2 focus:ring-primary"
                     >
                       <option value="">Выберите тип объекта</option>
                       <option value="residential">Жилой дом</option>
@@ -1674,7 +1669,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                       onChange={(e) =>
                         setFormData({ ...formData, objectPurpose: e.target.value })
                       }
-                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full px-3 py-2 border rounded-none focus:outline-none focus:ring-2 focus:ring-primary"
                     >
                       <option value="">Выберите назначение</option>
                       <option value="residential">Жилое</option>
@@ -1716,6 +1711,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                     onChange={(value: string) =>
                       setFormData({ ...formData, objectAddress: value })
                     }
+                    className="!rounded-none"
                   />
                 </div>
 
@@ -1745,7 +1741,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                   Вид подключения <span className="text-red-500">*</span>
                 </Label>
                 <div className="flex gap-6">
-                  <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                  <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-none hover:bg-gray-50 transition-colors">
                     <input
                       type="checkbox"
                       checked={formData.connectionTypeWater}
@@ -1759,7 +1755,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                     />
                     <span>Водопровод</span>
                   </label>
-                  <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                  <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-none hover:bg-gray-50 transition-colors">
                     <input
                       type="checkbox"
                       checked={formData.connectionTypeSewerage}
@@ -1781,7 +1777,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                   Тип подключения <span className="text-red-500">*</span>
                 </Label>
                 <div className="space-y-3">
-                  <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                  <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-none hover:bg-gray-50 transition-colors">
                     <input
                       type="radio"
                       name="connectionMethod"
@@ -1798,7 +1794,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                     />
                     <span>по протяженности</span>
                   </label>
-                  <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                  <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-none hover:bg-gray-50 transition-colors">
                     <input
                       type="radio"
                       name="connectionMethod"
@@ -1823,7 +1819,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                     Колодец <span className="text-red-500">*</span>
                   </Label>
                   <div className="space-y-3">
-                    <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                    <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-none hover:bg-gray-50 transition-colors">
                       <input
                         type="radio"
                         name="wellType"
@@ -1839,7 +1835,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                       />
                       <span>Существующий</span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-lg hover:bg-gray-50 transition-colors">
+                    <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-none hover:bg-gray-50 transition-colors">
                       <input
                         type="radio"
                         name="wellType"
@@ -1914,7 +1910,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                     onChange={(e) =>
                       setFormData({ ...formData, pipeMaterial: e.target.value })
                     }
-                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 py-2 border rounded-none focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="">Выберите материал</option>
                     <option value="PE">ПЭ (Полиэтилен)</option>
@@ -1931,12 +1927,12 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
           {/* Шаг 5: Документы */}
           {currentStep === "documents" && (personType === "individual" || personType === "legal") && (
             <div className="space-y-6">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-semibold text-blue-900 mb-1">Инструкция</p>
-                    <ol className="list-decimal list-inside space-y-1 text-sm text-blue-800">
+              <div className="mb-6 rounded-none border border-blue-200 bg-blue-50 p-4 md:px-6">
+                <div className="flex items-start gap-3 text-left">
+                  <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" />
+                  <div className="min-w-0 flex-1">
+                    <p className="mb-2 font-semibold text-blue-900">Инструкция</p>
+                    <ol className="list-decimal space-y-1.5 pl-5 text-left text-sm leading-relaxed text-blue-800">
                       <li>Скачайте заявление на выдачу технических условий</li>
                       <li>Распечатайте заявление</li>
                       <li>Подпишите заявление</li>
@@ -1953,7 +1949,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
               </div>
 
               {/* Заявление на выдачу ТУ */}
-              <Card className="border-2 border-dashed border-gray-300">
+              <Card className="rounded-none border-2 border-dashed border-gray-300">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <FileText className="h-5 w-5 text-blue-600" />
@@ -1975,6 +1971,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                   <div className="flex flex-wrap gap-3">
                     <Button
                       type="button"
+                      variant="outline"
                       onClick={handleDownloadApplication}
                       className="gap-2"
                     >
@@ -2000,7 +1997,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
               </Card>
 
               {/* Загрузка документов */}
-              <Card>
+              <Card className="rounded-none shadow-none">
                 <CardHeader>
                   <CardTitle>Загрузка документов</CardTitle>
                   <CardDescription>
@@ -2011,7 +2008,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
+                    <div className="border-2 border-dashed border-gray-300 rounded-none p-6 text-center hover:border-blue-400 transition-colors">
                       <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
                       <p className="text-sm text-gray-600 mb-2">
                         Перетащите файлы сюда или нажмите для выбора
@@ -2044,7 +2041,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                         {uploadedFiles.map((file, index) => (
                           <div
                             key={index}
-                            className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                            className="flex items-center justify-between p-3 bg-gray-50 rounded-none"
                           >
                             <div className="flex items-center gap-2">
                               <FileText className="h-4 w-4 text-gray-600" />
@@ -2065,7 +2062,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                       </div>
                     )}
 
-                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                    <div className="bg-amber-50 border border-amber-200 rounded-none p-4">
                       <div className="flex items-start gap-2">
                         <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
                         <div>
@@ -2089,12 +2086,13 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
           )}
 
           {/* Навигация */}
-          <div className="flex justify-between pt-6 border-t mt-6">
+          <div className="mt-6 flex justify-between border-t pt-6">
             <Button
               type="button"
               variant="outline"
               onClick={handleBack}
               disabled={getCurrentStepIndex() === 0}
+              className="rounded-none hover:scale-100 active:scale-100"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Назад
@@ -2104,6 +2102,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                 type="button"
                 onClick={handleNext}
                 disabled={!canGoNext()}
+                className="rounded-none hover:scale-100 active:scale-100"
               >
                 {currentStep === "stages" ? "Продолжить" : "Далее"}
                 <ArrowRight className="h-4 w-4 ml-2" />
@@ -2113,6 +2112,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                 type="button"
                 onClick={handleSubmit}
                 disabled={!canGoNext() || isSubmitting}
+                className="rounded-none hover:scale-100 active:scale-100"
               >
                 {isSubmitting ? (
                   <>
@@ -2130,6 +2130,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

@@ -143,7 +143,7 @@ export default function ApplyServicePage() {
   if (status === "loading" || loadingService) {
     return (
       <div className="container py-12 px-4 max-w-2xl">
-        <p>Загрузка...</p>
+        <p className="text-gray-600">Загрузка...</p>
       </div>
     );
   }
@@ -151,10 +151,10 @@ export default function ApplyServicePage() {
   if (!service) {
     return (
       <div className="container py-12 px-4 max-w-2xl">
-        <Card>
+        <Card className="rounded-none shadow-none">
           <CardContent className="py-12 text-center">
             <p className="text-red-500">{error || "Услуга не найдена"}</p>
-            <Button asChild className="mt-4">
+            <Button asChild className="mt-4 rounded-none hover:scale-100 active:scale-100">
               <Link href="/services">Вернуться к услугам</Link>
             </Button>
           </CardContent>
@@ -164,26 +164,27 @@ export default function ApplyServicePage() {
   }
 
   return (
-    <div className="container py-12 px-4 max-w-2xl">
-      <Button
-        variant="ghost"
-        asChild
-        className="mb-6"
-      >
-        <Link href="/services">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Назад к услугам
-        </Link>
-      </Button>
+    <div className="bg-gray-50 min-h-[calc(100vh-4rem)]">
+      <div className="container py-12 px-4 max-w-2xl">
+        <Button
+          variant="ghost"
+          asChild
+          className="mb-6 rounded-none hover:scale-100 active:scale-100"
+        >
+          <Link href="/services">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Назад к услугам
+          </Link>
+        </Button>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">Подача заявки</CardTitle>
-          <CardDescription>{service.title}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {existingApplication && (
-            <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <Card className="rounded-none shadow-none">
+          <CardHeader className="p-6 pb-4">
+            <CardTitle className="text-2xl font-semibold tracking-tight">Подача заявки</CardTitle>
+            <CardDescription className="text-base">{service.title}</CardDescription>
+          </CardHeader>
+          <CardContent className="p-6 pt-4">
+            {existingApplication && (
+              <div className="mb-6 rounded-none border border-blue-200 bg-blue-50 p-4">
               <div className="flex items-start gap-3">
                 <div className="flex-shrink-0 mt-0.5">
                   <svg
@@ -226,7 +227,7 @@ export default function ApplyServicePage() {
                     variant="outline"
                     size="sm"
                     asChild
-                    className="text-blue-700 border-blue-300 hover:bg-blue-100"
+                    className="rounded-none text-blue-700 border-blue-300 hover:bg-blue-100 hover:scale-100 active:scale-100"
                   >
                     <Link href="/dashboard/applications">Посмотреть мои заявки</Link>
                   </Button>
@@ -236,12 +237,12 @@ export default function ApplyServicePage() {
           )}
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
-              <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md">
+              <div className="rounded-none bg-destructive/10 text-destructive text-sm p-3">
                 {error}
               </div>
             )}
             {existingApplication && (
-              <div className="bg-amber-50 border border-amber-200 rounded-md p-3">
+              <div className="rounded-none border border-amber-200 bg-amber-50 p-3">
                 <p className="text-sm text-amber-800">
                   ⚠️ Вы не можете подать вторую заявку на эту услугу, пока не завершена текущая.
                 </p>
@@ -256,6 +257,7 @@ export default function ApplyServicePage() {
                 value={formData.address}
                 onChange={(address) => setFormData({ ...formData, address })}
                 placeholder="Начните вводить адрес (например: г. Симферополь, ул. Ленина)"
+                className="!rounded-none"
                 required
               />
             </div>
@@ -269,7 +271,7 @@ export default function ApplyServicePage() {
                 required
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full rounded-none px-3 py-2 border focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="+7 (999) 123-45-67"
               />
               {formData.phone && (
@@ -287,12 +289,12 @@ export default function ApplyServicePage() {
                 rows={6}
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full rounded-none px-3 py-2 border focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="Опишите детали заявки..."
               />
             </div>
             {service.price && (
-              <div className="bg-blue-50 p-4 rounded-md">
+              <div className="rounded-none border border-blue-100 bg-blue-50 p-4">
                 <p className="text-sm text-gray-600">
                   <strong>Стоимость услуги:</strong> {service.price}
                 </p>
@@ -304,7 +306,7 @@ export default function ApplyServicePage() {
             <Button
               type="submit"
               disabled={submitting || !!existingApplication}
-              className="w-full"
+              className="w-full rounded-none hover:scale-100 active:scale-100"
               size="lg"
             >
               {submitting ? "Отправка..." : existingApplication ? "Заявка уже подана" : "Подать заявку"}
@@ -312,6 +314,7 @@ export default function ApplyServicePage() {
           </form>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

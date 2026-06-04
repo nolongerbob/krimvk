@@ -1,8 +1,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Droplet, Wrench, FileText, Phone, Plug, Settings, MessageSquare, Truck } from "lucide-react";
+import { Droplet, Wrench, FileText, Phone, Plug, Settings, Truck } from "lucide-react";
 import { prisma, withRetry } from "@/lib/prisma";
+import { cn } from "@/lib/utils";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -35,6 +36,68 @@ const getServiceIcon = (service: { title: string; category: string }) => {
   return categoryKey ? iconMap[categoryKey] : Plug;
 };
 
+const hiddenServiceTitles = new Set([
+  "стать абонентом",
+  "консультации специалистов",
+]);
+
+function isHiddenService(title: string) {
+  return hiddenServiceTitles.has(title.toLowerCase().trim());
+}
+
+const serviceCardDescriptions: Record<string, string> = {
+  "Ремонт водопроводных сетей": "Аварийный и плановый ремонт сетей.",
+  "Установка счетчиков воды": "Установка и поверка счётчиков воды.",
+  "Переоформление договора": "Переоформление при смене собственника.",
+  "Проверка качества воды": "Лабораторный анализ качества воды.",
+  "Откачка и вывоз сточных вод": "Откачка для домов без канализации.",
+  "Технологическое присоединение": "Техусловия на подключение к водоснабжению.",
+};
+
+function getServiceCardDescription(title: string, description: string) {
+  const shortText = serviceCardDescriptions[title.trim()];
+  if (shortText) return shortText;
+
+  const normalized = description.trim();
+  const firstSentence = normalized.match(/^[^.!?]+[.!?]/)?.[0]?.trim();
+  if (firstSentence && firstSentence.length <= 72) return firstSentence;
+
+  return normalized.length > 72 ? `${normalized.slice(0, 69).trim()}…` : normalized;
+}
+
+function getServiceIconAppearance(service: { title: string; category: string }) {
+  const title = service.title.toLowerCase();
+
+  if (title.includes("откачка") || title.includes("сточных")) {
+    return { boxClass: "bg-emerald-100", iconClass: "text-emerald-600" };
+  }
+  if (title.includes("технологическое") || title.includes("присоединение")) {
+    return { boxClass: "bg-indigo-100", iconClass: "text-indigo-600" };
+  }
+  if (title.includes("ремонт")) {
+    return { boxClass: "bg-slate-100", iconClass: "text-slate-600" };
+  }
+  if (title.includes("счетчик") || title.includes("счётчик")) {
+    return { boxClass: "bg-purple-100", iconClass: "text-purple-600" };
+  }
+  if (title.includes("переоформление") || title.includes("договор")) {
+    return { boxClass: "bg-orange-100", iconClass: "text-orange-600" };
+  }
+  if (title.includes("качества") || title.includes("анализ")) {
+    return { boxClass: "bg-cyan-100", iconClass: "text-cyan-600" };
+  }
+
+  const category = service.category.toLowerCase();
+  if (category === "ремонт") return { boxClass: "bg-slate-100", iconClass: "text-slate-600" };
+  if (category === "установка") return { boxClass: "bg-purple-100", iconClass: "text-purple-600" };
+  if (category === "документы") return { boxClass: "bg-orange-100", iconClass: "text-orange-600" };
+  if (category === "анализ") return { boxClass: "bg-cyan-100", iconClass: "text-cyan-600" };
+  if (category === "подключение") return { boxClass: "bg-blue-100", iconClass: "text-blue-600" };
+  if (category === "консультация") return { boxClass: "bg-gray-100", iconClass: "text-gray-600" };
+
+  return { boxClass: "bg-blue-100", iconClass: "text-blue-600" };
+}
+
 export default async function ServicesPage() {
   let services: Array<{
     id: string;
@@ -62,13 +125,6 @@ export default async function ServicesPage() {
       try {
         const basicServices = [
           {
-            title: "Стать абонентом",
-            description: "Техническое подключение к системе централизованного водоснабжения. Включает проектирование, монтаж и пусконаладочные работы.",
-            category: "подключение",
-            price: 15000,
-            isActive: true,
-          },
-          {
             title: "Ремонт водопроводных сетей",
             description: "Аварийный и плановый ремонт водопроводных сетей, замена труб, устранение протечек.",
             category: "ремонт",
@@ -80,13 +136,6 @@ export default async function ServicesPage() {
             description: "Установка и поверка счетчиков холодной и горячей воды. Официальная регистрация приборов учета.",
             category: "установка",
             price: 5000,
-            isActive: true,
-          },
-          {
-            title: "Консультации специалистов",
-            description: "Консультации по вопросам водоснабжения, водоотведения, тарифам и правилам пользования.",
-            category: "консультация",
-            price: null,
             isActive: true,
           },
           {
@@ -193,73 +242,69 @@ export default async function ServicesPage() {
     // В случае ошибки показываем пустой массив, чтобы страница не упала
     services = [];
   }
+
+  const visibleServices = services.filter((service) => !isHiddenService(service.title));
   
   return (
-    <div className="container py-12 px-4">
-      <div className="text-center mb-12 animate-fade-in">
-        <h1 className="text-4xl font-bold mb-4">Наши услуги</h1>
-        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-          Полный спектр услуг по водоснабжению и водоотведению для жителей Крыма
-        </p>
-      </div>
-
-      {services.length === 0 ? (
-        <Card className="mb-12">
-          <CardContent className="py-12 text-center">
-            <p className="text-gray-500 mb-4">Услуги временно недоступны. Пожалуйста, попробуйте позже.</p>
-            <Button asChild>
-              <Link href="/">Вернуться на главную</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-        {services.map((service) => {
-          const Icon = getServiceIcon(service);
-          // Услуга технологического присоединения ведёт на страницу "Стать абонентом"
-          const isTechConnection = service.id === "tehnologicheskoe-prisoedinenie" || 
-            service.title.toLowerCase().includes("технологическое присоединение");
-          const serviceLink = isTechConnection ? "/stat-abonentom" : `/services/${service.id}/apply`;
-          
-          return (
-            <Card key={service.id} className="hover:shadow-lg transition-shadow flex flex-col">
-              <CardHeader>
-                <div className="flex items-center space-x-3 mb-2">
-                  <Icon className="h-8 w-8 text-blue-500" />
-                  <CardTitle className="text-xl">{service.title}</CardTitle>
-                </div>
-                <CardDescription>{service.description}</CardDescription>
-              </CardHeader>
-              <CardContent className="flex-1 flex flex-col justify-end">
-                <Button asChild className="w-full">
-                  <Link href={serviceLink}>Подать заявку</Link>
-                </Button>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-      )}
-
-      <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-8 md:p-12 text-center shadow-soft">
-        <h2 className="text-3xl font-semibold mb-4 tracking-tight">Нужна консультация?</h2>
-        <p className="text-gray-600 mb-8 text-lg">
-          Наши специалисты готовы ответить на все ваши вопросы
-        </p>
-        <div className="flex gap-4 justify-center flex-wrap">
-          <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-base rounded-xl">
-            <Link href="/contact" className="flex items-center gap-2">
-              <Phone className="h-5 w-5" />
-              Позвонить
-            </Link>
-          </Button>
-          <Button asChild size="lg" variant="outline" className="border-2 border-blue-600 text-blue-600 hover:bg-blue-50 px-8 py-6 text-base rounded-xl">
-            <Link href="/dashboard/questions" className="flex items-center gap-2">
-              <MessageSquare className="h-5 w-5" />
-              Написать в чате
-            </Link>
-          </Button>
+    <div className="flex min-h-[calc(100dvh-4rem)] flex-col bg-gray-50 lg:min-h-[calc(100dvh-4.5rem)]">
+      <div className="container mx-auto flex flex-1 flex-col justify-center px-4 py-8 md:py-10">
+        <div className="mb-6 shrink-0 text-center md:mb-8 animate-fade-in">
+          <h1 className="mb-3 text-3xl font-semibold tracking-tight md:text-4xl">Наши услуги</h1>
+          <p className="mx-auto max-w-2xl text-base text-gray-600 md:text-lg">
+            Полный спектр услуг по водоснабжению и водоотведению для жителей Крыма
+          </p>
         </div>
+
+        {visibleServices.length === 0 ? (
+          <Card className="rounded-none shadow-none">
+            <CardContent className="py-12 text-center">
+              <p className="text-gray-500 mb-4">Услуги временно недоступны. Пожалуйста, попробуйте позже.</p>
+              <Button asChild className="rounded-none hover:scale-100 active:scale-100">
+                <Link href="/">Вернуться на главную</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
+            {visibleServices.map((service) => {
+              const Icon = getServiceIcon(service);
+              const appearance = getServiceIconAppearance(service);
+              const isTechConnection = service.id === "tehnologicheskoe-prisoedinenie" ||
+                service.title.toLowerCase().includes("технологическое присоединение");
+              const serviceLink = isTechConnection ? "/stat-abonentom" : `/services/${service.id}/apply`;
+              const cardDescription = getServiceCardDescription(service.title, service.description);
+
+              return (
+                <Card
+                  key={service.id}
+                  className="flex h-full flex-col justify-between rounded-none transition-all hover:shadow-lg hover:translate-y-0"
+                >
+                  <CardHeader className="p-7 pb-0">
+                    <div
+                      className={cn(
+                        "mb-3 flex h-12 w-12 shrink-0 items-center justify-center rounded-none",
+                        appearance.boxClass
+                      )}
+                    >
+                      <Icon className={cn("h-6 w-6", appearance.iconClass)} />
+                    </div>
+                    <CardTitle className="mb-2 min-h-[3.25rem] text-xl font-semibold leading-snug text-gray-900 line-clamp-2">
+                      {service.title}
+                    </CardTitle>
+                    <CardDescription className="min-h-[2.75rem] text-base leading-snug line-clamp-2">
+                      {cardDescription}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-7 pt-5">
+                    <Button asChild className="h-11 w-full rounded-none text-base hover:scale-100 active:scale-100">
+                      <Link href={serviceLink}>Подать заявку</Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

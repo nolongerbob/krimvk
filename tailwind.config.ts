@@ -71,6 +71,9 @@ const config = {
         '18': '4.5rem',
         '88': '22rem',
       },
+      transitionTimingFunction: {
+        spring: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+      },
       keyframes: {
         "accordion-down": {
           from: { height: "0" },

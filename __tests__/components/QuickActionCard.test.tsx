@@ -26,7 +26,7 @@ describe('QuickActionCard', () => {
       />
     )
 
-    expect(screen.getByText('Передать показания')).toBeInTheDocument()
+    expect(screen.getAllByText('Передать показания').length).toBeGreaterThan(0)
     expect(screen.getByText('Передать показания счетчиков воды')).toBeInTheDocument()
   })
 
@@ -63,21 +63,6 @@ describe('QuickActionCard', () => {
     expect(container.querySelector('.text-red-500')).toBeInTheDocument()
     expect(container.querySelector('.border-red-600')).toBeInTheDocument()
     expect(container.querySelector('.bg-red-600')).not.toBeInTheDocument()
-  })
-
-  it('uses primary icon styling when isPrimary is true', () => {
-    const { container } = render(
-      <QuickActionCard
-        iconName="Droplet"
-        title="Primary Card"
-        description="Primary description"
-        href="/test"
-        isPrimary={true}
-      />
-    )
-
-    expect(container.querySelector('.bg-blue-50')).toBeInTheDocument()
-    expect(container.querySelector('.text-blue-600')).toBeInTheDocument()
   })
 
   it('redirects to login when not authenticated', () => {

@@ -1,40 +1,51 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Clock, CheckCircle, XCircle, AlertCircle, X, Download, Eye } from "lucide-react";
+import {
+  FileText,
+  Clock,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  X,
+  Download,
+} from "lucide-react";
 import Link from "next/link";
 import { CompletedApplicationDetails } from "@/components/user/CompletedApplicationDetails";
 import { fileHrefForStoredUrl } from "@/lib/file-url";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
+import { cn } from "@/lib/utils";
+import { dashboardButtonClass } from "@/components/dashboard/dashboard-styles";
 
 const statusConfig = {
   PENDING: {
     label: "Ожидает обработки",
     icon: Clock,
-    className: "text-yellow-500",
-    bgClassName: "bg-yellow-50",
+    tagClass: "bg-amber-50 text-amber-800",
   },
   IN_PROGRESS: {
     label: "В работе",
     icon: AlertCircle,
-    className: "text-blue-500",
-    bgClassName: "bg-blue-50",
+    tagClass: "bg-blue-50 text-blue-700",
   },
   COMPLETED: {
     label: "Завершена",
     icon: CheckCircle,
-    className: "text-green-500",
-    bgClassName: "bg-green-50",
+    tagClass: "bg-emerald-50 text-emerald-700",
   },
   CANCELLED: {
     label: "Отменена",
     icon: XCircle,
-    className: "text-red-500",
-    bgClassName: "bg-red-50",
+    tagClass: "bg-slate-100 text-slate-600",
   },
 };
+
+const outlineBtnClass = cn(
+  dashboardButtonClass,
+  "h-9 border-slate-200 text-slate-700 hover:bg-slate-50"
+);
 
 interface ApplicationFile {
   id: string;
@@ -50,7 +61,7 @@ interface Application {
   service: {
     id?: string;
     title: string;
-  };
+  } | null;
   description: string | null;
   address: string | null;
   status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
@@ -62,15 +73,34 @@ interface ApplicationsClientProps {
   applications: Application[];
 }
 
-export function ApplicationsClient({ applications: initialApplications }: ApplicationsClientProps) {
+function parseTechnicalConditions(description: string | null) {
+  if (!description) {
+    return { isTechnicalConditions: false, techData: null as Record<string, unknown> | null };
+  }
+  try {
+    let jsonPart = description;
+    const commentIndex = description.indexOf(
+      "\n\nКомментарий при завершении:"
+    );
+    if (commentIndex !== -1) {
+      jsonPart = description.substring(0, commentIndex).trim();
+    }
+    const parsed = JSON.parse(jsonPart) as { type?: string };
+    if (parsed.type === "technical_conditions") {
+      return { isTechnicalConditions: true, techData: parsed };
+    }
+  } catch {
+    /* обычная заявка */
+  }
+  return { isTechnicalConditions: false, techData: null };
+}
+
+export function ApplicationsClient({
+  applications: initialApplications,
+}: ApplicationsClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [applications, setApplications] = useState(initialApplications);
-
-  // Обновляем состояние при изменении initialApplications
-  useEffect(() => {
-    setApplications(initialApplications);
-  }, [initialApplications]);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [statusChangeNotification, setStatusChangeNotification] = useState<{
     show: boolean;
@@ -78,16 +108,16 @@ export function ApplicationsClient({ applications: initialApplications }: Applic
     type: "success" | "info";
   } | null>(null);
 
-  // Показываем уведомление если заявка только что создана
   const created = searchParams.get("created");
-  
-  // Отслеживаем изменения статуса заявок при обновлении данных
+
   useEffect(() => {
-    // Сравниваем текущие заявки с новыми, чтобы обнаружить изменения статуса
+    setApplications(initialApplications);
+  }, [initialApplications]);
+
+  useEffect(() => {
     initialApplications.forEach((newApp) => {
       const oldApp = applications.find((a) => a.id === newApp.id);
       if (oldApp && oldApp.status !== newApp.status) {
-        // Статус изменился
         const statusLabels: Record<string, string> = {
           PENDING: "Ожидает обработки",
           IN_PROGRESS: "В работе",
@@ -96,28 +126,20 @@ export function ApplicationsClient({ applications: initialApplications }: Applic
         };
         setStatusChangeNotification({
           show: true,
-          message: `Статус заявки "${newApp.service.title}" изменен на "${statusLabels[newApp.status] || newApp.status}"`,
+          message: `Статус заявки «${newApp.service?.title ?? "Заявка"}» изменён на «${statusLabels[newApp.status] || newApp.status}»`,
           type: newApp.status === "COMPLETED" ? "success" : "info",
         });
-        // Скрываем уведомление через 5 секунд
-        setTimeout(() => {
-          setStatusChangeNotification(null);
-        }, 5000);
+        setTimeout(() => setStatusChangeNotification(null), 5000);
       }
     });
-    // Обновляем список заявок
     setApplications(initialApplications);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialApplications]);
 
-  // Обновляем данные при монтировании компонента, если заявка только что создана
   useEffect(() => {
     if (created === "true") {
-      // Обновляем данные с сервера
       router.refresh();
-      // Обновляем статистику на дашборде
       window.dispatchEvent(new Event("stats-update"));
-      // Убираем параметр из URL через 5 секунд (после показа уведомления)
       const timer = setTimeout(() => {
         router.replace("/dashboard/applications", { scroll: false });
       }, 5000);
@@ -140,14 +162,14 @@ export function ApplicationsClient({ applications: initialApplications }: Applic
       });
 
       if (response.ok) {
-        // Обновляем список заявок
         setApplications((prev) =>
           prev.map((app) =>
-            app.id === applicationId ? { ...app, status: "CANCELLED" as const } : app
+            app.id === applicationId
+              ? { ...app, status: "CANCELLED" as const }
+              : app
           )
         );
         router.refresh();
-        // Обновляем статистику на дашборде
         window.dispatchEvent(new Event("stats-update"));
       } else {
         const data = await response.json();
@@ -163,244 +185,263 @@ export function ApplicationsClient({ applications: initialApplications }: Applic
 
   return (
     <>
-      {created === "true" && (
-        <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
-          <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 mt-0.5">
-              <CheckCircle className="h-5 w-5 text-green-600" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-sm font-semibold text-green-900 mb-1">
-                Заявка успешно подана!
-              </h3>
-              <p className="text-sm text-green-800">
-                Ваша заявка принята в обработку. Мы скоро свяжемся с вами для уточнения деталей.
-              </p>
-            </div>
+      {created === "true" ? (
+        <div className="mb-6 flex items-start gap-3 rounded-none border border-emerald-200 bg-emerald-50 px-4 py-3">
+          <CheckCircle className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+          <div>
+            <p className="text-sm font-semibold text-emerald-900">
+              Заявка успешно подана
+            </p>
+            <p className="text-sm text-emerald-800">
+              Ваша заявка принята в обработку. Мы скоро свяжемся с вами для
+              уточнения деталей.
+            </p>
           </div>
         </div>
-      )}
+      ) : null}
 
-      {statusChangeNotification?.show && (
+      {statusChangeNotification?.show ? (
         <div
-          className={`mb-6 border rounded-lg p-4 ${
+          className={cn(
+            "mb-6 flex items-start gap-3 rounded-none border px-4 py-3",
             statusChangeNotification.type === "success"
-              ? "bg-green-50 border-green-200"
-              : "bg-blue-50 border-blue-200"
-          }`}
+              ? "border-emerald-200 bg-emerald-50"
+              : "border-blue-200 bg-blue-50"
+          )}
         >
-          <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 mt-0.5">
-              {statusChangeNotification.type === "success" ? (
-                <CheckCircle className="h-5 w-5 text-green-600" />
-              ) : (
-                <AlertCircle className="h-5 w-5 text-blue-600" />
+          {statusChangeNotification.type === "success" ? (
+            <CheckCircle className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+          ) : (
+            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" />
+          )}
+          <div className="min-w-0 flex-1">
+            <p
+              className={cn(
+                "text-sm font-semibold",
+                statusChangeNotification.type === "success"
+                  ? "text-emerald-900"
+                  : "text-blue-900"
               )}
-            </div>
-            <div className="flex-1">
-              <p
-                className={`text-sm font-semibold mb-1 ${
-                  statusChangeNotification.type === "success"
-                    ? "text-green-900"
-                    : "text-blue-900"
-                }`}
-              >
-                {statusChangeNotification.type === "success"
-                  ? "Заявка завершена!"
-                  : "Статус заявки обновлен"}
-              </p>
-              <p
-                className={`text-sm ${
-                  statusChangeNotification.type === "success"
-                    ? "text-green-800"
-                    : "text-blue-800"
-                }`}
-              >
-                {statusChangeNotification.message}
-              </p>
-            </div>
-            <button
-              onClick={() => setStatusChangeNotification(null)}
-              className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors"
-              aria-label="Закрыть уведомление"
             >
-              <X className="h-5 w-5" />
-            </button>
+              {statusChangeNotification.type === "success"
+                ? "Заявка завершена"
+                : "Статус заявки обновлён"}
+            </p>
+            <p
+              className={cn(
+                "text-sm",
+                statusChangeNotification.type === "success"
+                  ? "text-emerald-800"
+                  : "text-blue-800"
+              )}
+            >
+              {statusChangeNotification.message}
+            </p>
           </div>
+          <button
+            type="button"
+            onClick={() => setStatusChangeNotification(null)}
+            className="shrink-0 text-slate-400 hover:text-slate-600"
+            aria-label="Закрыть уведомление"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
-      )}
+      ) : null}
 
-
-      <div className="space-y-4">
+      <ul className="space-y-3">
         {applications.map((app) => {
           const status = statusConfig[app.status];
           const StatusIcon = status.icon;
-          
-          // Проверяем, является ли это заявкой на технические условия
-          let isTechnicalConditions = false;
-          let techData: any = null;
-          let displayDescription = app.description || "Без описания";
-          
-          try {
-            if (app.description) {
-              // Пытаемся найти JSON в начале строки (до комментария)
-              let jsonPart = app.description;
-              
-              // Если есть комментарий, извлекаем только JSON часть
-              const commentIndex = app.description.indexOf('\n\nКомментарий при завершении:');
-              if (commentIndex !== -1) {
-                jsonPart = app.description.substring(0, commentIndex).trim();
-              }
-              
-              // Пытаемся распарсить JSON
-              const parsed = JSON.parse(jsonPart);
-              if (parsed.type === "technical_conditions") {
-                isTechnicalConditions = true;
-                techData = parsed;
-              }
-            }
-          } catch (e) {
-            // Не JSON, значит обычная заявка - используем description как есть
-          }
+          const { isTechnicalConditions, techData } = parseTechnicalConditions(
+            app.description
+          );
+          const title = isTechnicalConditions
+            ? "Заявка на технические условия"
+            : app.service?.title ?? "Заявка";
+          const createdLabel = new Date(
+            app.createdAt instanceof Date
+              ? app.createdAt
+              : new Date(app.createdAt)
+          ).toLocaleDateString("ru-RU");
 
           return (
-            <Card key={app.id} className={`${status.bgClassName} border-2`}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="mb-2">
-                      {isTechnicalConditions ? "Заявка на технические условия" : app.service.title}
-                    </CardTitle>
-                    <CardDescription className="mb-2">
-                      {isTechnicalConditions ? (
-                        <div className="space-y-1">
-                          <div>
-                            <strong>ФИО:</strong> {techData?.lastName} {techData?.firstName} {techData?.middleName}
-                          </div>
-                          {techData?.objectAddress && (
-                            <div>
-                              <strong>Адрес объекта:</strong> {techData.objectAddress}
-                            </div>
-                          )}
-                          {techData?.connectionTypeWater && techData?.connectionTypeSewerage && (
-                            <div>
-                              <strong>Подключение:</strong> Водоснабжение и водоотведение
-                            </div>
-                          )}
-                          {techData?.connectionTypeWater && !techData?.connectionTypeSewerage && (
-                            <div>
-                              <strong>Подключение:</strong> Водоснабжение
-                            </div>
-                          )}
-                          {!techData?.connectionTypeWater && techData?.connectionTypeSewerage && (
-                            <div>
-                              <strong>Подключение:</strong> Водоотведение
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        app.description || "Без описания"
-                      )}
-                    </CardDescription>
-                    <div className="flex items-center gap-4 text-sm text-gray-600">
-                      <span>
-                        Создана: {new Date(app.createdAt instanceof Date ? app.createdAt : new Date(app.createdAt)).toLocaleDateString("ru-RU")}
-                      </span>
-                      {app.address && <span>Адрес: {app.address}</span>}
-                    </div>
-                  </div>
-                  <div className={`flex items-center gap-2 ${status.className}`}>
-                    <StatusIcon className="h-5 w-5" />
-                    <span className="font-medium">{status.label}</span>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex gap-4 flex-wrap">
-                    {isTechnicalConditions && (
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => {
-                          // Генерируем и скачиваем PDF
-                          const params = new URLSearchParams();
-                          Object.keys(techData).forEach(key => {
-                            if (techData[key] !== null && techData[key] !== undefined) {
-                              params.append(key, String(techData[key]));
-                            }
-                          });
-                          window.open(`/stat-abonentom/download?${params.toString()}`, '_blank');
-                        }}
-                      >
-                        <Download className="h-4 w-4 mr-2" />
-                        Скачать заявление
-                      </Button>
-                    )}
-                    {app.status === "COMPLETED" && (
-                      <CompletedApplicationDetails 
-                        application={app}
-                        isTechnicalConditions={isTechnicalConditions}
-                      />
-                    )}
-                    {app.status === "PENDING" && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-red-600 hover:bg-red-50"
-                        onClick={() => handleCancel(app.id)}
-                        disabled={cancellingId === app.id}
-                      >
-                        {cancellingId === app.id ? "Отмена..." : "Отменить"}
-                      </Button>
-                    )}
-                  </div>
-
-                  {/* Документы, загруженные администратором */}
-                  {app.files && app.files.length > 0 && (
-                    <div className="border-t pt-4">
-                      <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
-                        <FileText className="h-4 w-4" />
-                        Документы от администратора ({app.files.length})
-                      </h4>
-                      <div className="space-y-2">
-                        {app.files.map((file) => (
-                          <a
-                            key={file.id}
-                            href={fileHrefForStoredUrl(file.filePath)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 text-blue-600 hover:underline text-sm"
+            <li key={app.id}>
+              <DashboardCard>
+                <DashboardCardBody className="p-0">
+                  <div className="border-b border-slate-100 px-4 py-3.5">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-base font-semibold text-slate-900">
+                            {title}
+                          </p>
+                          <span
+                            className={cn(
+                              "inline-flex items-center gap-1 rounded-none px-2 py-0.5 text-xs font-medium",
+                              status.tagClass
+                            )}
                           >
-                            <FileText className="h-4 w-4" />
-                            <span>{file.fileName}</span>
-                            <span className="text-xs text-gray-500">
-                              ({(file.fileSize / 1024).toFixed(1)} KB)
-                            </span>
-                          </a>
-                        ))}
+                            <StatusIcon className="h-3.5 w-3.5" strokeWidth={2} />
+                            {status.label}
+                          </span>
+                        </div>
+                        <p className="mt-1 text-xs text-slate-500">
+                          Создана: {createdLabel}
+                          {app.address ? ` · ${app.address}` : ""}
+                        </p>
                       </div>
                     </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                  </div>
+
+                  <div className="space-y-4 px-4 py-3.5">
+                    {isTechnicalConditions && techData ? (
+                      <div className="space-y-1 text-sm text-slate-600">
+                        <p>
+                          <span className="text-slate-500">ФИО:</span>{" "}
+                          <span className="font-medium text-slate-900">
+                            {String(techData.lastName ?? "")}{" "}
+                            {String(techData.firstName ?? "")}{" "}
+                            {String(techData.middleName ?? "")}
+                          </span>
+                        </p>
+                        {techData.objectAddress ? (
+                          <p>
+                            <span className="text-slate-500">Адрес объекта:</span>{" "}
+                            <span className="text-slate-900">
+                              {String(techData.objectAddress)}
+                            </span>
+                          </p>
+                        ) : null}
+                        {techData.connectionTypeWater ||
+                        techData.connectionTypeSewerage ? (
+                          <p>
+                            <span className="text-slate-500">Подключение:</span>{" "}
+                            <span className="text-slate-900">
+                              {techData.connectionTypeWater &&
+                              techData.connectionTypeSewerage
+                                ? "Водоснабжение и водоотведение"
+                                : techData.connectionTypeWater
+                                  ? "Водоснабжение"
+                                  : "Водоотведение"}
+                            </span>
+                          </p>
+                        ) : null}
+                      </div>
+                    ) : app.description ? (
+                      <p className="text-sm leading-relaxed text-slate-600 line-clamp-4">
+                        {app.description}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-slate-500">Без описания</p>
+                    )}
+
+                    <div className="flex flex-wrap gap-2">
+                      {isTechnicalConditions && techData ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className={outlineBtnClass}
+                          onClick={() => {
+                            const params = new URLSearchParams();
+                            Object.keys(techData).forEach((key) => {
+                              const val = techData[key];
+                              if (val !== null && val !== undefined) {
+                                params.append(key, String(val));
+                              }
+                            });
+                            window.open(
+                              `/stat-abonentom/download?${params.toString()}`,
+                              "_blank"
+                            );
+                          }}
+                        >
+                          <Download className="mr-2 h-4 w-4" />
+                          Скачать заявление
+                        </Button>
+                      ) : null}
+                      {app.status === "COMPLETED" ? (
+                        <CompletedApplicationDetails
+                          application={app}
+                          isTechnicalConditions={isTechnicalConditions}
+                          triggerClassName={outlineBtnClass}
+                        />
+                      ) : null}
+                      {app.status === "PENDING" ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className={cn(
+                            outlineBtnClass,
+                            "border-red-200 text-red-600 hover:bg-red-50"
+                          )}
+                          onClick={() => handleCancel(app.id)}
+                          disabled={cancellingId === app.id}
+                        >
+                          {cancellingId === app.id ? "Отмена…" : "Отменить"}
+                        </Button>
+                      ) : null}
+                    </div>
+
+                    {app.files && app.files.length > 0 ? (
+                      <div className="border-t border-slate-100 pt-3">
+                        <p className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                          <FileText className="h-4 w-4" strokeWidth={1.75} />
+                          Документы от администратора ({app.files.length})
+                        </p>
+                        <ul className="space-y-1.5">
+                          {app.files.map((file) => (
+                            <li key={file.id}>
+                              <a
+                                href={fileHrefForStoredUrl(file.filePath)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:underline"
+                              >
+                                <FileText className="h-4 w-4 shrink-0" />
+                                <span>{file.fileName}</span>
+                                <span className="text-xs font-normal text-slate-500">
+                                  ({(file.fileSize / 1024).toFixed(1)} KB)
+                                </span>
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
+                  </div>
+                </DashboardCardBody>
+              </DashboardCard>
+            </li>
           );
         })}
-      </div>
+      </ul>
 
-      {applications.length === 0 && (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500 mb-4">У вас нет заявок</p>
-            <Button asChild>
+      {applications.length === 0 ? (
+        <DashboardCard className="border-dashed bg-slate-50/80">
+          <DashboardCardBody className="py-12 text-center">
+            <FileText
+              className="mx-auto mb-4 h-10 w-10 text-slate-400"
+              strokeWidth={1.75}
+            />
+            <p className="mb-1 text-sm text-slate-600">У вас нет заявок</p>
+            <p className="mb-4 text-xs text-slate-500">
+              Подайте заявку на услугу через каталог
+            </p>
+            <Button
+              asChild
+              className={cn(
+                dashboardButtonClass,
+                "rounded-none bg-blue-600 text-white hover:bg-blue-700"
+              )}
+            >
               <Link href="/services">Подать заявку</Link>
             </Button>
-          </CardContent>
-        </Card>
-      )}
+          </DashboardCardBody>
+        </DashboardCard>
+      ) : null}
     </>
   );
 }
-

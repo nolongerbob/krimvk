@@ -22,9 +22,14 @@ interface CompletedApplicationDetailsProps {
     }>;
   };
   isTechnicalConditions?: boolean;
+  triggerClassName?: string;
 }
 
-export function CompletedApplicationDetails({ application, isTechnicalConditions = false }: CompletedApplicationDetailsProps) {
+export function CompletedApplicationDetails({
+  application,
+  isTechnicalConditions = false,
+  triggerClassName,
+}: CompletedApplicationDetailsProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   // Извлекаем данные заявки и комментарий из description
@@ -69,7 +74,7 @@ export function CompletedApplicationDetails({ application, isTechnicalConditions
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
+        <Button variant="outline" size="sm" className={triggerClassName}>
           Подробнее
         </Button>
       </DialogTrigger>

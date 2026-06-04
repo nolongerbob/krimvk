@@ -12,10 +12,16 @@ interface QuickActionCardProps {
   description: string;
   href: string;
   iconColor?: string;
-  publicAccess?: boolean; // Если true, доступно всем пользователям
-  isPrimary?: boolean; // Главный CTA (передача показаний)
-  isEmergency?: boolean; // Аварийная карточка
+  publicAccess?: boolean;
+  isEmergency?: boolean;
+  /** Контурная кнопка с цветным акцентом (как у аварии) */
+  buttonAccent?: "blue";
 }
+
+const accentButtonClass = {
+  blue: "border-blue-600 text-blue-600 hover:bg-blue-50 hover:text-blue-700",
+  red: "border-red-600 text-red-600 hover:bg-red-50 hover:text-red-700",
+} as const;
 
 const iconMap = {
   Droplet,
@@ -25,8 +31,8 @@ const iconMap = {
   AlertTriangle,
 };
 
-const primaryCardClass =
-  'rounded-none border-2 border-blue-500 bg-gradient-to-br from-blue-50 to-cyan-50 shadow-lg shadow-blue-200/60 ring-2 ring-blue-200/80 hover:shadow-xl hover:shadow-blue-300/50 hover:scale-[1.02]';
+const cardClass =
+  "group flex h-full flex-col cursor-pointer rounded-none bg-white transition-all hover:shadow-lg";
 
 const actionButtonClass =
   "w-full pointer-events-none rounded-none hover:scale-100 active:scale-100";
@@ -36,15 +42,12 @@ function QuickActionCardContent({
   title,
   description,
   iconColor,
-  isPrimary,
   isEmergency,
-}: Pick<QuickActionCardProps, "iconName" | "title" | "description" | "iconColor" | "isPrimary" | "isEmergency">) {
+}: Pick<QuickActionCardProps, "iconName" | "title" | "description" | "iconColor" | "isEmergency">) {
   const Icon = iconMap[iconName];
   const iconClassName = isEmergency
     ? "h-10 w-10 text-red-500"
-    : isPrimary
-      ? "h-12 w-12 text-blue-600"
-      : `h-10 w-10 ${iconColor}`;
+    : `h-10 w-10 ${iconColor}`;
 
   return (
     <CardHeader className="flex flex-1 flex-col p-5 pb-2">
@@ -61,56 +64,50 @@ function QuickActionCardContent({
 
 function QuickActionCardFooter({
   label,
-  isPrimary,
   isEmergency,
-  asChild = true,
+  buttonAccent,
   disabled = false,
 }: {
   label: string;
-  isPrimary?: boolean;
   isEmergency?: boolean;
-  asChild?: boolean;
+  buttonAccent?: "blue";
   disabled?: boolean;
 }) {
-  const btnClass = `${actionButtonClass} ${
-    isEmergency
-      ? "border-red-600 text-red-600 hover:bg-red-50 hover:text-red-700"
-      : ""
-  } ${isPrimary ? "bg-blue-600 hover:bg-blue-700 text-white" : ""}`;
+  const accent = isEmergency ? accentButtonClass.red : buttonAccent ? accentButtonClass[buttonAccent] : "";
+  const btnClass = `${actionButtonClass} ${accent}`;
 
-  if (disabled) {
-    return (
-      <CardContent className="mt-auto px-5 pt-0 pb-3">
-        <Button className={btnClass} disabled>
-          {label}
-        </Button>
-      </CardContent>
-    );
-  }
-
-  if (asChild) {
-    return (
-      <CardContent className="mt-auto px-5 pt-0 pb-3">
-        <Button asChild className={btnClass} variant={isPrimary ? "default" : "outline"}>
-          <span>{label}</span>
-        </Button>
-      </CardContent>
-    );
-  }
-
-  return null;
+  return (
+    <CardContent className="mt-auto px-5 pt-0 pb-3">
+      <Button
+        asChild={!disabled}
+        className={btnClass}
+        variant="outline"
+        disabled={disabled}
+      >
+        {disabled ? label : <span>{label}</span>}
+      </Button>
+    </CardContent>
+  );
 }
 
-export function QuickActionCard({ iconName, title, description, href, iconColor = "text-blue-500", publicAccess = false, isPrimary = false, isEmergency = false }: QuickActionCardProps) {
+export function QuickActionCard({
+  iconName,
+  title,
+  description,
+  href,
+  iconColor = "text-blue-500",
+  publicAccess = false,
+  isEmergency = false,
+  buttonAccent,
+}: QuickActionCardProps) {
   const { data: session, status } = useSession();
   const isAuthenticated = !!session?.user;
   const isLoading = status === "loading";
 
-  // Если карточка доступна всем, показываем её всегда
   if (publicAccess) {
     return (
-      <Link href={href} className="block">
-        <Card className="group flex h-full flex-col cursor-pointer rounded-none bg-white transition-all hover:shadow-lg">
+      <Link href={href} className="block h-full">
+        <Card className={cardClass}>
           <QuickActionCardContent
             iconName={iconName}
             title={title}
@@ -118,7 +115,11 @@ export function QuickActionCard({ iconName, title, description, href, iconColor 
             iconColor={iconColor}
             isEmergency={isEmergency}
           />
-          <QuickActionCardFooter label={title} isEmergency={isEmergency} />
+          <QuickActionCardFooter
+            label={title}
+            isEmergency={isEmergency}
+            buttonAccent={buttonAccent}
+          />
         </Card>
       </Link>
     );
@@ -126,15 +127,18 @@ export function QuickActionCard({ iconName, title, description, href, iconColor 
 
   if (isLoading) {
     return (
-      <Card className={`flex h-full flex-col rounded-none ${isPrimary ? primaryCardClass : ""}`}>
+      <Card className={`${cardClass} h-full`}>
         <QuickActionCardContent
           iconName={iconName}
           title={title}
           description={description}
           iconColor={iconColor}
-          isPrimary={isPrimary}
         />
-        <QuickActionCardFooter label="Загрузка..." isPrimary={isPrimary} disabled />
+        <QuickActionCardFooter
+          label="Загрузка..."
+          buttonAccent={buttonAccent}
+          disabled
+        />
       </Card>
     );
   }
@@ -142,20 +146,14 @@ export function QuickActionCard({ iconName, title, description, href, iconColor 
   if (!isAuthenticated) {
     return (
       <Link href="/login" className="block h-full">
-        <Card className={`group flex h-full flex-col cursor-pointer rounded-none transition-all ${
-          isPrimary ? `${primaryCardClass} opacity-95` : 'opacity-75 hover:shadow-lg'
-        }`}>
+        <Card className={`${cardClass} opacity-75`}>
           <QuickActionCardContent
             iconName={iconName}
             title={title}
             description={description}
             iconColor={iconColor}
-            isPrimary={isPrimary}
           />
-          <QuickActionCardFooter
-            label={isPrimary ? title : "Войти для доступа"}
-            isPrimary={isPrimary}
-          />
+          <QuickActionCardFooter label="Войти для доступа" buttonAccent={buttonAccent} />
         </Card>
       </Link>
     );
@@ -163,19 +161,15 @@ export function QuickActionCard({ iconName, title, description, href, iconColor 
 
   return (
     <Link href={href} className="block h-full">
-      <Card className={`group flex h-full flex-col cursor-pointer rounded-none transition-all ${
-        isPrimary ? primaryCardClass : 'hover:shadow-lg'
-      }`}>
+      <Card className={cardClass}>
         <QuickActionCardContent
           iconName={iconName}
           title={title}
           description={description}
           iconColor={iconColor}
-          isPrimary={isPrimary}
         />
-        <QuickActionCardFooter label={title} isPrimary={isPrimary} />
+        <QuickActionCardFooter label={title} buttonAccent={buttonAccent} />
       </Card>
     </Link>
   );
 }
-

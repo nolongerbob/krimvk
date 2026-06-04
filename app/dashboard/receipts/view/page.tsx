@@ -1,18 +1,29 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { Card, CardContent } from "@/components/ui/card";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Loader2, Download, Printer, ArrowLeft, Smartphone, Phone, MapPin, Clock } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
+import { cn } from "@/lib/utils";
+import {
+  dashboardButtonClass,
+  dashboardPageClass,
+} from "@/components/dashboard/dashboard-styles";
+
+const outlineBtnClass = cn(
+  dashboardButtonClass,
+  "h-9 border-slate-200 text-slate-700 hover:bg-slate-50"
+);
 
 // Динамический импорт QR-кода для избежания проблем с SSR
 const QRCodeSVG = dynamic(() => import("qrcode.react").then((mod) => mod.QRCodeSVG), {
   ssr: false,
-  loading: () => <div className="w-[130px] h-[130px] bg-gray-200 animate-pulse rounded"></div>
+  loading: () => <div className="h-[130px] w-[130px] animate-pulse rounded-none bg-slate-200" />
 });
 import { generateSBPQRString, generateSBPURL } from "@/lib/qr-code";
 
@@ -97,7 +108,6 @@ interface ReceiptData {
 
 export default function ReceiptViewPage() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const accountId = searchParams.get("accountId");
   const dateFrom = searchParams.get("dateFrom");
   const dateTo = searchParams.get("dateTo");
@@ -287,10 +297,10 @@ export default function ReceiptViewPage() {
 
   if (loading) {
     return (
-      <div className="container py-8 px-4">
-        <div className="text-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-500" />
-          <p className="text-gray-600">Загрузка квитанции...</p>
+      <div className={cn(dashboardPageClass, "container px-4 py-8")}>
+        <div className="py-12 text-center">
+          <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-blue-600" />
+          <p className="text-sm text-slate-600">Загрузка квитанции…</p>
         </div>
       </div>
     );
@@ -298,35 +308,59 @@ export default function ReceiptViewPage() {
 
   if (error || !receiptData) {
     return (
-      <div className="container py-8 px-4 max-w-4xl">
-        <Alert variant="destructive">
+      <div
+        className={cn(
+          dashboardPageClass,
+          "container max-w-4xl px-4 py-8 [&_button]:!rounded-none"
+        )}
+      >
+        <Alert variant="destructive" className="rounded-none">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>{error || "Квитанция не найдена"}</AlertDescription>
         </Alert>
-        <Button onClick={() => router.back()} className="mt-4">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Назад
+        <Button
+          asChild
+          variant="outline"
+          className={cn(dashboardButtonClass, "mt-4 h-9 border-slate-200")}
+        >
+          <Link href="/dashboard/bills">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Назад
+          </Link>
         </Button>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Кнопки управления (скрываются при печати) */}
-      <div className="container py-6 px-4 print:hidden">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <Button variant="outline" onClick={() => router.back()}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Назад
+    <div className={cn(dashboardPageClass, "min-h-screen [&_button]:!rounded-none")}>
+      <div className="container max-w-4xl px-4 py-6 print:hidden">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+          <Button asChild variant="outline" className={cn(outlineBtnClass)}>
+            <Link href="/dashboard/bills">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Назад
+            </Link>
           </Button>
           <div className="flex flex-wrap gap-2">
             {(() => {
-              const lscode = receiptData?.LSCode || receiptData?.lscode || accountInfo?.accountNumber;
-              const addr = receiptData?.Address || receiptData?.address || accountInfo?.address;
+              const lscode =
+                receiptData?.LSCode ||
+                receiptData?.lscode ||
+                accountInfo?.accountNumber;
+              const addr =
+                receiptData?.Address ||
+                receiptData?.address ||
+                accountInfo?.address;
               if (lscode && addr) {
                 return (
-                  <Button onClick={handleQRClick} className="gap-2">
+                  <Button
+                    onClick={handleQRClick}
+                    className={cn(
+                      dashboardButtonClass,
+                      "h-9 gap-2 rounded-none bg-blue-600 px-4 text-white hover:bg-blue-700"
+                    )}
+                  >
                     <Smartphone className="h-4 w-4" />
                     Оплатить по QR
                   </Button>
@@ -334,11 +368,19 @@ export default function ReceiptViewPage() {
               }
               return null;
             })()}
-            <Button variant="outline" onClick={handleDownloadPDF} className="gap-2">
+            <Button
+              variant="outline"
+              onClick={handleDownloadPDF}
+              className={cn(outlineBtnClass, "gap-2")}
+            >
               <Download className="h-4 w-4" />
               Скачать PDF
             </Button>
-            <Button variant="outline" onClick={handlePrint} className="gap-2">
+            <Button
+              variant="outline"
+              onClick={handlePrint}
+              className={cn(outlineBtnClass, "gap-2")}
+            >
               <Printer className="h-4 w-4" />
               Печать
             </Button>
@@ -346,10 +388,10 @@ export default function ReceiptViewPage() {
         </div>
       </div>
 
-      {/* Квитанция — дружелюбный формат */}
-      <div className="container max-w-4xl mx-auto px-4 pb-8 print:block">
-        <Card ref={receiptRef} className="bg-white shadow-md print:shadow-none print:block border-gray-200">
-          <CardContent className="p-6 sm:p-8 print:p-6 text-gray-900">
+      <div className="container mx-auto max-w-4xl px-4 pb-8 print:block">
+        <div ref={receiptRef}>
+        <DashboardCard className="bg-white print:block print:shadow-none">
+          <DashboardCardBody className="p-6 text-slate-900 sm:p-8 print:p-6">
             {(() => {
               const commonDutyAmount = parseAmount(receiptData.CommonDuty ?? receiptData.commonDuty);
               const lscode = receiptData.LSCode || receiptData.lscode || accountInfo?.accountNumber || "";
@@ -380,22 +422,22 @@ export default function ReceiptViewPage() {
               return (
                 <>
             {/* Шапка: заголовок слева, сумма и QR справа */}
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 pb-4 border-b border-gray-200">
-              <div className="flex-1 min-w-0">
-                <h1 className="text-base sm:text-lg font-bold leading-snug text-gray-900">
+            <div className="mb-6 flex flex-col gap-4 border-b border-slate-200 pb-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-base font-bold leading-snug text-slate-900 sm:text-lg">
                   Счёт-квитанция за услугу водоснабжения и водоотведения №{" "}
                   <span className="break-all font-mono">{receiptNum}</span> за {periodStr}
                 </h1>
-                <p className="text-sm text-gray-600 mt-1">оплата до {payByStr}</p>
+                <p className="mt-1 text-sm text-slate-600">оплата до {payByStr}</p>
               </div>
-              <div className="flex flex-col items-start sm:items-end gap-3 flex-shrink-0 print:break-inside-avoid">
-                <div className={`rounded-lg px-4 py-2.5 min-w-0 ${isOverpaid ? "bg-emerald-50 text-emerald-800" : isUnderpaid ? "bg-amber-50 text-amber-800" : "bg-gray-50 text-gray-700"}`}>
+              <div className="flex shrink-0 flex-col items-start gap-3 sm:items-end print:break-inside-avoid">
+                <div className={`min-w-0 rounded-none px-4 py-2.5 ${isOverpaid ? "bg-emerald-50 text-emerald-800" : isUnderpaid ? "bg-amber-50 text-amber-800" : "bg-slate-50 text-slate-700"}`}>
                   <p className="text-xs font-medium text-inherit/80">{isOverpaid ? "Переплата" : isUnderpaid ? "К оплате" : "Нет задолженности"}</p>
                   <p className="text-xl font-bold tabular-nums whitespace-nowrap">{formatCurrency(Math.abs(commonDutyAmount))} ₽</p>
                 </div>
                 {lscode && address && (
                   <div className="flex flex-col items-start sm:items-end">
-                    <div onClick={handleQRClick} className="cursor-pointer p-2 bg-white border border-gray-200 rounded-lg hover:border-sky-300 hover:shadow-sm transition-all print:border-gray-300" title="Оплата через СБП">
+                    <div onClick={handleQRClick} className="cursor-pointer rounded-none border border-slate-200 bg-white p-2 transition-all hover:border-blue-400 hover:shadow-sm print:border-slate-300" title="Оплата через СБП">
                       <QRCodeSVG
                         value={(() => {
                           const today = new Date();
@@ -411,17 +453,17 @@ export default function ReceiptViewPage() {
                         includeMargin={false}
                       />
                     </div>
-                    <p className="text-xs text-gray-500 mt-1.5 print:hidden">Нажмите или отсканируйте для оплаты</p>
+                    <p className="mt-1.5 text-xs text-slate-500 print:hidden">Нажмите или отсканируйте для оплаты</p>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Получатель платежа */}
-            <div className="mb-5 pb-4 border-b border-gray-200 min-w-0">
-              <p className="text-sm font-semibold text-gray-700 mb-2">Получатель платежа</p>
-              <div className="text-sm text-gray-600 space-y-0.5 break-words">
-                <p className="font-medium text-gray-900">ООО «Крымская Водная Компания»</p>
+            <div className="mb-5 pb-4 border-b border-slate-200 min-w-0">
+              <p className="text-sm font-semibold text-slate-700 mb-2">Получатель платежа</p>
+              <div className="text-sm text-slate-600 space-y-0.5 break-words">
+                <p className="font-medium text-slate-900">ООО «Крымская Водная Компания»</p>
                 <p>296560, с. Лесновка Сакского района, ул. Механизаторов, 9</p>
                 <p>ИНН 9107000240, КПП 910701001 · П/с <span className="break-all font-mono">40702810725190003625</span></p>
                 <p>Банк: Филиал «Центральный» Банка ВТБ (ПАО), БИК 044525411, корр. счёт <span className="break-all font-mono">30101810145250000411</span></p>
@@ -430,30 +472,30 @@ export default function ReceiptViewPage() {
             </div>
 
             {/* Плательщик и адрес — компактно */}
-            <div className="grid sm:grid-cols-2 gap-4 mb-5 pb-4 border-b border-gray-200">
+            <div className="grid sm:grid-cols-2 gap-4 mb-5 pb-4 border-b border-slate-200">
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-gray-700 mb-0.5">Плательщик</p>
-                <p className="text-sm text-gray-900 break-words">{receiptData.LSName || accountInfo?.name || "—"}</p>
-                <p className="text-xs text-gray-500 mt-0.5">Лицевой счёт № <span className="break-all font-mono">{receiptNum}</span></p>
+                <p className="text-sm font-semibold text-slate-700 mb-0.5">Плательщик</p>
+                <p className="text-sm text-slate-900 break-words">{receiptData.LSName || accountInfo?.name || "—"}</p>
+                <p className="text-xs text-slate-500 mt-0.5">Лицевой счёт № <span className="break-all font-mono">{receiptNum}</span></p>
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-gray-700 mb-0.5">Адрес потребления</p>
-                <p className="text-sm text-gray-900 break-words">{address || "—"}</p>
+                <p className="text-sm font-semibold text-slate-700 mb-0.5">Адрес потребления</p>
+                <p className="text-sm text-slate-900 break-words">{address || "—"}</p>
               </div>
             </div>
 
             {/* Справочная информация — компактно */}
-            <div className="mb-5 pb-4 border-b border-gray-200">
-              <p className="text-sm font-semibold text-gray-700 mb-1.5">Справочная информация</p>
-              <ul className="text-sm text-gray-600 space-y-0.5 list-none">
-                <li>Расчётная площадь: <span className="font-medium text-gray-800">{String(receiptData.Area ?? receiptData.area ?? "—").trim()}</span></li>
-                <li>Проживает: <span className="font-medium text-gray-800">{String(receiptData.NumberOfResidents ?? receiptData.NumberOfResident ?? "—").trim()} чел.</span></li>
+            <div className="mb-5 pb-4 border-b border-slate-200">
+              <p className="text-sm font-semibold text-slate-700 mb-1.5">Справочная информация</p>
+              <ul className="text-sm text-slate-600 space-y-0.5 list-none">
+                <li>Расчётная площадь: <span className="font-medium text-slate-800">{String(receiptData.Area ?? receiptData.area ?? "—").trim()}</span></li>
+                <li>Проживает: <span className="font-medium text-slate-800">{String(receiptData.NumberOfResidents ?? receiptData.NumberOfResident ?? "—").trim()} чел.</span></li>
                 {(() => {
                   const exemptionList = receiptData.Exemption ?? receiptData.exemption;
                   if (exemptionList && Array.isArray(exemptionList) && exemptionList.length > 0) {
                     return (
                       <li className="mt-1">
-                        <span className="font-medium text-gray-700">Льготы:</span>
+                        <span className="font-medium text-slate-700">Льготы:</span>
                         <ul className="list-none mt-0.5 space-y-0.5">
                           {exemptionList.map((ex, idx) => (
                             <li key={idx} className="text-emerald-700">
@@ -479,7 +521,7 @@ export default function ReceiptViewPage() {
                   return (
                     <li>
                       Договор рассрочки:{" "}
-                      <span className="font-medium text-gray-800">
+                      <span className="font-medium text-slate-800">
                         {contractNumber ? `№ ${contractNumber}` : "без номера"}
                         {contractDate ? ` от ${contractDate}` : ""}
                       </span>
@@ -502,7 +544,7 @@ export default function ReceiptViewPage() {
                     return (
                       <>
                         <li>
-                          Установлено приборов учёта: <span className="font-medium text-gray-800">{metersCount}</span>.
+                          Установлено приборов учёта: <span className="font-medium text-slate-800">{metersCount}</span>.
                         </li>
                         {realMeters.map((meter, idx) => {
                           const serviceName = meter.service || "Услуга";
@@ -510,7 +552,7 @@ export default function ReceiptViewPage() {
                           const norm = meter.norm ? `, норматив: ${meter.norm}` : "";
                           return (
                             <li key={idx}>
-                              {serviceName}: прибор учёта № <span className="font-medium text-gray-800">{deviceNumber}</span>{norm}.
+                              {serviceName}: прибор учёта № <span className="font-medium text-slate-800">{deviceNumber}</span>{norm}.
                             </li>
                           );
                         })}
@@ -521,7 +563,7 @@ export default function ReceiptViewPage() {
                   }
                 })()}
                 {receiptData.CommonPayment && parseFloat(receiptData.CommonPayment) > 0 && (
-                  <li>Последняя оплата: <span className="font-medium text-gray-800">{formatCurrency(receiptData.CommonPayment)} ₽</span>.</li>
+                  <li>Последняя оплата: <span className="font-medium text-slate-800">{formatCurrency(receiptData.CommonPayment)} ₽</span>.</li>
                 )}
               </ul>
             </div>
@@ -529,37 +571,37 @@ export default function ReceiptViewPage() {
             {/* Расшифровка начислений */}
             {((receiptData.ChargesAndPayments && receiptData.ChargesAndPayments.length > 0) || (receiptData.StartCommonDuty && parseAmount(receiptData.StartCommonDuty) > 0.01)) && (
               <div className="mb-5">
-                <p className="text-sm font-semibold text-gray-700 mb-2">
+                <p className="text-sm font-semibold text-slate-700 mb-2">
                   Расшифровка начислений за {periodStr}
                 </p>
-                <div className="overflow-x-auto rounded-lg border border-gray-200 -mx-1 print:mx-0">
+                <div className="overflow-x-auto rounded-none border border-slate-200 -mx-1 print:mx-0">
                   <table className="w-full border-collapse text-xs min-w-[600px] print:text-[10px]">
                     <thead>
-                      <tr className="bg-gray-50">
-                        <th className="border-b border-gray-200 px-1.5 py-1.5 text-left font-semibold text-gray-700 min-w-0 break-words">Услуга</th>
-                        <th className="border-b border-gray-200 px-1 py-1.5 text-center font-semibold text-gray-700 w-[1%] whitespace-nowrap">Ед. изм.</th>
-                        <th className="border-b border-gray-200 px-1 py-1.5 text-center font-semibold text-gray-700" colSpan={3}>Показания</th>
-                        <th className="border-b border-gray-200 px-1 py-1.5 text-center font-semibold text-gray-700 w-[1%] whitespace-nowrap">Тариф</th>
-                        <th className="border-b border-gray-200 px-1 py-1.5 text-center font-semibold text-gray-700 w-[1%] whitespace-nowrap">Начисл.</th>
-                        <th className="border-b border-gray-200 px-1 py-1.5 text-center font-semibold text-gray-700 w-[1%] whitespace-nowrap">Льгота</th>
-                        <th className="border-b border-gray-200 px-1 py-1.5 text-center font-semibold text-gray-700 w-[1%] whitespace-nowrap">Перерасч.</th>
-                        <th className="border-b border-gray-200 px-1 py-1.5 text-right font-semibold text-gray-700 w-[1%] whitespace-nowrap">Итого, ₽</th>
-                        <th className="border-b border-gray-200 px-1 py-1.5 text-center font-semibold text-gray-700 w-[1%] whitespace-nowrap">Норматив</th>
-                        <th className="border-b border-gray-200 px-1 py-1.5 text-center font-semibold text-gray-700 w-[1%] whitespace-nowrap">Объем потребл.</th>
+                      <tr className="bg-slate-50">
+                        <th className="border-b border-slate-200 px-1.5 py-1.5 text-left font-semibold text-slate-700 min-w-0 break-words">Услуга</th>
+                        <th className="border-b border-slate-200 px-1 py-1.5 text-center font-semibold text-slate-700 w-[1%] whitespace-nowrap">Ед. изм.</th>
+                        <th className="border-b border-slate-200 px-1 py-1.5 text-center font-semibold text-slate-700" colSpan={3}>Показания</th>
+                        <th className="border-b border-slate-200 px-1 py-1.5 text-center font-semibold text-slate-700 w-[1%] whitespace-nowrap">Тариф</th>
+                        <th className="border-b border-slate-200 px-1 py-1.5 text-center font-semibold text-slate-700 w-[1%] whitespace-nowrap">Начисл.</th>
+                        <th className="border-b border-slate-200 px-1 py-1.5 text-center font-semibold text-slate-700 w-[1%] whitespace-nowrap">Льгота</th>
+                        <th className="border-b border-slate-200 px-1 py-1.5 text-center font-semibold text-slate-700 w-[1%] whitespace-nowrap">Перерасч.</th>
+                        <th className="border-b border-slate-200 px-1 py-1.5 text-right font-semibold text-slate-700 w-[1%] whitespace-nowrap">Итого, ₽</th>
+                        <th className="border-b border-slate-200 px-1 py-1.5 text-center font-semibold text-slate-700 w-[1%] whitespace-nowrap">Норматив</th>
+                        <th className="border-b border-slate-200 px-1 py-1.5 text-center font-semibold text-slate-700 w-[1%] whitespace-nowrap">Объем потребл.</th>
                       </tr>
-                      <tr className="bg-gray-50/80">
-                        <th className="border-b border-gray-200 px-1.5 py-1" />
-                        <th className="border-b border-gray-200 px-1 py-1" />
-                        <th className="border-b border-gray-200 px-0.5 py-1 text-center font-medium text-gray-600">Нач.</th>
-                        <th className="border-b border-gray-200 px-0.5 py-1 text-center font-medium text-gray-600">Кон.</th>
-                        <th className="border-b border-gray-200 px-0.5 py-1 text-center font-medium text-gray-600">кол-во</th>
-                        <th className="border-b border-gray-200 px-1 py-1" />
-                        <th className="border-b border-gray-200 px-1 py-1" />
-                        <th className="border-b border-gray-200 px-1 py-1" />
-                        <th className="border-b border-gray-200 px-1 py-1" />
-                        <th className="border-b border-gray-200 px-1 py-1" />
-                        <th className="border-b border-gray-200 px-1 py-1" />
-                        <th className="border-b border-gray-200 px-1 py-1" />
+                      <tr className="bg-slate-50/80">
+                        <th className="border-b border-slate-200 px-1.5 py-1" />
+                        <th className="border-b border-slate-200 px-1 py-1" />
+                        <th className="border-b border-slate-200 px-0.5 py-1 text-center font-medium text-slate-600">Нач.</th>
+                        <th className="border-b border-slate-200 px-0.5 py-1 text-center font-medium text-slate-600">Кон.</th>
+                        <th className="border-b border-slate-200 px-0.5 py-1 text-center font-medium text-slate-600">кол-во</th>
+                        <th className="border-b border-slate-200 px-1 py-1" />
+                        <th className="border-b border-slate-200 px-1 py-1" />
+                        <th className="border-b border-slate-200 px-1 py-1" />
+                        <th className="border-b border-slate-200 px-1 py-1" />
+                        <th className="border-b border-slate-200 px-1 py-1" />
+                        <th className="border-b border-slate-200 px-1 py-1" />
+                        <th className="border-b border-slate-200 px-1 py-1" />
                       </tr>
                     </thead>
                     <tbody>
@@ -569,16 +611,16 @@ export default function ReceiptViewPage() {
                         if (startDutyAmount > 0.01) {
                           const emptyCells = (
                             <>
-                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
-                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
-                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
-                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
-                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
-                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
-                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">0,00</td>
-                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">0,00</td>
-                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
-                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
+                              <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-500 tabular-nums">—</td>
+                              <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-500 tabular-nums">—</td>
+                              <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-500 tabular-nums">—</td>
+                              <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-500 tabular-nums">—</td>
+                              <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-500 tabular-nums">—</td>
+                              <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-500 tabular-nums">—</td>
+                              <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-500 tabular-nums">0,00</td>
+                              <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-500 tabular-nums">0,00</td>
+                              <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-500 tabular-nums">—</td>
+                              <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-500 tabular-nums">—</td>
                             </>
                           );
                           if (receiptData.StartDutys && receiptData.StartDutys.length > 0) {
@@ -586,9 +628,9 @@ export default function ReceiptViewPage() {
                               const a = parseAmount(duty.Duty);
                               if (a > 0) return (
                                 <tr key={`sd-${i}`} className="bg-amber-50/50">
-                                  <td className="border-b border-gray-100 px-1.5 py-1 text-gray-900 break-words align-top">{duty.Service || "Долг за предыдущий период"}</td>
+                                  <td className="border-b border-slate-100 px-1.5 py-1 text-slate-900 break-words align-top">{duty.Service || "Долг за предыдущий период"}</td>
                                   {emptyCells}
-                                  <td className="border-b border-gray-100 px-1 py-1 text-right font-medium tabular-nums">{formatCurrency(a)}</td>
+                                  <td className="border-b border-slate-100 px-1 py-1 text-right font-medium tabular-nums">{formatCurrency(a)}</td>
                                 </tr>
                               );
                               return null;
@@ -596,18 +638,18 @@ export default function ReceiptViewPage() {
                           }
                           return (
                             <tr className="bg-amber-50/50">
-                              <td className="border-b border-gray-100 px-1.5 py-1 text-gray-900 break-words align-top">Долг на начало периода</td>
-                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
-                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
-                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
-                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
-                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
-                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
-                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">0,00</td>
-                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">0,00</td>
-                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
-                              <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-500 tabular-nums">—</td>
-                              <td className="border-b border-gray-100 px-1 py-1 text-right font-medium tabular-nums">{formatCurrency(startDutyAmount)}</td>
+                              <td className="border-b border-slate-100 px-1.5 py-1 text-slate-900 break-words align-top">Долг на начало периода</td>
+                              <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-500 tabular-nums">—</td>
+                              <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-500 tabular-nums">—</td>
+                              <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-500 tabular-nums">—</td>
+                              <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-500 tabular-nums">—</td>
+                              <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-500 tabular-nums">—</td>
+                              <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-500 tabular-nums">—</td>
+                              <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-500 tabular-nums">0,00</td>
+                              <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-500 tabular-nums">0,00</td>
+                              <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-500 tabular-nums">—</td>
+                              <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-500 tabular-nums">—</td>
+                              <td className="border-b border-slate-100 px-1 py-1 text-right font-medium tabular-nums">{formatCurrency(startDutyAmount)}</td>
                             </tr>
                           );
                         }
@@ -621,8 +663,8 @@ export default function ReceiptViewPage() {
                         const rows: React.ReactNode[] = [];
                         if (housing.length > 0) {
                           rows.push(
-                            <tr key="gr-h" className="bg-gray-100 font-semibold">
-                              <td colSpan={12} className="border-b border-gray-200 px-1.5 py-1 text-gray-800">Жилищные</td>
+                            <tr key="gr-h" className="bg-slate-100 font-semibold">
+                              <td colSpan={12} className="border-b border-slate-200 px-1.5 py-1 text-slate-800">Жилищные</td>
                             </tr>
                           );
                           housing.forEach((c, i) => {
@@ -632,30 +674,30 @@ export default function ReceiptViewPage() {
                             const numEnd = endVal != null && endVal !== "" ? Number(endVal) : NaN;
                             const qty = !isNaN(numStart) && !isNaN(numEnd) ? (numEnd - numStart) : (c.Volume != null && c.Volume !== "" ? String(c.Volume) : "—");
                             rows.push(
-                              <tr key={`h-${i}`} className="hover:bg-gray-50/80">
-                                <td className="border-b border-gray-100 px-1.5 py-1 text-gray-900 break-words align-top">{c.Service}</td>
-                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{c.Unit || "—"}</td>
-                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{startVal != null && startVal !== "" ? fmt(startVal) : "—"}</td>
-                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{endVal != null && endVal !== "" ? fmt(endVal) : "—"}</td>
-                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{fmt(qty)}</td>
-                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{formatCurrency(c.TariffPrice)}</td>
-                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{formatCurrency(c.ChargeFull || c.Charge)}</td>
-                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{parseAmount(c.Exemption) !== 0 ? formatCurrency(c.Exemption) : "0,00"}</td>
-                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{parseAmount(c.Recalculation) !== 0 ? formatCurrency(c.Recalculation) : "0,00"}</td>
-                                <td className="border-b border-gray-100 px-1 py-1 text-right font-medium text-gray-900 tabular-nums">{formatCurrency(c.ChargeFull || c.Charge)}</td>
-                                <td colSpan={2} className="border-b border-gray-100 px-1 py-1 text-center text-gray-500">X</td>
+                              <tr key={`h-${i}`} className="hover:bg-slate-50/80">
+                                <td className="border-b border-slate-100 px-1.5 py-1 text-slate-900 break-words align-top">{c.Service}</td>
+                                <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-600 tabular-nums">{c.Unit || "—"}</td>
+                                <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-600 tabular-nums">{startVal != null && startVal !== "" ? fmt(startVal) : "—"}</td>
+                                <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-600 tabular-nums">{endVal != null && endVal !== "" ? fmt(endVal) : "—"}</td>
+                                <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-600 tabular-nums">{fmt(qty)}</td>
+                                <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-600 tabular-nums">{formatCurrency(c.TariffPrice)}</td>
+                                <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-600 tabular-nums">{formatCurrency(c.ChargeFull || c.Charge)}</td>
+                                <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-600 tabular-nums">{parseAmount(c.Exemption) !== 0 ? formatCurrency(c.Exemption) : "0,00"}</td>
+                                <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-600 tabular-nums">{parseAmount(c.Recalculation) !== 0 ? formatCurrency(c.Recalculation) : "0,00"}</td>
+                                <td className="border-b border-slate-100 px-1 py-1 text-right font-medium text-slate-900 tabular-nums">{formatCurrency(c.ChargeFull || c.Charge)}</td>
+                                <td colSpan={2} className="border-b border-slate-100 px-1 py-1 text-center text-slate-500">X</td>
                               </tr>
                             );
                           });
                         }
                         if (communal.length > 0) {
                           rows.push(
-                            <tr key="gr-c" className="bg-gray-100 font-semibold">
-                              <td colSpan={9} className="border-b border-gray-200 px-1.5 py-1 text-gray-800">Коммунальные на индивидуальное потребление</td>
-                              <td className="border-b border-gray-200 px-1 py-1 text-right font-semibold tabular-nums">
+                            <tr key="gr-c" className="bg-slate-100 font-semibold">
+                              <td colSpan={9} className="border-b border-slate-200 px-1.5 py-1 text-slate-800">Коммунальные на индивидуальное потребление</td>
+                              <td className="border-b border-slate-200 px-1 py-1 text-right font-semibold tabular-nums">
                                 {formatCurrency(communal.reduce((s, c) => s + parseAmount(c.ChargeFull || c.Charge), 0))}
                               </td>
-                              <td colSpan={2} className="border-b border-gray-200 px-1 py-1 text-center font-medium text-gray-600">индив. потребление</td>
+                              <td colSpan={2} className="border-b border-slate-200 px-1 py-1 text-center font-medium text-slate-600">индив. потребление</td>
                             </tr>
                           );
                           let idx = 0;
@@ -673,19 +715,19 @@ export default function ReceiptViewPage() {
                               ? ` (повыш. коэф. ${ratio.toLocaleString("ru-RU", { minimumFractionDigits: 0, maximumFractionDigits: 2 })})`
                               : "";
                             rows.push(
-                              <tr key={`c-${idx}`} className="hover:bg-gray-50/80">
-                                <td className="border-b border-gray-100 px-1.5 py-1 text-gray-900 break-words align-top">{c.Service}</td>
-                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{c.Unit || "—"}</td>
-                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{startVal != null && startVal !== "" ? fmt(startVal) : "—"}</td>
-                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{endVal != null && endVal !== "" ? fmt(endVal) : "—"}</td>
-                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{fmt(qty)}</td>
-                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{formatCurrency(c.TariffPrice)}</td>
-                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{formatCurrency(c.ChargeFull || c.Charge)}</td>
-                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{parseAmount(c.Exemption) !== 0 ? formatCurrency(c.Exemption) : "0,00"}</td>
-                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{parseAmount(c.Recalculation) !== 0 ? formatCurrency(c.Recalculation) : "0,00"}</td>
-                                <td className="border-b border-gray-100 px-1 py-1 text-right font-medium text-gray-900 tabular-nums">{formatCurrency(c.ChargeFull || c.Charge)}</td>
-                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">{c.Norm || "—"}</td>
-                                <td className="border-b border-gray-100 px-1 py-1 text-center text-gray-600 tabular-nums">
+                              <tr key={`c-${idx}`} className="hover:bg-slate-50/80">
+                                <td className="border-b border-slate-100 px-1.5 py-1 text-slate-900 break-words align-top">{c.Service}</td>
+                                <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-600 tabular-nums">{c.Unit || "—"}</td>
+                                <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-600 tabular-nums">{startVal != null && startVal !== "" ? fmt(startVal) : "—"}</td>
+                                <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-600 tabular-nums">{endVal != null && endVal !== "" ? fmt(endVal) : "—"}</td>
+                                <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-600 tabular-nums">{fmt(qty)}</td>
+                                <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-600 tabular-nums">{formatCurrency(c.TariffPrice)}</td>
+                                <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-600 tabular-nums">{formatCurrency(c.ChargeFull || c.Charge)}</td>
+                                <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-600 tabular-nums">{parseAmount(c.Exemption) !== 0 ? formatCurrency(c.Exemption) : "0,00"}</td>
+                                <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-600 tabular-nums">{parseAmount(c.Recalculation) !== 0 ? formatCurrency(c.Recalculation) : "0,00"}</td>
+                                <td className="border-b border-slate-100 px-1 py-1 text-right font-medium text-slate-900 tabular-nums">{formatCurrency(c.ChargeFull || c.Charge)}</td>
+                                <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-600 tabular-nums">{c.Norm || "—"}</td>
+                                <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-600 tabular-nums">
                                   {c.Volume && c.Volume !== "" ? `${c.Volume}${coeffLabel}` : "—"}
                                 </td>
                               </tr>
@@ -704,15 +746,15 @@ export default function ReceiptViewPage() {
             {/* Показания индивидуальных приборов учета (ИПУ) */}
             {((receiptData.MeterReadings ?? receiptData.meterReadings)?.length ?? 0) > 0 && (
               <div className="mb-5">
-                <p className="text-sm font-semibold text-gray-700 mb-2">Показания индивидуальных приборов учета (ИПУ)</p>
-                <div className="overflow-x-auto rounded-lg border border-gray-200">
+                <p className="text-sm font-semibold text-slate-700 mb-2">Показания индивидуальных приборов учета (ИПУ)</p>
+                <div className="overflow-x-auto rounded-none border border-slate-200">
                   <table className="w-full border-collapse text-xs min-w-[400px] print:text-[10px]">
                     <thead>
-                      <tr className="bg-gray-50">
-                        <th className="border-b border-gray-200 px-1.5 py-1.5 text-left font-semibold text-gray-700">Вид услуг</th>
-                        <th className="border-b border-gray-200 px-1 py-1.5 text-center font-semibold text-gray-700">Предыдущее</th>
-                        <th className="border-b border-gray-200 px-1 py-1.5 text-center font-semibold text-gray-700">Текущее</th>
-                        <th className="border-b border-gray-200 px-1 py-1.5 text-center font-semibold text-gray-700">Расход</th>
+                      <tr className="bg-slate-50">
+                        <th className="border-b border-slate-200 px-1.5 py-1.5 text-left font-semibold text-slate-700">Вид услуг</th>
+                        <th className="border-b border-slate-200 px-1 py-1.5 text-center font-semibold text-slate-700">Предыдущее</th>
+                        <th className="border-b border-slate-200 px-1 py-1.5 text-center font-semibold text-slate-700">Текущее</th>
+                        <th className="border-b border-slate-200 px-1 py-1.5 text-center font-semibold text-slate-700">Расход</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -721,14 +763,14 @@ export default function ReceiptViewPage() {
                         const curVal = row.Reading != null && row.Reading !== "" ? String(row.Reading) : "—";
                         const volume = row.Volume != null && row.Volume !== "" ? String(row.Volume) : "—";
                         return (
-                          <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50/80">
-                            <td className="px-1.5 py-1 text-gray-900">{row.Service}</td>
-                            <td className="px-1 py-1 text-center tabular-nums text-gray-700">
-                              <span className="block text-gray-500 text-[10px]">{row.PastDate || ""}</span>
+                          <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50/80">
+                            <td className="px-1.5 py-1 text-slate-900">{row.Service}</td>
+                            <td className="px-1 py-1 text-center tabular-nums text-slate-700">
+                              <span className="block text-slate-500 text-[10px]">{row.PastDate || ""}</span>
                               <span>{pastVal}</span>
                             </td>
-                            <td className="px-1 py-1 text-center tabular-nums text-gray-900">{curVal}</td>
-                            <td className="px-1 py-1 text-center tabular-nums text-gray-700">{volume}</td>
+                            <td className="px-1 py-1 text-center tabular-nums text-slate-900">{curVal}</td>
+                            <td className="px-1 py-1 text-center tabular-nums text-slate-700">{volume}</td>
                           </tr>
                         );
                       })}
@@ -741,14 +783,14 @@ export default function ReceiptViewPage() {
             {/* Долг за предыдущие периоды (ЖКУ / Пени / Всего) */}
             {receiptData.StartCommonDuty && parseAmount(receiptData.StartCommonDuty) > 0.01 && (
               <div className="mb-5">
-                <div className="max-w-xs rounded-lg border border-gray-200 overflow-hidden">
+                <div className="max-w-xs rounded-none border border-slate-200 overflow-hidden">
                   <table className="w-full text-sm border-collapse">
-                    <tbody className="text-gray-700">
-                      <tr className="bg-gray-50">
-                        <td colSpan={2} className="py-2 px-3 text-center font-semibold text-gray-800 border-b border-gray-200">Долг за предыдущие периоды</td>
+                    <tbody className="text-slate-700">
+                      <tr className="bg-slate-50">
+                        <td colSpan={2} className="py-2 px-3 text-center font-semibold text-slate-800 border-b border-slate-200">Долг за предыдущие периоды</td>
                       </tr>
-                      <tr className="border-b border-gray-100"><td className="py-1.5 pl-3 w-[60%]">ЖКУ</td><td className="py-1.5 pr-3 text-right tabular-nums">{formatCurrency(receiptData.StartCommonDuty)}</td></tr>
-                      <tr className="border-b border-gray-100"><td className="py-1.5 pl-3">Пени</td><td className="py-1.5 pr-3 text-right tabular-nums">0,00</td></tr>
+                      <tr className="border-b border-slate-100"><td className="py-1.5 pl-3 w-[60%]">ЖКУ</td><td className="py-1.5 pr-3 text-right tabular-nums">{formatCurrency(receiptData.StartCommonDuty)}</td></tr>
+                      <tr className="border-b border-slate-100"><td className="py-1.5 pl-3">Пени</td><td className="py-1.5 pr-3 text-right tabular-nums">0,00</td></tr>
                       <tr><td className="py-1.5 pl-3 font-medium">Всего</td><td className="py-1.5 pr-3 text-right tabular-nums font-medium">{formatCurrency(receiptData.StartCommonDuty)}</td></tr>
                     </tbody>
                   </table>
@@ -768,17 +810,17 @@ export default function ReceiptViewPage() {
               // В 1С: положительное CommonDuty = долг к оплате (недоплата), отрицательное = переплата
               const isOverpaid = commonDutyAmount < 0;
               const isUnderpaid = commonDutyAmount > 0;
-              const totalRowStyle = isOverpaid ? "bg-emerald-50 text-emerald-800" : isUnderpaid ? "bg-amber-50 text-amber-800" : "bg-gray-50 text-gray-800";
+              const totalRowStyle = isOverpaid ? "bg-emerald-50 text-emerald-800" : isUnderpaid ? "bg-amber-50 text-amber-800" : "bg-slate-50 text-slate-800";
               return (
                 <div className="mb-5">
-                  <p className="text-sm font-semibold text-gray-700 mb-2">Расшифровка суммы счёта</p>
-                  <div className="max-w-full rounded-lg border border-gray-200 overflow-hidden overflow-x-auto">
+                  <p className="text-sm font-semibold text-slate-700 mb-2">Расшифровка суммы счёта</p>
+                  <div className="max-w-full rounded-none border border-slate-200 overflow-hidden overflow-x-auto">
                     <table className="w-full min-w-[280px] text-sm border-collapse">
-                      <tbody className="text-gray-700">
-                        <tr className="border-b border-gray-100"><td className="py-2 pr-4 pl-3">Задолженность на 1-е число</td><td className="py-2 pr-3 pl-2 text-right tabular-nums whitespace-nowrap">{formatCurrency(startDebt)}</td></tr>
-                        <tr className="border-b border-gray-100"><td className="py-2 pr-4 pl-3">Перерасчёты</td><td className="py-2 pr-3 pl-2 text-right tabular-nums whitespace-nowrap">{formatCurrency(totalRecalc)}</td></tr>
-                        <tr className="border-b border-gray-100"><td className="py-2 pr-4 pl-3">Начислено за {periodStr}</td><td className="py-2 pr-3 pl-2 text-right tabular-nums whitespace-nowrap">{formatCurrency(totalCharged)}</td></tr>
-                        <tr className="border-b border-gray-100"><td className="py-2 pr-4 pl-3">Оплаты за {periodStr}</td><td className="py-2 pr-3 pl-2 text-right tabular-nums whitespace-nowrap">{formatCurrency(payments)}</td></tr>
+                      <tbody className="text-slate-700">
+                        <tr className="border-b border-slate-100"><td className="py-2 pr-4 pl-3">Задолженность на 1-е число</td><td className="py-2 pr-3 pl-2 text-right tabular-nums whitespace-nowrap">{formatCurrency(startDebt)}</td></tr>
+                        <tr className="border-b border-slate-100"><td className="py-2 pr-4 pl-3">Перерасчёты</td><td className="py-2 pr-3 pl-2 text-right tabular-nums whitespace-nowrap">{formatCurrency(totalRecalc)}</td></tr>
+                        <tr className="border-b border-slate-100"><td className="py-2 pr-4 pl-3">Начислено за {periodStr}</td><td className="py-2 pr-3 pl-2 text-right tabular-nums whitespace-nowrap">{formatCurrency(totalCharged)}</td></tr>
+                        <tr className="border-b border-slate-100"><td className="py-2 pr-4 pl-3">Оплаты за {periodStr}</td><td className="py-2 pr-3 pl-2 text-right tabular-nums whitespace-nowrap">{formatCurrency(payments)}</td></tr>
                         <tr className={`font-semibold ${totalRowStyle}`}>
                           <td className="py-3 pl-3">
                             {isOverpaid ? "Итого (переплата)" : isUnderpaid ? "Итого (долг)" : "Итого"}
@@ -793,34 +835,34 @@ export default function ReceiptViewPage() {
             })()}
 
             {/* Подвал: контакты и информация */}
-            <div className="mt-6 pt-5 border-t border-gray-200">
+            <div className="mt-6 pt-5 border-t border-slate-200">
               <div className="grid sm:grid-cols-2 gap-6 text-sm">
                 <div>
-                  <p className="text-gray-600 mb-2">Уважаемые абоненты! Напоминаем, показания индивидуальных (квартирных) приборов учета холодной воды необходимо передавать с 10 по 25 число по тел. +7 (978) 080-03-66 или контролеру на участке. При нарушении сроков представления показаний прибора учета начисления будут производиться расчетным способом.</p>
-                  <p className="text-gray-600 mb-3">При несвоевременной оплате взыскание задолженности производится в судебном порядке.</p>
-                  <p className="text-gray-500">Сформировано {new Date().toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}. QR-код — оплата через СБП.</p>
+                  <p className="text-slate-600 mb-2">Уважаемые абоненты! Напоминаем, показания индивидуальных (квартирных) приборов учета холодной воды необходимо передавать с 10 по 25 число по тел. +7 (978) 080-03-66 или контролеру на участке. При нарушении сроков представления показаний прибора учета начисления будут производиться расчетным способом.</p>
+                  <p className="text-slate-600 mb-3">При несвоевременной оплате взыскание задолженности производится в судебном порядке.</p>
+                  <p className="text-slate-500">Сформировано {new Date().toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}. QR-код — оплата через СБП.</p>
                 </div>
                 <div className="space-y-2 min-w-0">
-                  <p className="font-medium text-gray-700 flex flex-wrap items-center gap-x-1 gap-y-0.5 print:gap-0">
+                  <p className="font-medium text-slate-700 flex flex-wrap items-center gap-x-1 gap-y-0.5 print:gap-0">
                     <Phone className="h-4 w-4 flex-shrink-0 print:hidden" />
                     <span className="mr-1">Тел.:</span>
-                    <a href="tel:+79780800366" className="text-sky-600 hover:underline print:text-inherit whitespace-nowrap">+7 (978) 080-03-66</a>
+                    <a href="tel:+79780800366" className="text-blue-600 hover:underline print:text-inherit whitespace-nowrap">+7 (978) 080-03-66</a>
                     <span>,</span>
-                    <a href="tel:+79787415759" className="text-sky-600 hover:underline print:text-inherit whitespace-nowrap">+7 (978) 741-57-59</a>
+                    <a href="tel:+79787415759" className="text-blue-600 hover:underline print:text-inherit whitespace-nowrap">+7 (978) 741-57-59</a>
                     <span>,</span>
-                    <a href="tel:+79787013050" className="text-sky-600 hover:underline print:text-inherit whitespace-nowrap">+7 (978) 701-30-50</a>
+                    <a href="tel:+79787013050" className="text-blue-600 hover:underline print:text-inherit whitespace-nowrap">+7 (978) 701-30-50</a>
                     <span> (аварийная)</span>
                   </p>
-                  <p className="text-gray-600 flex items-center gap-2">
+                  <p className="text-slate-600 flex items-center gap-2">
                     <MapPin className="h-4 w-4 flex-shrink-0 print:hidden" />
                     с. Лесновка Сакского района, ул. Механизаторов, 9
                   </p>
-                  <p className="text-gray-600 flex items-center gap-2">
+                  <p className="text-slate-600 flex items-center gap-2">
                     <Clock className="h-4 w-4 flex-shrink-0 print:hidden" />
                     Пн–Чт 08:00–17:00, Пт 08:00–16:00 · обед 12:00–12:48
                   </p>
-                  <p className="text-gray-600 text-xs leading-relaxed pl-6 print:pl-0">
-                    Приём абонентов: 8:15–15:00. <span className="text-gray-500">С 1 по 7 число каждого месяца приём не ведётся.</span>
+                  <p className="text-slate-600 text-xs leading-relaxed pl-6 print:pl-0">
+                    Приём абонентов: 8:15–15:00. <span className="text-slate-500">С 1 по 7 число каждого месяца приём не ведётся.</span>
                   </p>
                 </div>
               </div>
@@ -828,8 +870,9 @@ export default function ReceiptViewPage() {
                 </>
               );
             })()}
-          </CardContent>
-        </Card>
+          </DashboardCardBody>
+        </DashboardCard>
+        </div>
       </div>
 
       {/* Стили для печати */}
@@ -886,7 +929,7 @@ export default function ReceiptViewPage() {
           }
           
           /* Более строгие правила для блока с QR-кодом */
-          div[class*="bg-gray-50"][class*="border-dashed"] {
+          div[class*="bg-slate-50"][class*="border-dashed"] {
             page-break-inside: avoid !important;
             break-inside: avoid !important;
             -webkit-region-break-inside: avoid !important;
@@ -916,7 +959,7 @@ export default function ReceiptViewPage() {
           }
           
           /* Уменьшаем отступы блока с QR-кодом при печати */
-          div[class*="bg-gray-50"][class*="border-dashed"] {
+          div[class*="bg-slate-50"][class*="border-dashed"] {
             padding: 0.75rem !important;
             margin-top: 1rem !important;
           }
@@ -931,13 +974,13 @@ export default function ReceiptViewPage() {
           }
           
           /* Уменьшаем размер текста в блоке QR-кода при печати */
-          div[class*="bg-gray-50"][class*="border-dashed"] p,
-          div[class*="bg-gray-50"][class*="border-dashed"] h3 {
+          div[class*="bg-slate-50"][class*="border-dashed"] p,
+          div[class*="bg-slate-50"][class*="border-dashed"] h3 {
             font-size: 0.875rem !important;
           }
           
           /* Скрываем кнопку при печати */
-          div[class*="bg-gray-50"][class*="border-dashed"] button {
+          div[class*="bg-slate-50"][class*="border-dashed"] button {
             display: none !important;
           }
           

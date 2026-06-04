@@ -226,14 +226,11 @@ export function disconnectBviPanelObserver(): void {
 }
 
 export function applyBviLayoutFixes(): void {
-  isolateSiteHeaderFromBviBody();
-  isolateSiteFooterFromBviBody();
+  // Не переносим header/footer в DOM — React теряет узлы (NotFoundError).
   observeBviPanelHeight();
   observeBviBody();
   bindBviPanelSync();
   requestAnimationFrame(() => {
-    isolateSiteHeaderFromBviBody();
-    isolateSiteFooterFromBviBody();
     syncBviPanelOffset();
     syncBviUiFromBody();
   });

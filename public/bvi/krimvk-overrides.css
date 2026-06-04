@@ -966,12 +966,13 @@ html body.bvi-active .bvi-body .about-company-gallery .grid button {
   height: auto !important;
 }
 
-/* ——— Футер: масштаб как у .bvi-body, 4 колонки в ряд ——— */
+/* ——— Футер: масштаб как у .bvi-body, на всю ширину (без переноса узла из React) ——— */
 html body.bvi-active footer.site-footer {
-  width: 100% !important;
-  max-width: 100% !important;
-  margin-left: 0 !important;
-  margin-right: 0 !important;
+  width: calc(100% + 2 * var(--bvi-page-pad)) !important;
+  max-width: 100vw !important;
+  margin-left: calc(-1 * var(--bvi-page-pad)) !important;
+  margin-right: calc(-1 * var(--bvi-page-pad)) !important;
+  box-sizing: border-box !important;
   opacity: 1 !important;
   transform: none !important;
   font-size: var(--bvi-root-px, 16px) !important;

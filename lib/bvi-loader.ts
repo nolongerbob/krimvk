@@ -26,6 +26,8 @@ import {
   clearBviLayoutFixes,
   readBviFontSizeFromBody,
   resetBviUiSyncCache,
+  restoreSiteFooterToShell,
+  restoreSiteHeaderToShell,
   syncBviUiFromBody,
 } from '@/lib/bvi-layout-fix';
 import {
@@ -251,6 +253,9 @@ export function closeBviPanel(): void {
 export function teardownBviDom(): void {
   if (typeof document === 'undefined') return;
 
+  restoreSiteHeaderToShell();
+  restoreSiteFooterToShell();
+
   document.querySelectorAll('.bvi-panel').forEach((el) => el.remove());
   document.querySelectorAll('.bvi-link-fixed-top').forEach((el) => el.remove());
   document.querySelectorAll('.bvi-body').forEach((el) => unwrapBviBody(el));
@@ -431,8 +436,12 @@ function activateBviPanel(): void {
       throw new Error('BVI panel was not created');
     }
 
-    // Safari: приветствие после открытия. Chrome теряет user-gesture после await — не озвучиваем.
-    applyBviLayoutFixes();
+    // После вставки панели isvek — в следующем кадре, чтобы не гонять React с DOM.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        applyBviLayoutFixes();
+      });
+    });
 
     if (!isChromiumBrowser()) {
       window.setTimeout(() => bviSpeak('Версия для слабовидящих включена'), 150);

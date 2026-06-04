@@ -1,12 +1,15 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { useState, useRef, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Send, MessageSquare, Image as ImageIcon, X } from "lucide-react";
+import { Send, MessageSquare, Image as ImageIcon, X, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { fileHrefForStoredUrl } from "@/lib/file-url";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
+import { cn } from "@/lib/utils";
+import { dashboardButtonClass } from "@/components/dashboard/dashboard-styles";
 
 interface Message {
   id: string;
@@ -24,54 +27,154 @@ interface Question {
 
 interface QuestionsChatProps {
   question: Question;
+  className?: string;
 }
 
-export function QuestionsChat({ question: initialQuestion }: QuestionsChatProps) {
+const URL_PATTERN = /(https?:\/\/[^\s<]+|\/dashboard\/[^\s<]+)/g;
+
+function formatMessageTime(date: Date | string) {
+  return new Date(date).toLocaleString("ru-RU", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function renderMessageText(text: string, isAdmin: boolean) {
+  const parts = text.split(URL_PATTERN);
+  return parts.map((part, index) => {
+    if (!part) return null;
+    if (part.startsWith("http") || part.startsWith("/dashboard/")) {
+      const href = part.startsWith("/") ? part : part;
+      return (
+        <Link
+          key={`${part}-${index}`}
+          href={href}
+          className={cn(
+            "font-medium hover:underline",
+            isAdmin ? "text-blue-600" : "text-white underline decoration-blue-200"
+          )}
+        >
+          {part}
+        </Link>
+      );
+    }
+    return <span key={`${part}-${index}`}>{part}</span>;
+  });
+}
+
+function MessageBubble({ message }: { message: Message }) {
+  const isAdmin = message.isFromAdmin;
+
+  return (
+    <div className={cn("flex w-full", isAdmin ? "justify-start" : "justify-end")}>
+      <div
+        className={cn(
+          "relative h-auto max-w-[min(85%,28rem)] shrink-0 rounded-lg shadow-sm",
+          isAdmin
+            ? "border border-slate-200 bg-slate-50 px-5 py-4 text-slate-900"
+            : "border border-blue-700 bg-blue-600 px-4 py-3 text-white"
+        )}
+      >
+        {message.imageUrl ? (
+          <div className="mb-2 overflow-hidden rounded-md border border-slate-200">
+            <Image
+              src={fileHrefForStoredUrl(message.imageUrl)}
+              alt="Прикреплённое изображение"
+              width={400}
+              height={300}
+              className="h-auto max-w-full object-contain"
+              unoptimized
+            />
+          </div>
+        ) : null}
+        {message.text ? (
+          <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+            {renderMessageText(message.text, isAdmin)}
+          </p>
+        ) : null}
+        <p
+          className={cn(
+            "mt-1.5 text-right text-xs",
+            isAdmin ? "text-slate-400" : "text-blue-100"
+          )}
+        >
+          {formatMessageTime(message.createdAt)}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export function QuestionsChat({
+  question: initialQuestion,
+  className,
+}: QuestionsChatProps) {
   const [question, setQuestion] = useState(initialQuestion);
   const [newMessage, setNewMessage] = useState("");
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const router = useRouter();
 
   const scrollToBottom = () => {
     if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+      messagesContainerRef.current.scrollTop =
+        messagesContainerRef.current.scrollHeight;
     }
   };
 
-  // Проверяем, находится ли пользователь внизу чата
   const isNearBottom = () => {
     if (!messagesContainerRef.current) return true;
     const container = messagesContainerRef.current;
-    const threshold = 100; // Порог в пикселях
-    return container.scrollHeight - container.scrollTop - container.clientHeight < threshold;
+    const threshold = 100;
+    return (
+      container.scrollHeight - container.scrollTop - container.clientHeight <
+      threshold
+    );
   };
 
-  // Скроллим вниз только при отправке своего сообщения или при первой загрузке
-  const lastMessageIdsRef = useRef<Set<string>>(new Set(question.messages.map(m => m.id)));
+  const lastMessageIdsRef = useRef<Set<string>>(
+    new Set(question.messages.map((m) => m.id))
+  );
   const shouldAutoScrollRef = useRef(false);
   const isInitialMountRef = useRef(true);
 
+  const adjustTextareaHeight = useCallback(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 128)}px`;
+  }, []);
+
   useEffect(() => {
-    // При первой загрузке - скроллим вниз
+    adjustTextareaHeight();
+  }, [newMessage, adjustTextareaHeight]);
+
+  useEffect(() => {
     if (isInitialMountRef.current) {
       isInitialMountRef.current = false;
-      setTimeout(() => scrollToBottom(), 100);
-      lastMessageIdsRef.current = new Set(question.messages.map(m => m.id));
+      requestAnimationFrame(() => {
+        scrollToBottom();
+        setTimeout(scrollToBottom, 50);
+        setTimeout(scrollToBottom, 200);
+      });
+      lastMessageIdsRef.current = new Set(question.messages.map((m) => m.id));
       return;
     }
 
-    // Проверяем, есть ли новые сообщения
-    const currentMessageIds = new Set(question.messages.map(m => m.id));
-    const hasNewMessages = question.messages.some(m => !lastMessageIdsRef.current.has(m.id));
+    const currentMessageIds = new Set(question.messages.map((m) => m.id));
+    const hasNewMessages = question.messages.some(
+      (m) => !lastMessageIdsRef.current.has(m.id)
+    );
 
     if (hasNewMessages) {
-      // Если это наше сообщение или пользователь был внизу - скроллим
       if (shouldAutoScrollRef.current || isNearBottom()) {
         setTimeout(() => scrollToBottom(), 100);
       }
@@ -80,7 +183,6 @@ export function QuestionsChat({ question: initialQuestion }: QuestionsChatProps)
     }
   }, [question.messages]);
 
-  // Автоматическое обновление сообщений каждые 5 секунд
   useEffect(() => {
     const interval = setInterval(async () => {
       try {
@@ -91,8 +193,10 @@ export function QuestionsChat({ question: initialQuestion }: QuestionsChatProps)
             const wasNearBottom = isNearBottom();
             setQuestion((prev) => {
               const oldMessageCount = prev.messages.length;
-              // Если были новые сообщения и пользователь был внизу - скроллим
-              if (data.question.messages.length > oldMessageCount && wasNearBottom) {
+              if (
+                data.question.messages.length > oldMessageCount &&
+                wasNearBottom
+              ) {
                 setTimeout(() => scrollToBottom(), 100);
               }
               return data.question;
@@ -137,13 +241,13 @@ export function QuestionsChat({ question: initialQuestion }: QuestionsChatProps)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if ((!newMessage.trim() && !selectedImage) || isLoading || isUploadingImage) return;
+    if ((!newMessage.trim() && !selectedImage) || isLoading || isUploadingImage)
+      return;
 
     setIsLoading(true);
     let imageUrl: string | null = null;
 
     try {
-      // Сначала загружаем изображение, если оно есть
       if (selectedImage) {
         setIsUploadingImage(true);
         const formData = new FormData();
@@ -164,30 +268,27 @@ export function QuestionsChat({ question: initialQuestion }: QuestionsChatProps)
         setIsUploadingImage(false);
       }
 
-      // Отправляем сообщение
       const response = await fetch("/api/questions/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          text: newMessage.trim() || "", 
-          imageUrl 
+        body: JSON.stringify({
+          text: newMessage.trim() || "",
+          imageUrl,
         }),
       });
 
       if (response.ok) {
-        const data = await response.json();
-        // Помечаем, что нужно скроллить (это наше сообщение)
         shouldAutoScrollRef.current = true;
-        // Очищаем форму
         setNewMessage("");
         setSelectedImage(null);
         setImagePreview(null);
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
         }
-        // Обновляем список сообщений (включая автоматическое сообщение)
+        if (textareaRef.current) {
+          textareaRef.current.style.height = "auto";
+        }
         router.refresh();
-        // Загружаем обновленный диалог
         const refreshResponse = await fetch("/api/questions/list");
         if (refreshResponse.ok) {
           const refreshData = await refreshResponse.json();
@@ -197,7 +298,6 @@ export function QuestionsChat({ question: initialQuestion }: QuestionsChatProps)
         }
       } else {
         const error = await response.json();
-        console.error("Error sending message:", error);
         alert(error.error || "Ошибка при отправке сообщения");
       }
     } catch (error) {
@@ -208,63 +308,44 @@ export function QuestionsChat({ question: initialQuestion }: QuestionsChatProps)
     }
   };
 
+  const canSend =
+    !isLoading &&
+    !isUploadingImage &&
+    (newMessage.trim().length > 0 || !!selectedImage);
+
   return (
-    <Card className="h-[600px] flex flex-col overflow-hidden">
-      <CardContent className="flex-1 flex flex-col p-0 min-h-0">
-        {/* История сообщений */}
-        <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-6 space-y-4 min-h-0">
+    <DashboardCard
+      className={cn(
+        "flex min-h-[280px] flex-col overflow-hidden bg-white shadow-sm",
+        className
+      )}
+    >
+      <DashboardCardBody className="flex min-h-0 flex-1 flex-col p-0">
+        <div
+          ref={messagesContainerRef}
+          className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden bg-slate-50/90 scroll-smooth"
+        >
           {question.messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-gray-500">
-              <MessageSquare className="h-12 w-12 mb-4 text-gray-400" />
-              <p>Пока нет сообщений. Задайте первый вопрос!</p>
+            <div className="flex min-h-full flex-col items-center justify-center px-4 pb-4 pt-4 text-slate-500">
+              <MessageSquare
+                className="mb-3 h-10 w-10 text-slate-300"
+                strokeWidth={1.5}
+              />
+              <p className="text-sm">Пока нет сообщений. Задайте первый вопрос.</p>
             </div>
           ) : (
-            question.messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.isFromAdmin ? "justify-start" : "justify-end"}`}
-              >
-                <div
-                  className={`rounded-lg px-4 py-2 max-w-[80%] ${
-                    message.isFromAdmin
-                      ? "bg-gray-100 text-gray-900"
-                      : "bg-blue-500 text-white"
-                  }`}
-                >
-                  {message.imageUrl && (
-                    <div className="mb-2 rounded-lg overflow-hidden">
-                      <Image
-                        src={fileHrefForStoredUrl(message.imageUrl)}
-                        alt="Прикрепленное изображение"
-                        width={400}
-                        height={300}
-                        className="object-contain max-w-full h-auto"
-                        unoptimized
-                      />
-                    </div>
-                  )}
-                  {message.text && (
-                    <p className="text-sm whitespace-pre-wrap">{message.text}</p>
-                  )}
-                  <p
-                    className={`text-xs mt-1 ${
-                      message.isFromAdmin ? "text-gray-500" : "text-blue-100"
-                    }`}
-                  >
-                    {new Date(message.createdAt).toLocaleString("ru-RU")}
-                  </p>
-                </div>
-              </div>
-            ))
+            <div className="mt-auto flex flex-col gap-4 px-4 pb-4 pt-4">
+              {question.messages.map((message) => (
+                <MessageBubble key={message.id} message={message} />
+              ))}
+            </div>
           )}
-          <div ref={messagesEndRef} />
         </div>
 
-        {/* Форма отправки сообщения */}
-        <div className="border-t p-4 flex-shrink-0 bg-white">
-          {imagePreview && (
-            <div className="mb-2 relative inline-block">
-              <div className="relative w-32 h-32 rounded-lg overflow-hidden border-2 border-blue-500">
+        <div className="shrink-0 border-t border-slate-200 bg-white px-4 py-3 shadow-[0_-2px_8px_rgba(15,23,42,0.06)]">
+          {imagePreview ? (
+            <div className="relative mb-2 inline-block">
+              <div className="relative h-20 w-20 overflow-hidden rounded-none border border-slate-200">
                 <Image
                   src={imagePreview}
                   alt="Предпросмотр"
@@ -276,13 +357,15 @@ export function QuestionsChat({ question: initialQuestion }: QuestionsChatProps)
               <button
                 type="button"
                 onClick={removeImage}
-                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                className="absolute -right-1 -top-1 rounded-none border border-slate-200 bg-white p-0.5 text-slate-600 hover:bg-slate-50"
+                aria-label="Убрать изображение"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3.5 w-3.5" />
               </button>
             </div>
-          )}
-          <form onSubmit={handleSubmit} className="flex gap-2">
+          ) : null}
+
+          <form onSubmit={handleSubmit}>
             <input
               ref={fileInputRef}
               type="file"
@@ -290,38 +373,62 @@ export function QuestionsChat({ question: initialQuestion }: QuestionsChatProps)
               onChange={handleImageSelect}
               className="hidden"
             />
-            <textarea
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Введите ваше сообщение..."
-              className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-              rows={2}
-              disabled={isLoading || isUploadingImage}
-            />
-            <div className="flex flex-col gap-2">
+            <div
+              className={cn(
+                "flex items-center gap-2 rounded-none border border-slate-200 bg-white py-2 pl-2 pr-3 shadow-sm transition-colors",
+                "focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500"
+              )}
+            >
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
                 size="icon"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isLoading || isUploadingImage}
                 title="Прикрепить изображение"
+                className={cn(
+                  dashboardButtonClass,
+                  "h-7 w-7 shrink-0 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                )}
               >
-                <ImageIcon className="h-4 w-4" />
+                <ImageIcon className="h-3.5 w-3.5" />
               </Button>
-              <Button 
-                type="submit" 
-                disabled={isLoading || isUploadingImage || (!newMessage.trim() && !selectedImage)}
+
+              <textarea
+                ref={textareaRef}
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onInput={adjustTextareaHeight}
+                placeholder="Введите сообщение…"
+                rows={1}
+                disabled={isLoading || isUploadingImage}
+                className="max-h-28 min-h-[1.25rem] flex-1 resize-none self-center rounded-none border-0 bg-transparent py-0 text-sm leading-snug text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-0"
+              />
+
+              <Button
+                type="submit"
+                disabled={!canSend}
+                size="icon"
+                className={cn(
+                  dashboardButtonClass,
+                  "h-7 w-7 shrink-0 rounded-none bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                )}
+                title="Отправить"
               >
-                <Send className="h-4 w-4" />
+                {isLoading || isUploadingImage ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
               </Button>
             </div>
           </form>
-          {isUploadingImage && (
-            <p className="text-xs text-gray-500 mt-2">Загрузка изображения...</p>
-          )}
+
+          {isUploadingImage ? (
+            <p className="mt-1.5 text-xs text-slate-500">Загрузка изображения…</p>
+          ) : null}
         </div>
-      </CardContent>
-    </Card>
+      </DashboardCardBody>
+    </DashboardCard>
   );
 }

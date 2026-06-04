@@ -4,10 +4,12 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Loader2, AlertCircle } from "lucide-react";
+import { Loader2, Plus, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ONE_C_REGION_OPTIONS } from "@/lib/1c-regions";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
+import { cn } from "@/lib/utils";
+import { dashboardButtonClass } from "@/components/dashboard/dashboard-styles";
 
 interface AddAccountFormProps {
   onAccountAdded: () => void;
@@ -50,14 +52,11 @@ export function AddAccountForm({ onAccountAdded }: AddAccountFormProps) {
           region: "",
         });
         onAccountAdded();
-        // Показываем сообщение об успехе, если есть информация о загруженных счетчиках
         if (result.message) {
-          // Можно показать toast или другое уведомление
           console.log(result.message);
         }
       } else {
         const data = await response.json();
-        // Показываем более понятное сообщение об ошибке
         if (response.status === 401) {
           setError("Неверный номер лицевого счета или пароль. Проверьте правильность данных.");
         } else if (response.status === 500 && data.details) {
@@ -66,8 +65,8 @@ export function AddAccountForm({ onAccountAdded }: AddAccountFormProps) {
           setError(data.error || "Ошибка при добавлении лицевого счета");
         }
       }
-    } catch (error: any) {
-      console.error("Error adding account:", error);
+    } catch (err: unknown) {
+      console.error("Error adding account:", err);
       setError("Ошибка при добавлении лицевого счета");
     } finally {
       setIsSubmitting(false);
@@ -78,34 +77,35 @@ export function AddAccountForm({ onAccountAdded }: AddAccountFormProps) {
     return (
       <Button
         onClick={() => setIsOpen(true)}
-        className="w-full sm:w-auto"
         variant="outline"
+        className={cn(dashboardButtonClass, "h-10 w-full border-slate-200 sm:w-auto")}
       >
-        <Plus className="h-4 w-4 mr-2" />
+        <Plus className="mr-2 h-4 w-4" />
         Добавить лицевой счет
       </Button>
     );
   }
 
   return (
-    <Card className="mb-6">
-      <CardHeader>
-        <CardTitle>Добавить лицевой счет</CardTitle>
-        <CardDescription>
-          Введите номер лицевого счета для загрузки счетчиков
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+    <DashboardCard className="mb-6 border-slate-200 bg-slate-50/80">
+      <DashboardCardBody className="space-y-4 p-4 sm:p-5">
+        <div>
+          <h2 className="text-base font-semibold text-slate-900">Добавить лицевой счет</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Укажите район, номер лицевого счета и пароль от aqua-crimea.ru
+          </p>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <Alert variant="destructive">
+            <Alert variant="destructive" className="rounded-none">
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription className="whitespace-pre-line text-sm">{error}</AlertDescription>
             </Alert>
           )}
 
           <div>
-            <Label htmlFor="accountNumber">
+            <Label htmlFor="accountNumber" className="text-sm text-slate-700">
               Номер лицевого счета <span className="text-red-500">*</span>
             </Label>
             <Input
@@ -118,42 +118,37 @@ export function AddAccountForm({ onAccountAdded }: AddAccountFormProps) {
               placeholder="Например: 12345"
               required
               disabled={isSubmitting}
-              className="text-lg"
+              className="mt-1.5 rounded-none"
             />
           </div>
 
           <div>
-            <Label className="mb-3 block">
+            <Label htmlFor="region" className="text-sm text-slate-700">
               Район <span className="text-red-500">*</span>
             </Label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <select
+              id="region"
+              value={formData.region}
+              onChange={(e) =>
+                setFormData({ ...formData, region: e.target.value })
+              }
+              required
+              disabled={isSubmitting}
+              className="mt-1.5 flex h-10 w-full rounded-none border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <option value="" disabled>
+                Выберите район
+              </option>
               {ONE_C_REGION_OPTIONS.map((region) => (
-                <button
-                  key={region.value}
-                  type="button"
-                  onClick={() =>
-                    setFormData({ ...formData, region: region.value })
-                  }
-                  disabled={isSubmitting}
-                  className={`p-4 rounded-lg border-2 text-left transition-all ${
-                    formData.region === region.value
-                      ? "border-blue-500 bg-blue-50 shadow-md"
-                      : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                  } disabled:opacity-50 disabled:cursor-not-allowed`}
-                >
-                  <p className="font-medium text-sm">{region.label}</p>
-                </button>
+                <option key={region.value} value={region.value}>
+                  {region.label}
+                </option>
               ))}
-            </div>
-            {!formData.region && (
-              <p className="text-xs text-gray-500 mt-2">
-                Выберите район, к которому относится ваш лицевой счет
-              </p>
-            )}
+            </select>
           </div>
 
           <div>
-            <Label htmlFor="password1c">
+            <Label htmlFor="password1c" className="text-sm text-slate-700">
               Пароль для 1С <span className="text-red-500">*</span>
             </Label>
             <Input
@@ -163,21 +158,26 @@ export function AddAccountForm({ onAccountAdded }: AddAccountFormProps) {
               onChange={(e) =>
                 setFormData({ ...formData, password1c: e.target.value })
               }
-              placeholder="Пароль для доступа к личному кабинету 1С"
+              placeholder="Пароль личного кабинета 1С"
               required
               disabled={isSubmitting}
+              className="mt-1.5 rounded-none"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Пароль, который вы используете для входа в личный кабинет на сайте aqua-crimea.ru
+            <p className="mt-1.5 text-xs text-slate-500">
+              Пароль с сайта aqua-crimea.ru
             </p>
           </div>
 
-          <div className="flex gap-2">
-            <Button type="submit" disabled={isSubmitting}>
+          <div className="flex flex-wrap gap-2 border-t border-slate-100 pt-4">
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className={cn(dashboardButtonClass, "h-10 bg-blue-600 hover:bg-blue-700")}
+            >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Добавление...
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Добавление…
                 </>
               ) : (
                 "Добавить"
@@ -196,13 +196,13 @@ export function AddAccountForm({ onAccountAdded }: AddAccountFormProps) {
                 });
               }}
               disabled={isSubmitting}
+              className={cn(dashboardButtonClass, "h-10 border-slate-200")}
             >
               Отмена
             </Button>
           </div>
         </form>
-      </CardContent>
-    </Card>
+      </DashboardCardBody>
+    </DashboardCard>
   );
 }
-

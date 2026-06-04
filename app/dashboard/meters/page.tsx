@@ -2,13 +2,18 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Droplet, Thermometer, Snowflake, AlertCircle, CheckCircle, CreditCard, ArrowLeft } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AddAccountForm } from "@/components/AddAccountForm";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
+import { cn } from "@/lib/utils";
+import {
+  dashboardButtonClass,
+  dashboardPageClass,
+} from "@/components/dashboard/dashboard-styles";
 import Link from "next/link";
 
 interface Meter {
@@ -436,27 +441,41 @@ export default function MetersPage() {
 
   if (loading) {
     return (
-      <div className="container py-8 px-4">
-        <div className="text-center py-12">Загрузка...</div>
+      <div className={cn(dashboardPageClass, "container px-4 py-8")}>
+        <div className="py-12 text-center text-sm text-slate-600">Загрузка…</div>
       </div>
     );
   }
 
   return (
-    <div className="container py-8 px-4 max-w-4xl">
+    <div
+      className={cn(
+        dashboardPageClass,
+        "container max-w-4xl px-4 py-8 [&_button]:!rounded-none [&_input]:!rounded-none"
+      )}
+    >
       <div className="mb-6">
-        <Button asChild variant="outline" size="sm">
+        <Button
+          asChild
+          variant="outline"
+          size="sm"
+          className={cn(dashboardButtonClass, "h-9 border-slate-200")}
+        >
           <Link href="/dashboard">
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <ArrowLeft className="mr-2 h-4 w-4" />
             Назад
           </Link>
         </Button>
       </div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Передача показаний счетчиков</h1>
-        <p className="text-gray-600">Выберите лицевой счет и передайте показания счетчиков холодной воды</p>
+        <h1 className="mb-2 text-3xl font-bold tracking-tight text-slate-900">
+          Передача показаний счетчиков
+        </h1>
+        <p className="text-sm text-slate-600">
+          Выберите лицевой счет и передайте показания счетчиков холодной воды
+        </p>
         {!canSubmit && (
-          <Alert className="mt-4 bg-yellow-50 border-yellow-200">
+          <Alert className="mt-4 rounded-none border-amber-200 bg-amber-50">
             <AlertCircle className="h-4 w-4 text-yellow-600" />
             <AlertDescription className="text-yellow-800">
               Показания можно передавать только с 6 по 25 число каждого месяца (включительно)
@@ -466,14 +485,14 @@ export default function MetersPage() {
       </div>
 
       {error && (
-        <Alert variant="destructive" className="mb-6">
+        <Alert variant="destructive" className="mb-6 rounded-none">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
       {success && (
-        <Alert className="mb-6 bg-green-50 border-green-200">
+        <Alert className="mb-6 rounded-none border-green-200 bg-green-50">
           <CheckCircle className="h-4 w-4 text-green-600" />
           <AlertDescription className="text-green-800">
             Показания успешно отправлены!
@@ -486,257 +505,297 @@ export default function MetersPage() {
         <AddAccountForm onAccountAdded={fetchAccounts} />
       </div>
 
-      {/* Выбор лицевого счета */}
       {accounts.length > 0 && (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5" />
-              Лицевые счета
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {accounts.map((account) => (
-                <button
-                  key={account.id}
-                  onClick={() => setSelectedAccountId(account.id)}
-                  className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
-                    selectedAccountId === account.id
-                      ? "border-blue-500 bg-blue-50"
-                      : "border-gray-200 hover:border-gray-300"
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold">ЛС: {account.accountNumber}</p>
-                      <p className="text-sm text-gray-600">{account.address}</p>
-                      {account.name && (
-                        <p className="text-xs text-gray-500 mt-1">{account.name}</p>
-                      )}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {account.meters.length} счетчик(ов)
-                    </div>
-                  </div>
-                </button>
-              ))}
+        <DashboardCard className="mb-6">
+          <DashboardCardBody className="p-0">
+            <div className="border-b border-slate-100 px-4 py-3">
+              <p className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                <CreditCard className="h-4 w-4 text-slate-500" strokeWidth={1.75} />
+                Лицевые счета
+              </p>
             </div>
-          </CardContent>
-        </Card>
+            <ul className="divide-y divide-slate-100">
+              {accounts.map((account) => {
+                const selected = selectedAccountId === account.id;
+                return (
+                  <li key={account.id}>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedAccountId(account.id)}
+                      className={cn(
+                        "flex w-full items-center justify-between gap-4 px-4 py-3 text-left transition-colors rounded-none",
+                        selected
+                          ? "bg-slate-100"
+                          : "hover:bg-slate-50"
+                      )}
+                    >
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-slate-900">
+                          ЛС: {account.accountNumber}
+                        </p>
+                        <p className="text-sm text-slate-600">{account.address}</p>
+                        {account.name ? (
+                          <p className="mt-0.5 text-xs text-slate-500">{account.name}</p>
+                        ) : null}
+                      </div>
+                      <span className="shrink-0 text-xs text-slate-500">
+                        {account.meters.length} сч.
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </DashboardCardBody>
+        </DashboardCard>
       )}
 
       {/* Форма передачи показаний */}
       {selectedAccountId && meters.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <Droplet className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500 mb-4">У выбранного лицевого счета нет счетчиков холодной воды</p>
-            <p className="text-sm text-gray-400">
+        <DashboardCard>
+          <DashboardCardBody className="py-12 text-center">
+            <Droplet className="mx-auto mb-4 h-10 w-10 text-slate-400" strokeWidth={1.75} />
+            <p className="mb-2 text-sm text-slate-600">
+              У выбранного лицевого счета нет счетчиков холодной воды
+            </p>
+            <p className="text-xs text-slate-500">
               Обратитесь в службу поддержки для регистрации счетчиков
             </p>
-          </CardContent>
-        </Card>
+          </DashboardCardBody>
+        </DashboardCard>
       ) : selectedAccountId && meters.length > 0 ? (
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-6 mb-6">
-            {meters.map((meter) => {
-              const config = typeConfig[meter.type as keyof typeof typeConfig] || {
-                label: meter.type,
-                icon: Droplet,
-                color: "text-gray-500",
-              };
-              const Icon = config.icon;
-              const lastReading = meter.lastReading;
-              const lastReadingDate = meter.lastReadingDate;
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <DashboardCard>
+            <DashboardCardBody className="p-0">
+              {meters.map((meter, meterIndex) => {
+                const config = typeConfig[meter.type as keyof typeof typeConfig] || {
+                  label: meter.type,
+                  icon: Droplet,
+                  color: "text-slate-500",
+                };
+                const Icon = config.icon;
+                const lastReading = meter.lastReading;
+                const lastReadingDate = meter.lastReadingDate;
+                const historyForMeter = meterHistory[meter.id];
+                const latestHistory = historyForMeter?.[0];
+                const historyValue =
+                  latestHistory?.Reading ?? latestHistory?.Value;
+                const historyDate =
+                  latestHistory?.ReadingDate ??
+                  latestHistory?.Date ??
+                  latestHistory?.DateOfHistory;
+                const enteredRaw = readings[meter.id]?.trim();
+                const enteredFormatted =
+                  enteredRaw && !isNaN(parseFloat(enteredRaw))
+                    ? `${parseFloat(enteredRaw).toLocaleString("ru-RU", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })} м³`
+                    : enteredRaw
+                      ? `${enteredRaw} м³`
+                      : null;
 
-              return (
-                <Card key={meter.id}>
-                  <CardHeader>
-                    <div className="flex items-center gap-3">
-                      <Icon className={`h-6 w-6 ${config.color}`} />
-                      <div>
-                        <CardTitle className="text-lg">{config.label}</CardTitle>
-                        <CardDescription>
+                return (
+                  <div
+                    key={meter.id}
+                    className={cn(
+                      "space-y-4 px-5 py-5",
+                      meterIndex > 0 && "border-t border-slate-100"
+                    )}
+                  >
+                    <div className="flex items-start gap-3">
+                      <Icon
+                        className={cn("h-5 w-5 shrink-0", config.color)}
+                        strokeWidth={1.75}
+                      />
+                      <div className="min-w-0 space-y-1">
+                        <p className="text-base font-semibold text-slate-900">
+                          {config.label}
+                        </p>
+                        <p className="text-sm text-slate-500">
                           Заводской номер: {meter.serialNumber}
-                          {meter.serviceName && ` • ${meter.serviceName}`}
-                        </CardDescription>
+                          {meter.serviceName ? ` • ${meter.serviceName}` : ""}
+                        </p>
+                        <p className="text-sm text-slate-600">{meter.address}</p>
                       </div>
                     </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <p className="text-sm text-gray-600 mb-1">Адрес установки</p>
-                      <p className="text-sm font-medium">{meter.address}</p>
-                    </div>
-                    
+
                     {lastReading !== null && (
-                      <div className="bg-gray-50 p-3 rounded-lg">
-                        <p className="text-xs text-gray-600 mb-1">Последние показания</p>
-                        <p className="text-lg font-semibold">{lastReading.toLocaleString("ru-RU")} м³</p>
-                        {lastReadingDate && (
-                          <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-sm text-slate-600">
+                        <span className="text-slate-500">Показания в системе:</span>{" "}
+                        <span className="font-medium text-slate-900">
+                          {lastReading.toLocaleString("ru-RU", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}{" "}
+                          м³
+                        </span>
+                        {lastReadingDate ? (
+                          <span className="text-slate-500">
+                            {" "}
+                            (
                             {new Date(lastReadingDate).toLocaleDateString("ru-RU", {
                               day: "2-digit",
-                              month: "long",
+                              month: "2-digit",
                               year: "numeric",
                             })}
+                            )
+                          </span>
+                        ) : null}
+                      </p>
+                    )}
+
+                    <div className="space-y-3">
+                      <div>
+                        <Label
+                          htmlFor={`meter-${meter.id}`}
+                          className="text-sm font-medium text-slate-900"
+                        >
+                          Текущие показания (м³){" "}
+                          <span className="text-red-500">*</span>
+                        </Label>
+                        {hasCurrentMonthReading[meter.id] && (
+                          <Alert className="mb-2 mt-2 rounded-none border-amber-200 bg-amber-50">
+                            <AlertCircle className="h-4 w-4 text-amber-600" />
+                            <AlertDescription className="text-sm text-amber-900">
+                              Показания за текущий месяц уже переданы. Следующая передача
+                              возможна в следующем месяце.
+                            </AlertDescription>
+                          </Alert>
+                        )}
+                        <Input
+                          id={`meter-${meter.id}`}
+                          type="number"
+                          step="0.01"
+                          min={lastReading !== null ? lastReading : 0}
+                          value={readings[meter.id] || ""}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            handleReadingChange(meter.id, value);
+
+                            if (value && lastReading !== null) {
+                              const numValue = parseFloat(value);
+                              if (!isNaN(numValue) && numValue < lastReading) {
+                                setError(
+                                  `Показания не могут быть меньше предыдущих (${lastReading.toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} м³)`
+                                );
+                              } else {
+                                setError(null);
+                              }
+                            }
+                          }}
+                          onBlur={(e) => {
+                            const value = e.target.value;
+                            if (value && value.trim() !== "") {
+                              handleReadingChange(meter.id, value);
+                            }
+                          }}
+                          placeholder={
+                            lastReading !== null
+                              ? `Не менее ${lastReading.toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                              : "0,00"
+                          }
+                          className="mt-2 h-10 max-w-[200px] rounded-none border border-slate-200 bg-white focus-visible:border-blue-500 focus-visible:ring-1 focus-visible:ring-blue-500"
+                          required
+                          disabled={!canSubmit || hasCurrentMonthReading[meter.id]}
+                        />
+                        {lastReading !== null && (
+                          <p className="mt-1.5 text-xs text-slate-500">
+                            Минимум:{" "}
+                            {lastReading.toLocaleString("ru-RU", {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}{" "}
+                            м³
                           </p>
                         )}
-                        {meter.serviceName && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            Услуга: {meter.serviceName}
+                        {!canSubmit && (
+                          <p className="mt-1 text-xs text-amber-700">
+                            Показания можно передавать только с 6 по 25 число каждого месяца
                           </p>
                         )}
                       </div>
-                    )}
 
-                    <div>
-                      <Label htmlFor={`meter-${meter.id}`} className="text-sm font-medium">
-                        Текущие показания (м³) <span className="text-red-500">*</span>
-                      </Label>
-                      {hasCurrentMonthReading[meter.id] && (
-                        <Alert className="mt-2 mb-2 bg-yellow-50 border-yellow-200">
-                          <AlertCircle className="h-4 w-4 text-yellow-600" />
-                          <AlertDescription className="text-yellow-800 text-sm">
-                            Показания за текущий месяц уже переданы. Следующая передача возможна в следующем месяце.
-                          </AlertDescription>
-                        </Alert>
-                      )}
-                      <Input
-                        id={`meter-${meter.id}`}
-                        type="number"
-                        step="0.01"
-                        min={lastReading !== null ? lastReading : 0}
-                        value={readings[meter.id] || ""}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          // Сохраняем значение даже если поле заблокировано
-                          handleReadingChange(meter.id, value);
-                          
-                          // Валидация: новое значение не должно быть меньше предыдущего
-                          if (value && lastReading !== null) {
-                            const numValue = parseFloat(value);
-                            if (!isNaN(numValue) && numValue < lastReading) {
-                              setError(`Показания не могут быть меньше предыдущих (${lastReading.toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} м³)`);
-                            } else {
-                              setError(null);
-                            }
-                          }
-                        }}
-                        onBlur={(e) => {
-                          // Сохраняем значение при потере фокуса
-                          const value = e.target.value;
-                          if (value && value.trim() !== "") {
-                            handleReadingChange(meter.id, value);
-                          }
-                        }}
-                        placeholder={lastReading !== null ? `Не менее ${lastReading.toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "Введите показания"}
-                        className="mt-1"
-                        required
-                        disabled={!canSubmit || hasCurrentMonthReading[meter.id]}
-                      />
-                      {lastReading !== null && (
-                        <p className="text-xs text-gray-500 mt-1">
-                          Минимальное значение: {lastReading.toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} м³
-                        </p>
-                      )}
-                      {!canSubmit && (
-                        <p className="text-xs text-yellow-600 mt-1">
-                          Показания можно передавать только с 6 по 25 число каждого месяца
-                        </p>
-                      )}
-                      {/* Показываем последнее введенное показание */}
-                      {readings[meter.id] && readings[meter.id].trim() !== "" && (
-                        <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded">
-                          <p className="text-xs text-blue-600 mb-1">Введенное показание:</p>
-                          <p className="text-sm font-semibold text-blue-800">
-                            {!isNaN(parseFloat(readings[meter.id])) 
-                              ? parseFloat(readings[meter.id]).toLocaleString("ru-RU", {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2,
-                                }) + " м³"
-                              : readings[meter.id] + " м³"}
+                      <div className="space-y-1 text-sm text-slate-600">
+                        {enteredFormatted ? (
+                          <p>
+                            <span className="text-slate-500">Введённое показание:</span>{" "}
+                            <span className="font-medium text-slate-900">
+                              {enteredFormatted}
+                            </span>
                           </p>
-                        </div>
-                      )}
-                      
-                      {/* Показываем последнее показание из истории */}
-                      {(() => {
-                        const historyForMeter = meterHistory[meter.id];
-                        if (historyForMeter && historyForMeter.length > 0) {
-                          const latestReading = historyForMeter[0];
-                          const readingValue = latestReading.Reading || latestReading.Value;
-                          const readingDate = latestReading.ReadingDate || latestReading.Date || latestReading.DateOfHistory;
-                          
-                          if (readingValue !== undefined && readingValue !== null) {
-                            return (
-                              <div className="mt-2 p-2 bg-gray-50 border border-gray-200 rounded">
-                                <p className="text-xs text-gray-600 mb-1">Последнее показание:</p>
-                                <p className="text-sm font-semibold text-gray-800">
-                                  {parseFloat(String(readingValue)).toLocaleString("ru-RU", {
-                                    minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2,
-                                  })} м³
-                                </p>
-                                {readingDate && (
-                                  <p className="text-xs text-gray-500 mt-1">
-                                    {new Date(readingDate).toLocaleDateString("ru-RU", {
-                                      day: "2-digit",
-                                      month: "2-digit",
-                                      year: "numeric",
-                                    })}
-                                  </p>
-                                )}
-                              </div>
-                            );
-                          }
-                        }
-                        return null;
-                      })()}
+                        ) : null}
+                        {historyValue !== undefined && historyValue !== null ? (
+                          <p>
+                            <span className="text-slate-500">Последнее показание:</span>{" "}
+                            <span className="font-medium text-slate-900">
+                              {parseFloat(String(historyValue)).toLocaleString("ru-RU", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              })}{" "}
+                              м³
+                            </span>
+                            {historyDate ? (
+                              <span className="text-slate-500">
+                                {" "}
+                                (от{" "}
+                                {new Date(historyDate).toLocaleDateString("ru-RU", {
+                                  day: "2-digit",
+                                  month: "2-digit",
+                                  year: "numeric",
+                                })}
+                                )
+                              </span>
+                            ) : null}
+                          </p>
+                        ) : null}
+                      </div>
                     </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+                  </div>
+                );
+              })}
 
-          <Card>
-            <CardContent className="pt-6">
-              <Button
-                type="submit"
-                disabled={
-                  submitting || 
-                  Object.keys(readings).length === 0 || 
-                  !canSubmit ||
-                  Object.keys(hasCurrentMonthReading).some(key => hasCurrentMonthReading[key] && readings[key])
-                }
-                className="w-full"
-                size="lg"
-              >
-                {submitting ? "Отправка..." : "Отправить показания"}
-              </Button>
-              {Object.keys(hasCurrentMonthReading).some(key => hasCurrentMonthReading[key] && readings[key]) && (
-                <p className="text-xs text-yellow-600 text-center mt-2">
-                  Невозможно отправить: показания за текущий месяц уже переданы
-                </p>
-              )}
-              <p className="text-xs text-gray-500 text-center mt-4">
-                Проверьте правильность введенных показаний перед отправкой
-              </p>
-            </CardContent>
-          </Card>
+              <div className="flex flex-col items-end gap-2 border-t border-slate-100 px-5 py-4">
+                <Button
+                  type="submit"
+                  disabled={
+                    submitting ||
+                    Object.keys(readings).length === 0 ||
+                    !canSubmit ||
+                    Object.keys(hasCurrentMonthReading).some(
+                      (key) => hasCurrentMonthReading[key] && readings[key]
+                    )
+                  }
+                  className={cn(
+                    dashboardButtonClass,
+                    "h-10 w-fit rounded-none bg-blue-600 px-6 text-white hover:bg-blue-700"
+                  )}
+                >
+                  {submitting ? "Отправка…" : "Отправить показания"}
+                </Button>
+                {Object.keys(hasCurrentMonthReading).some(
+                  (key) => hasCurrentMonthReading[key] && readings[key]
+                ) ? (
+                  <p className="text-right text-xs text-amber-700">
+                    Невозможно отправить: показания за текущий месяц уже переданы
+                  </p>
+                ) : (
+                  <p className="text-right text-xs text-slate-500">
+                    Проверьте правильность введённых показаний перед отправкой
+                  </p>
+                )}
+              </div>
+            </DashboardCardBody>
+          </DashboardCard>
 
-          {/* Показываем предыдущие показания под кнопкой отправки */}
           {meters.length > 0 && (
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle className="text-lg">История показаний</CardTitle>
-                <CardDescription>
-                  Предыдущие показания счетчиков
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
+            <DashboardCard className="mt-6">
+              <DashboardCardBody className="p-0">
+                <div className="border-b border-slate-100 px-4 py-3">
+                  <p className="text-base font-semibold text-slate-900">История показаний</p>
+                  <p className="text-sm text-slate-500">Предыдущие показания счетчиков</p>
+                </div>
+                <div className="p-4">
                 {loadingHistory ? (
                   <p className="text-sm text-gray-500 text-center py-4">Загрузка истории показаний...</p>
                 ) : Object.keys(meterHistory).length === 0 ? (
@@ -756,63 +815,56 @@ export default function MetersPage() {
                             {meter.serialNumber}
                             {meter.serviceName && <span className="text-gray-500 font-normal ml-2">• {meter.serviceName}</span>}
                           </h4>
-                          <div className="space-y-2 max-h-64 overflow-y-auto">
+                          <ul className="max-h-64 divide-y divide-slate-100 overflow-y-auto">
                             {historyForMeter.slice(0, 10).map((item, index) => {
                               const readingValue = item.Reading || item.Value;
-                              const readingDate = item.ReadingDate || item.Date || item.DateOfHistory;
+                              const readingDate =
+                                item.ReadingDate || item.Date || item.DateOfHistory;
                               if (readingValue === undefined && !readingDate) return null;
-                              
+
+                              const valueText =
+                                readingValue !== undefined && readingValue !== null
+                                  ? `${parseFloat(String(readingValue)).toLocaleString("ru-RU", {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 2,
+                                    })} м³`
+                                  : "—";
+                              const dateText = readingDate
+                                ? new Date(readingDate).toLocaleDateString("ru-RU", {
+                                    day: "2-digit",
+                                    month: "2-digit",
+                                    year: "numeric",
+                                  })
+                                : null;
+
                               return (
-                                <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded text-sm">
-                                  <div className="flex-1">
-                                    <div className="flex items-center justify-between">
-                                      <div>
-                                        <p className="font-medium text-gray-900">
-                                          {readingValue !== undefined && readingValue !== null
-                                            ? `${parseFloat(String(readingValue)).toLocaleString("ru-RU", {
-                                                minimumFractionDigits: 2,
-                                                maximumFractionDigits: 2,
-                                              })} м³`
-                                            : "—"}
-                                        </p>
-                                        {item.Service && (
-                                          <p className="text-xs text-gray-500 mt-0.5">{item.Service}</p>
-                                        )}
-                                      </div>
-                                      {item.Volume !== undefined && item.Volume !== null && (
-                                        <div className="text-right ml-4">
-                                          <p className="text-xs text-gray-600">Объем:</p>
-                                          <p className="text-sm font-medium">
-                                            {parseFloat(String(item.Volume)).toLocaleString("ru-RU", {
-                                              minimumFractionDigits: 2,
-                                              maximumFractionDigits: 2,
-                                            })} м³
-                                          </p>
-                                        </div>
-                                      )}
-                                    </div>
-                                    {readingDate && (
-                                      <p className="text-xs text-gray-500 mt-1">
-                                        {new Date(readingDate).toLocaleDateString("ru-RU", {
-                                          day: "2-digit",
-                                          month: "2-digit",
-                                          year: "numeric",
-                                        })}
-                                      </p>
-                                    )}
-                                    {item.PastReading !== undefined && item.PastReading !== null && (
-                                      <p className="text-xs text-gray-400 mt-0.5">
-                                        Предыдущее: {parseFloat(String(item.PastReading)).toLocaleString("ru-RU", {
-                                          minimumFractionDigits: 2,
-                                          maximumFractionDigits: 2,
-                                        })} м³
-                                      </p>
-                                    )}
-                                  </div>
-                                </div>
+                                <li
+                                  key={index}
+                                  className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-2.5 text-sm"
+                                >
+                                  <span className="font-medium text-slate-900">
+                                    {valueText}
+                                    {dateText ? (
+                                      <span className="font-normal text-slate-500">
+                                        {" "}
+                                        · {dateText}
+                                      </span>
+                                    ) : null}
+                                  </span>
+                                  {item.Volume !== undefined && item.Volume !== null ? (
+                                    <span className="text-xs text-slate-500">
+                                      объём{" "}
+                                      {parseFloat(String(item.Volume)).toLocaleString("ru-RU", {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                      })}{" "}
+                                      м³
+                                    </span>
+                                  ) : null}
+                                </li>
                               );
                             })}
-                          </div>
+                          </ul>
                           {historyForMeter.length > 10 && (
                             <p className="text-xs text-gray-500 mt-2">
                               Показано последних 10 из {historyForMeter.length} показаний
@@ -823,20 +875,21 @@ export default function MetersPage() {
                     })}
                   </div>
                 )}
-              </CardContent>
-            </Card>
+                </div>
+              </DashboardCardBody>
+            </DashboardCard>
           )}
         </form>
       ) : (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <CreditCard className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500 mb-4">У вас нет лицевых счетов</p>
-            <p className="text-sm text-gray-400 mb-6">
-              Добавьте лицевой счет, чтобы начать передавать показания счетчиков
+        <DashboardCard className="border-dashed bg-slate-100/70">
+          <DashboardCardBody className="py-12 text-center">
+            <CreditCard className="mx-auto mb-4 h-10 w-10 text-slate-400" strokeWidth={1.75} />
+            <p className="mb-2 text-sm text-slate-600">У вас нет лицевых счетов</p>
+            <p className="text-xs text-slate-500">
+              Добавьте лицевой счет выше, чтобы передавать показания
             </p>
-          </CardContent>
-        </Card>
+          </DashboardCardBody>
+        </DashboardCard>
       )}
     </div>
   );

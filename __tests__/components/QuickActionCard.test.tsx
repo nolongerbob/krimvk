@@ -44,19 +44,25 @@ describe('QuickActionCard', () => {
     expect(link).toHaveAttribute('href', '/test-path')
   })
 
-  it('renders public access card correctly', () => {
-    render(
+  it('renders public access emergency card without alarm card chrome', () => {
+    const { container } = render(
       <QuickActionCard
         iconName="AlertTriangle"
         title="Emergency Card"
         description="Emergency description"
         href="/emergency"
         publicAccess={true}
+        isEmergency
       />
     )
 
     const link = screen.getByRole('link')
     expect(link).toHaveAttribute('href', '/emergency')
+    expect(container.querySelector('.border-red-500')).not.toBeInTheDocument()
+    expect(container.querySelector('.bg-red-50')).not.toBeInTheDocument()
+    expect(container.querySelector('.text-red-500')).toBeInTheDocument()
+    expect(container.querySelector('.border-red-600')).toBeInTheDocument()
+    expect(container.querySelector('.bg-red-600')).not.toBeInTheDocument()
   })
 
   it('uses primary icon styling when isPrimary is true', () => {

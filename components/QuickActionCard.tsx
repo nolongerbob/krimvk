@@ -41,7 +41,7 @@ function QuickActionCardContent({
 }: Pick<QuickActionCardProps, "iconName" | "title" | "description" | "iconColor" | "isPrimary" | "isEmergency">) {
   const Icon = iconMap[iconName];
   const iconClassName = isEmergency
-    ? "h-12 w-12 text-red-600"
+    ? "h-10 w-10 text-red-500"
     : isPrimary
       ? "h-12 w-12 text-blue-600"
       : `h-10 w-10 ${iconColor}`;
@@ -72,7 +72,11 @@ function QuickActionCardFooter({
   asChild?: boolean;
   disabled?: boolean;
 }) {
-  const btnClass = `${actionButtonClass} ${isEmergency ? "bg-red-600 hover:bg-red-700 text-white" : ""} ${isPrimary ? "bg-blue-600 hover:bg-blue-700 text-white" : ""}`;
+  const btnClass = `${actionButtonClass} ${
+    isEmergency
+      ? "border-red-600 text-red-600 hover:bg-red-50 hover:text-red-700"
+      : ""
+  } ${isPrimary ? "bg-blue-600 hover:bg-blue-700 text-white" : ""}`;
 
   if (disabled) {
     return (
@@ -87,7 +91,7 @@ function QuickActionCardFooter({
   if (asChild) {
     return (
       <CardContent className="mt-auto px-5 pt-0 pb-3">
-        <Button asChild className={btnClass} variant={isPrimary || isEmergency ? "default" : "outline"}>
+        <Button asChild className={btnClass} variant={isPrimary ? "default" : "outline"}>
           <span>{label}</span>
         </Button>
       </CardContent>
@@ -106,11 +110,7 @@ export function QuickActionCard({ iconName, title, description, href, iconColor 
   if (publicAccess) {
     return (
       <Link href={href} className="block">
-        <Card className={`flex h-full flex-col cursor-pointer rounded-none transition-all group ${
-          isEmergency 
-            ? 'border-2 border-red-500 bg-red-50 hover:bg-red-100 hover:shadow-xl hover:scale-[1.02]' 
-            : 'hover:shadow-lg'
-        }`}>
+        <Card className="group flex h-full flex-col cursor-pointer rounded-none bg-white transition-all hover:shadow-lg">
           <QuickActionCardContent
             iconName={iconName}
             title={title}

@@ -1,13 +1,25 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { History, Search, CreditCard, Calendar, AlertCircle, ArrowLeft } from "lucide-react";
+import {
+  History,
+  Search,
+  CreditCard,
+  AlertCircle,
+  ArrowLeft,
+  Loader2,
+} from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Link from "next/link";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
+import { cn } from "@/lib/utils";
+import {
+  dashboardButtonClass,
+  dashboardPageClass,
+} from "@/components/dashboard/dashboard-styles";
 
 interface Account {
   id: string;
@@ -22,7 +34,6 @@ interface Payment {
   source: string;
 }
 
-// Единый парсер сумм из 1С (учитывает пробелы и запятые)
 const parseAmount = (value: string | number): number => {
   if (typeof value === "number") return value;
   if (!value) return 0;
@@ -36,14 +47,16 @@ export default function HistoryPage() {
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [payments, setPayments] = useState<Payment[]>([]);
 
+  const selectedAccount = accounts.find((a) => a.id === selectedAccountId);
+
   useEffect(() => {
     fetchAccounts();
-    // Устанавливаем последние 3 месяца по умолчанию
     const today = new Date();
     const threeMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 3, 1);
     setDateFrom(threeMonthsAgo.toISOString().split("T")[0]);
@@ -56,16 +69,16 @@ export default function HistoryPage() {
       if (response.ok) {
         const data = await response.json();
         setAccounts(data.accounts || []);
-        if (data.accounts && data.accounts.length > 0 && !selectedAccountId) {
+        if (data.accounts?.length > 0 && !selectedAccountId) {
           setSelectedAccountId(data.accounts[0].id);
         }
       } else {
         const errorData = await response.json().catch(() => ({}));
         setError(errorData.error || "Ошибка при загрузке лицевых счетов");
       }
-    } catch (error: any) {
-      console.error("Error fetching accounts:", error);
-      setError(`Ошибка при загрузке лицевых счетов: ${error?.message || "Неизвестная ошибка"}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Неизвестная ошибка";
+      setError(`Ошибка при загрузке лицевых счетов: ${message}`);
     } finally {
       setLoading(false);
     }
@@ -79,6 +92,7 @@ export default function HistoryPage() {
 
     setLoadingHistory(true);
     setError(null);
+    setHasSearched(true);
 
     try {
       const params = new URLSearchParams({
@@ -88,154 +102,97 @@ export default function HistoryPage() {
       });
 
       const response = await fetch(`/api/1c/payment-history?${params.toString()}`);
-      
+
       if (response.ok) {
         const data = await response.json();
-        
-        // На старом сайте ответ содержит поле Payments (не вложенное)
-        // Строки 331-359 старого PHP кода:
-        //   if($response->Payments) {
-        //     $the_history = $response->Payments;
-        //     $the_history = (array)$the_history;
-        //     rsort($the_history); // Сортировка по дате (обратная - новые сверху)
-        //     foreach($the_history as $k => $res){
-        //       $out['results'][$k]['DateOfPayment'] = date('d-m-Y', strtotime($res->DateOfPayment));
-        //       $out['results'][$k]['Charge'] = $res->Charge;
-        //       $out['results'][$k]['Source'] = $res->Source;
-        //     }
-        //   }
-        
-        // Обрабатываем Payments как массив
-        let paymentsArray: any[] = [];
-        
+        let paymentsArray: Record<string, unknown>[] = [];
+
         if (data.data) {
-          // Вариант 1: data.data.Payments (массив)
           if (Array.isArray(data.data.Payments)) {
             paymentsArray = data.data.Payments;
-          }
-          // Вариант 2: data.data.payments (массив)
-          else if (Array.isArray(data.data.payments)) {
+          } else if (Array.isArray(data.data.payments)) {
             paymentsArray = data.data.payments;
-          }
-          // Вариант 3: data.data сам по себе массив
-          else if (Array.isArray(data.data)) {
+          } else if (Array.isArray(data.data)) {
             paymentsArray = data.data;
           }
-          // Вариант 4: data.data - объект с Payments
-          else if (data.data.Payments && Array.isArray(data.data.Payments)) {
-            paymentsArray = data.data.Payments;
-          }
-        }
-        // Вариант 5: data.Payments напрямую
-        else if (data.Payments && Array.isArray(data.Payments)) {
+        } else if (data.Payments && Array.isArray(data.Payments)) {
           paymentsArray = data.Payments;
-        }
-        // Вариант 6: data сам по себе массив
-        else if (Array.isArray(data)) {
+        } else if (Array.isArray(data)) {
           paymentsArray = data;
         }
-        
-        // Преобразуем данные в нужный формат
-        // Поля из старого сайта: DateOfPayment, Charge, Source
-        // На старом сайте: date('d-m-Y', strtotime($res->DateOfPayment))
-        // strtotime() в PHP очень гибкий и может распарсить разные форматы
-        const formattedPayments: Array<{date: string; dateForSort: Date | null; amount: number; source: string}> = paymentsArray.map((payment: any) => {
-          const dateOfPayment = payment.DateOfPayment || payment.date || payment.PaymentDate || payment.Date || "";
-          let formattedDate = "";
-          let dateForSort: Date | null = null;
-          
-          if (dateOfPayment) {
-            // Логируем для отладки
-            if (process.env.NODE_ENV === 'development') {
-              console.log('[Payment History] Raw DateOfPayment:', dateOfPayment, typeof dateOfPayment);
-            }
-            
-            try {
-              // Пробуем распарсить дату как strtotime() в PHP
-              // strtotime() может распарсить: "2024-01-15", "2024-01-15T10:30:00", "15.01.2024" и др.
-              let date: Date | null = null;
-              
-              // Вариант 1: Прямой парсинг через Date (работает для ISO и стандартных форматов)
-              date = new Date(dateOfPayment);
-              
-              // Если не удалось распарсить, пробуем другие форматы
-              if (isNaN(date.getTime())) {
-                // Вариант 2: Timestamp (число)
-                if (typeof dateOfPayment === 'number') {
-                  date = new Date(dateOfPayment * 1000); // Если секунды
-                  if (isNaN(date.getTime())) {
-                    date = new Date(dateOfPayment); // Если миллисекунды
-                  }
-                }
-                // Вариант 3: Строка в формате ДД.ММ.ГГГГ или ДД-ММ-ГГГГ
-                else if (typeof dateOfPayment === 'string') {
-                  // Пробуем распарсить ДД.ММ.ГГГГ или ДД-ММ-ГГГГ
-                  const match = dateOfPayment.match(/(\d{1,2})[.\-\/](\d{1,2})[.\-\/](\d{4})/);
+
+        const formattedPayments = paymentsArray
+          .map((payment) => {
+            const dateOfPayment =
+              (payment.DateOfPayment as string) ||
+              (payment.date as string) ||
+              (payment.PaymentDate as string) ||
+              (payment.Date as string) ||
+              "";
+            let formattedDate = "";
+            let dateForSort: Date | null = null;
+
+            if (dateOfPayment) {
+              try {
+                let date = new Date(dateOfPayment);
+                if (isNaN(date.getTime()) && typeof dateOfPayment === "string") {
+                  const match = dateOfPayment.match(
+                    /(\d{1,2})[.\-/](\d{1,2})[.\-/](\d{4})/
+                  );
                   if (match) {
                     const [, day, month, year] = match;
-                    date = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
-                  }
-                  // Пробуем формат ГГГГ-ММ-ДД
-                  else {
-                    const match2 = dateOfPayment.match(/(\d{4})[.\-\/](\d{1,2})[.\-\/](\d{1,2})/);
-                    if (match2) {
-                      const [, year, month, day] = match2;
-                      date = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
-                    }
+                    date = new Date(
+                      `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`
+                    );
                   }
                 }
-              }
-              
-              if (date && !isNaN(date.getTime())) {
-                // Форматируем как на старом сайте: d-m-Y (15-01-2024)
-                const day = String(date.getDate()).padStart(2, '0');
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                const year = date.getFullYear();
-                formattedDate = `${day}-${month}-${year}`;
-                dateForSort = date;
-                
-                if (process.env.NODE_ENV === 'development') {
-                  console.log('[Payment History] Parsed date:', dateOfPayment, '→', formattedDate);
+                if (!isNaN(date.getTime())) {
+                  const day = String(date.getDate()).padStart(2, "0");
+                  const month = String(date.getMonth() + 1).padStart(2, "0");
+                  const year = date.getFullYear();
+                  formattedDate = `${day}-${month}-${year}`;
+                  dateForSort = date;
+                } else {
+                  formattedDate = String(dateOfPayment);
                 }
-              } else {
-                // Если не удалось распарсить, используем исходное значение
+              } catch {
                 formattedDate = String(dateOfPayment);
-                console.warn('[Payment History] Could not parse date:', dateOfPayment);
               }
-            } catch (error) {
-              console.error('[Payment History] Error parsing date:', dateOfPayment, error);
-              formattedDate = String(dateOfPayment);
             }
-          }
-          
-          return {
-            date: formattedDate,
-            dateForSort: dateForSort,
-            amount: parseAmount(payment.Charge || payment.Amount || payment.amount || payment.Sum || 0),
-            source: payment.Source || payment.source || payment.PaymentSource || "Не указан",
-          };
-        });
-        
-        // Сортируем по дате (новые сверху) как на старом сайте (rsort)
-        formattedPayments.sort((a, b) => {
-          if (a.dateForSort && b.dateForSort) {
-            return b.dateForSort.getTime() - a.dateForSort.getTime(); // Обратная сортировка (новые сверху)
-          }
-          // Если дата не распарсилась, сортируем по строке
-          return b.date.localeCompare(a.date);
-        });
-        
-        // Убираем dateForSort из результата (он был только для сортировки)
-        const finalPayments = formattedPayments.map(({ dateForSort, ...rest }) => rest);
-        
-        setPayments(finalPayments);
+
+            return {
+              date: formattedDate,
+              dateForSort,
+              amount: parseAmount(
+                (payment.Charge as string | number) ||
+                  (payment.Amount as string | number) ||
+                  (payment.amount as string | number) ||
+                  (payment.Sum as string | number) ||
+                  0
+              ),
+              source:
+                (payment.Source as string) ||
+                (payment.source as string) ||
+                (payment.PaymentSource as string) ||
+                "Не указан",
+            };
+          })
+          .sort((a, b) => {
+            if (a.dateForSort && b.dateForSort) {
+              return b.dateForSort.getTime() - a.dateForSort.getTime();
+            }
+            return b.date.localeCompare(a.date);
+          })
+          .map(({ date, amount, source }) => ({ date, amount, source }));
+
+        setPayments(formattedPayments);
       } else {
         const errorData = await response.json().catch(() => ({}));
         setError(errorData.error || "Ошибка при загрузке истории платежей");
         setPayments([]);
       }
-    } catch (error: any) {
-      console.error("Error fetching payment history:", error);
+    } catch (err) {
+      console.error("Error fetching payment history:", err);
       setError("Ошибка при загрузке истории платежей");
       setPayments([]);
     } finally {
@@ -243,182 +200,205 @@ export default function HistoryPage() {
     }
   };
 
+  const dateInputClass =
+    "h-9 w-full min-w-0 rounded-none border border-slate-200 bg-white text-sm focus-visible:border-blue-500 focus-visible:ring-1 focus-visible:ring-blue-500";
+
   if (loading) {
     return (
-      <div className="container py-8 px-4">
-        <div className="text-center py-12">Загрузка...</div>
+      <div className={cn(dashboardPageClass, "container px-4 py-8")}>
+        <div className="py-12 text-center text-sm text-slate-600">Загрузка…</div>
       </div>
     );
   }
 
   return (
-    <div className="container py-8 px-4 max-w-6xl">
+    <div
+      className={cn(
+        dashboardPageClass,
+        "container max-w-5xl px-4 py-8 [&_button]:!rounded-none [&_input]:!rounded-none [&_select]:!rounded-none"
+      )}
+    >
       <div className="mb-6">
-        <Button asChild variant="outline" size="sm">
+        <Button
+          asChild
+          variant="outline"
+          size="sm"
+          className={cn(dashboardButtonClass, "h-9 border-slate-200")}
+        >
           <Link href="/dashboard">
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <ArrowLeft className="mr-2 h-4 w-4" />
             Назад
           </Link>
         </Button>
       </div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">История платежей</h1>
-        <p className="text-gray-600">Просмотр истории платежей по лицевым счетам</p>
+
+      <div className="mb-6">
+        <h1 className="mb-2 text-3xl font-bold tracking-tight text-slate-900">
+          История платежей
+        </h1>
+        <p className="text-sm text-slate-600">
+          Просмотр истории платежей по лицевым счетам
+        </p>
       </div>
 
-      {error && (
-        <Alert variant="destructive" className="mb-6">
+      {error ? (
+        <Alert variant="destructive" className="mb-4 rounded-none">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
         </Alert>
-      )}
+      ) : null}
 
-      {/* Выбор лицевого счета и периода */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Search className="h-5 w-5" />
-            Параметры поиска
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {accounts.length > 0 && (
-            <div>
-              <Label>Лицевой счет</Label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
-                {accounts.map((account) => (
-                  <button
-                    key={account.id}
-                    onClick={() => setSelectedAccountId(account.id)}
-                    className={`p-3 rounded-lg border-2 text-left transition-all ${
-                      selectedAccountId === account.id
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <p className="font-semibold">ЛС: {account.accountNumber}</p>
-                    <p className="text-sm text-gray-600">{account.address}</p>
-                  </button>
-                ))}
+      {accounts.length > 0 ? (
+        <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-end">
+          <div className="shrink-0">
+            <Label className="mb-1.5 block text-xs text-slate-500">Лицевой счёт</Label>
+            {accounts.length === 1 && selectedAccount ? (
+              <div className="flex h-9 items-center rounded-none border border-slate-300 bg-slate-100 px-3 text-sm font-medium text-slate-900">
+                ЛС: {selectedAccount.accountNumber}
               </div>
-            </div>
-          )}
+            ) : (
+              <select
+                value={selectedAccountId || ""}
+                onChange={(e) => setSelectedAccountId(e.target.value)}
+                className="h-9 min-w-[10rem] rounded-none border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                {accounts.map((account) => (
+                  <option key={account.id} value={account.id}>
+                    ЛС: {account.accountNumber}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="dateFrom">Дата начала</Label>
-              <Input
-                id="dateFrom"
-                type="date"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label htmlFor="dateTo">Дата окончания</Label>
-              <Input
-                id="dateTo"
-                type="date"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-                className="mt-1"
-              />
-            </div>
+          <div className="w-full min-w-[8.5rem] max-w-[11rem] flex-1 sm:flex-none">
+            <Label htmlFor="dateFrom" className="mb-1.5 block text-xs text-slate-500">
+              Дата начала
+            </Label>
+            <Input
+              id="dateFrom"
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className={dateInputClass}
+            />
+          </div>
+
+          <div className="w-full min-w-[8.5rem] max-w-[11rem] flex-1 sm:flex-none">
+            <Label htmlFor="dateTo" className="mb-1.5 block text-xs text-slate-500">
+              Дата окончания
+            </Label>
+            <Input
+              id="dateTo"
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className={dateInputClass}
+            />
           </div>
 
           <Button
+            type="button"
             onClick={fetchPaymentHistory}
             disabled={!selectedAccountId || !dateFrom || !dateTo || loadingHistory}
-            className="w-full"
-            size="lg"
+            className={cn(
+              dashboardButtonClass,
+              "h-9 w-full shrink-0 rounded-none bg-blue-600 px-5 text-white hover:bg-blue-700 lg:w-auto"
+            )}
           >
             {loadingHistory ? (
               <>
-                <History className="h-4 w-4 mr-2 animate-spin" />
-                Загрузка...
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Поиск…
               </>
             ) : (
               <>
-                <Search className="h-4 w-4 mr-2" />
-                Найти платежи
+                <Search className="mr-2 h-4 w-4" />
+                Найти
               </>
             )}
           </Button>
-        </CardContent>
-      </Card>
+        </div>
+      ) : null}
 
-      {/* Таблица платежей */}
-      {payments.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <History className="h-5 w-5" />
-              История платежей
-            </CardTitle>
-            <CardDescription>
-              Найдено платежей: {payments.length}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+      {payments.length > 0 ? (
+        <DashboardCard>
+          <DashboardCardBody className="p-0">
+            <div className="border-b border-slate-100 px-4 py-3">
+              <p className="text-sm font-semibold text-slate-900">
+                Найдено платежей: {payments.length}
+              </p>
+            </div>
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-3">Дата</th>
-                    <th className="text-left p-3">Сумма</th>
-                    <th className="text-left p-3">Источник</th>
+                  <tr className="border-b border-slate-100 bg-slate-50/80 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <th className="px-4 py-2.5">Дата</th>
+                    <th className="px-4 py-2.5">Сумма</th>
+                    <th className="px-4 py-2.5">Источник</th>
                   </tr>
                 </thead>
                 <tbody>
                   {payments.map((payment, index) => (
-                    <tr key={index} className="border-b hover:bg-gray-50">
-                      <td className="p-3">
-                        {payment.date || "Не указана"}
+                    <tr
+                      key={`${payment.date}-${payment.amount}-${index}`}
+                      className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/60"
+                    >
+                      <td className="px-4 py-3 text-slate-900">
+                        {payment.date || "—"}
                       </td>
-                      <td className="p-3 font-semibold">
+                      <td className="px-4 py-3 font-semibold tabular-nums text-slate-900">
                         {payment.amount.toLocaleString("ru-RU", {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
                         })}{" "}
                         ₽
                       </td>
-                      <td className="p-3">{payment.source}</td>
+                      <td className="px-4 py-3 text-slate-600">{payment.source}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </DashboardCardBody>
+        </DashboardCard>
+      ) : null}
 
-      {payments.length === 0 && !loadingHistory && selectedAccountId && (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <History className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">Платежи за выбранный период не найдены</p>
-          </CardContent>
-        </Card>
-      )}
-
-      {accounts.length === 0 && (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <CreditCard className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500 mb-4">У вас нет лицевых счетов</p>
-            <p className="text-sm text-gray-400">
-              Добавьте лицевой счет в разделе "Передача показаний"
+      {hasSearched && !loadingHistory && payments.length === 0 && selectedAccountId ? (
+        <DashboardCard>
+          <DashboardCardBody className="flex items-center justify-center gap-3 px-4 py-8 text-center">
+            <History className="h-8 w-8 shrink-0 text-slate-300" strokeWidth={1.5} />
+            <p className="text-sm text-slate-600">
+              Платежи за выбранный период не найдены
             </p>
-          </CardContent>
-        </Card>
-      )}
+          </DashboardCardBody>
+        </DashboardCard>
+      ) : null}
+
+      {!hasSearched && accounts.length > 0 ? (
+        <DashboardCard className="border-dashed border-slate-200">
+          <DashboardCardBody className="px-4 py-6 text-center">
+            <p className="text-sm text-slate-500">
+              Укажите период и нажмите «Найти», чтобы показать историю платежей
+            </p>
+          </DashboardCardBody>
+        </DashboardCard>
+      ) : null}
+
+      {accounts.length === 0 ? (
+        <DashboardCard className="border-dashed bg-slate-100/70">
+          <DashboardCardBody className="py-10 text-center">
+            <CreditCard
+              className="mx-auto mb-3 h-10 w-10 text-slate-400"
+              strokeWidth={1.75}
+            />
+            <p className="mb-1 text-sm text-slate-600">У вас нет лицевых счетов</p>
+            <p className="text-xs text-slate-500">
+              Добавьте лицевой счёт в разделе «Передача показаний»
+            </p>
+          </DashboardCardBody>
+        </DashboardCard>
+      ) : null}
     </div>
   );
 }
-
-
-
-
-
-

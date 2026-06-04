@@ -1,16 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { 
-  Droplet, 
-  CreditCard, 
-  FileText, 
-  Wrench, 
-  Loader2,
-} from "lucide-react";
+import { Loader2, Droplet, CreditCard, FileText, Wrench } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import DashboardTour from "@/components/DashboardTour";
@@ -19,6 +10,8 @@ import { useDashboardEmailVerification } from "@/hooks/use-dashboard-email-verif
 import { EmailVerificationBanner } from "@/components/dashboard/EmailVerificationBanner";
 import { DashboardBalanceCard } from "@/components/dashboard/DashboardBalanceCard";
 import { DashboardStatsGrid } from "@/components/dashboard/DashboardStatsGrid";
+import { DashboardQuickActionCard } from "@/components/dashboard/DashboardQuickActionCard";
+import { dashboardPageClass } from "@/components/dashboard/dashboard-styles";
 import type { DashboardAccount, DashboardAccountData } from "@/lib/dashboard-types";
 
 export default function DashboardPage() {
@@ -238,8 +231,10 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
-      <div className="container py-8 px-4 max-w-7xl">
+    <div
+      className={`${dashboardPageClass} [&_button]:!rounded-none [&_input]:!rounded-none [&_select]:!rounded-none`}
+    >
+      <div className="container max-w-7xl px-4 py-8">
         {/* Email Verification Banner */}
         {emailVerified === false && (
           <EmailVerificationBanner
@@ -258,10 +253,10 @@ export default function DashboardPage() {
         <div className="mb-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
             <div data-tour-id="tour-welcome">
-              <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+              <h1 className="mb-2 text-4xl font-bold tracking-tight text-slate-900">
                 Личный кабинет
               </h1>
-              <p className="text-gray-600">
+              <p className="text-slate-600">
                 Добро пожаловать, {session.user?.name || session.user?.email}!
               </p>
             </div>
@@ -282,109 +277,50 @@ export default function DashboardPage() {
 
         <DashboardStatsGrid stats={stats} />
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8" data-tour-id="tour-quick">
-          <Card className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 h-full flex flex-col">
-            <CardHeader className="flex-shrink-0">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Droplet className="h-6 w-6 text-blue-600" />
-                </div>
-                <CardTitle>Показания счетчиков</CardTitle>
-              </div>
-              <CardDescription>Подать показания счетчиков воды</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 flex items-end">
-              <Button asChild className="w-full" size="lg">
-                <Link href="/dashboard/meters">Подать показания</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 h-full flex flex-col">
-            <CardHeader className="flex-shrink-0">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <CreditCard className="h-6 w-6 text-green-600" />
-                </div>
-                <CardTitle>Счета и оплата</CardTitle>
-              </div>
-              <CardDescription>Просмотр и оплата счетов</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 flex items-end">
-              <Button asChild className="w-full" size="lg" variant="outline">
-                <Link href="/dashboard/bills">Перейти к счетам</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 h-full flex flex-col">
-            <CardHeader className="flex-shrink-0">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <FileText className="h-6 w-6 text-purple-600" />
-                </div>
-                <CardTitle>Квитанции</CardTitle>
-              </div>
-              <CardDescription>Скачать квитанции на оплату</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 flex items-end">
-              <Button asChild className="w-full" size="lg" variant="outline">
-                <Link href="/dashboard/receipts">Скачать квитанцию</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 h-full flex flex-col">
-            <CardHeader className="flex-shrink-0">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <FileText className="h-6 w-6 text-purple-600" />
-                </div>
-                <CardTitle>История платежей</CardTitle>
-              </div>
-              <CardDescription>Просмотр истории платежей</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 flex items-end">
-              <Button asChild className="w-full" size="lg" variant="outline">
-                <Link href="/dashboard/history">История</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 h-full flex flex-col">
-            <CardHeader className="flex-shrink-0">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-orange-100 rounded-lg">
-                  <Wrench className="h-6 w-6 text-orange-600" />
-                </div>
-                <CardTitle>Заказать услугу</CardTitle>
-              </div>
-              <CardDescription>Подать заявку на услуги</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 flex items-end">
-              <Button asChild className="w-full" size="lg" variant="outline">
-                <Link href="/services">Выбрать услугу</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 h-full flex flex-col">
-            <CardHeader className="flex-shrink-0">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <FileText className="h-6 w-6 text-blue-600" />
-                </div>
-                <CardTitle>Задать вопрос</CardTitle>
-              </div>
-              <CardDescription>Задать вопрос службе поддержки</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 flex items-end">
-              <Button asChild className="w-full" size="lg" variant="outline">
-                <Link href="/dashboard/questions">Задать вопрос</Link>
-              </Button>
-            </CardContent>
-          </Card>
+        <div
+          className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
+          data-tour-id="tour-quick"
+        >
+          <DashboardQuickActionCard
+            href="/dashboard/meters"
+            title="Показания счетчиков"
+            description="Подать показания счетчиков воды"
+            icon={Droplet}
+            iconClassName="text-blue-600"
+          />
+          <DashboardQuickActionCard
+            href="/dashboard/bills"
+            title="Счета и оплата"
+            description="Просмотр и оплата счетов"
+            icon={CreditCard}
+            iconClassName="text-green-600"
+          />
+          <DashboardQuickActionCard
+            href="/dashboard/receipts"
+            title="Квитанции"
+            description="Скачать квитанции на оплату"
+            icon={FileText}
+          />
+          <DashboardQuickActionCard
+            href="/dashboard/history"
+            title="История платежей"
+            description="Просмотр истории платежей"
+            icon={FileText}
+          />
+          <DashboardQuickActionCard
+            href="/services"
+            title="Заказать услугу"
+            description="Подать заявку на услуги"
+            icon={Wrench}
+            iconClassName="text-slate-600"
+          />
+          <DashboardQuickActionCard
+            href="/dashboard/questions"
+            title="Задать вопрос"
+            description="Задать вопрос службе поддержки"
+            icon={FileText}
+            iconClassName="text-blue-600"
+          />
         </div>
 
         <DashboardTour />

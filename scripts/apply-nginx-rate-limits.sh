@@ -45,6 +45,18 @@ blocks = f"""
     {marker}
     limit_conn krimvk_conn 30;
 
+    location = /api/auth/verify-email {{
+        limit_req zone=krimvk_verify_email burst=20 nodelay;
+        proxy_pass http://krimvk_prod;
+{proxy_headers}
+    }}
+
+    location = /api/auth/check-email-verified {{
+        limit_req zone=krimvk_verify_email burst=20 nodelay;
+        proxy_pass http://krimvk_prod;
+{proxy_headers}
+    }}
+
     location /api/auth/ {{
         limit_req zone=krimvk_auth burst=5 nodelay;
         proxy_pass http://krimvk_prod;

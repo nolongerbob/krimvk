@@ -72,7 +72,7 @@ export default function VerifyEmailPage() {
     };
 
     tick();
-    const id = setInterval(tick, 2000);
+    const id = setInterval(tick, 5000);
     return () => clearInterval(id);
   }, [waiting, session, goDashboard, goLogin]);
 
@@ -109,7 +109,7 @@ export default function VerifyEmailPage() {
         else if (result === "login") goLogin();
       };
       tick();
-      const id = setInterval(tick, 3000);
+      const id = setInterval(tick, 5000);
       return () => clearInterval(id);
     }
 

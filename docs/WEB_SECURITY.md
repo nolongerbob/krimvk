@@ -47,11 +47,23 @@ sudo nginx -t && sudo systemctl reload nginx
 ```nginx
 limit_conn krimvk_conn 30;
 
+location = /api/auth/verify-email {
+    limit_req zone=krimvk_verify_email burst=20 nodelay;
+    proxy_pass http://krimvk_prod;
+    # ... proxy_set_header как в location /
+}
+
+location = /api/auth/check-email-verified {
+    limit_req zone=krimvk_verify_email burst=20 nodelay;
+    proxy_pass http://krimvk_prod;
+}
+
 location /api/auth/ {
     limit_req zone=krimvk_auth burst=5 nodelay;
     proxy_pass http://krimvk_prod;
     # ... proxy_set_header как в location /
 }
+```
 
 location /api/admin/ {
     limit_req zone=krimvk_admin burst=20 nodelay;
@@ -157,6 +169,14 @@ sudo grep listen_addresses /etc/postgresql/*/main/postgresql.conf
 | Сигнал | Где смотреть |
 |--------|----------------|
 | 429 rate limit | `/var/log/nginx/access.log` |
+
+**429 при подтверждении email из письма:** почтовые сканеры и опрос статуса бьют в общий `/api/auth/`. Патч:
+
+```bash
+cd /var/www/krimvk && git pull
+sudo bash scripts/patch-nginx-verify-email-limits.sh
+pm2 restart krimvk   # если меняли http-guard в приложении
+```
 | fail2ban ban | `sudo fail2ban-client status nginx-limit-req` |
 | Подозрительные запросы | `sudo tail -f /var/log/nginx/access.log` |
 | Алерт | ntfy / UptimeRobot |

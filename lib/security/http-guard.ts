@@ -53,6 +53,18 @@ export function applyRateLimit(req: NextRequest): NextResponse | null {
   const ip = clientIp(req);
   const keyBase = `${ip}:${path.split('/').slice(0, 4).join('/')}`;
 
+  const verifyEmailPaths =
+    path === '/api/auth/verify-email' ||
+    path === '/api/auth/check-email-verified' ||
+    path === '/api/auth/resend-verification';
+
+  if (verifyEmailPaths) {
+    if (!rateLimit(`verify-email:${ip}`, 60, 60_000)) {
+      return NextResponse.json({ error: 'Слишком много запросов.' }, { status: 429 });
+    }
+    return null;
+  }
+
   const strictAuth =
     path.startsWith('/api/auth/login') ||
     path.startsWith('/api/auth/register') ||

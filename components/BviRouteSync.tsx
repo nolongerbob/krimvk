@@ -4,14 +4,16 @@ import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import {
   BVI_TRIGGER_ID,
-  isInternalNavigationLink,
+  isBviEnabledInCookies,
+  isBviPanelActive,
   reapplyBviAfterNavigation,
-  teardownBviBeforeNavigation,
+  refreshBviAfterClientNavigation,
 } from '@/lib/bvi-loader';
 import { bindBviPanelSpeechPriming } from '@/lib/bvi-speech-patch';
 
 /**
- * Синхронизация BVI с клиентской навигацией Next.js (плагин рассчитан на полную перезагрузку страницы).
+ * Синхронизация BVI с клиентской навигацией Next.js.
+ * Не снимаем обёртку .bvi-body при переходах — иначе React падает с NotFoundError.
  */
 export function BviRouteSync() {
   const pathname = usePathname();
@@ -19,27 +21,29 @@ export function BviRouteSync() {
   useEffect(() => bindBviPanelSpeechPriming(), []);
 
   useEffect(() => {
-    const onClickCapture = (event: MouseEvent) => {
-      const target = event.target;
-      if (!(target instanceof Element)) return;
-      const anchor = target.closest('a[href]');
-      if (!(anchor instanceof HTMLAnchorElement)) return;
-      if (!isInternalNavigationLink(anchor)) return;
-      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-      teardownBviBeforeNavigation();
-    };
+    let cancelled = false;
+    let outerRaf = 0;
+    let innerRaf = 0;
 
-    document.addEventListener('click', onClickCapture, true);
-    return () => document.removeEventListener('click', onClickCapture, true);
-  }, []);
+    outerRaf = requestAnimationFrame(() => {
+      innerRaf = requestAnimationFrame(() => {
+        if (cancelled) return;
 
-  useEffect(() => {
-    const id = window.setTimeout(() => {
-      void reapplyBviAfterNavigation();
-    }, 0);
+        if (isBviPanelActive()) {
+          refreshBviAfterClientNavigation();
+          return;
+        }
+
+        if (isBviEnabledInCookies()) {
+          void reapplyBviAfterNavigation();
+        }
+      });
+    });
+
     return () => {
-      window.clearTimeout(id);
-      teardownBviBeforeNavigation();
+      cancelled = true;
+      cancelAnimationFrame(outerRaf);
+      cancelAnimationFrame(innerRaf);
     };
   }, [pathname]);
 

@@ -101,13 +101,21 @@ function setBviCookie(name: string, value: string | number | boolean) {
 }
 
 function unwrapBviBody(wrapper: Element) {
+  if (!wrapper.isConnected) return;
   const parent = wrapper.parentNode;
   if (!parent) return;
-  const docFrag = document.createDocumentFragment();
-  while (wrapper.firstChild) {
-    docFrag.appendChild(wrapper.firstChild);
+
+  try {
+    const docFrag = document.createDocumentFragment();
+    while (wrapper.firstChild) {
+      docFrag.appendChild(wrapper.firstChild);
+    }
+    if (wrapper.isConnected) {
+      parent.replaceChild(docFrag, wrapper);
+    }
+  } catch (err) {
+    console.warn('[BVI] unwrap bvi-body failed', err);
   }
-  parent.replaceChild(docFrag, wrapper);
 }
 
 function dedupeBviPanels() {
@@ -204,12 +212,20 @@ function unbindBviPanelCloseFix(): void {
   bviPanelCloseHandler = null;
 }
 
+let bviPanelDedupeRaf = 0;
+
 function observeBviPanelDedupe(): void {
   bviPanelDedupeObserver?.disconnect();
   bviPanelDedupeObserver = new MutationObserver(() => {
-    if (document.querySelectorAll('.bvi-panel').length > 1) {
-      dedupeBviPanels();
-    }
+    if (!document.documentElement.classList.contains('bvi-active')) return;
+
+    if (bviPanelDedupeRaf) cancelAnimationFrame(bviPanelDedupeRaf);
+    bviPanelDedupeRaf = requestAnimationFrame(() => {
+      bviPanelDedupeRaf = 0;
+      if (document.querySelectorAll('.bvi-panel').length > 1) {
+        dedupeBviPanels();
+      }
+    });
   });
   bviPanelDedupeObserver.observe(document.body, { childList: true, subtree: true });
 }
@@ -217,6 +233,10 @@ function observeBviPanelDedupe(): void {
 function disconnectBviPanelDedupeObserver(): void {
   bviPanelDedupeObserver?.disconnect();
   bviPanelDedupeObserver = null;
+  if (bviPanelDedupeRaf) {
+    cancelAnimationFrame(bviPanelDedupeRaf);
+    bviPanelDedupeRaf = 0;
+  }
 }
 
 /** Полное выключение BVI (кнопка «Обычная версия сайта»). */
@@ -450,7 +470,26 @@ export async function reapplyBviAfterNavigation(): Promise<void> {
   }
 }
 
-/** Перед переходом по внутренней ссылке. */
+/**
+ * После клиентского перехода Next.js: не снимаем BVI (иначе React теряет DOM → NotFoundError),
+ * только подправляем обёртку и стили.
+ */
+export function refreshBviAfterClientNavigation(): void {
+  if (typeof document === 'undefined') return;
+  if (!isBviPanelActive()) return;
+
+  try {
+    applyBviLayoutFixes();
+    syncBviUiFromBody();
+    dedupeBviPanels();
+    const inst = window.__bviInstance as { _images?: () => void } | undefined;
+    inst?._images?.();
+  } catch (err) {
+    console.warn('[BVI] refresh after client navigation failed', err);
+  }
+}
+
+/** @deprecated Не вызывать при SPA-переходах — ломает React DOM. */
 export function teardownBviBeforeNavigation(): void {
   if (!isBviPanelActive() && !document.querySelector('.bvi-body')) return;
   teardownBviDom();

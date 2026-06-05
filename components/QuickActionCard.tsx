@@ -63,16 +63,22 @@ function QuickActionCardContent({
   );
 }
 
+const emergencyBtnClass =
+  "border-red-600 text-red-600 hover:bg-red-50 hover:text-red-700";
+
 function QuickActionCardFooter({
   label,
+  isEmergency,
   disabled = false,
 }: {
   label: string;
+  isEmergency?: boolean;
   disabled?: boolean;
 }) {
   const btnClass = cn(
     siteOutlineBtnClass,
-    "quick-action-card-footer bvi-no-styles w-full max-w-full box-border pointer-events-none"
+    "quick-action-card-footer bvi-no-styles w-full max-w-full box-border pointer-events-none",
+    isEmergency && emergencyBtnClass
   );
 
   return (
@@ -113,7 +119,7 @@ export function QuickActionCard({
             iconColor={iconColor}
             isEmergency={isEmergency}
           />
-          <QuickActionCardFooter label={title} />
+          <QuickActionCardFooter label={title} isEmergency={isEmergency} />
         </DashboardCard>
       </Link>
     );

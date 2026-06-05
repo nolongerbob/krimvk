@@ -121,10 +121,9 @@ export function KachestvoVodyClient({ districts }: KachestvoVodyClientProps) {
       return;
     }
 
-    if (selectedDistrictId !== "all") {
-      setOpenDistrictIds([selectedDistrictId]);
-    }
-  }, [searchQuery, filteredDistricts, selectedDistrictId]);
+    setOpenDistrictIds([]);
+    setOpenCityIds([]);
+  }, [searchQuery, filteredDistricts]);
 
   return (
     <div className="flex min-h-[calc(100dvh-4rem)] flex-col bg-gray-50 py-8 md:py-12 pb-14 lg:min-h-[calc(100dvh-4.5rem)]">

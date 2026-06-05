@@ -43,7 +43,7 @@ export function AdminNotificationsBadge({ type }: AdminNotificationsBadgeProps) 
   return (
     <Badge
       variant="destructive"
-      className="ml-2 h-5 min-w-[20px] flex items-center justify-center px-1.5 text-xs"
+      className="h-5 min-w-[20px] rounded-none px-1.5 text-xs flex items-center justify-center bg-red-600"
     >
       {count > 99 ? "99+" : count}
     </Badge>

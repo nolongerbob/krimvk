@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
+import { adminFieldClass, adminOutlineBtnClass, adminSectionLabelClass } from "@/components/admin/admin-styles";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -180,7 +182,7 @@ export function UsersClient({ users: initialUsers, currentUserId }: UsersClientP
       <div className="mb-6 space-y-4">
         {/* Фильтры по балансу */}
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-medium text-gray-700">Фильтр:</span>
+          <span className={adminSectionLabelClass}>Фильтр</span>
           <Button
             variant={debtFilter === "all" ? "default" : "outline"}
             size="sm"
@@ -235,10 +237,10 @@ export function UsersClient({ users: initialUsers, currentUserId }: UsersClientP
             placeholder="Поиск по имени, email, телефону, адресу или номеру лицевого счета..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            className={cn("pl-10", adminFieldClass)}
           />
         </div>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-slate-500">
           Найдено пользователей: {filteredUsers.length}
           {debtFilter !== "all" && (
             <span className="ml-2">
@@ -256,26 +258,27 @@ export function UsersClient({ users: initialUsers, currentUserId }: UsersClientP
 
       <div className="space-y-4">
         {filteredUsers.map((user) => (
-          <Card key={user.id} className="hover:shadow-md transition-shadow">
-            <CardHeader>
+          <DashboardCard key={user.id}>
+            <DashboardCardBody>
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <CardTitle className="text-xl">
+                  <div className="mb-2 flex items-center gap-2">
+                    <h3 className="text-xl font-semibold text-slate-900">
                       {user.name || user.email}
-                    </CardTitle>
+                    </h3>
                     {user.role === "ADMIN" && (
                       <Shield className="h-5 w-5 text-blue-500" />
                     )}
                     <Badge
                       variant={user.role === "ADMIN" ? "default" : "secondary"}
+                      className="rounded-none"
                     >
                       {user.role === "ADMIN" ? "Администратор" : "Пользователь"}
                     </Badge>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                     <div className="space-y-2 text-sm">
-                      <div className="flex items-center gap-2 text-gray-600">
+                      <div className="flex items-center gap-2 text-slate-600">
                         <Mail className="h-4 w-4" />
                         <span>{user.email}</span>
                       </div>
@@ -365,29 +368,29 @@ export function UsersClient({ users: initialUsers, currentUserId }: UsersClientP
                     onClick={() => setSelectedUser(user)}
                     variant="outline"
                     size="sm"
-                    className="gap-2"
+                    className={cn("gap-2", adminOutlineBtnClass)}
                   >
                     <Eye className="h-4 w-4" />
                     Подробнее
                   </Button>
                 </div>
               </div>
-            </CardHeader>
-          </Card>
+            </DashboardCardBody>
+          </DashboardCard>
         ))}
       </div>
 
       {filteredUsers.length === 0 && (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">
+        <DashboardCard className="border-dashed bg-slate-50/80">
+          <DashboardCardBody className="py-12 text-center">
+            <Users className="mx-auto mb-4 h-12 w-12 text-slate-300" />
+            <p className="text-slate-500">
               {searchQuery
                 ? "Пользователи не найдены"
                 : "Нет пользователей"}
             </p>
-          </CardContent>
-        </Card>
+          </DashboardCardBody>
+        </DashboardCard>
       )}
 
       {selectedUser && (

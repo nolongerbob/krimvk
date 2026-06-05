@@ -1,8 +1,8 @@
 import { getSession } from "@/lib/get-session";
 import { redirect } from "next/navigation";
 import { prisma, withRetry } from "@/lib/prisma";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { adminContainerClass } from "@/components/admin/admin-styles";
 import { UsersClient } from "./UsersClient";
 import { get1CUserData } from "@/lib/1c-api";
 import { tryDecryptPassword1c } from "@/lib/password1c-crypto";
@@ -204,17 +204,11 @@ export default async function AdminUsersPage() {
   );
 
   return (
-    <div className="container py-8 px-4 max-w-7xl">
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Управление пользователями</h1>
-          <p className="text-gray-600">База пользователей со всеми данными, лицевыми счетами и задолженностью</p>
-        </div>
-        <Button asChild variant="outline">
-          <Link href="/admin">Назад</Link>
-        </Button>
-      </div>
-
+    <div className={adminContainerClass}>
+      <AdminPageHeader
+        title="Управление пользователями"
+        description="База пользователей со всеми данными, лицевыми счетами и задолженностью"
+      />
       <UsersClient users={usersWithDebt} currentUserId={session.user.id} />
     </div>
   );

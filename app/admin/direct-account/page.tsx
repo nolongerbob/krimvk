@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
+import { dashboardTileClass } from "@/components/dashboard/dashboard-styles";
+import { adminContainerClass, adminFieldClass, adminOutlineBtnClass, adminPrimaryBtnClass } from "@/components/admin/admin-styles";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -107,27 +110,29 @@ export default function DirectAccountPage() {
   };
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-4xl">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Работа с лицевым счетом</h1>
-        <p className="text-gray-600">
+    <div className={cn(adminContainerClass, "max-w-4xl")}>
+      <div className="mb-8">
+        <h1 className="mb-2 text-3xl font-bold tracking-tight text-slate-900">
+          Работа с лицевым счетом
+        </h1>
+        <p className="text-sm text-slate-600">
           Введите данные лицевого счета для доступа к информации и управлению
         </p>
       </div>
 
       {!isConnected ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Key className="h-5 w-5" />
-              Подключение к лицевому счету
-            </CardTitle>
-            <CardDescription>
-              Введите номер лицевого счета и пароль для доступа к данным 1С
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleConnect} className="space-y-4">
+        <DashboardCard>
+          <DashboardCardBody>
+            <div className="mb-6">
+              <h2 className="mb-1 flex items-center gap-2 text-lg font-semibold text-slate-900">
+                <Key className="h-5 w-5" />
+                Подключение к лицевому счету
+              </h2>
+              <p className="text-sm text-slate-500">
+                Введите номер лицевого счета и пароль для доступа к данным 1С
+              </p>
+            </div>
+            <form onSubmit={handleConnect} className="max-w-md space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="accountNumber">Номер лицевого счета</Label>
                 <Input
@@ -138,6 +143,7 @@ export default function DirectAccountPage() {
                   onChange={(e) => setAccountNumber(e.target.value)}
                   required
                   disabled={loading}
+                  className={adminFieldClass}
                 />
               </div>
 
@@ -151,13 +157,14 @@ export default function DirectAccountPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   disabled={loading}
+                  className={adminFieldClass}
                 />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="region">Регион</Label>
                 <Select value={region} onValueChange={setRegion} disabled={loading}>
-                  <SelectTrigger id="region">
+                  <SelectTrigger id="region" className={adminFieldClass}>
                     <SelectValue placeholder="Выберите район" />
                   </SelectTrigger>
                   <SelectContent>
@@ -177,7 +184,7 @@ export default function DirectAccountPage() {
                 </Alert>
               )}
 
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button type="submit" className={cn("w-full", adminPrimaryBtnClass)} disabled={loading}>
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -191,35 +198,32 @@ export default function DirectAccountPage() {
                 )}
               </Button>
             </form>
-          </CardContent>
-        </Card>
+          </DashboardCardBody>
+        </DashboardCard>
       ) : (
         <div className="space-y-6">
-          {/* Информация о подключенном счете */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <Key className="h-5 w-5 text-green-600" />
+          <DashboardCard>
+            <DashboardCardBody>
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <span className="flex items-center gap-2 text-lg font-semibold text-slate-900">
+                  <Key className="h-5 w-5 text-emerald-600" />
                   Подключено к л/с: {accountNumber}
                 </span>
-                <Button variant="outline" size="sm" onClick={handleDisconnect}>
+                <Button variant="outline" size="sm" className={adminOutlineBtnClass} onClick={handleDisconnect}>
                   Отключиться
                 </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4">
+              </div>
+              <div className="grid gap-4 sm:grid-cols-3">
                 <div>
-                  <p className="text-sm text-gray-600">Адрес</p>
-                  <p className="font-medium">{accountData?.Address || accountData?.address || "—"}</p>
+                  <p className="text-sm text-slate-500">Адрес</p>
+                  <p className="font-medium text-slate-900">{accountData?.Address || accountData?.address || "—"}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Абонент</p>
-                  <p className="font-medium">{accountData?.LSName || accountData?.name || "—"}</p>
+                  <p className="text-sm text-slate-500">Абонент</p>
+                  <p className="font-medium text-slate-900">{accountData?.LSName || accountData?.name || "—"}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-slate-500">
                     {(() => {
                       const balance = parseAmount(accountData?.CommonDuty ?? accountData?.commonDuty ?? "0");
                       if (balance > 0.01) return "Задолженность (к оплате)";
@@ -241,66 +245,29 @@ export default function DirectAccountPage() {
                   </p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </DashboardCardBody>
+          </DashboardCard>
 
-          {/* Действия */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={openReceipt}>
-              <CardContent className="pt-6">
-                <div className="flex flex-col items-center text-center gap-3">
-                  <div className="p-3 bg-blue-100 rounded-full">
-                    <Receipt className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg">Квитанция</h3>
-                    <p className="text-sm text-gray-600">Просмотр и печать квитанции с полными данными</p>
-                  </div>
+            {[
+              { onClick: openReceipt, icon: Receipt, title: "Квитанция", desc: "Просмотр и печать квитанции с полными данными", iconClass: "text-blue-600" },
+              { onClick: openMeters, icon: Droplet, title: "Передача показаний", desc: "Передать показания счетчиков воды", iconClass: "text-blue-600" },
+              { onClick: openPaymentHistory, icon: CreditCard, title: "История платежей", desc: "Просмотр истории платежей по счету", iconClass: "text-slate-600" },
+              { onClick: openMeterHistory, icon: History, title: "История показаний", desc: "Просмотр истории показаний счетчиков", iconClass: "text-slate-600" },
+            ].map(({ onClick, icon: Icon, title, desc, iconClass }) => (
+              <button
+                key={title}
+                type="button"
+                onClick={onClick}
+                className={cn(dashboardTileClass, "flex h-full flex-col gap-3 p-5 text-left")}
+              >
+                <Icon className={cn("h-5 w-5 shrink-0", iconClass)} strokeWidth={1.75} />
+                <div className="flex min-h-0 flex-1 flex-col gap-1">
+                  <p className="text-base font-semibold leading-snug text-slate-900">{title}</p>
+                  <p className="text-sm leading-relaxed text-slate-500">{desc}</p>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={openMeters}>
-              <CardContent className="pt-6">
-                <div className="flex flex-col items-center text-center gap-3">
-                  <div className="p-3 bg-green-100 rounded-full">
-                    <Droplet className="h-6 w-6 text-green-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg">Передача показаний</h3>
-                    <p className="text-sm text-gray-600">Передать показания счетчиков воды</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={openPaymentHistory}>
-              <CardContent className="pt-6">
-                <div className="flex flex-col items-center text-center gap-3">
-                  <div className="p-3 bg-purple-100 rounded-full">
-                    <CreditCard className="h-6 w-6 text-purple-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg">История платежей</h3>
-                    <p className="text-sm text-gray-600">Просмотр истории платежей по счету</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={openMeterHistory}>
-              <CardContent className="pt-6">
-                <div className="flex flex-col items-center text-center gap-3">
-                  <div className="p-3 bg-orange-100 rounded-full">
-                    <History className="h-6 w-6 text-orange-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg">История показаний</h3>
-                    <p className="text-sm text-gray-600">Просмотр истории показаний счетчиков</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+              </button>
+            ))}
           </div>
         </div>
       )}

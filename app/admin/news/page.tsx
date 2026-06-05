@@ -1,11 +1,14 @@
 import { getSession } from "@/lib/get-session";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Newspaper, Plus, Eye, EyeOff, Calendar, User } from "lucide-react";
 import Link from "next/link";
 import { NewsActions } from "@/components/admin/NewsActions";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
+import { adminContainerClass, adminPrimaryBtnClass } from "@/components/admin/admin-styles";
+import { cn } from "@/lib/utils";
 
 export default async function AdminNewsPage() {
   const session = await getSession();
@@ -23,7 +26,6 @@ export default async function AdminNewsPage() {
     redirect("/dashboard");
   }
 
-  // Загружаем все новости
   const news = await prisma.news.findMany({
     include: {
       author: { select: { name: true, email: true } },
@@ -32,81 +34,94 @@ export default async function AdminNewsPage() {
   });
 
   return (
-    <div className="container py-8 px-4">
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Управление новостями</h1>
-          <p className="text-gray-600">Создание и публикация новостей</p>
-        </div>
-        <div className="flex gap-4">
-          <Button asChild>
+    <div className={adminContainerClass}>
+      <AdminPageHeader
+        title="Управление новостями"
+        description="Создание и публикация новостей"
+        actions={
+          <Button asChild className={adminPrimaryBtnClass}>
             <Link href="/admin/news/create">
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="mr-2 h-4 w-4" />
               Создать новость
             </Link>
           </Button>
-          <Button asChild variant="outline">
-            <Link href="/admin">Назад</Link>
-          </Button>
-        </div>
-      </div>
+        }
+      />
 
       <div className="space-y-4">
         {news.map((item) => (
-          <Card key={item.id} className={item.published ? "border-green-200" : "border-yellow-200"}>
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <CardTitle>{item.title}</CardTitle>
-                    {item.published ? (
-                      <Eye className="h-4 w-4 text-green-500" />
-                    ) : (
-                      <EyeOff className="h-4 w-4 text-yellow-500" />
-                    )}
-                  </div>
-                  <CardDescription className="mb-4 line-clamp-3">{item.content}</CardDescription>
-                  <div className="flex items-center gap-4 text-sm text-gray-600">
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4" />
-                      <span>{item.author.name || item.author.email}</span>
+          <DashboardCard key={item.id}>
+            <DashboardCardBody className="p-0">
+              <div className="border-b border-slate-100 px-6 py-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-2 flex flex-wrap items-center gap-2">
+                      <h2 className="text-lg font-semibold text-slate-900">{item.title}</h2>
+                      <span
+                        className={cn(
+                          "inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium",
+                          item.published
+                            ? "bg-emerald-50 text-emerald-700"
+                            : "bg-amber-50 text-amber-800"
+                        )}
+                      >
+                        {item.published ? (
+                          <>
+                            <Eye className="h-3.5 w-3.5" />
+                            Опубликовано
+                          </>
+                        ) : (
+                          <>
+                            <EyeOff className="h-3.5 w-3.5" />
+                            Черновик
+                          </>
+                        )}
+                      </span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      <span>Создана: {new Date(item.createdAt).toLocaleDateString("ru-RU")}</span>
-                    </div>
-                    {item.publishedAt && (
+                    <p className="mb-4 line-clamp-3 text-sm text-slate-600">{item.content}</p>
+                    <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500">
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4" />
+                        <span>{item.author.name || item.author.email}</span>
+                      </div>
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4" />
-                        <span>Опубликована: {new Date(item.publishedAt).toLocaleDateString("ru-RU")}</span>
+                        <span>Создана: {new Date(item.createdAt).toLocaleDateString("ru-RU")}</span>
                       </div>
-                    )}
+                      {item.publishedAt && (
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4" />
+                          <span>
+                            Опубликована: {new Date(item.publishedAt).toLocaleDateString("ru-RU")}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
-            </CardHeader>
-            <CardContent>
-              <NewsActions newsId={item.id} published={item.published} />
-            </CardContent>
-          </Card>
+              <div className="px-6 py-4">
+                <NewsActions newsId={item.id} published={item.published} />
+              </div>
+            </DashboardCardBody>
+          </DashboardCard>
         ))}
       </div>
 
       {news.length === 0 && (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <Newspaper className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500 mb-4">Нет новостей</p>
-            <Button asChild>
+        <DashboardCard className="border-dashed bg-slate-50/80">
+          <DashboardCardBody className="py-12 text-center">
+            <Newspaper className="mx-auto mb-4 h-12 w-12 text-slate-300" />
+            <p className="mb-4 text-slate-500">Нет новостей</p>
+            <Button asChild className={adminPrimaryBtnClass}>
               <Link href="/admin/news/create">
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="mr-2 h-4 w-4" />
                 Создать первую новость
               </Link>
             </Button>
-          </CardContent>
-        </Card>
+          </DashboardCardBody>
+        </DashboardCard>
       )}
     </div>
   );
 }
-

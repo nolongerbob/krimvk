@@ -6,10 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
 import { cn } from "@/lib/utils";
-import {
-  dashboardButtonClass,
-  dashboardPageClass,
-} from "@/components/dashboard/dashboard-styles";
+import { dashboardButtonClass } from "@/components/dashboard/dashboard-styles";
 import {
   Dialog,
   DialogContent,
@@ -546,12 +543,7 @@ export function WaterQualityClient({ initialDistricts }: WaterQualityClientProps
   };
 
   return (
-    <div
-      className={cn(
-        dashboardPageClass,
-        "container max-w-6xl px-4 py-8 [&_button]:!rounded-none [&_input]:!rounded-none [&_select]:!rounded-none"
-      )}
-    >
+    <div className="container max-w-6xl px-4 py-8">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="mb-2 text-3xl font-bold tracking-tight text-slate-900">

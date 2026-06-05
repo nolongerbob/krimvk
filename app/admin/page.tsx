@@ -1,23 +1,23 @@
 import { getSession } from "@/lib/get-session";
 import { redirect } from "next/navigation";
 import { prisma, withRetry } from "@/lib/prisma";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
+import { AdminStatTile } from "@/components/admin/AdminStatTile";
+import { AdminModuleCard } from "@/components/admin/AdminModuleCard";
+import { AdminNotificationsBadge } from "@/components/admin/AdminNotificationsBadge";
+import { adminContainerClass } from "@/components/admin/admin-styles";
 import {
   FileText,
   MessageSquare,
   Newspaper,
   Users,
   AlertCircle,
-  CheckCircle,
   Clock,
   Settings,
   Droplet,
   FileCheck,
   CreditCard,
 } from "lucide-react";
-import { AdminNotificationsBadge } from "@/components/admin/AdminNotificationsBadge";
 
 export const dynamic = 'force-dynamic';
 
@@ -28,7 +28,6 @@ export default async function AdminPage() {
     redirect("/login?callbackUrl=/admin");
   }
 
-  // Проверяем, что пользователь - администратор
   let user;
   try {
     user = await withRetry(() =>
@@ -39,13 +38,18 @@ export default async function AdminPage() {
     );
   } catch (error) {
     console.error("Failed to fetch user:", error);
-    // Возвращаем ошибку подключения
     return (
-      <div className="container py-8 px-4">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-          <h1 className="text-2xl font-bold text-red-800 mb-2">Ошибка подключения к базе данных</h1>
-          <p className="text-red-600">Не удалось подключиться к базе данных. Пожалуйста, попробуйте позже.</p>
-        </div>
+      <div className={adminContainerClass}>
+        <DashboardCard className="border-red-200 bg-red-50">
+          <DashboardCardBody>
+            <h1 className="mb-2 text-2xl font-bold text-red-800">
+              Ошибка подключения к базе данных
+            </h1>
+            <p className="text-red-600">
+              Не удалось подключиться к базе данных. Пожалуйста, попробуйте позже.
+            </p>
+          </DashboardCardBody>
+        </DashboardCard>
       </div>
     );
   }
@@ -54,7 +58,6 @@ export default async function AdminPage() {
     redirect("/dashboard");
   }
 
-  // Загружаем статистику с обработкой ошибок
   const [
     pendingApplications,
     inProgressApplications,
@@ -91,200 +94,121 @@ export default async function AdminPage() {
   });
 
   return (
-    <div className="container py-8 px-4">
+    <div className={adminContainerClass}>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Админ-панель</h1>
-        <p className="text-gray-600">Управление системой</p>
+        <h1 className="mb-2 text-4xl font-bold tracking-tight text-slate-900">
+          Админ-панель
+        </h1>
+        <p className="text-slate-600">Управление системой</p>
       </div>
 
-      {/* Статистика */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Новые заявки</CardTitle>
-            <Clock className="h-4 w-4 text-yellow-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{pendingApplications}</div>
-            <p className="text-xs text-muted-foreground">Требуют обработки</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">В работе</CardTitle>
-            <AlertCircle className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{inProgressApplications}</div>
-            <p className="text-xs text-muted-foreground">Активные заявки</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Вопросы</CardTitle>
-            <MessageSquare className="h-4 w-4 text-purple-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{unansweredQuestionsCount}</div>
-            <p className="text-xs text-muted-foreground">Без ответа</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Новости</CardTitle>
-            <Newspaper className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{unpublishedNews}</div>
-            <p className="text-xs text-muted-foreground">Не опубликовано</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Пользователи</CardTitle>
-            <Users className="h-4 w-4 text-gray-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalUsers}</div>
-            <p className="text-xs text-muted-foreground">Всего</p>
-          </CardContent>
-        </Card>
+      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <AdminStatTile
+          title="Новые заявки"
+          value={pendingApplications}
+          subtitle="Требуют обработки"
+          icon={Clock}
+          iconClassName="text-amber-600"
+          href="/admin/applications?status=PENDING"
+        />
+        <AdminStatTile
+          title="В работе"
+          value={inProgressApplications}
+          subtitle="Активные заявки"
+          icon={AlertCircle}
+          iconClassName="text-blue-600"
+          href="/admin/applications?status=IN_PROGRESS"
+        />
+        <AdminStatTile
+          title="Вопросы"
+          value={unansweredQuestionsCount}
+          subtitle="Без ответа"
+          icon={MessageSquare}
+          iconClassName="text-blue-600"
+          href="/admin/questions"
+        />
+        <AdminStatTile
+          title="Новости"
+          value={unpublishedNews}
+          subtitle="Не опубликовано"
+          icon={Newspaper}
+          href="/admin/news"
+        />
+        <AdminStatTile
+          title="Пользователи"
+          value={totalUsers}
+          subtitle="Всего"
+          icon={Users}
+          href="/admin/users"
+        />
       </div>
 
-      {/* Быстрые действия */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <FileText className="h-10 w-10 text-blue-500 mb-2" />
-            <CardTitle className="flex items-center">
-              Управление заявками
-              <AdminNotificationsBadge type="applications" />
-            </CardTitle>
-            <CardDescription>Просмотр и обработка заявок</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild className="w-full">
-              <Link href="/admin/applications">Перейти</Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-lg transition-shadow border-2 border-blue-200 bg-blue-50">
-          <CardHeader>
-            <Settings className="h-10 w-10 text-blue-600 mb-2" />
-            <CardTitle className="flex items-center">
-              Технологическое присоединение
-              <AdminNotificationsBadge type="applications" />
-            </CardTitle>
-            <CardDescription>Заявки на технические условия</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild className="w-full" variant="outline">
-              <Link href="/admin/technical-conditions">Перейти</Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <MessageSquare className="h-10 w-10 text-purple-500 mb-2" />
-            <CardTitle className="flex items-center">
-              Вопросы и ответы
-              <AdminNotificationsBadge type="questions" />
-            </CardTitle>
-            <CardDescription>Ответы на вопросы пользователей</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild className="w-full">
-              <Link href="/admin/questions">Перейти</Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <Newspaper className="h-10 w-10 text-green-500 mb-2" />
-            <CardTitle>Управление новостями</CardTitle>
-            <CardDescription>Создание и публикация новостей</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild className="w-full">
-              <Link href="/admin/news">Перейти</Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <Users className="h-10 w-10 text-gray-500 mb-2" />
-            <CardTitle>Пользователи</CardTitle>
-            <CardDescription>Управление пользователями</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild className="w-full">
-              <Link href="/admin/users">Перейти</Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <Droplet className="h-10 w-10 text-cyan-500 mb-2" />
-            <CardTitle>Качество питьевой воды</CardTitle>
-            <CardDescription>Управление разделами, годами и документами</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild className="w-full">
-              <Link href="/admin/water-quality">Перейти</Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <FileText className="h-10 w-10 text-blue-500 mb-2" />
-            <CardTitle>Раскрытие информации</CardTitle>
-            <CardDescription>Управление документами раскрытия информации</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild className="w-full">
-              <Link href="/admin/disclosure">Перейти</Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <FileCheck className="h-10 w-10 text-purple-500 mb-2" />
-            <CardTitle>Договоры</CardTitle>
-            <CardDescription>Создание договоров и управление пользователями</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild className="w-full">
-              <Link href="/admin/contracts">Перейти</Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Работа с лицевым счетом (прямой доступ в 1С) */}
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <CreditCard className="h-10 w-10 text-indigo-500 mb-2" />
-            <CardTitle>Работа с лицевым счетом</CardTitle>
-            <CardDescription>Прямой доступ к л/с в 1С: квитанция, показания, платежи</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild className="w-full" variant="outline">
-              <Link href="/admin/direct-account">Перейти</Link>
-            </Button>
-          </CardContent>
-        </Card>
+      <p className="mb-4 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+        Разделы
+      </p>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <AdminModuleCard
+          href="/admin/applications"
+          title="Управление заявками"
+          description="Просмотр и обработка заявок"
+          icon={FileText}
+          iconClassName="text-blue-600"
+          badge={<AdminNotificationsBadge type="applications" />}
+        />
+        <AdminModuleCard
+          href="/admin/technical-conditions"
+          title="Технологическое присоединение"
+          description="Заявки на технические условия"
+          icon={Settings}
+          iconClassName="text-blue-600"
+          badge={<AdminNotificationsBadge type="applications" />}
+        />
+        <AdminModuleCard
+          href="/admin/questions"
+          title="Вопросы и ответы"
+          description="Ответы на вопросы пользователей"
+          icon={MessageSquare}
+          iconClassName="text-blue-600"
+          badge={<AdminNotificationsBadge type="questions" />}
+        />
+        <AdminModuleCard
+          href="/admin/news"
+          title="Управление новостями"
+          description="Создание и публикация новостей"
+          icon={Newspaper}
+        />
+        <AdminModuleCard
+          href="/admin/users"
+          title="Пользователи"
+          description="Управление пользователями"
+          icon={Users}
+        />
+        <AdminModuleCard
+          href="/admin/water-quality"
+          title="Качество питьевой воды"
+          description="Управление разделами, годами и документами"
+          icon={Droplet}
+          iconClassName="text-blue-600"
+        />
+        <AdminModuleCard
+          href="/admin/disclosure"
+          title="Раскрытие информации"
+          description="Управление документами раскрытия информации"
+          icon={FileText}
+        />
+        <AdminModuleCard
+          href="/admin/contracts"
+          title="Договоры"
+          description="Создание договоров и управление пользователями"
+          icon={FileCheck}
+        />
+        <AdminModuleCard
+          href="/admin/direct-account"
+          title="Работа с лицевым счетом"
+          description="Прямой доступ к л/с в 1С: квитанция, показания, платежи"
+          icon={CreditCard}
+        />
       </div>
     </div>
   );
 }
-

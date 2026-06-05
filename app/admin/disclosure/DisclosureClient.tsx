@@ -1,10 +1,18 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import {
+  adminFieldClass,
+  adminOutlineBtnClass,
+  adminPrimaryBtnClass,
+  adminSectionLabelClass,
+} from "@/components/admin/admin-styles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -228,32 +236,27 @@ export function DisclosureClient({ initialDocuments }: DisclosureClientProps) {
 
   return (
     <div>
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Раскрытие информации</h1>
-          <p className="text-gray-600">Управление документами раскрытия информации</p>
-        </div>
-        <div className="flex gap-4">
-          <Button onClick={openUploadDialog} disabled={loading}>
-            <Plus className="h-4 w-4 mr-2" />
+      <AdminPageHeader
+        title="Раскрытие информации"
+        description="Управление документами раскрытия информации"
+        actions={
+          <Button onClick={openUploadDialog} disabled={loading} className={adminPrimaryBtnClass}>
+            <Plus className="mr-2 h-4 w-4" />
             Добавить документ
           </Button>
-          <Button asChild variant="outline">
-            <Link href="/admin">Назад</Link>
-          </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Фильтры и поиск */}
       <div className="mb-6 space-y-4">
         <div className="grid md:grid-cols-2 gap-4">
           {/* Фильтр по категории */}
           <div>
-            <Label htmlFor="category-filter" className="mb-2 block">
+            <Label htmlFor="category-filter" className={cn("mb-2 block", adminSectionLabelClass)}>
               Категория
             </Label>
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger id="category-filter" className="w-full">
+              <SelectTrigger id="category-filter" className={cn("w-full", adminFieldClass)}>
                 <SelectValue placeholder="Все категории" />
               </SelectTrigger>
               <SelectContent>
@@ -269,18 +272,18 @@ export function DisclosureClient({ initialDocuments }: DisclosureClientProps) {
 
           {/* Поиск */}
           <div>
-            <Label htmlFor="search" className="mb-2 block">
+            <Label htmlFor="search" className={cn("mb-2 block", adminSectionLabelClass)}>
               Поиск
             </Label>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
               <Input
                 id="search"
                 type="text"
                 placeholder="Поиск по названию или имени файла..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className={cn("pl-10", adminFieldClass)}
               />
             </div>
           </div>
@@ -288,7 +291,7 @@ export function DisclosureClient({ initialDocuments }: DisclosureClientProps) {
 
         {/* Информация о результатах */}
         {filteredDocuments.length !== documents.length && (
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-slate-500">
             Показано {filteredDocuments.length} из {documents.length} документов
           </div>
         )}
@@ -296,38 +299,39 @@ export function DisclosureClient({ initialDocuments }: DisclosureClientProps) {
 
       {/* Список документов */}
       {loading && !documents.length ? (
-        <div className="text-center py-12">
-          <p className="text-gray-500">Загрузка...</p>
+        <div className="py-12 text-center">
+          <p className="text-slate-500">Загрузка...</p>
         </div>
       ) : filteredDocuments.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">
+        <DashboardCard className="border-dashed bg-slate-50/80">
+          <DashboardCardBody className="py-12 text-center">
+            <FileText className="mx-auto mb-4 h-12 w-12 text-slate-300" />
+            <p className="text-slate-500">
               {searchQuery ? "Документы не найдены" : "Документы отсутствуют"}
             </p>
-          </CardContent>
-        </Card>
+          </DashboardCardBody>
+        </DashboardCard>
       ) : (
         <div className="grid gap-4">
           {filteredDocuments.map((doc) => (
-            <Card key={doc.id}>
-              <CardHeader>
+            <DashboardCard key={doc.id}>
+              <DashboardCardBody className="p-0">
+                <div className="px-6 py-4">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <CardTitle className="flex items-center gap-2">
+                    <h3 className="mb-2 flex items-center gap-2 text-lg font-semibold text-slate-900">
                       {doc.title}
                       {doc.isActive ? (
-                        <CheckCircle2 className="h-5 w-5 text-green-500" />
+                        <CheckCircle2 className="h-5 w-5 text-emerald-600" />
                       ) : (
-                        <XCircle className="h-5 w-5 text-gray-400" />
+                        <XCircle className="h-5 w-5 text-slate-400" />
                       )}
-                    </CardTitle>
-                    <p className="text-sm text-gray-500 mt-1">
+                    </h3>
+                    <p className="mt-1 text-sm text-slate-500">
                       {doc.fileName} • {formatFileSize(doc.fileSize)}
                     </p>
                     {doc.category && (
-                      <p className="text-xs text-blue-600 mt-1">
+                      <p className="mt-1 text-xs text-blue-600">
                         {categories.find(c => c.value === doc.category)?.label || doc.category}
                       </p>
                     )}
@@ -336,6 +340,7 @@ export function DisclosureClient({ initialDocuments }: DisclosureClientProps) {
                     <Button
                       variant="outline"
                       size="sm"
+                      className={adminOutlineBtnClass}
                       onClick={() => openEditDialog(doc)}
                     >
                       <Edit className="h-4 w-4" />
@@ -343,30 +348,30 @@ export function DisclosureClient({ initialDocuments }: DisclosureClientProps) {
                     <Button
                       variant="outline"
                       size="sm"
+                      className={adminOutlineBtnClass}
                       onClick={() => handleDelete(doc.id)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-4">
+                <div className="mt-4 flex items-center gap-4 border-t border-slate-100 pt-4">
                   <a
                     href={publicFileHref(doc.fileUrl)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline flex items-center gap-2"
+                    className="flex items-center gap-2 text-blue-600 hover:underline"
                   >
                     <FileText className="h-4 w-4" />
                     Открыть документ
                   </a>
-                  <span className="text-sm text-gray-500">
+                  <span className="text-sm text-slate-500">
                     Порядок: {doc.order}
                   </span>
                 </div>
-              </CardContent>
-            </Card>
+                </div>
+              </DashboardCardBody>
+            </DashboardCard>
           ))}
         </div>
       )}

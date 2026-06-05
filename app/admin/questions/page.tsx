@@ -1,9 +1,8 @@
 import { getSession } from "@/lib/get-session";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { AdminQuestionsChat } from "@/components/admin/AdminQuestionsChat";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 export default async function AdminQuestionsPage() {
   const session = await getSession();
@@ -21,7 +20,6 @@ export default async function AdminQuestionsPage() {
     redirect("/dashboard");
   }
 
-  // Загружаем все диалоги
   const questions = await prisma.question.findMany({
     include: {
       user: { select: { name: true, email: true } },
@@ -29,27 +27,22 @@ export default async function AdminQuestionsPage() {
         orderBy: { createdAt: "asc" },
       },
     },
-      orderBy: [
-        { status: "asc" },
-        { updatedAt: "desc" },
-      ],
+    orderBy: [
+      { status: "asc" },
+      { updatedAt: "desc" },
+    ],
   });
 
   return (
-    <div className="p-3">
-      <div className="mb-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Button asChild variant="outline" size="sm">
-            <Link href="/admin">← Админ</Link>
-          </Button>
-          <h1 className="text-lg font-semibold">Вопросы и ответы</h1>
-        </div>
-        <div className="text-sm text-gray-500">
-          {questions.length} диалогов
-        </div>
+    <div className="flex min-h-[calc(100dvh-4rem)] flex-col px-4 py-6">
+      <AdminPageHeader
+        title="Вопросы и ответы"
+        description={`${questions.length} диалогов`}
+        className="mb-4"
+      />
+      <div className="flex min-h-0 flex-1 flex-col">
+        <AdminQuestionsChat questions={questions} />
       </div>
-
-      <AdminQuestionsChat questions={questions} />
     </div>
   );
 }

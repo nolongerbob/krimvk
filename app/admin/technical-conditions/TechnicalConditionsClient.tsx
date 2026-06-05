@@ -2,7 +2,9 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Card, CardContent } from "@/components/ui/card";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
+import { adminSectionLabelClass } from "@/components/admin/admin-styles";
+import { cn } from "@/lib/utils";
 import { FileText, Clock, CheckCircle, AlertCircle } from "lucide-react";
 import { TechnicalConditionsApplication } from "@/components/admin/TechnicalConditionsApplication";
 import { Button } from "@/components/ui/button";
@@ -96,7 +98,7 @@ export function TechnicalConditionsClient({ applications }: TechnicalConditionsC
     <>
       {/* Фильтры по статусу */}
       <div className="mb-6">
-        <h3 className="text-sm font-medium mb-3 text-gray-700">Фильтр по статусу:</h3>
+        <h3 className={cn("mb-3", adminSectionLabelClass)}>Фильтр по статусу</h3>
         <div className="flex flex-wrap gap-2">
           <Button
             variant={activeFilter === "ALL" ? "default" : "outline"}
@@ -143,7 +145,7 @@ export function TechnicalConditionsClient({ applications }: TechnicalConditionsC
             <div className="mb-8">
               <div className="mb-4 flex items-center gap-2">
                 <Clock className="h-5 w-5 text-yellow-500" />
-                <h2 className="text-xl font-bold">Ожидают обработки ({pendingApps.length})</h2>
+                <h2 className="text-xl font-bold text-slate-900">Ожидают обработки ({pendingApps.length})</h2>
               </div>
               <div className="space-y-4">
                 {pendingApps.map((app) => (
@@ -209,16 +211,16 @@ export function TechnicalConditionsClient({ applications }: TechnicalConditionsC
 
       {/* Пустое состояние */}
       {filteredApplications.length === 0 && (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">
+        <DashboardCard className="border-dashed bg-slate-50/80">
+          <DashboardCardBody className="py-12 text-center">
+            <FileText className="mx-auto mb-4 h-12 w-12 text-slate-300" />
+            <p className="text-slate-500">
               {activeFilter === "ALL" 
                 ? "Нет заявок на технологическое присоединение"
                 : "Нет заявок с выбранным статусом"}
             </p>
-          </CardContent>
-        </Card>
+          </DashboardCardBody>
+        </DashboardCard>
       )}
     </>
   );

@@ -1,6 +1,7 @@
 "use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
+import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { User, Phone, MapPin, FileText, Building, Settings, Calendar, FileCheck } from "lucide-react";
@@ -235,49 +236,49 @@ export function TechnicalConditionsApplication({ application }: TechnicalConditi
       
       // Показываем базовую информацию даже если JSON не парсится
       return (
-        <Card className="border-2 border-blue-200 bg-blue-50">
-          <CardHeader>
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <CardTitle>Заявка на технические условия</CardTitle>
-                  <Badge variant="outline" className="bg-blue-100">Технические условия</Badge>
-                </div>
-                <div className="space-y-2 text-sm text-gray-600">
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    <span>{extractedFullName}</span>
+        <DashboardCard>
+          <DashboardCardBody className="p-0">
+            <div className="border-b border-slate-100 px-6 py-4">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="mb-2 flex items-center gap-2">
+                    <h3 className="text-lg font-semibold text-slate-900">Заявка на технические условия</h3>
+                    <Badge variant="outline" className="rounded-none bg-blue-50">Технические условия</Badge>
                   </div>
-                  {application.address && (
+                  <div className="space-y-2 text-sm text-slate-600">
                     <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4" />
-                      <span>{application.address}</span>
+                      <User className="h-4 w-4" />
+                      <span>{extractedFullName}</span>
                     </div>
-                  )}
-                  <div>
-                    Создана: {new Date(application.createdAt).toLocaleDateString("ru-RU")}
+                    {application.address && (
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4" />
+                        <span>{application.address}</span>
+                      </div>
+                    )}
+                    <div>
+                      Создана: {new Date(application.createdAt).toLocaleDateString("ru-RU")}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </CardHeader>
-        <CardContent>
-          <div className="flex gap-2 items-center flex-wrap">
-            <ApplicationDetails application={application} />
-            <ApplicationActions 
-              applicationId={application.id} 
-              currentStatus={application.status}
-              isTechnicalConditions={true}
-            />
-            <Button asChild variant="outline" className="bg-green-50 hover:bg-green-100 border-green-300 text-green-700">
-              <Link href={`/admin/contracts/create?fromApplication=${application.id}`}>
-                <FileCheck className="h-4 w-4 mr-2" />
-                Создать договор
-              </Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+            <div className="flex flex-wrap items-center gap-2 px-6 py-4">
+              <ApplicationDetails application={application} />
+              <ApplicationActions 
+                applicationId={application.id} 
+                currentStatus={application.status}
+                isTechnicalConditions={true}
+              />
+              <Button asChild variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100">
+                <Link href={`/admin/contracts/create?fromApplication=${application.id}`}>
+                  <FileCheck className="mr-2 h-4 w-4" />
+                  Создать договор
+                </Link>
+              </Button>
+            </div>
+          </DashboardCardBody>
+        </DashboardCard>
     );
   }
   return null;
@@ -289,13 +290,14 @@ export function TechnicalConditionsApplication({ application }: TechnicalConditi
     : "не указано";
 
   return (
-    <Card className="border-2 border-blue-200 bg-blue-50">
-      <CardHeader>
+    <DashboardCard>
+      <DashboardCardBody className="p-0">
+        <div className="border-b border-slate-100 px-6 py-4">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <CardTitle>Заявка на технические условия</CardTitle>
-              <Badge variant="outline" className="bg-blue-100">Технические условия</Badge>
+            <div className="mb-2 flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-slate-900">Заявка на технические условия</h3>
+              <Badge variant="outline" className="rounded-none bg-blue-50">Технические условия</Badge>
             </div>
             
             <div className="space-y-3 mt-4">
@@ -466,24 +468,23 @@ export function TechnicalConditionsApplication({ application }: TechnicalConditi
             </div>
           </div>
         </div>
-      </CardHeader>
-      <CardContent>
-        <div className="flex gap-2 items-center flex-wrap">
+        </div>
+        <div className="flex flex-wrap items-center gap-2 px-6 py-4">
           <ApplicationDetails application={application} />
           <ApplicationActions 
             applicationId={application.id} 
             currentStatus={application.status}
             isTechnicalConditions={true}
           />
-          <Button asChild variant="outline" className="bg-green-50 hover:bg-green-100 border-green-300 text-green-700">
+          <Button asChild variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100">
             <Link href={`/admin/contracts/create?fromApplication=${application.id}`}>
-              <FileCheck className="h-4 w-4 mr-2" />
+              <FileCheck className="mr-2 h-4 w-4" />
               Создать договор
             </Link>
           </Button>
         </div>
-      </CardContent>
-    </Card>
+      </DashboardCardBody>
+    </DashboardCard>
   );
 }
 

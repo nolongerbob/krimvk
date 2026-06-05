@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
+import { adminFieldClass, adminOutlineBtnClass } from "@/components/admin/admin-styles";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FileCheck, Trash2, Edit, Copy, Search, Eye, X, Filter } from "lucide-react";
@@ -189,15 +191,15 @@ export function ContractsClient({ contracts: initialContracts }: ContractsClient
 
   if (initialContracts.length === 0) {
     return (
-      <Card>
-        <CardContent className="py-12 text-center">
-          <FileCheck className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600 mb-4">Договоры не найдены</p>
+      <DashboardCard className="border-dashed bg-slate-50/80">
+        <DashboardCardBody className="py-12 text-center">
+          <FileCheck className="mx-auto mb-4 h-12 w-12 text-slate-300" />
+          <p className="mb-4 text-slate-600">Договоры не найдены</p>
           <Button asChild>
             <Link href="/admin/contracts/create">Создать первый договор</Link>
           </Button>
-        </CardContent>
-      </Card>
+        </DashboardCardBody>
+      </DashboardCard>
     );
   }
 
@@ -209,8 +211,8 @@ export function ContractsClient({ contracts: initialContracts }: ContractsClient
   return (
     <div className="space-y-4">
       {/* Панель поиска и фильтров */}
-      <Card className="border-2 border-blue-200 shadow-md">
-        <CardContent className="p-4">
+      <DashboardCard>
+        <DashboardCardBody>
           <div className="space-y-4">
             {/* Поиск */}
             <div className="relative">
@@ -219,7 +221,7 @@ export function ContractsClient({ contracts: initialContracts }: ContractsClient
                 placeholder="Быстрый поиск: фамилия, имя, номер договора, телефон, адрес..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-12 pr-10 h-12 text-base"
+                className={cn("h-12 pl-12 pr-10 text-base", adminFieldClass)}
                 autoFocus
               />
               {searchTerm && (
@@ -300,13 +302,12 @@ export function ContractsClient({ contracts: initialContracts }: ContractsClient
               </div>
             )}
           </div>
-        </CardContent>
-      </Card>
+        </DashboardCardBody>
+      </DashboardCard>
 
-      {/* Результаты поиска */}
       {filteredContracts.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
+        <DashboardCard className="border-dashed bg-slate-50/80">
+          <DashboardCardBody className="py-12 text-center">
             <FileCheck className="h-16 w-16 text-gray-300 mx-auto mb-4" />
             <p className="text-lg font-medium text-gray-600 mb-2">
               {searchTerm || statusFilter !== "all"
@@ -323,13 +324,13 @@ export function ContractsClient({ contracts: initialContracts }: ContractsClient
                 Сбросить фильтры
               </Button>
             )}
-          </CardContent>
-        </Card>
+          </DashboardCardBody>
+        </DashboardCard>
       ) : (
         <div className="space-y-3">
           {filteredContracts.map((contract) => (
-            <Card key={contract.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-4">
+            <DashboardCard key={contract.id}>
+              <DashboardCardBody>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
@@ -397,8 +398,8 @@ export function ContractsClient({ contracts: initialContracts }: ContractsClient
                     </Button>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </DashboardCardBody>
+            </DashboardCard>
           ))}
         </div>
       )}

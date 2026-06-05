@@ -1,9 +1,9 @@
 import { getSession } from "@/lib/get-session";
 import { redirect } from "next/navigation";
 import { prisma, withRetry } from "@/lib/prisma";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { AutoRefresh } from "@/components/admin/AutoRefresh";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { adminContainerClass } from "@/components/admin/admin-styles";
 import { ApplicationsClient } from "./ApplicationsClient";
 
 export default async function AdminApplicationsPage() {
@@ -127,21 +127,12 @@ export default async function AdminApplicationsPage() {
 
 
   return (
-    <div className="container py-8 px-4">
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Управление заявками</h1>
-          <p className="text-gray-600">Обработка заявок пользователей</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <AutoRefresh interval={15} />
-          <Button asChild variant="outline">
-            <Link href="/admin">Назад</Link>
-          </Button>
-        </div>
-      </div>
-
-
+    <div className={adminContainerClass}>
+      <AdminPageHeader
+        title="Управление заявками"
+        description="Обработка заявок пользователей"
+        actions={<AutoRefresh interval={15} />}
+      />
       <ApplicationsClient applications={applications} categories={categories.map(c => c.category)} />
     </div>
   );

@@ -2,7 +2,9 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
+import { adminSectionLabelClass } from "@/components/admin/admin-styles";
+import { cn } from "@/lib/utils";
 import { FileText, Clock, CheckCircle, XCircle, AlertCircle, User, Phone, MapPin } from "lucide-react";
 import { ApplicationActions } from "@/components/admin/ApplicationActions";
 import { ApplicationFilters } from "@/components/admin/ApplicationFilters";
@@ -49,26 +51,22 @@ const statusConfig = {
   PENDING: {
     label: "Ожидает обработки",
     icon: Clock,
-    className: "text-yellow-500",
-    bgClassName: "bg-yellow-50",
+    tagClass: "bg-amber-50 text-amber-800",
   },
   IN_PROGRESS: {
     label: "В работе",
     icon: AlertCircle,
-    className: "text-blue-500",
-    bgClassName: "bg-blue-50",
+    tagClass: "bg-blue-50 text-blue-700",
   },
   COMPLETED: {
     label: "Завершена",
     icon: CheckCircle,
-    className: "text-green-500",
-    bgClassName: "bg-green-50",
+    tagClass: "bg-emerald-50 text-emerald-700",
   },
   CANCELLED: {
     label: "Отменена",
     icon: XCircle,
-    className: "text-red-500",
-    bgClassName: "bg-red-50",
+    tagClass: "bg-slate-100 text-slate-600",
   },
 };
 
@@ -257,56 +255,61 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
     }
 
     return (
-      <Card key={app.id} className={`${status.bgClassName} border-2`}>
-        <CardHeader>
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <CardTitle className="mb-2">{app.service.title}</CardTitle>
-              <CardDescription className="mb-2">{displayDescription}</CardDescription>
-              <div className="space-y-2 text-sm text-gray-600">
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  <span>
-                    {extractFullName(safeParseDescription(app.description), app.user.name, app.user.email)}
-                  </span>
-                </div>
-                {app.user.phone && (
+      <DashboardCard key={app.id}>
+        <DashboardCardBody className="p-0">
+          <div className="border-b border-slate-100 px-6 py-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <h3 className="mb-2 text-lg font-semibold text-slate-900">{app.service.title}</h3>
+                <p className="mb-3 text-sm text-slate-600">{displayDescription}</p>
+                <div className="space-y-2 text-sm text-slate-500">
                   <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4" />
-                    <span>{app.user.phone}</span>
+                    <User className="h-4 w-4 shrink-0" />
+                    <span>
+                      {extractFullName(safeParseDescription(app.description), app.user.name, app.user.email)}
+                    </span>
                   </div>
-                )}
-                {app.address && (
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4" />
-                    <span>{app.address}</span>
+                  {app.user.phone && (
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-4 w-4 shrink-0" />
+                      <span>{app.user.phone}</span>
+                    </div>
+                  )}
+                  {app.address && (
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 shrink-0" />
+                      <span>{app.address}</span>
+                    </div>
+                  )}
+                  <div>
+                    Создана: {new Date(app.createdAt).toLocaleDateString("ru-RU")}
                   </div>
-                )}
-                <div>
-                  Создана: {new Date(app.createdAt).toLocaleDateString("ru-RU")}
                 </div>
               </div>
-            </div>
-            <div className={`flex items-center gap-2 ${status.className}`}>
-              <StatusIcon className="h-5 w-5" />
-              <span className="font-medium">{status.label}</span>
+              <span
+                className={cn(
+                  "inline-flex shrink-0 items-center gap-1.5 px-2.5 py-1 text-xs font-medium",
+                  status.tagClass
+                )}
+              >
+                <StatusIcon className="h-3.5 w-3.5" />
+                {status.label}
+              </span>
             </div>
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-2 items-center">
+          <div className="flex flex-wrap items-center gap-2 px-6 py-4">
             <ApplicationDetails application={app} />
             <ApplicationActions applicationId={app.id} currentStatus={app.status} />
           </div>
-        </CardContent>
-      </Card>
+        </DashboardCardBody>
+      </DashboardCard>
     );
   };
 
   return (
     <>
       <div className="mb-6">
-        <h3 className="text-sm font-medium mb-3 text-gray-700">Фильтр по статусу:</h3>
+        <h3 className={cn("mb-3", adminSectionLabelClass)}>Фильтр по статусу</h3>
         <ApplicationFilters
           activeFilter={activeFilter}
           onFilterChange={setActiveFilter}
@@ -315,7 +318,7 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
       </div>
       
       <div className="mb-6">
-        <h3 className="text-sm font-medium mb-3 text-gray-700">Фильтр по категории услуги:</h3>
+        <h3 className={cn("mb-3", adminSectionLabelClass)}>Фильтр по категории услуги</h3>
         <ServiceCategoryFilters
           categories={categories}
           activeCategory={activeCategory}
@@ -340,13 +343,13 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
 
       {/* Завершенные заявки в отдельном разделе (когда выбран "Все") */}
       {activeFilter === "ALL" && completedApplications.length > 0 && (
-        <div className="mt-8 pt-8 border-t">
+        <div className="mt-8 border-t border-slate-200 pt-8">
           <div className="mb-4">
-            <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
-              <CheckCircle className="h-6 w-6 text-green-500" />
+            <h2 className="mb-2 flex items-center gap-2 text-2xl font-bold text-slate-900">
+              <CheckCircle className="h-6 w-6 text-emerald-600" />
               Завершенные заявки
             </h2>
-            <p className="text-gray-600 text-sm">
+            <p className="text-sm text-slate-500">
               Всего завершено: {completedApplications.length}
             </p>
           </div>
@@ -358,24 +361,23 @@ export function ApplicationsClient({ applications, categories }: ApplicationsCli
 
       {/* Пустое состояние */}
       {filteredApplications.length === 0 && completedApplications.length === 0 && (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">Нет заявок</p>
-          </CardContent>
-        </Card>
+        <DashboardCard className="border-dashed bg-slate-50/80">
+          <DashboardCardBody className="py-12 text-center">
+            <FileText className="mx-auto mb-4 h-12 w-12 text-slate-300" />
+            <p className="text-slate-500">Нет заявок</p>
+          </DashboardCardBody>
+        </DashboardCard>
       )}
 
-      {/* Пустое состояние для активного фильтра */}
       {filteredApplications.length === 0 && 
        completedApplications.length > 0 && 
        activeFilter !== "COMPLETED" && (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">Нет заявок с выбранным статусом</p>
-          </CardContent>
-        </Card>
+        <DashboardCard className="border-dashed bg-slate-50/80">
+          <DashboardCardBody className="py-12 text-center">
+            <FileText className="mx-auto mb-4 h-12 w-12 text-slate-300" />
+            <p className="text-slate-500">Нет заявок с выбранным статусом</p>
+          </DashboardCardBody>
+        </DashboardCard>
       )}
     </>
   );

@@ -1,9 +1,9 @@
 import { getSession } from "@/lib/get-session";
 import { redirect } from "next/navigation";
 import { prisma, withRetry } from "@/lib/prisma";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { AutoRefresh } from "@/components/admin/AutoRefresh";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { adminContainerClass } from "@/components/admin/admin-styles";
 import { TechnicalConditionsClient } from "./TechnicalConditionsClient";
 
 export const dynamic = 'force-dynamic';
@@ -139,20 +139,12 @@ export default async function AdminTechnicalConditionsPage() {
 
 
   return (
-    <div className="container py-8 px-4">
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Технологическое присоединение</h1>
-          <p className="text-gray-600">Заявки на выдачу технических условий</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <AutoRefresh interval={15} />
-          <Button asChild variant="outline">
-            <Link href="/admin">Назад</Link>
-          </Button>
-        </div>
-      </div>
-
+    <div className={adminContainerClass}>
+      <AdminPageHeader
+        title="Технологическое присоединение"
+        description="Заявки на выдачу технических условий"
+        actions={<AutoRefresh interval={15} />}
+      />
       <TechnicalConditionsClient applications={applications} />
     </div>
   );

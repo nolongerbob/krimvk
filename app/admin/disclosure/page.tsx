@@ -1,6 +1,7 @@
 import { getSession } from "@/lib/get-session";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { adminContainerClass } from "@/components/admin/admin-styles";
 import { DisclosureClient } from "./DisclosureClient";
 
 export const dynamic = 'force-dynamic';
@@ -30,7 +31,7 @@ export default async function AdminDisclosurePage() {
   });
 
   return (
-    <div className="container py-8 px-4">
+    <div className={adminContainerClass}>
       <DisclosureClient initialDocuments={JSON.parse(JSON.stringify(documents))} />
     </div>
   );

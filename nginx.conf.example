@@ -48,6 +48,16 @@ server {
     # Режим обслуживания: error_page 502/503/504 + .maintenance (см. docs/MAINTENANCE.md)
     include snippets/krimvk-maintenance.conf;
 
+    # NextAuth опрашивает session/csrf — не лимитировать как login (иначе 429 и CLIENT_FETCH_ERROR)
+    location ~ ^/api/auth/(session|csrf|providers|_log)$ {
+        proxy_pass http://krimvk_prod;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
     location /api/auth/ {
         limit_req zone=krimvk_auth burst=5 nodelay;
         proxy_pass http://krimvk_prod;

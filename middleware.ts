@@ -45,6 +45,7 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|maintenance\\.html|images/).*)',
+    // Исключаем API upload: middleware не должен буферизовать большие multipart-тела
+    '/((?!_next/static|_next/image|favicon.ico|maintenance\\.html|images/|api/.+/upload).*)',
   ],
 };

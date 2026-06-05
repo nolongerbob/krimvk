@@ -433,10 +433,20 @@ export function WaterQualityClient({ initialDistricts }: WaterQualityClientProps
         setSelectedYearId(null);
         const fileInput = document.getElementById("file-upload") as HTMLInputElement;
         if (fileInput) fileInput.value = "";
+      } else if (response.status === 413) {
+        alert(
+          "Файл не принят сервером (лимит размера). Нужны nginx 200M, npm run build после обновления next.config, или сожмите PDF до 50 МБ."
+        );
       } else {
-        const error = await response.json();
-        console.error("Upload error response:", error);
-        alert(error.error || "Ошибка при загрузке файла");
+        let message = "Ошибка при загрузке файла";
+        try {
+          const error = await response.json();
+          console.error("Upload error response:", error);
+          message = error.error || message;
+        } catch {
+          console.error("Upload error, status:", response.status);
+        }
+        alert(message);
       }
     } catch (error) {
       console.error("Error uploading document:", error);

@@ -16,8 +16,19 @@ export async function POST(request: NextRequest) {
     const auth = await requireAdmin();
     if (!auth.ok) return auth.response;
 
-    // Используем streaming для больших файлов
-    const formData = await request.formData();
+    let formData: FormData;
+    try {
+      formData = await request.formData();
+    } catch (e) {
+      console.error("formData parse failed:", e);
+      return NextResponse.json(
+        {
+          error:
+            "Не удалось принять файл (слишком большой или обрезан сервером). Проверьте nginx client_max_body_size и пересоберите приложение после обновления next.config.js.",
+        },
+        { status: 413 }
+      );
+    }
     const file = formData.get("file") as File;
     const yearId = formData.get("yearId") as string;
     

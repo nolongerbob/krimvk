@@ -72,10 +72,13 @@ const nextConfig = {
     // Next 15: async route/page params — миграция по файлам на develop
     ignoreBuildErrors: true,
   },
-  // Увеличиваем лимит размера тела запроса для больших файлов
+  // Лимиты тела запроса: Next 15.5+ буферизует body в middleware/proxy (по умолчанию ~10MB).
+  // Без этого multipart обрезается → "Failed to parse body as FormData".
   experimental: {
+    middlewareClientMaxBodySize: '200mb',
+    proxyClientMaxBodySize: '200mb',
     serverActions: {
-      bodySizeLimit: '50mb', // 50MB для больших файлов
+      bodySizeLimit: '200mb',
     },
   },
   // Явно указываем webpack для разрешения путей

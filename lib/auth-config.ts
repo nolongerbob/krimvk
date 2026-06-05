@@ -217,14 +217,11 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id as string;
-        session.user.email = token.email as string;
-        session.user.name = token.name as string;
-        session.user.role = token.role as string;
-        if (process.env.NODE_ENV === 'development') {
-          console.log('Session callback - role set to:', token.role);
-        }
+      if (session.user && token) {
+        session.user.id = (token.id as string) || (token.sub as string) || '';
+        session.user.email = (token.email as string) || session.user.email || '';
+        session.user.name = (token.name as string) ?? session.user.name ?? null;
+        session.user.role = (token.role as string) || 'USER';
       }
       return session;
     },

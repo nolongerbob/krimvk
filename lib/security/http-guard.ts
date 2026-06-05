@@ -50,6 +50,16 @@ export function applyRateLimit(req: NextRequest): NextResponse | null {
     return null;
   }
 
+  // NextAuth SessionProvider часто опрашивает эти пути — не лимитировать (иначе CLIENT_FETCH_ERROR)
+  if (
+    path === '/api/auth/session' ||
+    path === '/api/auth/csrf' ||
+    path === '/api/auth/providers' ||
+    path === '/api/auth/_log'
+  ) {
+    return null;
+  }
+
   const ip = clientIp(req);
   const keyBase = `${ip}:${path.split('/').slice(0, 4).join('/')}`;
 

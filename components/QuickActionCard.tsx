@@ -17,14 +17,7 @@ interface QuickActionCardProps {
   iconColor?: string;
   publicAccess?: boolean;
   isEmergency?: boolean;
-  /** Контурная кнопка с цветным акцентом (как у аварии) */
-  buttonAccent?: "blue";
 }
-
-const accentButtonClass = {
-  blue: "border-blue-600 text-blue-600 hover:bg-blue-50 hover:text-blue-700",
-  red: "border-red-600 text-red-600 hover:bg-red-50 hover:text-red-700",
-} as const;
 
 const iconMap = {
   Droplet,
@@ -72,17 +65,15 @@ function QuickActionCardContent({
 
 function QuickActionCardFooter({
   label,
-  isEmergency,
-  buttonAccent,
   disabled = false,
 }: {
   label: string;
-  isEmergency?: boolean;
-  buttonAccent?: "blue";
   disabled?: boolean;
 }) {
-  const accent = isEmergency ? accentButtonClass.red : buttonAccent ? accentButtonClass[buttonAccent] : "";
-  const btnClass = cn(siteOutlineBtnClass, "quick-action-card-footer bvi-no-styles w-full max-w-full box-border pointer-events-none", accent);
+  const btnClass = cn(
+    siteOutlineBtnClass,
+    "quick-action-card-footer bvi-no-styles w-full max-w-full box-border pointer-events-none"
+  );
 
   return (
     <DashboardCardBody className="quick-action-card-footer mt-auto shrink-0 px-5 pt-0 pb-4">
@@ -106,7 +97,6 @@ export function QuickActionCard({
   iconColor = "text-blue-500",
   publicAccess = false,
   isEmergency = false,
-  buttonAccent,
 }: QuickActionCardProps) {
   const { data: session, status } = useSession();
   const isAuthenticated = !!session?.user;
@@ -123,11 +113,7 @@ export function QuickActionCard({
             iconColor={iconColor}
             isEmergency={isEmergency}
           />
-          <QuickActionCardFooter
-            label={title}
-            isEmergency={isEmergency}
-            buttonAccent={buttonAccent}
-          />
+          <QuickActionCardFooter label={title} />
         </DashboardCard>
       </Link>
     );
@@ -143,11 +129,7 @@ export function QuickActionCard({
             description={description}
             iconColor={iconColor}
           />
-          <QuickActionCardFooter
-            label="Загрузка..."
-            buttonAccent={buttonAccent}
-            disabled
-          />
+          <QuickActionCardFooter label="Загрузка..." disabled />
         </DashboardCard>
       </div>
     );
@@ -163,7 +145,7 @@ export function QuickActionCard({
             description={description}
             iconColor={iconColor}
           />
-          <QuickActionCardFooter label="Войти для доступа" buttonAccent={buttonAccent} />
+          <QuickActionCardFooter label="Войти для доступа" />
         </DashboardCard>
       </Link>
     );
@@ -178,7 +160,7 @@ export function QuickActionCard({
           description={description}
           iconColor={iconColor}
         />
-        <QuickActionCardFooter label={title} buttonAccent={buttonAccent} />
+        <QuickActionCardFooter label={title} />
       </DashboardCard>
     </Link>
   );

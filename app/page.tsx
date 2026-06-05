@@ -107,7 +107,6 @@ export default async function HomePage() {
               description="Передать показания счетчиков воды"
               href="/dashboard/meters"
               iconColor="text-blue-500"
-              buttonAccent="blue"
             />
             <QuickActionCard
               iconName="AlertTriangle"

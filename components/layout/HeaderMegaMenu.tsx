@@ -31,7 +31,6 @@ export const companyMegaMenu: MegaMenuSection[] = [
     links: [
       { href: "/o-kompanii/vakansii", label: "Вакансии" },
       { href: "/o-kompanii/istoriya", label: "История предприятия" },
-      { href: "/o-kompanii/kachestvo-vody", label: "Качество питьевой воды" },
       { href: "/o-kompanii/licenzii", label: "Лицензии и заключения" },
       { href: "/o-kompanii/razvitie", label: "Развитие" },
     ],
@@ -51,7 +50,7 @@ export const companyMegaMenu: MegaMenuSection[] = [
     title: "Водоснабжение",
     links: [
       { href: "/o-kompanii/vodosnabzhenie/struktura", label: "Структура водоснабжения" },
-      { href: "/o-kompanii/vodosnabzhenie/kachestvo-vody", label: "Качество воды" },
+      { href: "/o-kompanii/kachestvo-vody", label: "Качество питьевой воды" },
     ],
   },
   {

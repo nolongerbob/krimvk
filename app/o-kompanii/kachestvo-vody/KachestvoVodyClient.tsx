@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -11,8 +11,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Droplet, FileText, Calendar, MapPin, Search, Building2, ChevronDown } from "lucide-react";
+import { Droplet, FileText, Calendar, MapPin, Search, Building2 } from "lucide-react";
 import { publicFileHref } from "@/lib/public-file-url";
+import { cn } from "@/lib/utils";
 
 interface WaterQualityDocument {
   id: string;
@@ -45,12 +46,16 @@ interface KachestvoVodyClientProps {
   districts: WaterQualityDistrict[];
 }
 
+const cardClass = "rounded-none border border-gray-200 shadow-none";
+const fieldClass =
+  "h-10 rounded-none border-gray-200 bg-white focus-visible:border-blue-500 focus-visible:ring-1 focus-visible:ring-blue-500";
+
 function formatFileSize(bytes: number): string {
   if (bytes === 0) return "0 Bytes";
   const k = 1024;
   const sizes = ["Bytes", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
+  return `${Math.round((bytes / Math.pow(k, i)) * 100) / 100} ${sizes[i]}`;
 }
 
 export function KachestvoVodyClient({ districts }: KachestvoVodyClientProps) {
@@ -60,71 +65,54 @@ export function KachestvoVodyClient({ districts }: KachestvoVodyClientProps) {
   const filteredDistricts = useMemo(() => {
     let filtered = districts;
 
-    // Фильтр по району
     if (selectedDistrictId && selectedDistrictId !== "all") {
       filtered = filtered.filter((d) => d.id === selectedDistrictId);
     }
 
-    // Поиск по городам
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
-      filtered = filtered.map((district) => ({
-        ...district,
-        cities: district.cities.filter((city) =>
-          city.name.toLowerCase().includes(query)
-        ),
-      })).filter((district) => district.cities.length > 0);
+      filtered = filtered
+        .map((district) => ({
+          ...district,
+          cities: district.cities.filter((city) =>
+            city.name.toLowerCase().includes(query)
+          ),
+        }))
+        .filter((district) => district.cities.length > 0);
     }
 
     return filtered;
   }, [districts, searchQuery, selectedDistrictId]);
 
   return (
-    <div className="container py-12 px-4 max-w-6xl">
-      {/* Заголовок */}
-      <div className="text-center mb-12 animate-fade-in">
-        <div className="inline-flex items-center justify-center w-20 h-20 bg-blue-100 rounded-full mb-6">
-          <Droplet className="h-10 w-10 text-blue-600" />
+    <div className="flex min-h-[calc(100dvh-4rem)] flex-col bg-gray-50 py-8 md:py-12 pb-14 lg:min-h-[calc(100dvh-4.5rem)]">
+      <div className="container max-w-5xl flex-1 px-4">
+        <div className="mb-10 text-center animate-fade-in md:mb-12">
+          <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-none bg-blue-100">
+            <Droplet className="h-7 w-7 text-blue-600" strokeWidth={1.75} />
+          </div>
+          <h1 className="mx-auto mb-3 max-w-3xl text-center text-3xl font-semibold tracking-tight text-gray-900 md:text-4xl">
+            Качество питьевой воды
+          </h1>
+          <p className="mx-auto max-w-3xl text-center text-base text-gray-600 md:text-lg">
+            Отчёты и документы о качестве питьевой воды по районам, населённым пунктам и
+            годам
+          </p>
         </div>
-        <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">
-          Качество питьевой воды
-        </h1>
-        <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-          Информация о качестве питьевой воды по районам, городам и годам
-        </p>
-      </div>
 
-      {/* Фильтры */}
-      <div className="mb-8 space-y-4">
-        <div className="flex flex-col md:flex-row gap-4">
-          {/* Фильтр по району */}
-          <div className="flex-1">
-            <label htmlFor="district-filter" className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="mb-8 grid gap-4 md:grid-cols-2">
+          <div>
+            <Label htmlFor="district-filter" className="mb-1.5 text-sm text-gray-700">
               Район
-            </label>
-            <Select
-              value={selectedDistrictId}
-              onValueChange={setSelectedDistrictId}
-            >
-              <SelectTrigger 
-                id="district-filter"
-                className="w-full h-11 text-base bg-white border-gray-300 hover:border-blue-400 hover:bg-blue-50/50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm"
-              >
+            </Label>
+            <Select value={selectedDistrictId} onValueChange={setSelectedDistrictId}>
+              <SelectTrigger id="district-filter" className={fieldClass}>
                 <SelectValue placeholder="Все районы" />
               </SelectTrigger>
-              <SelectContent className="max-h-[300px] shadow-lg border-gray-200">
-                <SelectItem 
-                  value="all"
-                  className="cursor-pointer hover:bg-blue-50 focus:bg-blue-50 font-medium text-gray-900"
-                >
-                  Все районы
-                </SelectItem>
+              <SelectContent className="rounded-none border-gray-200">
+                <SelectItem value="all">Все районы</SelectItem>
                 {districts.map((district) => (
-                  <SelectItem 
-                    key={district.id} 
-                    value={district.id}
-                    className="cursor-pointer hover:bg-blue-50 focus:bg-blue-50 text-gray-700"
-                  >
+                  <SelectItem key={district.id} value={district.id}>
                     {district.name}
                   </SelectItem>
                 ))}
@@ -132,112 +120,129 @@ export function KachestvoVodyClient({ districts }: KachestvoVodyClientProps) {
             </Select>
           </div>
 
-          {/* Поиск по городам */}
-          <div className="flex-1">
-            <label htmlFor="city-search" className="block text-sm font-medium text-gray-700 mb-2">
-              Поиск по городам
-            </label>
+          <div>
+            <Label htmlFor="city-search" className="mb-1.5 text-sm text-gray-700">
+              Поиск по населённым пунктам
+            </Label>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <Input
                 id="city-search"
                 type="text"
-                placeholder="Поиск по городам..."
+                placeholder="Введите название…"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className={cn(fieldClass, "pl-9")}
               />
             </div>
           </div>
         </div>
-      </div>
 
-      {filteredDistricts.length === 0 ? (
-        <Card className="text-center py-12">
-          <CardContent>
-            {searchQuery || (selectedDistrictId && selectedDistrictId !== "all") ? (
-              <p className="text-gray-500 text-lg">
-                По запросу ничего не найдено
+        {filteredDistricts.length === 0 ? (
+          <Card className={cn(cardClass, "py-12 text-center")}>
+            <CardContent>
+              <FileText className="mx-auto mb-4 h-10 w-10 text-gray-400" strokeWidth={1.75} />
+              <p className="text-sm text-gray-600">
+                {searchQuery || (selectedDistrictId && selectedDistrictId !== "all")
+                  ? "По запросу ничего не найдено"
+                  : "Информация о качестве питьевой воды пока не добавлена"}
               </p>
-            ) : (
-              <p className="text-gray-500 text-lg">
-                Информация о качестве воды пока не добавлена
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-8">
-          {filteredDistricts.map((district) => (
-            <Card key={district.id} className="shadow-lg">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <Building2 className="h-6 w-6 text-blue-600" />
-                  <CardTitle className="text-2xl">{district.name}</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {district.cities.length === 0 ? (
-                  <p className="text-gray-500">Города для этого района пока не добавлены</p>
-                ) : (
-                  <div className="space-y-6">
-                    {district.cities.map((city) => (
-                      <div key={city.id} className="border-l-4 border-l-green-500 pl-4">
-                        <div className="flex items-center gap-2 mb-3">
-                          <MapPin className="h-5 w-5 text-green-600" />
-                          <h3 className="text-xl font-semibold">{city.name}</h3>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-6">
+            {filteredDistricts.map((district) => (
+              <Card key={district.id} className={cardClass}>
+                <CardHeader className="border-b border-gray-100 px-5 py-4">
+                  <div className="flex items-center gap-3">
+                    <Building2 className="h-5 w-5 text-blue-600" strokeWidth={1.75} />
+                    <CardTitle className="text-lg font-semibold text-gray-900">
+                      {district.name}
+                    </CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-6 px-5 py-5">
+                  {district.cities.length === 0 ? (
+                    <p className="text-sm text-gray-500">
+                      Населённые пункты для этого района пока не добавлены
+                    </p>
+                  ) : (
+                    district.cities.map((city) => (
+                      <div
+                        key={city.id}
+                        className="border border-gray-100 bg-white"
+                      >
+                        <div className="flex items-center gap-2 border-b border-gray-100 bg-gray-50/80 px-4 py-3">
+                          <MapPin className="h-4 w-4 text-gray-500" strokeWidth={1.75} />
+                          <h3 className="text-base font-semibold text-gray-900">
+                            {city.name}
+                          </h3>
                         </div>
+
                         {city.years.length === 0 ? (
-                          <p className="text-gray-500 text-sm">Документы для этого города пока не добавлены</p>
+                          <p className="px-4 py-4 text-sm text-gray-500">
+                            Документы для этого населённого пункта пока не добавлены
+                          </p>
                         ) : (
-                          <div className="space-y-4">
+                          <div className="divide-y divide-gray-100">
                             {city.years.map((year) => (
-                              <div key={year.id} className="border-l-4 border-l-blue-500 pl-4">
-                                <div className="flex items-center gap-2 mb-3">
-                                  <Calendar className="h-5 w-5 text-blue-600" />
-                                  <h4 className="text-lg font-semibold">{year.year} год</h4>
+                              <div key={year.id} className="px-4 py-4">
+                                <div className="mb-3 flex items-center gap-2">
+                                  <Calendar
+                                    className="h-4 w-4 text-gray-500"
+                                    strokeWidth={1.75}
+                                  />
+                                  <h4 className="text-sm font-semibold text-gray-900">
+                                    {year.year} год
+                                  </h4>
                                 </div>
+
                                 {year.documents.length === 0 ? (
-                                  <p className="text-gray-500 text-sm">Документы для этого года пока не добавлены</p>
+                                  <p className="text-sm text-gray-500">
+                                    Документы за этот год пока не добавлены
+                                  </p>
                                 ) : (
-                                  <div className="grid gap-2 mt-3">
+                                  <ul className="space-y-2">
                                     {year.documents.map((doc) => (
-                                      <a
-                                        key={doc.id}
-                                        href={publicFileHref(doc.fileUrl)}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors group"
-                                      >
-                                        <FileText className="h-5 w-5 text-blue-600 flex-shrink-0" />
-                                        <div className="flex-1 min-w-0">
-                                          <p className="font-medium text-gray-900 group-hover:text-blue-600 truncate">
-                                            {doc.fileName}
-                                          </p>
-                                          <p className="text-sm text-gray-500">
-                                            {formatFileSize(doc.fileSize)}
-                                          </p>
-                                        </div>
-                                        <span className="text-xs text-gray-400 flex-shrink-0">
-                                          Скачать
-                                        </span>
-                                      </a>
+                                      <li key={doc.id}>
+                                        <a
+                                          href={publicFileHref(doc.fileUrl)}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="group flex items-center gap-3 rounded-none border border-gray-200 bg-white px-4 py-3 transition-colors hover:border-blue-500 hover:bg-blue-50/40"
+                                        >
+                                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-none bg-blue-100">
+                                            <FileText className="h-5 w-5 text-blue-600" />
+                                          </div>
+                                          <div className="min-w-0 flex-1">
+                                            <p className="truncate text-sm font-medium text-gray-900 group-hover:text-blue-700">
+                                              {doc.fileName}
+                                            </p>
+                                            <p className="text-xs text-gray-500">
+                                              {formatFileSize(doc.fileSize)}
+                                            </p>
+                                          </div>
+                                          <span className="shrink-0 text-xs font-medium text-gray-400 group-hover:text-blue-600">
+                                            Скачать
+                                          </span>
+                                        </a>
+                                      </li>
                                     ))}
-                                  </div>
+                                  </ul>
                                 )}
                               </div>
                             ))}
                           </div>
                         )}
                       </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+                    ))
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

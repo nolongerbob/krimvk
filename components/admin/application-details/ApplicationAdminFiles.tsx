@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DashboardCard, DashboardCardBody } from '@/components/dashboard/DashboardCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FileText, Upload, X } from 'lucide-react';
 import { fileHrefForStoredUrl } from '@/lib/file-url';
+import { cn } from '@/lib/utils';
+import { adminOutlineBtnClass } from '@/components/admin/admin-styles';
 
 type ApplicationFile = {
   id: string;
@@ -100,14 +102,12 @@ export function ApplicationAdminFiles({ applicationId, active }: Props) {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg flex items-center gap-2">
+    <DashboardCard>
+      <DashboardCardBody>
+        <h3 className="mb-4 flex items-center gap-2 text-base font-semibold text-slate-900">
           <FileText className="h-5 w-5" />
           Документы, загруженные администратором ({adminFiles.length})
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+        </h3>
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <Input
@@ -123,7 +123,7 @@ export function ApplicationAdminFiles({ applicationId, active }: Props) {
               variant="outline"
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              className="flex items-center gap-2"
+              className={cn(adminOutlineBtnClass, "flex items-center gap-2")}
             >
               <Upload className="h-4 w-4" />
               {uploading ? 'Загрузка...' : 'Загрузить документ'}
@@ -135,17 +135,17 @@ export function ApplicationAdminFiles({ applicationId, active }: Props) {
               {adminFiles.map((file) => (
                 <div
                   key={file.id}
-                  className="flex items-center justify-between p-2 border rounded-lg hover:bg-gray-50"
+                  className="flex items-center justify-between border border-slate-100 p-2 hover:bg-slate-50"
                 >
                   <a
                     href={fileHrefForStoredUrl(file.filePath)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-blue-600 hover:underline flex-1"
+                    className="flex flex-1 items-center gap-2 text-blue-600 hover:underline"
                   >
                     <FileText className="h-4 w-4" />
                     <span>{file.fileName}</span>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-slate-500">
                       ({(file.fileSize / 1024).toFixed(1)} KB)
                     </span>
                   </a>
@@ -153,7 +153,7 @@ export function ApplicationAdminFiles({ applicationId, active }: Props) {
                     variant="ghost"
                     size="sm"
                     onClick={() => handleDeleteFile(file.id)}
-                    className="text-red-600 hover:text-red-700"
+                    className={cn(adminOutlineBtnClass, "text-red-600 hover:bg-red-50 hover:text-red-700")}
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -162,7 +162,7 @@ export function ApplicationAdminFiles({ applicationId, active }: Props) {
             </div>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </DashboardCardBody>
+    </DashboardCard>
   );
 }

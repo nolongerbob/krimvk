@@ -81,7 +81,7 @@ export function HeaderMegaMenu({ menu, pathname, onLinkClick }: HeaderMegaMenuPr
   const sections = menuMap[menu];
 
   return (
-    <div className="header-mega-menu bvi-no-styles w-full max-w-full overflow-x-hidden border-t border-gray-200/60 bg-white/95 shadow-[0_24px_48px_-12px_rgba(15,23,42,0.12)] animate-in fade-in slide-in-from-top-1 duration-200">
+    <div className="header-mega-menu bvi-no-styles w-full max-w-full overflow-x-hidden border-t border-slate-200/60 bg-white/95 shadow-[0_24px_48px_-12px_rgba(15,23,42,0.12)] animate-in fade-in slide-in-from-top-1 duration-200">
       <div className="header-mega-menu-inner w-full max-w-full box-border px-4 py-6 sm:px-6 sm:py-8 lg:px-10 lg:py-10">
         <div
           className={`header-mega-menu-grid grid w-full max-w-full gap-x-6 gap-y-6 sm:gap-x-10 sm:gap-y-8 lg:gap-x-14 lg:gap-y-10 ${
@@ -92,7 +92,7 @@ export function HeaderMegaMenu({ menu, pathname, onLinkClick }: HeaderMegaMenuPr
         >
           {sections.map((section) => (
             <div key={section.title}>
-              <p className="mb-4 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">
+              <p className="mb-4 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
                 {section.title}
               </p>
               <ul className="space-y-3">
@@ -106,7 +106,7 @@ export function HeaderMegaMenu({ menu, pathname, onLinkClick }: HeaderMegaMenuPr
                         className={`bvi-no-styles group/link relative block max-w-full text-base leading-snug transition-colors ${
                           active
                             ? "font-semibold text-primary"
-                            : "text-gray-900 hover:text-primary"
+                            : "text-slate-900 hover:text-primary"
                         }`}
                       >
                         <span className="relative">

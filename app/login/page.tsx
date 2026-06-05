@@ -18,7 +18,7 @@ function LoginStatusMessage({ children }: { children: React.ReactNode }) {
     <div className="flex flex-1 flex-col lg:grid lg:grid-cols-2">
       <AuthBrandPanel className="min-h-[220px] lg:min-h-0" />
       <div className="flex flex-1 items-center justify-center bg-white px-6 py-12 md:px-10">
-        <p className="text-gray-600">{children}</p>
+        <p className="text-slate-600">{children}</p>
       </div>
     </div>
   );
@@ -140,10 +140,10 @@ function LoginForm() {
     <AuthSplitLayout>
       <div className="w-full max-w-lg animate-fade-in">
         <div className="mb-8 text-center lg:text-left">
-          <h1 className="text-2xl font-semibold tracking-tight text-gray-900 md:text-3xl">
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 md:text-3xl">
             Вход в личный кабинет
           </h1>
-          <p className="mt-2 text-sm text-gray-600 md:text-base">
+          <p className="mt-2 text-sm text-slate-600 md:text-base">
             Войдите в аккаунт для доступа к услугам
           </p>
         </div>
@@ -210,7 +210,7 @@ function LoginForm() {
         </form>
 
         <p className="mt-6 text-center text-sm lg:text-left">
-          <span className="text-gray-600">Нет аккаунта? </span>
+          <span className="text-slate-600">Нет аккаунта? </span>
           <Link href="/register" className="text-blue-600 hover:underline">
             Зарегистрироваться
           </Link>

@@ -3,7 +3,6 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Fragment, useEffect, useState, useRef } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,6 +29,7 @@ import { AddressInput } from "@/components/AddressInput";
 import { ApplicationForm } from "./application-form";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
 
 type PersonType = "individual" | "legal" | null;
 type Step = "stages" | "type" | "abonent" | "object" | "params" | "documents";
@@ -709,8 +709,8 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
   if (success) {
     return (
       <div className="container mx-auto px-4 py-12 max-w-4xl">
-        <Card className="border-green-200 bg-green-50">
-          <CardContent className="py-12 text-center">
+        <DashboardCard className="border-green-200 bg-green-50">
+          <DashboardCardBody className="py-12 text-center">
             <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-green-900 mb-2">
               Заявка успешно отправлена!
@@ -724,28 +724,28 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                 <ArrowRight className="h-4 w-4 ml-2" />
               </a>
             </Button>
-          </CardContent>
-        </Card>
+          </DashboardCardBody>
+        </DashboardCard>
       </div>
     );
   }
 
   return (
-    <div className="bg-gray-50 py-8 md:py-12">
+    <div className="bg-slate-50 py-8 md:py-12">
       <div className="container mx-auto max-w-7xl px-4">
       <div className="mb-8 text-center md:mb-10">
-        <h1 className="mb-3 text-3xl font-semibold tracking-tight text-gray-900 md:text-4xl">
+        <h1 className="mb-3 text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
           Стать абонентом
         </h1>
-        <p className="text-base text-gray-600 md:text-lg">
+        <p className="text-base text-slate-600 md:text-lg">
           Заполните форму для подключения к системам водоснабжения и водоотведения
         </p>
       </div>
 
       {/* Сообщение о существующей заявке */}
       {existingApplication && (
-        <Card className="mb-6 border-blue-200 bg-blue-50">
-          <CardContent className="p-6">
+        <DashboardCard className="mb-6 border-blue-200 bg-blue-50">
+          <DashboardCardBody className="p-6">
             <div className="flex items-start gap-4">
               <AlertCircle className="h-6 w-6 text-blue-600 flex-shrink-0 mt-1" />
               <div className="flex-1">
@@ -769,13 +769,13 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                 </Button>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </DashboardCardBody>
+        </DashboardCard>
       )}
 
       {/* Прогресс-бар */}
-      <Card className="mb-6 rounded-none shadow-none">
-        <CardContent className="overflow-x-auto p-4 md:p-5">
+      <DashboardCard className="mb-6 rounded-none shadow-none">
+        <DashboardCardBody className="overflow-x-auto p-4 md:p-5">
           <div className="min-w-[620px]">
             <div className="flex items-center">
               {steps.map((step, index) => {
@@ -800,8 +800,8 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                           "relative z-10 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-none border bg-white transition-colors sm:h-11 sm:w-11",
                           isActive && "border-cyan-300 bg-cyan-100 text-blue-600",
                           !isActive && isCompleted && "border-green-300 bg-green-50 text-green-600",
-                          !isActive && !isCompleted && isAccessible && "border-gray-200 text-gray-400 hover:border-gray-300 hover:bg-gray-50",
-                          !isAccessible && "cursor-not-allowed border-gray-200 text-gray-300"
+                          !isActive && !isCompleted && isAccessible && "border-slate-200 text-slate-400 hover:border-slate-300 hover:bg-slate-50",
+                          !isAccessible && "cursor-not-allowed border-slate-200 text-slate-300"
                         )}
                       >
                         <StepIcon className="h-5 w-5" />
@@ -811,7 +811,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                       <div
                         className={cn(
                           "relative z-0 mx-1 h-px min-w-[12px] flex-1",
-                          isCompleted ? "bg-green-400" : "bg-gray-200"
+                          isCompleted ? "bg-green-400" : "bg-slate-200"
                         )}
                         aria-hidden
                       />
@@ -829,7 +829,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                       <span
                         className={cn(
                           "text-center text-[11px] font-medium leading-tight sm:text-xs",
-                          isActive ? "text-blue-600" : "text-gray-500"
+                          isActive ? "text-blue-600" : "text-slate-500"
                         )}
                       >
                         {step.label}
@@ -841,19 +841,19 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
               })}
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </DashboardCardBody>
+      </DashboardCard>
 
       {/* Форма */}
-      <Card className="rounded-none shadow-none [&_button]:rounded-none [&_button]:hover:scale-100 [&_button]:active:scale-100 [&_input:not([type=checkbox]):not([type=radio])]:rounded-none [&_select]:rounded-none [&_textarea]:rounded-none">
+      <DashboardCard className="rounded-none shadow-none [&_button]:rounded-none [&_button]:hover:scale-100 [&_button]:active:scale-100 [&_input:not([type=checkbox]):not([type=radio])]:rounded-none [&_select]:rounded-none [&_textarea]:rounded-none">
         {currentStep !== "stages" && (
-          <CardHeader>
-            <CardTitle className="text-2xl font-semibold tracking-tight">
+          <div className="p-6 pb-4">
+            <h2 className="text-2xl font-semibold tracking-tight">
               {steps.find((s) => s.id === currentStep)?.label}
-            </CardTitle>
-          </CardHeader>
+            </h2>
+          </div>
         )}
-        <CardContent className={currentStep === "stages" ? "pt-6" : undefined}>
+        <DashboardCardBody className={currentStep === "stages" ? "pt-6" : undefined}>
           {error && (
             <Alert variant="destructive" className="mb-6 rounded-none">
               <AlertCircle className="h-4 w-4" />
@@ -880,13 +880,13 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
           {/* Шаг 0: Этапы подключения */}
           {currentStep === "stages" && (
             <div className="space-y-6">
-              <p className="text-base text-gray-600">
+              <p className="text-base text-slate-600">
                 Ознакомьтесь с процессом подключения к системам водоснабжения и водоотведения. После этого вы
                 перейдёте к заполнению заявки.
               </p>
 
-              <div className="relative ml-1 border border-gray-200 bg-white p-6 md:p-8">
-                <div className="absolute bottom-6 left-[23px] top-6 w-px bg-gray-200 md:bottom-8 md:left-[27px] md:top-8" aria-hidden />
+              <div className="relative ml-1 border border-slate-200 bg-white p-6 md:p-8">
+                <div className="absolute bottom-6 left-[23px] top-6 w-px bg-slate-200 md:bottom-8 md:left-[27px] md:top-8" aria-hidden />
                 <div className="space-y-8">
                   {connectionStages.map((stage, index) => {
                     const isHighlighted = index === 0;
@@ -894,19 +894,19 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                       <div key={stage.title} className="relative flex gap-4 md:gap-5">
                         <div
                           className={cn(
-                            "relative z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-xs font-medium md:h-7 md:w-7",
+                            "relative z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-none border text-xs font-medium md:h-7 md:w-7",
                             isHighlighted
                               ? "border-blue-500 bg-blue-50 text-blue-600"
-                              : "border-gray-300 bg-white text-gray-500"
+                              : "border-slate-300 bg-white text-slate-500"
                           )}
                         >
                           {index + 1}
                         </div>
                         <div className="min-w-0 flex-1 pt-0">
-                          <h3 className="mb-1 text-base font-semibold text-gray-900 md:text-lg">{stage.title}</h3>
-                          <p className="text-sm leading-relaxed text-gray-500">{stage.description}</p>
+                          <h3 className="mb-1 text-base font-semibold text-slate-900 md:text-lg">{stage.title}</h3>
+                          <p className="text-sm leading-relaxed text-slate-500">{stage.description}</p>
                           {"duration" in stage && stage.duration && (
-                            <div className="mt-2 flex items-center gap-2 text-xs text-gray-400">
+                            <div className="mt-2 flex items-center gap-2 text-xs text-slate-400">
                               <Clock className="h-3 w-3 shrink-0" />
                               <span>{stage.duration}</span>
                             </div>
@@ -918,7 +918,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                 </div>
               </div>
 
-              <div className="border-t border-gray-200 pt-4">
+              <div className="border-t border-slate-200 pt-4">
                 <Button asChild variant="outline" size="sm" className="w-full rounded-none hover:scale-100 active:scale-100">
                   <Link href="/abonenty/platy-uslugi/podklyuchenie">
                     <FileText className="mr-2 h-4 w-4" />
@@ -932,7 +932,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
           {/* Шаг 1: Выбор типа лица */}
           {currentStep === "type" && (
             <div className="space-y-6">
-              <p className="text-gray-600 mb-6">
+              <p className="text-slate-600 mb-6">
                 Выберите тип лица для подключения
               </p>
               <div className="grid md:grid-cols-2 gap-6">
@@ -944,12 +944,12 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                   className={`p-8 border-2 rounded-none text-left transition-all ${
                     personType === "individual"
                       ? "border-blue-500 bg-blue-50 shadow-lg"
-                      : "border-gray-200 hover:border-gray-300"
+                      : "border-slate-200 hover:border-slate-300"
                   }`}
                 >
                   <User className="h-12 w-12 text-blue-600 mb-4" />
                   <h3 className="text-xl font-bold mb-2">Физическое лицо</h3>
-                  <p className="text-gray-600">
+                  <p className="text-slate-600">
                     Для частных лиц, владельцев жилых домов и квартир
                   </p>
                 </button>
@@ -961,12 +961,12 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                   className={`p-8 border-2 rounded-none text-left transition-all ${
                     personType === "legal"
                       ? "border-blue-500 bg-blue-50 shadow-lg"
-                      : "border-gray-200 hover:border-gray-300"
+                      : "border-slate-200 hover:border-slate-300"
                   }`}
                 >
                   <Building className="h-12 w-12 text-blue-600 mb-4" />
                   <h3 className="text-xl font-bold mb-2">Юридическое лицо</h3>
-                  <p className="text-gray-600">
+                  <p className="text-slate-600">
                     Для организаций, предприятий и коммерческих объектов
                   </p>
                 </button>
@@ -1040,7 +1040,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                   maxLength={10}
                   required
                 />
-                <p className="text-xs text-gray-500">Формат: дд.мм.гггг (например: 16.04.2006)</p>
+                <p className="text-xs text-slate-500">Формат: дд.мм.гггг (например: 16.04.2006)</p>
               </div>
 
               <div className="space-y-2">
@@ -1057,7 +1057,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                   placeholder="Введите адрес регистрации как указано в паспорте"
                   required
                 />
-                <p className="text-xs text-gray-500">Укажите адрес регистрации точно как в паспорте</p>
+                <p className="text-xs text-slate-500">Укажите адрес регистрации точно как в паспорте</p>
               </div>
 
               <div className="space-y-2">
@@ -1073,7 +1073,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                   }
                   placeholder="Введите адрес объекта (если отличается от адреса регистрации)"
                 />
-                <p className="text-xs text-gray-500">Адрес объекта для подключения (если отличается от адреса регистрации)</p>
+                <p className="text-xs text-slate-500">Адрес объекта для подключения (если отличается от адреса регистрации)</p>
               </div>
 
               <div className="border-t pt-4">
@@ -1150,7 +1150,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                               maxLength={10}
                               required
                             />
-                            <p className="text-xs text-gray-500">Формат: дд.мм.гггг (например: 20.03.2015)</p>
+                            <p className="text-xs text-slate-500">Формат: дд.мм.гггг (например: 20.03.2015)</p>
                           </div>
                   <div className="space-y-2">
                     <Label htmlFor="passportDivisionCode">
@@ -1187,7 +1187,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                       maxLength={12}
                       placeholder="123456789012"
                     />
-                    <p className="text-xs text-gray-500">Идентификационный номер налогоплательщика</p>
+                    <p className="text-xs text-slate-500">Идентификационный номер налогоплательщика</p>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="snils">СНИЛС</Label>
@@ -1200,7 +1200,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                       maxLength={11}
                       placeholder="123-456-789 01"
                     />
-                    <p className="text-xs text-gray-500">Страховой номер индивидуального лицевого счета</p>
+                    <p className="text-xs text-slate-500">Страховой номер индивидуального лицевого счета</p>
                   </div>
                 </div>
               </div>
@@ -1219,7 +1219,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                   required
                   placeholder="+7 (978) 123-45-67"
                 />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-slate-500">
                   Автозаполнено из профиля
                 </p>
               </div>
@@ -1230,7 +1230,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
           {currentStep === "abonent" && personType === "legal" && (
             <div className="space-y-6">
               <h3 className="text-xl font-bold mb-2">Юридическое лицо</h3>
-              <p className="text-gray-600 mb-4">
+              <p className="text-slate-600 mb-4">
                 Полное и сокращенное наименования, ОГРН, ИНН
               </p>
               <div className="space-y-2">
@@ -1277,7 +1277,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                     placeholder="1234567890123"
                     maxLength={13}
                   />
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-slate-500">
                     Основной государственный регистрационный номер в ЕГРЮЛ (13 цифр)
                   </p>
                 </div>
@@ -1296,7 +1296,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                     placeholder="1234567890"
                     maxLength={12}
                   />
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-slate-500">
                     Идентификационный номер налогоплательщика (10 или 12 цифр)
                   </p>
                 </div>
@@ -1375,7 +1375,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                   placeholder="XX:XX:XXXXXX:XXXX"
                   maxLength={18} // Максимальная длина с двоеточиями: 2:2:6:4 = 18 символов
                 />
-                <p className="text-xs text-gray-500">Формат: XX:XX:XXXXXX:XXXX (например: 77:01:000100:1001)</p>
+                <p className="text-xs text-slate-500">Формат: XX:XX:XXXXXX:XXXX (например: 77:01:000100:1001)</p>
                 <a
                   href="https://nspd.gov.ru/map"
                   target="_blank"
@@ -1437,7 +1437,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                     <option value="owner">Правообладатель земельного участка</option>
                     <option value="trusted">Доверенное лицо</option>
                   </select>
-                  <p className="text-xs text-gray-500">Укажите, кем вы являетесь по отношению к объекту</p>
+                  <p className="text-xs text-slate-500">Укажите, кем вы являетесь по отношению к объекту</p>
                 </div>
 
                 <div className="space-y-2 mt-4">
@@ -1501,7 +1501,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                     placeholder="дд.мм.гггг (например: 01.12.2025)"
                     maxLength={10}
                   />
-                  <p className="text-xs text-gray-500">Необязательное поле</p>
+                  <p className="text-xs text-slate-500">Необязательное поле</p>
                 </div>
               </div>
 
@@ -1741,7 +1741,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                   Вид подключения <span className="text-red-500">*</span>
                 </Label>
                 <div className="flex gap-6">
-                  <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-none hover:bg-gray-50 transition-colors">
+                  <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-none hover:bg-slate-50 transition-colors">
                     <input
                       type="checkbox"
                       checked={formData.connectionTypeWater}
@@ -1755,7 +1755,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                     />
                     <span>Водопровод</span>
                   </label>
-                  <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-none hover:bg-gray-50 transition-colors">
+                  <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-none hover:bg-slate-50 transition-colors">
                     <input
                       type="checkbox"
                       checked={formData.connectionTypeSewerage}
@@ -1777,7 +1777,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                   Тип подключения <span className="text-red-500">*</span>
                 </Label>
                 <div className="space-y-3">
-                  <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-none hover:bg-gray-50 transition-colors">
+                  <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-none hover:bg-slate-50 transition-colors">
                     <input
                       type="radio"
                       name="connectionMethod"
@@ -1794,7 +1794,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                     />
                     <span>по протяженности</span>
                   </label>
-                  <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-none hover:bg-gray-50 transition-colors">
+                  <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-none hover:bg-slate-50 transition-colors">
                     <input
                       type="radio"
                       name="connectionMethod"
@@ -1819,7 +1819,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                     Колодец <span className="text-red-500">*</span>
                   </Label>
                   <div className="space-y-3">
-                    <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-none hover:bg-gray-50 transition-colors">
+                    <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-none hover:bg-slate-50 transition-colors">
                       <input
                         type="radio"
                         name="wellType"
@@ -1835,7 +1835,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                       />
                       <span>Существующий</span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-none hover:bg-gray-50 transition-colors">
+                    <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-none hover:bg-slate-50 transition-colors">
                       <input
                         type="radio"
                         name="wellType"
@@ -1949,17 +1949,17 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
               </div>
 
               {/* Заявление на выдачу ТУ */}
-              <Card className="rounded-none border-2 border-dashed border-gray-300">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+              <DashboardCard className="rounded-none border-2 border-dashed border-slate-300">
+                <div className="p-6 pb-4">
+                  <h2 className="flex items-center gap-2">
                     <FileText className="h-5 w-5 text-blue-600" />
                     Заявление на выдачу технических условий
-                  </CardTitle>
-                  <CardDescription>
+                  </h2>
+                  <p>
                     Заявление автоматически заполнено вашими данными
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
+                  </p>
+                </div>
+                <DashboardCardBody className="space-y-4">
                   {/* Предпросмотр заявления */}
                   <ApplicationForm formData={formData} personType={personType} isPreview={true} />
 
@@ -1993,24 +1993,24 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                       </a>
                     </Button>
                   </div>
-                </CardContent>
-              </Card>
+                </DashboardCardBody>
+              </DashboardCard>
 
               {/* Загрузка документов */}
-              <Card className="rounded-none shadow-none">
-                <CardHeader>
-                  <CardTitle>Загрузка документов</CardTitle>
-                  <CardDescription>
+              <DashboardCard className="rounded-none shadow-none">
+                <div className="p-6 pb-4">
+                  <h2>Загрузка документов</h2>
+                  <p>
                     {personType === "individual"
                       ? "Загрузите отсканированные документы: подписанное заявление и копии паспорта"
                       : "Загрузите отсканированные документы: подписанное заявление и учредительные документы (устав, свидетельство о регистрации и т.п.)"}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
+                  </p>
+                </div>
+                <DashboardCardBody>
                   <div className="space-y-4">
-                    <div className="border-2 border-dashed border-gray-300 rounded-none p-6 text-center hover:border-blue-400 transition-colors">
-                      <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                      <p className="text-sm text-gray-600 mb-2">
+                    <div className="border-2 border-dashed border-slate-300 rounded-none p-6 text-center hover:border-blue-400 transition-colors">
+                      <Upload className="h-8 w-8 text-slate-400 mx-auto mb-2" />
+                      <p className="text-sm text-slate-600 mb-2">
                         Перетащите файлы сюда или нажмите для выбора
                       </p>
                       <Input
@@ -2030,7 +2030,7 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                         <Upload className="h-4 w-4 mr-2" />
                         Выбрать файлы
                       </Button>
-                      <p className="text-xs text-gray-500 mt-2">
+                      <p className="text-xs text-slate-500 mt-2">
                         PDF, JPG, PNG (макс. 10 МБ каждый)
                       </p>
                     </div>
@@ -2041,11 +2041,11 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                         {uploadedFiles.map((file, index) => (
                           <div
                             key={index}
-                            className="flex items-center justify-between p-3 bg-gray-50 rounded-none"
+                            className="flex items-center justify-between p-3 bg-slate-50 rounded-none"
                           >
                             <div className="flex items-center gap-2">
-                              <FileText className="h-4 w-4 text-gray-600" />
-                              <span className="text-sm text-gray-700">
+                              <FileText className="h-4 w-4 text-slate-600" />
+                              <span className="text-sm text-slate-700">
                                 {file.name} ({(file.size / 1024 / 1024).toFixed(2)} МБ)
                               </span>
                             </div>
@@ -2080,8 +2080,8 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
                       </div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </DashboardCardBody>
+              </DashboardCard>
             </div>
           )}
 
@@ -2128,8 +2128,8 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
               </Button>
             )}
           </div>
-        </CardContent>
-      </Card>
+        </DashboardCardBody>
+      </DashboardCard>
       </div>
     </div>
   );

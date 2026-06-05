@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -52,9 +52,9 @@ interface KachestvoVodyClientProps {
   districts: WaterQualityDistrict[];
 }
 
-const cardClass = "rounded-none border border-gray-200 shadow-none";
+const cardClass = "rounded-none border border-slate-200 shadow-none";
 const fieldClass =
-  "h-10 rounded-none border-gray-200 bg-white focus-visible:border-blue-500 focus-visible:ring-1 focus-visible:ring-blue-500";
+  "h-10 rounded-none border-slate-200 bg-white focus-visible:border-blue-500 focus-visible:ring-1 focus-visible:ring-blue-500";
 
 function countCityDocuments(city: WaterQualityCity) {
   return city.years.reduce((sum, year) => sum + year.documents.length, 0);
@@ -126,16 +126,16 @@ export function KachestvoVodyClient({ districts }: KachestvoVodyClientProps) {
   }, [searchQuery, filteredDistricts]);
 
   return (
-    <div className="flex min-h-[calc(100dvh-4rem)] flex-col bg-gray-50 py-8 md:py-12 pb-14 lg:min-h-[calc(100dvh-4.5rem)]">
+    <div className="flex min-h-[calc(100dvh-4rem)] flex-col bg-slate-50 py-8 md:py-12 pb-14 lg:min-h-[calc(100dvh-4.5rem)]">
       <div className="container max-w-5xl flex-1 px-4">
         <div className="mb-10 text-center animate-fade-in md:mb-12">
           <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-none bg-blue-100">
             <Droplet className="h-7 w-7 text-blue-600" strokeWidth={1.75} />
           </div>
-          <h1 className="mx-auto mb-3 max-w-3xl text-center text-3xl font-semibold tracking-tight text-gray-900 md:text-4xl">
+          <h1 className="mx-auto mb-3 max-w-3xl text-center text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
             Качество питьевой воды
           </h1>
-          <p className="mx-auto max-w-3xl text-center text-base text-gray-600 md:text-lg">
+          <p className="mx-auto max-w-3xl text-center text-base text-slate-600 md:text-lg">
             Отчёты и документы о качестве питьевой воды по районам, населённым пунктам и
             годам
           </p>
@@ -143,14 +143,14 @@ export function KachestvoVodyClient({ districts }: KachestvoVodyClientProps) {
 
         <div className="mb-8 grid gap-4 md:grid-cols-2">
           <div>
-            <Label htmlFor="district-filter" className="mb-1.5 text-sm text-gray-700">
+            <Label htmlFor="district-filter" className="mb-1.5 text-sm text-slate-700">
               Район
             </Label>
             <Select value={selectedDistrictId} onValueChange={setSelectedDistrictId}>
               <SelectTrigger id="district-filter" className={fieldClass}>
                 <SelectValue placeholder="Все районы" />
               </SelectTrigger>
-              <SelectContent className="rounded-none border-gray-200">
+              <SelectContent className="rounded-none border-slate-200">
                 <SelectItem value="all">Все районы</SelectItem>
                 {districts.map((district) => (
                   <SelectItem key={district.id} value={district.id}>
@@ -162,11 +162,11 @@ export function KachestvoVodyClient({ districts }: KachestvoVodyClientProps) {
           </div>
 
           <div>
-            <Label htmlFor="city-search" className="mb-1.5 text-sm text-gray-700">
+            <Label htmlFor="city-search" className="mb-1.5 text-sm text-slate-700">
               Поиск по населённым пунктам
             </Label>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
                 id="city-search"
                 type="text"
@@ -180,16 +180,16 @@ export function KachestvoVodyClient({ districts }: KachestvoVodyClientProps) {
         </div>
 
         {filteredDistricts.length === 0 ? (
-          <Card className={cn(cardClass, "py-12 text-center")}>
-            <CardContent>
-              <FileText className="mx-auto mb-4 h-10 w-10 text-gray-400" strokeWidth={1.75} />
-              <p className="text-sm text-gray-600">
+          <DashboardCard className={cn(cardClass, "border-dashed bg-slate-50/80 py-12 text-center")}>
+            <DashboardCardBody>
+              <FileText className="mx-auto mb-4 h-10 w-10 text-slate-300" strokeWidth={1.75} />
+              <p className="text-sm text-slate-600">
                 {searchQuery || (selectedDistrictId && selectedDistrictId !== "all")
                   ? "По запросу ничего не найдено"
                   : "Информация о качестве питьевой воды пока не добавлена"}
               </p>
-            </CardContent>
-          </Card>
+            </DashboardCardBody>
+          </DashboardCard>
         ) : (
           <Accordion
             type="multiple"
@@ -207,22 +207,22 @@ export function KachestvoVodyClient({ districts }: KachestvoVodyClientProps) {
                   value={district.id}
                   className={cn(cardClass, "border-b last:border-b")}
                 >
-                  <AccordionTrigger className="px-5 py-4 hover:no-underline hover:bg-gray-50/50 [&[data-state=open]]:border-b [&[data-state=open]]:border-gray-100">
+                  <AccordionTrigger className="px-5 py-4 hover:no-underline hover:bg-slate-50/50 [&[data-state=open]]:border-b [&[data-state=open]]:border-slate-100">
                     <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1 text-left">
                       <Building2
                         className="h-5 w-5 shrink-0 text-blue-600"
                         strokeWidth={1.75}
                       />
-                      <span className="text-lg font-semibold text-gray-900">
+                      <span className="text-lg font-semibold text-slate-900">
                         {district.name}
                       </span>
                       {settlementCount > 0 ? (
-                        <span className="text-xs font-normal text-gray-500">
+                        <span className="text-xs font-normal text-slate-500">
                           {settlementCount} {pluralSettlements(settlementCount)}
                         </span>
                       ) : null}
                       {docCount > 0 ? (
-                        <span className="text-xs font-normal text-gray-500">
+                        <span className="text-xs font-normal text-slate-500">
                           · {docCount} {pluralDocuments(docCount)}
                         </span>
                       ) : null}
@@ -230,7 +230,7 @@ export function KachestvoVodyClient({ districts }: KachestvoVodyClientProps) {
                   </AccordionTrigger>
                   <AccordionContent className="px-5 pb-5 pt-0">
                     {district.cities.length === 0 ? (
-                      <p className="py-2 text-sm text-gray-500">
+                      <p className="py-2 text-sm text-slate-500">
                         Населённые пункты для этого района пока не добавлены
                       </p>
                     ) : (
@@ -247,19 +247,19 @@ export function KachestvoVodyClient({ districts }: KachestvoVodyClientProps) {
                             <AccordionItem
                               key={city.id}
                               value={city.id}
-                              className="rounded-none border border-gray-200 border-b last:border-b"
+                              className="rounded-none border border-slate-200 border-b last:border-b"
                             >
-                              <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-gray-50/80 [&[data-state=open]]:border-b [&[data-state=open]]:border-gray-100">
+                              <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-slate-50/80 [&[data-state=open]]:border-b [&[data-state=open]]:border-slate-100">
                                 <div className="flex min-w-0 flex-1 items-center gap-2 text-left">
                                   <MapPin
-                                    className="h-4 w-4 shrink-0 text-gray-500"
+                                    className="h-4 w-4 shrink-0 text-slate-500"
                                     strokeWidth={1.75}
                                   />
-                                  <span className="text-base font-semibold text-gray-900">
+                                  <span className="text-base font-semibold text-slate-900">
                                     {city.name}
                                   </span>
                                   {cityDocCount > 0 ? (
-                                    <span className="shrink-0 text-xs font-normal text-gray-500">
+                                    <span className="shrink-0 text-xs font-normal text-slate-500">
                                       {cityDocCount} {pluralDocuments(cityDocCount)}
                                     </span>
                                   ) : null}
@@ -267,26 +267,26 @@ export function KachestvoVodyClient({ districts }: KachestvoVodyClientProps) {
                               </AccordionTrigger>
                               <AccordionContent className="px-0 pb-0">
                                 {city.years.length === 0 ? (
-                                  <p className="px-4 py-4 text-sm text-gray-500">
+                                  <p className="px-4 py-4 text-sm text-slate-500">
                                     Документы для этого населённого пункта пока не
                                     добавлены
                                   </p>
                                 ) : (
-                                  <div className="divide-y divide-gray-100 border-t border-gray-100">
+                                  <div className="divide-y divide-gray-100 border-t border-slate-100">
                                     {city.years.map((year) => (
                                       <div key={year.id} className="px-4 py-4">
                                         <div className="mb-3 flex items-center gap-2">
                                           <Calendar
-                                            className="h-4 w-4 text-gray-500"
+                                            className="h-4 w-4 text-slate-500"
                                             strokeWidth={1.75}
                                           />
-                                          <h4 className="text-sm font-semibold text-gray-900">
+                                          <h4 className="text-sm font-semibold text-slate-900">
                                             {year.year} год
                                           </h4>
                                         </div>
 
                                         {year.documents.length === 0 ? (
-                                          <p className="text-sm text-gray-500">
+                                          <p className="text-sm text-slate-500">
                                             Документы за этот год пока не добавлены
                                           </p>
                                         ) : (
@@ -297,20 +297,20 @@ export function KachestvoVodyClient({ districts }: KachestvoVodyClientProps) {
                                                   href={publicFileHref(doc.fileUrl)}
                                                   target="_blank"
                                                   rel="noopener noreferrer"
-                                                  className="group flex items-center gap-3 rounded-none border border-gray-200 bg-white px-4 py-3 transition-colors hover:border-blue-500 hover:bg-blue-50/40"
+                                                  className="group flex items-center gap-3 rounded-none border border-slate-200 bg-white px-4 py-3 transition-colors hover:border-blue-500 hover:bg-blue-50/40"
                                                 >
                                                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-none bg-blue-100">
                                                     <FileText className="h-5 w-5 text-blue-600" />
                                                   </div>
                                                   <div className="min-w-0 flex-1">
-                                                    <p className="truncate text-sm font-medium text-gray-900 group-hover:text-blue-700">
+                                                    <p className="truncate text-sm font-medium text-slate-900 group-hover:text-blue-700">
                                                       {doc.fileName}
                                                     </p>
-                                                    <p className="text-xs text-gray-500">
+                                                    <p className="text-xs text-slate-500">
                                                       {formatFileSize(doc.fileSize)}
                                                     </p>
                                                   </div>
-                                                  <span className="shrink-0 text-xs font-medium text-gray-400 group-hover:text-blue-600">
+                                                  <span className="shrink-0 text-xs font-medium text-slate-400 group-hover:text-blue-600">
                                                     Скачать
                                                   </span>
                                                 </a>

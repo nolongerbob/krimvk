@@ -1,4 +1,3 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Droplet,
   MapPin,
@@ -14,9 +13,10 @@ import {
   Target,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
 
 const sectionCardClass =
-  "mb-8 rounded-none border border-gray-200 border-l-4 border-l-blue-600 shadow-none";
+  "mb-8 rounded-none border border-slate-200 border-l-4 border-l-blue-600 shadow-none";
 
 const historyTimeline = [
   {
@@ -80,10 +80,10 @@ function StatCounter({
   description: string;
 }) {
   return (
-    <div className="rounded-none border border-gray-200 bg-white p-6 text-center">
+    <div className="rounded-none border border-slate-200 bg-white p-6 text-center">
       <p className="text-4xl font-bold tabular-nums text-blue-600 md:text-5xl">{value}</p>
-      <p className="mt-2 text-base font-semibold text-gray-900">{label}</p>
-      <p className="mt-1 text-sm text-gray-600">{description}</p>
+      <p className="mt-2 text-base font-semibold text-slate-900">{label}</p>
+      <p className="mt-1 text-sm text-slate-600">{description}</p>
     </div>
   );
 }
@@ -105,7 +105,7 @@ function TimelineItem({
     <div className="relative flex gap-4 md:gap-6">
       {!isLast && (
         <div
-          className="absolute left-[15px] top-8 hidden h-[calc(100%+1.5rem)] w-px bg-gray-200 md:block"
+          className="absolute left-[15px] top-8 hidden h-[calc(100%+1.5rem)] w-px bg-slate-200 md:block"
           aria-hidden
         />
       )}
@@ -120,9 +120,9 @@ function TimelineItem({
         </p>
       </div>
       <div className={cn("min-w-0 flex-1", isLast ? "pb-0" : "pb-8")}>
-        <div className="rounded-none border border-gray-200 bg-gray-50 p-4">
-          <h3 className="mb-1 font-semibold text-gray-900">{title}</h3>
-          <p className="text-sm leading-relaxed text-gray-700 md:text-base">{description}</p>
+        <div className="rounded-none border border-slate-200 bg-slate-50 p-4">
+          <h3 className="mb-1 font-semibold text-slate-900">{title}</h3>
+          <p className="text-sm leading-relaxed text-slate-700 md:text-base">{description}</p>
         </div>
       </div>
     </div>
@@ -131,32 +131,32 @@ function TimelineItem({
 
 export default function IstoriyaPage() {
   return (
-    <div className="flex min-h-[calc(100dvh-4rem)] flex-col bg-gray-50 py-8 md:py-12 pb-14 lg:min-h-[calc(100dvh-4.5rem)]">
+    <div className="flex min-h-[calc(100dvh-4rem)] flex-col bg-slate-50 py-8 md:py-12 pb-14 lg:min-h-[calc(100dvh-4.5rem)]">
       <div className="container max-w-6xl flex-1 px-4">
         <div className="mb-10 text-center animate-fade-in md:mb-12">
           <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-none bg-cyan-100">
             <Droplet className="h-7 w-7 text-cyan-600" />
           </div>
-          <h1 className="mx-auto mb-3 max-w-4xl text-center text-3xl font-semibold tracking-tight text-gray-900 md:text-4xl">
+          <h1 className="mx-auto mb-3 max-w-4xl text-center text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
             ООО «Крымская Водная Компания»: от истоков к современности
           </h1>
-          <p className="mx-auto max-w-3xl text-center text-base text-gray-600 md:text-lg">
+          <p className="mx-auto max-w-3xl text-center text-base text-slate-600 md:text-lg">
             Мы — крупнейшее водоснабжающее предприятие Сакского района и работаем в 7 районах
             Республики Крым. Наша история — путь от восстановления заброшенных сельских сетей до
             внедрения цифровых технологий управления водой.
           </p>
         </div>
 
-        <Card className={cn(sectionCardClass, "animate-fade-in animate-delay-100")}>
-          <CardHeader>
+        <DashboardCard className={cn(sectionCardClass, "animate-fade-in animate-delay-100")}>
+          <div className="p-6 pb-4">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-none bg-blue-100">
                 <Clock className="h-5 w-5 text-blue-600" />
               </div>
-              <CardTitle className="text-xl font-semibold md:text-2xl">Как всё начиналось</CardTitle>
+              <h2 className="text-xl font-semibold md:text-2xl">Как всё начиналось</h2>
             </div>
-          </CardHeader>
-          <CardContent>
+          </div>
+          <DashboardCardBody>
             <div className="relative">
               {historyTimeline.map((item, index) => (
                 <TimelineItem
@@ -166,26 +166,26 @@ export default function IstoriyaPage() {
                 />
               ))}
             </div>
-          </CardContent>
-        </Card>
+          </DashboardCardBody>
+        </DashboardCard>
 
-        <Card
+        <DashboardCard
           className={cn(
             sectionCardClass,
             "animate-fade-in animate-delay-200"
           )}
         >
-          <CardHeader>
+          <div className="p-6 pb-4">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-none bg-blue-100">
                 <Building2 className="h-5 w-5 text-blue-600" />
               </div>
-              <CardTitle className="text-xl font-semibold md:text-2xl">
+              <h2 className="text-xl font-semibold md:text-2xl">
                 Мы сегодня: масштаб и цифры
-              </CardTitle>
+              </h2>
             </div>
-          </CardHeader>
-          <CardContent className="space-y-6">
+          </div>
+          <DashboardCardBody className="space-y-6">
             <div className="grid gap-4 sm:grid-cols-2">
               {mainStats.map((stat) => (
                 <StatCounter key={stat.value} {...stat} />
@@ -193,44 +193,44 @@ export default function IstoriyaPage() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <div className="rounded-none border border-gray-200 bg-white p-4">
+              <div className="rounded-none border border-slate-200 bg-white p-4">
                 <div className="mb-2 flex items-center gap-3">
                   <MapPin className="h-5 w-5 text-blue-600" />
-                  <h3 className="font-semibold text-gray-900">География</h3>
+                  <h3 className="font-semibold text-slate-900">География</h3>
                 </div>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-slate-600">
                   Сакский, Черноморский, Первомайский, Симферопольский, Нижнегорский, Раздольненский
                   и Советский районы
                 </p>
               </div>
 
-              <div className="rounded-none border border-gray-200 bg-white p-4">
+              <div className="rounded-none border border-slate-200 bg-white p-4">
                 <div className="mb-2 flex items-center gap-3">
                   <Users className="h-5 w-5 text-blue-600" />
-                  <h3 className="font-semibold text-gray-900">Команда</h3>
+                  <h3 className="font-semibold text-slate-900">Команда</h3>
                 </div>
                 <p className="text-2xl font-bold text-blue-600">568</p>
-                <p className="text-xs text-gray-600">квалифицированных сотрудников</p>
+                <p className="text-xs text-slate-600">квалифицированных сотрудников</p>
               </div>
 
-              <div className="rounded-none border border-gray-200 bg-white p-4">
+              <div className="rounded-none border border-slate-200 bg-white p-4">
                 <div className="mb-2 flex items-center gap-3">
                   <Home className="h-5 w-5 text-blue-600" />
-                  <h3 className="font-semibold text-gray-900">Абоненты</h3>
+                  <h3 className="font-semibold text-slate-900">Абоненты</h3>
                 </div>
                 <p className="text-2xl font-bold text-blue-600">177 000+</p>
-                <p className="text-xs text-gray-600">человек получают питьевую воду</p>
+                <p className="text-xs text-slate-600">человек получают питьевую воду</p>
               </div>
 
-              <div className="rounded-none border border-gray-200 bg-white p-4">
+              <div className="rounded-none border border-slate-200 bg-white p-4">
                 <div className="mb-2 flex items-center gap-3">
                   <Wrench className="h-5 w-5 text-blue-600" />
-                  <h3 className="font-semibold text-gray-900">Инфраструктура</h3>
+                  <h3 className="font-semibold text-slate-900">Инфраструктура</h3>
                 </div>
                 <p className="text-2xl font-bold text-blue-600">2 312 км</p>
-                <p className="text-xs text-gray-600">водопроводных сетей</p>
+                <p className="text-xs text-slate-600">водопроводных сетей</p>
                 <p className="mt-2 text-2xl font-bold text-blue-600">406</p>
-                <p className="text-xs text-gray-600">артезианских скважин</p>
+                <p className="text-xs text-slate-600">артезианских скважин</p>
               </div>
             </div>
 
@@ -247,32 +247,32 @@ export default function IstoriyaPage() {
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </DashboardCardBody>
+        </DashboardCard>
 
-        <Card className={cn(sectionCardClass, "animate-fade-in animate-delay-300")}>
-          <CardHeader>
+        <DashboardCard className={cn(sectionCardClass, "animate-fade-in animate-delay-300")}>
+          <div className="p-6 pb-4">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-none bg-blue-100">
                 <Zap className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <CardTitle className="text-xl font-semibold md:text-2xl">
+                <h2 className="text-xl font-semibold md:text-2xl">
                   Технологии и модернизация
-                </CardTitle>
-                <CardDescription className="mt-1 text-base">
+                </h2>
+                <p className="mt-1 text-base">
                   Наша главная цель — круглосуточная вода в каждом доме
-                </CardDescription>
+                </p>
               </div>
             </div>
-          </CardHeader>
-          <CardContent className="space-y-5">
+          </div>
+          <DashboardCardBody className="space-y-5">
             <div>
               <h3 className="mb-2 flex items-center gap-2 font-semibold text-lg">
                 <Zap className="h-5 w-5 text-blue-600" />
                 Умное управление
               </h3>
-              <p className="pl-7 leading-relaxed text-gray-700">
+              <p className="pl-7 leading-relaxed text-slate-700">
                 С <strong>2018 года</strong> мы внедряем дистанционный мониторинг. Сейчас{" "}
                 <strong>189 скважин</strong> управляются удалённо — оператор видит состояние насоса
                 на экране, а не едет в поле.
@@ -284,7 +284,7 @@ export default function IstoriyaPage() {
                 <Wrench className="h-5 w-5 text-blue-600" />
                 Новая техника
               </h3>
-              <p className="pl-7 leading-relaxed text-gray-700">
+              <p className="pl-7 leading-relaxed text-slate-700">
                 За последние годы мы полностью обновили автопарк (<strong>53 новые машины</strong>) и
                 установили <strong>более 800 надёжных российских насосов</strong>.
               </p>
@@ -295,7 +295,7 @@ export default function IstoriyaPage() {
                 <Target className="h-5 w-5 text-blue-600" />
                 Борьба с потерями
               </h3>
-              <p className="pl-7 leading-relaxed text-gray-700">
+              <p className="pl-7 leading-relaxed text-slate-700">
                 Аварийные бригады оснащены современным оборудованием для поиска скрытых утечек, что
                 бережёт водные ресурсы Крыма.
               </p>
@@ -307,25 +307,25 @@ export default function IstoriyaPage() {
                 круглосуточную подачу воды во всех обслуживаемых сёлах.
               </p>
             </div>
-          </CardContent>
-        </Card>
+          </DashboardCardBody>
+        </DashboardCard>
 
-        <Card className={cn(sectionCardClass, "animate-fade-in animate-delay-400")}>
-          <CardHeader>
+        <DashboardCard className={cn(sectionCardClass, "animate-fade-in animate-delay-400")}>
+          <div className="p-6 pb-4">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-none bg-blue-100">
                 <Award className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <CardTitle className="text-xl font-semibold md:text-2xl">Реальные дела</CardTitle>
-                <CardDescription className="mt-1 text-base">
+                <h2 className="text-xl font-semibold md:text-2xl">Реальные дела</h2>
+                <p className="mt-1 text-base">
                   Мы не просто эксплуатируем старое, мы строим новое
-                </CardDescription>
+                </p>
               </div>
             </div>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            <p className="leading-relaxed text-gray-700">
+          </div>
+          <DashboardCardBody className="space-y-5">
+            <p className="leading-relaxed text-slate-700">
               За последние <strong>6 лет</strong> мы подготовили <strong>112 проектов</strong>{" "}
               капитального ремонта.
             </p>
@@ -335,7 +335,7 @@ export default function IstoriyaPage() {
               <div className="grid gap-2 pl-4 md:grid-cols-3 md:pl-0">
                 {["села Лушино", "Витино", "Столбовое", "Красноярское", "Свердлово", "и другие"].map(
                   (item) => (
-                    <span key={item} className="text-gray-700">
+                    <span key={item} className="text-slate-700">
                       • {item}
                     </span>
                   )
@@ -347,56 +347,56 @@ export default function IstoriyaPage() {
               <h3 className="mb-3 font-semibold text-lg">Модернизация очистных сооружений (КОС):</h3>
               <div className="grid gap-2 pl-4 md:grid-cols-2 md:pl-0">
                 {["пгт Черноморское", "Первомайское", "Гвардейское", "с. Орехово"].map((item) => (
-                  <span key={item} className="text-gray-700">
+                  <span key={item} className="text-slate-700">
                     • {item}
                   </span>
                 ))}
               </div>
             </div>
 
-            <div className="rounded-none border border-gray-200 bg-gray-50 px-4 py-3">
+            <div className="rounded-none border border-slate-200 bg-slate-50 px-4 py-3">
               <div className="flex items-start gap-3">
                 <Award className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" />
                 <div>
-                  <p className="mb-1 font-semibold text-gray-900">Инвестиции</p>
-                  <p className="text-sm text-gray-700">
+                  <p className="mb-1 font-semibold text-slate-900">Инвестиции</p>
+                  <p className="text-sm text-slate-700">
                     Только в Гвардейском поселении за счёт собственных средств мы модернизировали{" "}
                     <strong>7 скважин</strong> и заменили <strong>5,5 км труб</strong>.
                   </p>
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </DashboardCardBody>
+        </DashboardCard>
 
-        <Card className={cn(sectionCardClass, "animate-fade-in animate-delay-500")}>
-          <CardHeader>
+        <DashboardCard className={cn(sectionCardClass, "animate-fade-in animate-delay-500")}>
+          <div className="p-6 pb-4">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-none bg-blue-100">
                 <Heart className="h-5 w-5 text-blue-600" />
               </div>
-              <CardTitle className="text-xl font-semibold md:text-2xl">
+              <h2 className="text-xl font-semibold md:text-2xl">
                 Социальная ответственность
-              </CardTitle>
+              </h2>
             </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="leading-relaxed text-gray-700">
+          </div>
+          <DashboardCardBody className="space-y-4">
+            <p className="leading-relaxed text-slate-700">
               Мы живём и работаем рядом с вами. <strong>«Крымская Водная Компания»</strong> помогает
               школам, детским садам и больницам. В трудные моменты — будь то ураган, снегопад или
               подтопление — наша техника и люди всегда приходят на помощь местным жителям.
             </p>
-            <div className="rounded-none border border-gray-200 bg-gray-50 p-5">
+            <div className="rounded-none border border-slate-200 bg-slate-50 p-5">
               <div className="flex items-start gap-3">
                 <Target className="mt-0.5 h-6 w-6 shrink-0 text-blue-600" />
-                <p className="text-base font-semibold leading-snug text-gray-900 md:text-lg">
+                <p className="text-base font-semibold leading-snug text-slate-900 md:text-lg">
                   Наша миссия проста: качественно, гарантированно и бесперебойно подавать чистую
                   воду в каждый дом.
                 </p>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </DashboardCardBody>
+        </DashboardCard>
       </div>
     </div>
   );

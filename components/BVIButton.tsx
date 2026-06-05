@@ -30,7 +30,7 @@ export function BVIButton({ className }: { className?: string }) {
     <button
       type="button"
       className={cn(
-        'inline-flex h-9 w-9 items-center justify-center rounded-none text-gray-900 hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50',
+        'inline-flex h-9 w-9 items-center justify-center rounded-none text-slate-900 hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50',
         className
       )}
       aria-label="Версия для слабовидящих"

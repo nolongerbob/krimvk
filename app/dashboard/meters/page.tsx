@@ -797,9 +797,9 @@ export default function MetersPage() {
                 </div>
                 <div className="p-4">
                 {loadingHistory ? (
-                  <p className="text-sm text-gray-500 text-center py-4">Загрузка истории показаний...</p>
+                  <p className="text-sm text-slate-500 text-center py-4">Загрузка истории показаний...</p>
                 ) : Object.keys(meterHistory).length === 0 ? (
-                  <p className="text-sm text-gray-500 text-center py-4">История показаний отсутствует</p>
+                  <p className="text-sm text-slate-500 text-center py-4">История показаний отсутствует</p>
                 ) : (
                   <div className="space-y-6">
                     {meters.map((meter) => {
@@ -813,7 +813,7 @@ export default function MetersPage() {
                         <div key={meter.id} className="border-b pb-4 last:border-b-0 last:pb-0">
                           <h4 className="text-sm font-semibold mb-3">
                             {meter.serialNumber}
-                            {meter.serviceName && <span className="text-gray-500 font-normal ml-2">• {meter.serviceName}</span>}
+                            {meter.serviceName && <span className="text-slate-500 font-normal ml-2">• {meter.serviceName}</span>}
                           </h4>
                           <ul className="max-h-64 divide-y divide-slate-100 overflow-y-auto">
                             {historyForMeter.slice(0, 10).map((item, index) => {
@@ -866,7 +866,7 @@ export default function MetersPage() {
                             })}
                           </ul>
                           {historyForMeter.length > 10 && (
-                            <p className="text-xs text-gray-500 mt-2">
+                            <p className="text-xs text-slate-500 mt-2">
                               Показано последних 10 из {historyForMeter.length} показаний
                             </p>
                           )}

@@ -1,7 +1,7 @@
 "use client";
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -23,7 +23,6 @@ import {
   Receipt,
   Loader2,
   ShieldCheck,
-  UserCog,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ApplicationDetails } from "@/components/admin/ApplicationDetails";
@@ -38,6 +37,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+import {
+  adminFieldClass,
+  adminOutlineBtnClass,
+  adminSectionLabelClass,
+} from "@/components/admin/admin-styles";
 
 import { get1cRegionLabel } from "@/lib/1c-regions";
 
@@ -242,44 +247,42 @@ export function UserDetailsDialog({ user, open, onOpenChange, onRoleChange, curr
 
           {/* Основная информация */}
           <TabsContent value="info" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+            <DashboardCard>
+              <DashboardCardBody className="space-y-4">
+                <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900">
                   <User className="h-5 w-5" />
                   Личные данные
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex items-center gap-3">
-                    <Mail className="h-5 w-5 text-gray-400" />
+                    <Mail className="h-5 w-5 text-slate-400" />
                     <div>
-                      <p className="text-sm text-gray-500">Email</p>
+                      <p className="text-sm text-slate-500">Email</p>
                       <p className="font-medium">{user.email}</p>
                     </div>
                   </div>
                   {user.phone && (
                     <div className="flex items-center gap-3">
-                      <Phone className="h-5 w-5 text-gray-400" />
+                      <Phone className="h-5 w-5 text-slate-400" />
                       <div>
-                        <p className="text-sm text-gray-500">Телефон</p>
+                        <p className="text-sm text-slate-500">Телефон</p>
                         <p className="font-medium">{user.phone}</p>
                       </div>
                     </div>
                   )}
                   {user.address && (
                     <div className="flex items-center gap-3">
-                      <Building className="h-5 w-5 text-gray-400" />
+                      <Building className="h-5 w-5 text-slate-400" />
                       <div>
-                        <p className="text-sm text-gray-500">Адрес</p>
+                        <p className="text-sm text-slate-500">Адрес</p>
                         <p className="font-medium">{user.address}</p>
                       </div>
                     </div>
                   )}
                   <div className="flex items-center gap-3">
-                    <Calendar className="h-5 w-5 text-gray-400" />
+                    <Calendar className="h-5 w-5 text-slate-400" />
                     <div>
-                      <p className="text-sm text-gray-500">Дата регистрации</p>
+                      <p className="text-sm text-slate-500">Дата регистрации</p>
                       <p className="font-medium">
                         {new Date(user.createdAt).toLocaleDateString("ru-RU", {
                           year: "numeric",
@@ -290,15 +293,15 @@ export function UserDetailsDialog({ user, open, onOpenChange, onRoleChange, curr
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <Shield className="h-5 w-5 text-gray-400" />
+                    <Shield className="h-5 w-5 text-slate-400" />
                     <div className="flex-1">
-                      <p className="text-sm text-gray-500 mb-1">Роль</p>
+                      <p className="text-sm text-slate-500 mb-1">Роль</p>
                       {isSelf ? (
                         <div className="flex items-center gap-2">
                           <Badge variant={user.role === "ADMIN" ? "default" : "secondary"}>
                             {user.role === "ADMIN" ? "Администратор" : "Пользователь"}
                           </Badge>
-                          <span className="text-xs text-gray-400">(это вы)</span>
+                          <span className="text-xs text-slate-400">(это вы)</span>
                         </div>
                       ) : (
                         <div className="space-y-2">
@@ -307,7 +310,7 @@ export function UserDetailsDialog({ user, open, onOpenChange, onRoleChange, curr
                             onValueChange={handleRoleChange}
                             disabled={isChangingRole}
                           >
-                            <SelectTrigger className="w-[200px]">
+                            <SelectTrigger className={cn(adminFieldClass, "w-[200px]")}>
                               {isChangingRole ? (
                                 <div className="flex items-center gap-2">
                                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -340,32 +343,26 @@ export function UserDetailsDialog({ user, open, onOpenChange, onRoleChange, curr
                     </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </DashboardCardBody>
+            </DashboardCard>
 
             {/* Статистика */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardDescription>Лицевых счетов</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{user.userAccounts.length}</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardDescription>Заявок</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{user.applications.length}</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardDescription>Баланс</CardDescription>
-                </CardHeader>
-                <CardContent>
+              <DashboardCard>
+                <DashboardCardBody className="p-4">
+                  <p className={adminSectionLabelClass}>Лицевых счетов</p>
+                  <div className="text-2xl font-bold text-slate-900">{user.userAccounts.length}</div>
+                </DashboardCardBody>
+              </DashboardCard>
+              <DashboardCard>
+                <DashboardCardBody className="p-4">
+                  <p className={adminSectionLabelClass}>Заявок</p>
+                  <div className="text-2xl font-bold text-slate-900">{user.applications.length}</div>
+                </DashboardCardBody>
+              </DashboardCard>
+              <DashboardCard>
+                <DashboardCardBody className="p-4">
+                  <p className={adminSectionLabelClass}>Баланс</p>
                   <div className={`text-2xl font-bold ${
                     user.totalDebt > 0.01 
                       ? "text-red-600" 
@@ -380,12 +377,12 @@ export function UserDetailsDialog({ user, open, onOpenChange, onRoleChange, curr
                       : "0 ₽"}
                   </div>
                   {user.unpaidBillsCount > 0 && user.totalDebt > 0.01 && (
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-slate-500 mt-1">
                       {user.unpaidBillsCount} неоплаченных счетов
                     </p>
                   )}
-                </CardContent>
-              </Card>
+                </DashboardCardBody>
+              </DashboardCard>
             </div>
           </TabsContent>
 
@@ -393,44 +390,42 @@ export function UserDetailsDialog({ user, open, onOpenChange, onRoleChange, curr
           <TabsContent value="accounts" className="space-y-4">
             {user.userAccounts.length > 0 ? (
               user.userAccounts.map((account) => (
-                <Card key={account.id}>
-                  <CardHeader>
+                <DashboardCard key={account.id}>
+                  <DashboardCardBody className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="flex items-center gap-2">
+                      <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900">
                         <CreditCard className="h-5 w-5" />
                         Лицевой счет {account.accountNumber}
-                      </CardTitle>
+                      </h3>
                       <Badge variant={account.isActive ? "default" : "secondary"}>
                         {account.isActive ? "Активен" : "Неактивен"}
                       </Badge>
                     </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <p className="text-sm text-gray-500 mb-1">Адрес</p>
+                        <p className="text-sm text-slate-500 mb-1">Адрес</p>
                         <p className="font-medium">{account.address}</p>
                       </div>
                       {account.name && (
                         <div>
-                          <p className="text-sm text-gray-500 mb-1">ФИО абонента</p>
+                          <p className="text-sm text-slate-500 mb-1">ФИО абонента</p>
                           <p className="font-medium">{account.name}</p>
                         </div>
                       )}
                       {account.phone && (
                         <div>
-                          <p className="text-sm text-gray-500 mb-1">Телефон</p>
+                          <p className="text-sm text-slate-500 mb-1">Телефон</p>
                           <p className="font-medium">{account.phone}</p>
                         </div>
                       )}
                       {account.region && (
                         <div>
-                          <p className="text-sm text-gray-500 mb-1">Район</p>
+                          <p className="text-sm text-slate-500 mb-1">Район</p>
                           <p className="font-medium">{getRegionName(account.region)}</p>
                         </div>
                       )}
                       <div>
-                        <p className="text-sm text-gray-500 mb-1">Дата добавления</p>
+                        <p className="text-sm text-slate-500 mb-1">Дата добавления</p>
                         <p className="font-medium">
                           {new Date(account.createdAt).toLocaleDateString("ru-RU")}
                         </p>
@@ -444,7 +439,7 @@ export function UserDetailsDialog({ user, open, onOpenChange, onRoleChange, curr
                           {account.meters.map((meter) => (
                             <div
                               key={meter.id}
-                              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                              className="flex items-center justify-between border border-slate-100 bg-slate-50 p-3"
                             >
                               <div className="flex items-center gap-3">
                                 <Droplet
@@ -458,17 +453,17 @@ export function UserDetailsDialog({ user, open, onOpenChange, onRoleChange, curr
                                   <p className="font-medium">
                                     {meter.type === "горячая" ? "Горячая" : "Холодная"} вода
                                   </p>
-                                  <p className="text-sm text-gray-500">
+                                  <p className="text-sm text-slate-500">
                                     Серийный номер: {meter.serialNumber}
                                   </p>
                                   {meter.address && (
-                                    <p className="text-xs text-gray-400">{meter.address}</p>
+                                    <p className="text-xs text-slate-400">{meter.address}</p>
                                   )}
                                 </div>
                               </div>
                               {meter.lastReading !== null && (
                                 <div className="text-right">
-                                  <p className="text-sm text-gray-500">Последнее показание</p>
+                                  <p className="text-sm text-slate-500">Последнее показание</p>
                                   <p className="font-medium">{meter.lastReading} м³</p>
                                 </div>
                               )}
@@ -479,7 +474,7 @@ export function UserDetailsDialog({ user, open, onOpenChange, onRoleChange, curr
                     )}
 
                     {/* Кнопка создания квитанции */}
-                    <div className="mt-4 pt-4 border-t border-gray-200">
+                    <div className="mt-4 border-t border-slate-100 pt-4">
                       <div className="space-y-3">
                         <div className="grid grid-cols-2 gap-2">
                           <div>
@@ -489,7 +484,7 @@ export function UserDetailsDialog({ user, open, onOpenChange, onRoleChange, curr
                               type="date"
                               value={receiptDateFrom}
                               onChange={(e) => setReceiptDateFrom(e.target.value)}
-                              className="mt-1 text-xs"
+                              className={cn(adminFieldClass, "mt-1 text-xs")}
                             />
                           </div>
                           <div>
@@ -499,14 +494,14 @@ export function UserDetailsDialog({ user, open, onOpenChange, onRoleChange, curr
                               type="date"
                               value={receiptDateTo}
                               onChange={(e) => setReceiptDateTo(e.target.value)}
-                              className="mt-1 text-xs"
+                              className={cn(adminFieldClass, "mt-1 text-xs")}
                             />
                           </div>
                         </div>
                         <Button
                           asChild
                           variant="outline"
-                          className="w-full gap-2"
+                          className={cn(adminOutlineBtnClass, "w-full gap-2")}
                           disabled={!receiptDateFrom || !receiptDateTo}
                         >
                           <Link
@@ -519,16 +514,16 @@ export function UserDetailsDialog({ user, open, onOpenChange, onRoleChange, curr
                         </Button>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </DashboardCardBody>
+                </DashboardCard>
               ))
             ) : (
-              <Card>
-                <CardContent className="py-8 text-center">
-                  <CreditCard className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">У пользователя нет лицевых счетов</p>
-                </CardContent>
-              </Card>
+              <DashboardCard>
+                <DashboardCardBody className="py-8 text-center">
+                  <CreditCard className="mx-auto mb-4 h-12 w-12 text-slate-400" />
+                  <p className="text-slate-500">У пользователя нет лицевых счетов</p>
+                </DashboardCardBody>
+              </DashboardCard>
             )}
           </TabsContent>
 
@@ -539,30 +534,28 @@ export function UserDetailsDialog({ user, open, onOpenChange, onRoleChange, curr
                 const status = statusConfig[application.status as keyof typeof statusConfig];
                 const StatusIcon = status.icon;
                 return (
-                  <Card key={application.id}>
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg">{application.service.title}</CardTitle>
+                  <DashboardCard key={application.id}>
+                    <DashboardCardBody>
+                      <div className="mb-4 flex items-center justify-between">
+                        <h3 className="text-lg font-semibold text-slate-900">{application.service.title}</h3>
                         <Badge className={status.className}>
-                          <StatusIcon className="h-3 w-3 mr-1" />
+                          <StatusIcon className="mr-1 h-3 w-3" />
                           {status.label}
                         </Badge>
                       </div>
-                    </CardHeader>
-                    <CardContent>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-4">
                         <div>
-                          <p className="text-gray-500 mb-1">Категория</p>
+                          <p className="text-slate-500 mb-1">Категория</p>
                           <p className="font-medium">{application.service.category}</p>
                         </div>
                         {application.address && (
                           <div>
-                            <p className="text-gray-500 mb-1">Адрес</p>
+                            <p className="text-slate-500 mb-1">Адрес</p>
                             <p className="font-medium">{application.address}</p>
                           </div>
                         )}
                         <div>
-                          <p className="text-gray-500 mb-1">Дата создания</p>
+                          <p className="text-slate-500 mb-1">Дата создания</p>
                           <p className="font-medium">
                             {new Date(application.createdAt).toLocaleDateString("ru-RU")}
                           </p>
@@ -585,30 +578,28 @@ export function UserDetailsDialog({ user, open, onOpenChange, onRoleChange, curr
                           }}
                         />
                       </div>
-                    </CardContent>
-                  </Card>
+                    </DashboardCardBody>
+                  </DashboardCard>
                 );
               })
             ) : (
-              <Card>
-                <CardContent className="py-8 text-center">
-                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">У пользователя нет заявок</p>
-                </CardContent>
-              </Card>
+              <DashboardCard>
+                <DashboardCardBody className="py-8 text-center">
+                  <FileText className="mx-auto mb-4 h-12 w-12 text-slate-400" />
+                  <p className="text-slate-500">У пользователя нет заявок</p>
+                </DashboardCardBody>
+              </DashboardCard>
             )}
           </TabsContent>
 
           {/* Счета и задолженность */}
           <TabsContent value="bills" className="space-y-4">
-            <Card className="border-2">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+            <DashboardCard>
+              <DashboardCardBody>
+                <h3 className="mb-4 flex items-center gap-2 text-base font-semibold text-slate-900">
                   <DollarSign className="h-5 w-5" />
                   Баланс абонента
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+                </h3>
                 <div className={`text-3xl font-bold ${
                   user.totalDebt > 0.01 
                     ? "text-red-600" 
@@ -623,25 +614,25 @@ export function UserDetailsDialog({ user, open, onOpenChange, onRoleChange, curr
                     : "Баланс: 0 ₽"}
                 </div>
                 {user.unpaidBillsCount > 0 && user.totalDebt > 0.01 && (
-                  <p className="text-sm text-gray-500 mt-2">
+                  <p className="text-sm text-slate-500 mt-2">
                     Неоплаченных счетов: {user.unpaidBillsCount}
                   </p>
                 )}
-              </CardContent>
-            </Card>
+              </DashboardCardBody>
+            </DashboardCard>
 
             {user.bills.length > 0 ? (
               <div className="space-y-2">
-                <h3 className="font-semibold text-lg">История счетов</h3>
+                <h3 className="text-lg font-semibold text-slate-900">История счетов</h3>
                 {user.bills.map((bill) => {
                   const billStatus = billStatusConfig[bill.status as keyof typeof billStatusConfig];
                   return (
-                    <Card key={bill.id}>
-                      <CardContent className="p-4">
+                    <DashboardCard key={bill.id}>
+                      <DashboardCardBody className="p-4">
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="font-medium">Период: {bill.period}</p>
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-slate-500">
                               Срок оплаты:{" "}
                               {new Date(bill.dueDate).toLocaleDateString("ru-RU")}
                             </p>
@@ -658,18 +649,18 @@ export function UserDetailsDialog({ user, open, onOpenChange, onRoleChange, curr
                             </Badge>
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
+                      </DashboardCardBody>
+                    </DashboardCard>
                   );
                 })}
               </div>
             ) : (
-              <Card>
-                <CardContent className="py-8 text-center">
-                  <DollarSign className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">Нет информации о счетах</p>
-                </CardContent>
-              </Card>
+              <DashboardCard>
+                <DashboardCardBody className="py-8 text-center">
+                  <DollarSign className="mx-auto mb-4 h-12 w-12 text-slate-400" />
+                  <p className="text-slate-500">Нет информации о счетах</p>
+                </DashboardCardBody>
+              </DashboardCard>
             )}
           </TabsContent>
         </Tabs>

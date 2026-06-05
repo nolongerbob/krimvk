@@ -165,7 +165,7 @@ export function Search({ mobileMode = false, inHeader = false }: SearchProps) {
         <div className="bg-white rounded-none">
           <form
             onSubmit={handleSubmit}
-            className="flex h-11 items-stretch border-b border-gray-200"
+            className="flex h-11 items-stretch border-b border-slate-200"
           >
             <div className="relative flex-1 min-w-0">
               <Input
@@ -183,7 +183,7 @@ export function Search({ mobileMode = false, inHeader = false }: SearchProps) {
                     setQuery("");
                     setResults([]);
                   }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                   aria-label="Очистить"
                 >
                   <X className="h-3.5 w-3.5" />
@@ -192,7 +192,7 @@ export function Search({ mobileMode = false, inHeader = false }: SearchProps) {
             </div>
             <button
               type="submit"
-              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-none text-gray-600 hover:text-gray-900 focus:outline-none focus-visible:outline-none"
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-none text-slate-600 hover:text-slate-900 focus:outline-none focus-visible:outline-none"
               aria-label="Найти"
             >
               <SearchIcon className="h-4 w-4" />
@@ -202,7 +202,7 @@ export function Search({ mobileMode = false, inHeader = false }: SearchProps) {
           {query.length >= 2 && (
             <div className="max-h-64 overflow-y-auto">
               {isLoading ? (
-                <div className="p-4 text-center text-sm text-gray-500">Поиск...</div>
+                <div className="p-4 text-center text-sm text-slate-500">Поиск...</div>
               ) : results.length > 0 ? (
                 <div className="py-1">
                   {results.map((result, index) => (
@@ -210,15 +210,15 @@ export function Search({ mobileMode = false, inHeader = false }: SearchProps) {
                       key={`${result.url}-${index}`}
                       href={result.url}
                       onClick={closeSearch}
-                      className="block border-b border-gray-100 px-4 py-2.5 last:border-b-0 hover:bg-gray-50 transition-colors"
+                      className="block border-b border-slate-100 px-4 py-2.5 last:border-b-0 hover:bg-slate-50 transition-colors"
                     >
-                      <div className="line-clamp-1 text-sm font-medium text-gray-900">{result.title}</div>
+                      <div className="line-clamp-1 text-sm font-medium text-slate-900">{result.title}</div>
                       {result.description && (
-                        <div className="mt-0.5 line-clamp-1 text-xs text-gray-500">{result.description}</div>
+                        <div className="mt-0.5 line-clamp-1 text-xs text-slate-500">{result.description}</div>
                       )}
                     </Link>
                   ))}
-                  <div className="border-t border-gray-100 px-4 py-2">
+                  <div className="border-t border-slate-100 px-4 py-2">
                     <Link
                       href={`/search?q=${encodeURIComponent(query)}`}
                       onClick={closeSearch}
@@ -229,7 +229,7 @@ export function Search({ mobileMode = false, inHeader = false }: SearchProps) {
                   </div>
                 </div>
               ) : (
-                <div className="p-4 text-center text-sm text-gray-500">Ничего не найдено</div>
+                <div className="p-4 text-center text-sm text-slate-500">Ничего не найдено</div>
               )}
             </div>
           )}
@@ -245,14 +245,14 @@ export function Search({ mobileMode = false, inHeader = false }: SearchProps) {
         onClick={() => (isOpen ? closeSearch() : openSearch())}
         className={`inline-flex items-center justify-center rounded-none transition-colors focus:outline-none focus-visible:outline-none active:outline-none ${
           inHeader
-            ? `h-full w-full ${isOpen ? "bg-gray-50" : "hover:bg-gray-50"}`
-            : `h-9 w-9 ${isOpen ? "bg-transparent" : "hover:bg-gray-100"} ${mobileMode ? "h-10 w-10" : ""}`
+            ? `h-full w-full ${isOpen ? "bg-slate-50" : "hover:bg-slate-50"}`
+            : `h-9 w-9 ${isOpen ? "bg-transparent" : "hover:bg-slate-100"} ${mobileMode ? "h-10 w-10" : ""}`
         } ${mobileMode && !inHeader ? "" : ""}`}
         aria-label="Поиск"
         aria-expanded={isOpen}
       >
         <SearchIcon
-          className={`text-gray-600 ${
+          className={`text-slate-600 ${
             inHeader ? "h-5 w-5 lg:h-6 lg:w-6" : mobileMode ? "h-6 w-6 stroke-[1.75]" : "h-5 w-5"
           }`}
         />

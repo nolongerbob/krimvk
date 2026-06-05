@@ -72,10 +72,10 @@ export default function RegisterPage() {
     <AuthSplitLayout>
       <div className="w-full max-w-lg animate-fade-in">
         <div className="mb-8 text-center lg:text-left">
-          <h1 className="text-2xl font-semibold tracking-tight text-gray-900 md:text-3xl">
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 md:text-3xl">
             Регистрация
           </h1>
-          <p className="mt-2 text-sm text-gray-600 md:text-base">
+          <p className="mt-2 text-sm text-slate-600 md:text-base">
             Создайте аккаунт для доступа к услугам водоканала
           </p>
         </div>
@@ -173,7 +173,7 @@ export default function RegisterPage() {
         </form>
 
         <p className="mt-6 text-center text-sm lg:text-left">
-          <span className="text-gray-600">Уже есть аккаунт? </span>
+          <span className="text-slate-600">Уже есть аккаунт? </span>
           <Link href="/login" className="text-blue-600 hover:underline">
             Войти
           </Link>

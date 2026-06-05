@@ -30,7 +30,7 @@ function NavUnderline({ active }: { active: boolean }) {
 
 function navItemClass(active: boolean) {
   return `relative flex items-center h-full px-1.5 text-base font-medium whitespace-nowrap transition-colors group/nav ${
-    active ? "text-primary font-semibold" : "text-gray-900 hover:text-primary"
+    active ? "text-primary font-semibold" : "text-slate-900 hover:text-primary"
   }`;
 }
 
@@ -39,7 +39,7 @@ function NavItemLabel({ children }: { children: React.ReactNode }) {
 }
 
 const headerSquareBtn =
-  "flex h-full w-14 lg:w-[4.5rem] shrink-0 items-center justify-center border-l border-gray-200 rounded-none hover:bg-gray-50 transition-colors focus:outline-none focus-visible:outline-none";
+  "flex h-full w-14 lg:w-[4.5rem] shrink-0 items-center justify-center border-l border-slate-200 rounded-none hover:bg-slate-50 transition-colors focus:outline-none focus-visible:outline-none";
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -103,7 +103,7 @@ export function Header() {
     <header id="site-header" className="site-header-root bvi-no-styles sticky top-0 z-50 w-full bg-white">
       <div className="relative">
       <div data-header-inner className="relative w-full flex h-16 lg:h-[4.5rem] items-stretch pr-0">
-        <div className="flex flex-1 min-w-0 items-stretch border-b border-gray-200 pl-3 sm:pl-4 lg:pl-6 xl:pl-8">
+        <div className="flex flex-1 min-w-0 items-stretch border-b border-slate-200 pl-3 sm:pl-4 lg:pl-6 xl:pl-8">
         {/* Левая часть: Логотип */}
         <div className="flex items-center flex-shrink-0 z-10 self-center">
           <Link href="/" className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
@@ -114,7 +114,7 @@ export function Header() {
               height={48}
               className="h-10 w-10 sm:h-11 sm:w-11 lg:h-12 lg:w-12"
             />
-            <span className="text-base sm:text-lg lg:text-xl font-bold hidden sm:inline text-gray-900">КрымВК</span>
+            <span className="text-base sm:text-lg lg:text-xl font-bold hidden sm:inline text-slate-900">КрымВК</span>
           </Link>
         </div>
         </div>
@@ -173,15 +173,15 @@ export function Header() {
 
         {/* Правая часть */}
         <div className="flex items-stretch h-full flex-shrink-0 z-10 ml-auto">
-          <div className="header-desktop-toolbar hidden 2xl:flex items-stretch h-full border-b border-gray-200">
+          <div className="header-desktop-toolbar hidden 2xl:flex items-stretch h-full border-b border-slate-200">
             <div className={headerSquareBtn}>
               <Search inHeader />
             </div>
 
             <div
               className={cn(
-                "relative flex h-full w-14 shrink-0 border-l border-gray-200 lg:w-[4.5rem]",
-                megaMenu === "phone" && "bg-gray-50"
+                "relative flex h-full w-14 shrink-0 border-l border-slate-200 lg:w-[4.5rem]",
+                megaMenu === "phone" && "bg-slate-50"
               )}
               onMouseEnter={() => openMegaMenu("phone")}
               onMouseLeave={scheduleCloseMegaMenu}
@@ -202,19 +202,19 @@ export function Header() {
           </div>
 
           {status === "loading" ? (
-            <div className="hidden 2xl:block h-full w-28 animate-pulse border-b border-l border-gray-200 bg-gray-200" />
+            <div className="hidden 2xl:block h-full w-28 animate-pulse border-b border-l border-slate-200 bg-gray-200" />
           ) : session ? (
             <div
               className={cn(
-                "header-desktop-auth relative hidden h-full border-b border-l border-gray-200 2xl:flex",
-                megaMenu === "profile" && "bg-gray-50"
+                "header-desktop-auth relative hidden h-full border-b border-l border-slate-200 2xl:flex",
+                megaMenu === "profile" && "bg-slate-50"
               )}
               onMouseEnter={() => openMegaMenu("profile")}
               onMouseLeave={scheduleCloseMegaMenu}
             >
               <button
                 type="button"
-                className="flex h-full items-center gap-2 px-4 text-base transition-colors hover:bg-gray-50 focus:outline-none lg:px-5"
+                className="flex h-full items-center gap-2 px-4 text-base transition-colors hover:bg-slate-50 focus:outline-none lg:px-5"
                 aria-expanded={megaMenu === "profile"}
               >
                 <User className="h-5 w-5" />
@@ -235,7 +235,7 @@ export function Header() {
                 href="/login"
                 className={cn(
                   buttonVariants({ variant: "ghost" }),
-                  "header-desktop-auth-link hidden 2xl:inline-flex self-stretch h-full min-h-full rounded-none border-b border-l border-gray-200 px-4 lg:px-5 text-base py-0 hover:scale-100 active:scale-100"
+                  "header-desktop-auth-link hidden 2xl:inline-flex self-stretch h-full min-h-full rounded-none border-b border-l border-slate-200 px-4 lg:px-5 text-base py-0 hover:scale-100 active:scale-100"
                 )}
               >
                 Войти

@@ -4,7 +4,15 @@ import { fileHrefForStoredUrl } from "@/lib/file-url";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
+import { cn } from "@/lib/utils";
+import {
+  adminFieldClass,
+  adminOutlineBtnClass,
+  adminPrimaryBtnClass,
+  adminSectionLabelClass,
+} from "@/components/admin/admin-styles";
+import { dashboardButtonClass } from "@/components/dashboard/dashboard-styles";
 import {
   Send,
   User,
@@ -64,6 +72,57 @@ interface KBArticle {
 
 interface AdminQuestionsChatProps {
   questions: Question[];
+}
+
+function formatMessageTime(date: Date | string) {
+  return new Date(date).toLocaleString("ru-RU", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function AdminMessageBubble({ message }: { message: Message }) {
+  const isAdmin = message.isFromAdmin;
+
+  return (
+    <div className={cn("flex w-full", isAdmin ? "justify-start" : "justify-end")}>
+      <div
+        className={cn(
+          "relative h-auto max-w-[min(85%,28rem)] shrink-0 rounded-none shadow-none",
+          isAdmin
+            ? "border border-slate-200 bg-white px-5 py-4 text-slate-900"
+            : "border border-blue-700 bg-blue-600 px-4 py-3 text-white"
+        )}
+      >
+        {message.imageUrl ? (
+          <div className="mb-2 overflow-hidden rounded-none border border-slate-200">
+            <Image
+              src={fileHrefForStoredUrl(message.imageUrl)}
+              alt="Прикреплённое изображение"
+              width={400}
+              height={300}
+              className="h-auto max-w-full object-contain"
+              unoptimized
+            />
+          </div>
+        ) : null}
+        {message.text ? (
+          <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{message.text}</p>
+        ) : null}
+        <p
+          className={cn(
+            "mt-1.5 text-right text-xs",
+            isAdmin ? "text-slate-400" : "text-blue-100"
+          )}
+        >
+          {formatMessageTime(message.createdAt)}
+        </p>
+      </div>
+    </div>
+  );
 }
 
 export function AdminQuestionsChat({ questions: initialQuestions }: AdminQuestionsChatProps) {
@@ -561,38 +620,38 @@ export function AdminQuestionsChat({ questions: initialQuestions }: AdminQuestio
   return (
     <div ref={containerRef} className="flex h-[calc(100vh-80px)]">
       {/* ЛЕВАЯ КОЛОНКА - Список чатов */}
-      <div
+      <DashboardCard
         style={{ width: isLeftCollapsed ? 48 : leftWidth }}
-        className="flex-shrink-0 bg-white rounded-xl border shadow-sm flex flex-col overflow-hidden transition-all duration-200"
+        className="flex shrink-0 flex-col overflow-hidden transition-all duration-200"
       >
         {isLeftCollapsed ? (
           <button
             onClick={() => setIsLeftCollapsed(false)}
-            className="h-full flex items-center justify-center hover:bg-gray-50"
+            className="flex h-full items-center justify-center hover:bg-slate-50"
             title="Развернуть панель"
           >
-            <PanelLeftClose className="h-5 w-5 text-gray-400 rotate-180" />
+            <PanelLeftClose className="h-5 w-5 rotate-180 text-slate-400" />
           </button>
         ) : (
           <>
-            <div className="p-3 border-b bg-gray-50 flex items-center justify-between">
+            <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-3 py-3">
               <div>
-                <h2 className="font-semibold">Диалоги</h2>
-                <p className="text-xs text-gray-500">{questions.length} всего</p>
+                <h2 className="font-semibold text-slate-900">Диалоги</h2>
+                <p className="text-xs text-slate-500">{questions.length} всего</p>
               </div>
               <button
                 onClick={() => setIsLeftCollapsed(true)}
-                className="p-1 hover:bg-gray-200 rounded"
+                className="rounded-none p-1 hover:bg-slate-200"
                 title="Свернуть"
               >
-                <PanelLeftClose className="h-4 w-4 text-gray-500" />
+                <PanelLeftClose className="h-4 w-4 text-slate-500" />
               </button>
             </div>
         <div className="flex-1 overflow-y-auto">
           {/* В работе */}
           {inProgressQuestions.length > 0 && (
             <>
-              <div className="px-3 py-2 bg-blue-50 text-xs font-semibold text-blue-700 sticky top-0">
+              <div className={cn(adminSectionLabelClass, "sticky top-0 bg-blue-50 px-3 py-2 text-blue-700")}>
                 В работе ({inProgressQuestions.length})
               </div>
               {inProgressQuestions.map((q) => (
@@ -609,7 +668,7 @@ export function AdminQuestionsChat({ questions: initialQuestions }: AdminQuestio
           {/* Ожидают */}
           {pendingQuestions.length > 0 && (
             <>
-              <div className="px-3 py-2 bg-yellow-50 text-xs font-semibold text-yellow-700 sticky top-0">
+              <div className={cn(adminSectionLabelClass, "sticky top-0 bg-yellow-50 px-3 py-2 text-yellow-700")}>
                 Ожидают ответа ({pendingQuestions.length})
               </div>
               {pendingQuestions.map((q) => (
@@ -626,7 +685,7 @@ export function AdminQuestionsChat({ questions: initialQuestions }: AdminQuestio
           {/* Завершённые */}
           {completedQuestions.length > 0 && (
             <>
-              <div className="px-3 py-2 bg-gray-100 text-xs font-semibold text-gray-600 sticky top-0">
+              <div className={cn(adminSectionLabelClass, "sticky top-0 bg-slate-100 px-3 py-2 text-slate-600")}>
                 Завершённые ({completedQuestions.length})
               </div>
               {completedQuestions.map((q) => (
@@ -635,7 +694,7 @@ export function AdminQuestionsChat({ questions: initialQuestions }: AdminQuestio
                   question={q}
                   isSelected={selectedQuestionId === q.id}
                   onClick={() => setSelectedQuestionId(q.id)}
-                  icon={<CheckCircle className="h-4 w-4 text-gray-400" />}
+                  icon={<CheckCircle className="h-4 w-4 text-slate-400" />}
                 />
               ))}
             </>
@@ -643,7 +702,7 @@ export function AdminQuestionsChat({ questions: initialQuestions }: AdminQuestio
         </div>
           </>
         )}
-      </div>
+      </DashboardCard>
 
       {/* Разделитель между левой и центральной колонкой */}
       {!isLeftCollapsed && (
@@ -651,35 +710,52 @@ export function AdminQuestionsChat({ questions: initialQuestions }: AdminQuestio
           className="w-2 flex-shrink-0 cursor-col-resize flex items-center justify-center hover:bg-blue-100 transition-colors group"
           onMouseDown={() => setIsDragging("left")}
         >
-          <GripVertical className="h-6 w-6 text-gray-300 group-hover:text-blue-400" />
+          <GripVertical className="h-6 w-6 text-slate-300 group-hover:text-blue-400" />
         </div>
       )}
 
       {/* ЦЕНТРАЛЬНАЯ КОЛОНКА - Чат */}
-      <div className="flex-1 bg-white rounded-xl border shadow-sm flex flex-col overflow-hidden min-w-0">
+      <DashboardCard className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {selectedQuestion ? (
           <>
             {/* Шапка чата */}
-            <div className="p-4 border-b bg-gray-50 flex items-center justify-between">
+            <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 p-4">
               <div>
-                <p className="font-semibold">{selectedQuestion.user.name || selectedQuestion.user.email}</p>
-                <p className="text-xs text-gray-500">
+                <p className="font-semibold text-slate-900">
+                  {selectedQuestion.user.name || selectedQuestion.user.email}
+                </p>
+                <p className="text-xs text-slate-500">
                   Создан: {new Date(selectedQuestion.createdAt).toLocaleString("ru-RU")}
                 </p>
               </div>
               <div className="flex gap-2">
                 {selectedQuestion.status === "PENDING" && (
-                  <Button size="sm" variant="outline" onClick={() => handleStatusChange("IN_PROGRESS")}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={adminOutlineBtnClass}
+                    onClick={() => handleStatusChange("IN_PROGRESS")}
+                  >
                     Взять в работу
                   </Button>
                 )}
                 {selectedQuestion.status === "IN_PROGRESS" && (
-                  <Button size="sm" variant="outline" className="text-green-600" onClick={() => handleStatusChange("COMPLETED")}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={cn(adminOutlineBtnClass, "text-green-600")}
+                    onClick={() => handleStatusChange("COMPLETED")}
+                  >
                     Завершить
                   </Button>
                 )}
                 {selectedQuestion.status === "COMPLETED" && (
-                  <Button size="sm" variant="outline" onClick={() => handleStatusChange("PENDING")}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={adminOutlineBtnClass}
+                    onClick={() => handleStatusChange("PENDING")}
+                  >
                     Вернуть
                   </Button>
                 )}
@@ -687,30 +763,20 @@ export function AdminQuestionsChat({ questions: initialQuestions }: AdminQuestio
             </div>
 
             {/* Сообщения */}
-            <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-3">
-              {selectedQuestion.messages.map((msg) => (
-                <div key={msg.id} className={`flex ${msg.isFromAdmin ? "justify-start" : "justify-end"}`}>
-                  <div
-                    className={`rounded-xl px-4 py-2 max-w-[75%] ${
-                      msg.isFromAdmin ? "bg-gray-100 text-gray-900" : "bg-blue-500 text-white"
-                    }`}
-                  >
-                    {msg.isFromAdmin && <p className="text-xs text-gray-500 mb-1">Вы</p>}
-                    {msg.imageUrl && (
-                      <Image src={fileHrefForStoredUrl(msg.imageUrl)} alt="" width={300} height={200} className="rounded-lg mb-2" unoptimized />
-                    )}
-                    {msg.text && <p className="text-sm whitespace-pre-wrap">{msg.text}</p>}
-                    <p className={`text-xs mt-1 ${msg.isFromAdmin ? "text-gray-400" : "text-blue-100"}`}>
-                      {new Date(msg.createdAt).toLocaleString("ru-RU")}
-                    </p>
-                  </div>
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
+            <div
+              ref={messagesContainerRef}
+              className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden bg-slate-50/90 scroll-smooth"
+            >
+              <div className="mt-auto flex flex-col gap-4 px-4 pb-4 pt-4">
+                {selectedQuestion.messages.map((msg) => (
+                  <AdminMessageBubble key={msg.id} message={msg} />
+                ))}
+                <div ref={messagesEndRef} />
+              </div>
             </div>
 
             {/* Форма отправки */}
-            <div className="p-4 border-t bg-white">
+            <div className="shrink-0 border-t border-slate-200 bg-white px-4 py-3 shadow-[0_-2px_8px_rgba(15,23,42,0.06)]">
               {/* Кнопки AI */}
               <div className="mb-3 flex flex-wrap gap-2">
                 <Button
@@ -719,7 +785,10 @@ export function AdminQuestionsChat({ questions: initialQuestions }: AdminQuestio
                   size="sm"
                   onClick={generateAIResponse}
                   disabled={isGenerating || !selectedQuestion?.messages.some((m) => !m.isFromAdmin)}
-                  className="gap-2 bg-gradient-to-r from-purple-50 to-blue-50 hover:from-purple-100 hover:to-blue-100 border-purple-200"
+                  className={cn(
+                    adminOutlineBtnClass,
+                    "gap-2 border-purple-200 bg-gradient-to-r from-purple-50 to-blue-50 hover:from-purple-100 hover:to-blue-100"
+                  )}
                 >
                   {isGenerating ? (
                     <>
@@ -739,7 +808,10 @@ export function AdminQuestionsChat({ questions: initialQuestions }: AdminQuestio
                   size="sm"
                   onClick={addToKnowledgeBase}
                   disabled={isAddingToKnowledge || !selectedQuestion?.messages.some((m) => m.isFromAdmin)}
-                  className="gap-2 bg-gradient-to-r from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 border-green-200"
+                  className={cn(
+                    adminOutlineBtnClass,
+                    "gap-2 border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100"
+                  )}
                   title="AI сформирует статью в базе знаний и шаблон ответа на основе этого диалога"
                 >
                   {isAddingToKnowledge ? (
@@ -755,62 +827,99 @@ export function AdminQuestionsChat({ questions: initialQuestions }: AdminQuestio
                   )}
                 </Button>
                 {message.trim() && (
-                  <span className="text-xs text-gray-500 self-center">
+                  <span className="self-center text-xs text-slate-500">
                     AI улучшит ваш черновик
                   </span>
                 )}
               </div>
               {imagePreview && (
-                <div className="mb-3 relative inline-block">
-                  <Image src={imagePreview} alt="" width={100} height={100} className="rounded-lg border" unoptimized />
+                <div className="relative mb-2 inline-block">
+                  <div className="relative h-20 w-20 overflow-hidden rounded-none border border-slate-200">
+                    <Image src={imagePreview} alt="Предпросмотр" fill className="object-cover" unoptimized />
+                  </div>
                   <button
+                    type="button"
                     onClick={removeImage}
-                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
+                    className="absolute -right-1 -top-1 rounded-none border border-slate-200 bg-white p-0.5 text-slate-600 hover:bg-slate-50"
+                    aria-label="Убрать изображение"
                   >
-                    <X className="h-3 w-3" />
+                    <X className="h-3.5 w-3.5" />
                   </button>
                 </div>
               )}
-              <form onSubmit={handleSendMessage} className="flex gap-2">
+              <form onSubmit={handleSendMessage}>
                 <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
-                <Button type="button" variant="outline" size="icon" onClick={() => fileInputRef.current?.click()}>
-                  <ImageIcon className="h-4 w-4" />
-                </Button>
-                <Textarea
-                  ref={textareaRef}
-                  value={message}
-                  onChange={(e) => {
-                    setMessage(e.target.value);
-                    // Автоматическое расширение
-                    e.target.style.height = "auto";
-                    e.target.style.height = Math.min(e.target.scrollHeight, 300) + "px";
-                  }}
-                  placeholder="Введите сообщение..."
-                  className="flex-1 min-h-[60px] max-h-[300px] resize-y"
-                  rows={2}
-                  disabled={isLoading}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSendMessage(e);
-                    }
-                  }}
-                />
-                <Button type="submit" disabled={isLoading || (!message.trim() && !selectedImage)}>
-                  <Send className="h-4 w-4" />
-                </Button>
+                <div
+                  className={cn(
+                    "flex items-center gap-2 rounded-none border border-slate-200 bg-white py-2 pl-2 pr-3 shadow-sm transition-colors",
+                    "focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500"
+                  )}
+                >
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isLoading || isUploadingImage}
+                    title="Прикрепить изображение"
+                    className={cn(
+                      dashboardButtonClass,
+                      "h-7 w-7 shrink-0 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                    )}
+                  >
+                    <ImageIcon className="h-3.5 w-3.5" />
+                  </Button>
+                  <textarea
+                    ref={textareaRef}
+                    value={message}
+                    onChange={(e) => {
+                      setMessage(e.target.value);
+                      e.target.style.height = "auto";
+                      e.target.style.height = `${Math.min(e.target.scrollHeight, 128)}px`;
+                    }}
+                    placeholder="Введите сообщение…"
+                    rows={1}
+                    disabled={isLoading || isUploadingImage}
+                    className="max-h-28 min-h-[1.25rem] flex-1 resize-none self-center rounded-none border-0 bg-transparent py-0 text-sm leading-snug text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-0"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendMessage(e);
+                      }
+                    }}
+                  />
+                  <Button
+                    type="submit"
+                    disabled={isLoading || isUploadingImage || (!message.trim() && !selectedImage)}
+                    size="icon"
+                    className={cn(
+                      dashboardButtonClass,
+                      "h-7 w-7 shrink-0 rounded-none bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                    )}
+                    title="Отправить"
+                  >
+                    {isLoading || isUploadingImage ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
               </form>
+              {isUploadingImage ? (
+                <p className="mt-1.5 text-xs text-slate-500">Загрузка изображения…</p>
+              ) : null}
             </div>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center text-gray-400">
+          <div className="flex flex-1 items-center justify-center text-slate-400">
             <div className="text-center">
-              <User className="h-16 w-16 mx-auto mb-4 opacity-50" />
+              <User className="mx-auto mb-4 h-16 w-16 opacity-50" />
               <p>Выберите диалог</p>
             </div>
           </div>
         )}
-      </div>
+      </DashboardCard>
 
       {/* Разделитель между центральной и правой колонкой */}
       {!isRightCollapsed && (
@@ -818,102 +927,114 @@ export function AdminQuestionsChat({ questions: initialQuestions }: AdminQuestio
           className="w-2 flex-shrink-0 cursor-col-resize flex items-center justify-center hover:bg-blue-100 transition-colors group"
           onMouseDown={() => setIsDragging("right")}
         >
-          <GripVertical className="h-6 w-6 text-gray-300 group-hover:text-blue-400" />
+          <GripVertical className="h-6 w-6 text-slate-300 group-hover:text-blue-400" />
         </div>
       )}
 
       {/* ПРАВАЯ КОЛОНКА - Шаблоны и База знаний */}
-      <div
+      <DashboardCard
         style={{ width: isRightCollapsed ? 48 : rightWidth }}
-        className="flex-shrink-0 bg-white rounded-xl border shadow-sm flex flex-col overflow-hidden transition-all duration-200"
+        className="flex shrink-0 flex-col overflow-hidden transition-all duration-200"
       >
         {isRightCollapsed ? (
           <button
             onClick={() => setIsRightCollapsed(false)}
-            className="h-full flex items-center justify-center hover:bg-gray-50"
+            className="flex h-full items-center justify-center hover:bg-slate-50"
             title="Развернуть панель"
           >
-            <PanelRightClose className="h-5 w-5 text-gray-400 rotate-180" />
+            <PanelRightClose className="h-5 w-5 rotate-180 text-slate-400" />
           </button>
         ) : (
           <>
         {/* Табы */}
-        <div className="flex border-b">
+        <div className="flex border-b border-slate-100">
           <button
             onClick={() => { setRightTab("templates"); resetForm(); }}
-            className={`flex-1 px-3 py-2.5 text-sm font-medium flex items-center justify-center gap-1.5 ${
-              rightTab === "templates" ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50" : "text-gray-600 hover:bg-gray-50"
-            }`}
+            className={cn(
+              "flex flex-1 items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-medium",
+              rightTab === "templates"
+                ? "border-b-2 border-blue-600 bg-blue-50 text-blue-600"
+                : "text-slate-600 hover:bg-slate-50"
+            )}
           >
             <MessageSquareText className="h-4 w-4" />
             <span className="hidden sm:inline">Шаблоны</span>
           </button>
           <button
             onClick={() => { setRightTab("knowledge"); resetForm(); }}
-            className={`flex-1 px-3 py-2.5 text-sm font-medium flex items-center justify-center gap-1.5 ${
-              rightTab === "knowledge" ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50" : "text-gray-600 hover:bg-gray-50"
-            }`}
+            className={cn(
+              "flex flex-1 items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-medium",
+              rightTab === "knowledge"
+                ? "border-b-2 border-blue-600 bg-blue-50 text-blue-600"
+                : "text-slate-600 hover:bg-slate-50"
+            )}
           >
             <BookOpen className="h-4 w-4" />
             <span className="hidden sm:inline">База знаний</span>
           </button>
           <button
             onClick={() => setIsRightCollapsed(true)}
-            className="px-2 py-2.5 hover:bg-gray-100 border-l"
+            className="border-l border-slate-100 px-2 py-2.5 hover:bg-slate-100"
             title="Свернуть"
           >
-            <PanelRightClose className="h-4 w-4 text-gray-500" />
+            <PanelRightClose className="h-4 w-4 text-slate-500" />
           </button>
         </div>
 
         {/* Поиск и добавление */}
-        <div className="p-3 border-b space-y-2">
+        <div className="space-y-2 border-b border-slate-100 p-3">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-slate-400" />
             <Input
               placeholder="Поиск..."
               value={searchRight}
               onChange={(e) => setSearchRight(e.target.value)}
-              className="pl-9"
+              className={cn(adminFieldClass, "pl-9")}
             />
           </div>
           <Button
             size="sm"
             variant="outline"
-            className="w-full"
+            className={cn(adminOutlineBtnClass, "w-full")}
             onClick={() => {
               resetForm();
               setShowAddForm(true);
             }}
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="mr-2 h-4 w-4" />
             {rightTab === "templates" ? "Добавить шаблон" : "Добавить статью"}
           </Button>
         </div>
 
         {/* Форма добавления/редактирования */}
         {showAddForm && (
-          <div className="p-3 border-b bg-gray-50 space-y-2">
+          <div className="space-y-2 border-b border-slate-100 bg-slate-50 p-3">
             <Input
               placeholder="Название"
               value={newItemTitle}
               onChange={(e) => setNewItemTitle(e.target.value)}
+              className={adminFieldClass}
             />
-            <Textarea
+            <textarea
               placeholder="Содержание"
               value={newItemContent}
               onChange={(e) => setNewItemContent(e.target.value)}
               rows={4}
+              className={cn(
+                adminFieldClass,
+                "min-h-[5rem] w-full resize-none px-3 py-2 text-sm"
+              )}
             />
             <div className="flex gap-2">
               <Button
                 size="sm"
+                className={adminPrimaryBtnClass}
                 onClick={rightTab === "templates" ? saveTemplate : saveArticle}
                 disabled={!newItemTitle.trim() || !newItemContent.trim()}
               >
                 {editingTemplate || editingArticle ? "Сохранить" : "Добавить"}
               </Button>
-              <Button size="sm" variant="outline" onClick={resetForm}>
+              <Button size="sm" variant="outline" className={adminOutlineBtnClass} onClick={resetForm}>
                 Отмена
               </Button>
             </div>
@@ -924,35 +1045,35 @@ export function AdminQuestionsChat({ questions: initialQuestions }: AdminQuestio
         <div className="flex-1 overflow-y-auto">
           {rightTab === "templates" ? (
             filteredTemplates.length === 0 ? (
-              <p className="text-center text-gray-400 py-8">Нет шаблонов</p>
+              <p className="py-8 text-center text-slate-400">Нет шаблонов</p>
             ) : (
               filteredTemplates.map((t) => (
                 <div
                   key={t.id}
-                  className="p-3 border-b hover:bg-gray-50 group cursor-pointer"
+                  className="group cursor-pointer border-b border-slate-100 p-3 hover:bg-slate-50"
                   onClick={() => insertText(t.content)}
                 >
                   <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">{t.title}</p>
-                      <p className="text-xs text-gray-500 line-clamp-2 mt-1">{t.content}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-slate-900">{t.title}</p>
+                      <p className="mt-1 line-clamp-2 text-xs text-slate-500">{t.content}</p>
                     </div>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-2">
+                    <div className="ml-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                       <button
                         onClick={(e) => { e.stopPropagation(); startEditTemplate(t); }}
-                        className="p-1 hover:bg-gray-200 rounded"
+                        className="rounded-none p-1 hover:bg-slate-200"
                       >
-                        <Pencil className="h-3 w-3 text-gray-500" />
+                        <Pencil className="h-3 w-3 text-slate-500" />
                       </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); deleteTemplate(t.id); }}
-                        className="p-1 hover:bg-red-100 rounded"
+                        className="rounded-none p-1 hover:bg-red-100"
                       >
                         <Trash2 className="h-3 w-3 text-red-500" />
                       </button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 mt-2 text-xs text-blue-500">
+                  <div className="mt-2 flex items-center gap-1 text-xs text-blue-500">
                     <ChevronRight className="h-3 w-3" />
                     <span>Нажмите, чтобы вставить</span>
                   </div>
@@ -960,35 +1081,35 @@ export function AdminQuestionsChat({ questions: initialQuestions }: AdminQuestio
               ))
             )
           ) : filteredArticles.length === 0 ? (
-            <p className="text-center text-gray-400 py-8">Нет статей</p>
+            <p className="py-8 text-center text-slate-400">Нет статей</p>
           ) : (
             filteredArticles.map((a) => (
               <div
                 key={a.id}
-                className="p-3 border-b hover:bg-gray-50 group cursor-pointer"
+                className="group cursor-pointer border-b border-slate-100 p-3 hover:bg-slate-50"
                 onClick={() => insertText(a.content)}
               >
                 <div className="flex items-start justify-between">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">{a.title}</p>
-                    <p className="text-xs text-gray-500 line-clamp-2 mt-1">{a.content}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-slate-900">{a.title}</p>
+                    <p className="mt-1 line-clamp-2 text-xs text-slate-500">{a.content}</p>
                   </div>
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-2">
+                  <div className="ml-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                     <button
                       onClick={(e) => { e.stopPropagation(); startEditArticle(a); }}
-                      className="p-1 hover:bg-gray-200 rounded"
+                      className="rounded-none p-1 hover:bg-slate-200"
                     >
-                      <Pencil className="h-3 w-3 text-gray-500" />
+                      <Pencil className="h-3 w-3 text-slate-500" />
                     </button>
                     <button
                       onClick={(e) => { e.stopPropagation(); deleteArticle(a.id); }}
-                      className="p-1 hover:bg-red-100 rounded"
+                      className="rounded-none p-1 hover:bg-red-100"
                     >
                       <Trash2 className="h-3 w-3 text-red-500" />
                     </button>
                   </div>
                 </div>
-                <div className="flex items-center gap-1 mt-2 text-xs text-blue-500">
+                <div className="mt-2 flex items-center gap-1 text-xs text-blue-500">
                   <ChevronRight className="h-3 w-3" />
                   <span>Нажмите, чтобы вставить</span>
                 </div>
@@ -998,7 +1119,7 @@ export function AdminQuestionsChat({ questions: initialQuestions }: AdminQuestio
         </div>
           </>
         )}
-      </div>
+      </DashboardCard>
     </div>
   );
 }
@@ -1019,16 +1140,21 @@ function ChatListItem({
   return (
     <button
       onClick={onClick}
-      className={`w-full text-left p-3 border-b hover:bg-gray-50 transition-colors ${
-        isSelected ? "bg-blue-50 border-l-4 border-l-blue-500" : ""
-      }`}
+      className={cn(
+        "w-full border-b border-slate-100 p-3 text-left transition-colors hover:bg-slate-50",
+        isSelected && "border-l-4 border-l-blue-500 bg-blue-50"
+      )}
     >
       <div className="flex items-start gap-2">
-        <div className="mt-0.5 flex-shrink-0">{icon}</div>
-        <div className="flex-1 min-w-0">
-          <p className="font-medium text-sm truncate">{question.user.name || question.user.email}</p>
-          {lastMessage && <p className="text-xs text-gray-500 truncate">{lastMessage.text}</p>}
-          <p className="text-xs text-gray-400 mt-1">
+        <div className="mt-0.5 shrink-0">{icon}</div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-medium text-slate-900">
+            {question.user.name || question.user.email}
+          </p>
+          {lastMessage && (
+            <p className="truncate text-xs text-slate-500">{lastMessage.text}</p>
+          )}
+          <p className="mt-1 text-xs text-slate-400">
             {new Date(question.updatedAt).toLocaleString("ru-RU")}
           </p>
         </div>

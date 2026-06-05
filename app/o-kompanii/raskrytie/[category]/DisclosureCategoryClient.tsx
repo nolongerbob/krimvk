@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { FileText, Search } from "lucide-react";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
+import { siteFieldClass } from "@/components/site/site-styles";
 import {
   DisclosureDocumentCard,
   type DisclosureDocumentItem,
@@ -73,48 +74,48 @@ export function DisclosureCategoryClient({
   }, [documents, searchQuery]);
 
   return (
-    <div className="flex min-h-[calc(100dvh-4rem)] flex-col bg-gray-50 py-8 md:py-12 pb-14 lg:min-h-[calc(100dvh-4.5rem)]">
+    <div className="flex min-h-[calc(100dvh-4rem)] flex-col bg-slate-50 py-8 md:py-12 pb-14 lg:min-h-[calc(100dvh-4.5rem)]">
       <div className="container max-w-6xl flex-1 px-4">
         <div className="mb-10 text-center animate-fade-in md:mb-12">
           <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-none bg-blue-100">
             <FileText className="h-7 w-7 text-blue-600" />
           </div>
-          <h1 className="mx-auto mb-3 max-w-3xl text-center text-3xl font-semibold tracking-tight text-gray-900 md:text-4xl">
+          <h1 className="mx-auto mb-3 max-w-3xl text-center text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
             {categoryInfo.title}
           </h1>
-          <p className="mx-auto max-w-3xl text-center text-base text-gray-600 md:text-lg">
+          <p className="mx-auto max-w-3xl text-center text-base text-slate-600 md:text-lg">
             {categoryInfo.description}
           </p>
         </div>
 
         <div className="mb-8">
           <div className="relative mx-auto max-w-2xl">
-            <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
             <Input
               type="text"
               placeholder="Поиск по названию документа..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="rounded-none py-6 pl-10 text-base md:text-lg"
+              className={`rounded-none py-6 pl-10 text-base md:text-lg ${siteFieldClass}`}
             />
           </div>
         </div>
 
         {loading ? (
           <div className="py-12 text-center">
-            <p className="text-gray-500">Поиск...</p>
+            <p className="text-slate-500">Поиск...</p>
           </div>
         ) : filteredDocuments.length === 0 ? (
-          <Card className="rounded-none border border-gray-200 shadow-none">
-            <CardContent className="py-12 text-center">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-none bg-gray-100">
-                <FileText className="h-6 w-6 text-gray-400" />
+          <DashboardCard className="rounded-none border border-slate-200 shadow-none">
+            <DashboardCardBody className="py-12 text-center">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-none bg-slate-100">
+                <FileText className="h-6 w-6 text-slate-400" />
               </div>
-              <p className="text-gray-500">
+              <p className="text-slate-500">
                 {searchQuery ? "Документы не найдены" : "Документы отсутствуют"}
               </p>
-            </CardContent>
-          </Card>
+            </DashboardCardBody>
+          </DashboardCard>
         ) : (
           <div className="grid gap-4">
             {filteredDocuments.map((doc) => (

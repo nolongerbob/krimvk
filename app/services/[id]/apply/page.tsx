@@ -3,11 +3,13 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { AddressInput } from "@/components/AddressInput";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
+import { siteFieldClass, sitePrimaryBtnClass, siteOutlineBtnClass } from "@/components/site/site-styles";
+import { sitePageClass, siteContainerClass } from "@/components/site/site-styles";
 
 export default function ApplyServicePage() {
   const router = useRouter();
@@ -142,30 +144,30 @@ export default function ApplyServicePage() {
 
   if (status === "loading" || loadingService) {
     return (
-      <div className="container py-12 px-4 max-w-2xl">
-        <p className="text-gray-600">Загрузка...</p>
+      <div className={`${siteContainerClass} max-w-2xl`}>
+        <p className="text-slate-600">Загрузка...</p>
       </div>
     );
   }
 
   if (!service) {
     return (
-      <div className="container py-12 px-4 max-w-2xl">
-        <Card className="rounded-none shadow-none">
-          <CardContent className="py-12 text-center">
+      <div className={`${siteContainerClass} max-w-2xl`}>
+        <DashboardCard className="rounded-none shadow-none">
+          <DashboardCardBody className="py-12 text-center">
             <p className="text-red-500">{error || "Услуга не найдена"}</p>
-            <Button asChild className="mt-4 rounded-none hover:scale-100 active:scale-100">
+            <Button asChild className={`mt-4 ${sitePrimaryBtnClass}`}>
               <Link href="/services">Вернуться к услугам</Link>
             </Button>
-          </CardContent>
-        </Card>
+          </DashboardCardBody>
+        </DashboardCard>
       </div>
     );
   }
 
   return (
-    <div className="bg-gray-50 min-h-[calc(100vh-4rem)]">
-      <div className="container py-12 px-4 max-w-2xl">
+    <div className={sitePageClass}>
+      <div className={`${siteContainerClass} max-w-2xl`}>
         <Button
           variant="ghost"
           asChild
@@ -177,12 +179,12 @@ export default function ApplyServicePage() {
           </Link>
         </Button>
 
-        <Card className="rounded-none shadow-none">
-          <CardHeader className="p-6 pb-4">
-            <CardTitle className="text-2xl font-semibold tracking-tight">Подача заявки</CardTitle>
-            <CardDescription className="text-base">{service.title}</CardDescription>
-          </CardHeader>
-          <CardContent className="p-6 pt-4">
+        <DashboardCard className="rounded-none shadow-none">
+          <div className="p-6 pb-4 p-6 pb-4" >
+            <h2 className="text-2xl font-semibold tracking-tight">Подача заявки</h2>
+            <p className="text-base">{service.title}</p>
+          </div>
+          <DashboardCardBody className="p-6 pt-4">
             {existingApplication && (
               <div className="mb-6 rounded-none border border-blue-200 bg-blue-50 p-4">
               <div className="flex items-start gap-3">
@@ -271,11 +273,11 @@ export default function ApplyServicePage() {
                 required
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full rounded-none px-3 py-2 border focus:outline-none focus:ring-2 focus:ring-primary"
+                className={`w-full px-3 py-2 border ${siteFieldClass}`}
                 placeholder="+7 (999) 123-45-67"
               />
               {formData.phone && (
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-slate-500 mt-1">
                   Телефон загружен из вашего профиля. Вы можете изменить его.
                 </p>
               )}
@@ -289,16 +291,16 @@ export default function ApplyServicePage() {
                 rows={6}
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full rounded-none px-3 py-2 border focus:outline-none focus:ring-2 focus:ring-primary"
+                className={`w-full px-3 py-2 border ${siteFieldClass}`}
                 placeholder="Опишите детали заявки..."
               />
             </div>
             {service.price && (
               <div className="rounded-none border border-blue-100 bg-blue-50 p-4">
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-slate-600">
                   <strong>Стоимость услуги:</strong> {service.price}
                 </p>
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-slate-500 mt-2">
                   Точная стоимость будет рассчитана после осмотра объекта нашим специалистом.
                 </p>
               </div>
@@ -306,14 +308,14 @@ export default function ApplyServicePage() {
             <Button
               type="submit"
               disabled={submitting || !!existingApplication}
-              className="w-full rounded-none hover:scale-100 active:scale-100"
+              className={`w-full ${sitePrimaryBtnClass}`}
               size="lg"
             >
               {submitting ? "Отправка..." : existingApplication ? "Заявка уже подана" : "Подать заявку"}
             </Button>
           </form>
-        </CardContent>
-      </Card>
+        </DashboardCardBody>
+      </DashboardCard>
       </div>
     </div>
   );

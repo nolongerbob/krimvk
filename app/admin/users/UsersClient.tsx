@@ -231,7 +231,7 @@ export function UsersClient({ users: initialUsers, currentUserId }: UsersClientP
 
         {/* Поиск */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input
             type="text"
             placeholder="Поиск по имени, email, телефону, адресу или номеру лицевого счета..."
@@ -283,18 +283,18 @@ export function UsersClient({ users: initialUsers, currentUserId }: UsersClientP
                         <span>{user.email}</span>
                       </div>
                       {user.phone && (
-                        <div className="flex items-center gap-2 text-gray-600">
+                        <div className="flex items-center gap-2 text-slate-600">
                           <Phone className="h-4 w-4" />
                           <span>{user.phone}</span>
                         </div>
                       )}
                       {user.address && (
-                        <div className="flex items-center gap-2 text-gray-600">
+                        <div className="flex items-center gap-2 text-slate-600">
                           <Building className="h-4 w-4" />
                           <span className="truncate">{user.address}</span>
                         </div>
                       )}
-                      <div className="flex items-center gap-2 text-gray-600">
+                      <div className="flex items-center gap-2 text-slate-600">
                         <Calendar className="h-4 w-4" />
                         <span>
                           Регистрация:{" "}
@@ -310,14 +310,14 @@ export function UsersClient({ users: initialUsers, currentUserId }: UsersClientP
                         </span>
                       </div>
                       {user.userAccounts.length > 0 && (
-                        <div className="ml-6 space-y-1 text-xs text-gray-600">
+                        <div className="ml-6 space-y-1 text-xs text-slate-600">
                           {user.userAccounts.slice(0, 3).map((acc) => (
                             <div key={acc.id}>
                               ЛС {acc.accountNumber} - {acc.address}
                             </div>
                           ))}
                           {user.userAccounts.length > 3 && (
-                            <div className="text-gray-400">
+                            <div className="text-slate-400">
                               и еще {user.userAccounts.length - 3}...
                             </div>
                           )}
@@ -355,8 +355,8 @@ export function UsersClient({ users: initialUsers, currentUserId }: UsersClientP
                         )}
                       </div>
                       <div className="flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-gray-500" />
-                        <span className="text-gray-600">
+                        <FileText className="h-4 w-4 text-slate-500" />
+                        <span className="text-slate-600">
                           Заявок: {user.applications.length}
                         </span>
                       </div>

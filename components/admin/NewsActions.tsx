@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { adminOutlineBtnClass } from "@/components/admin/admin-styles";
+import { cn } from "@/lib/utils";
 
 interface NewsActionsProps {
   newsId: string;
@@ -27,7 +29,6 @@ export function NewsActions({ newsId, published }: NewsActionsProps) {
       });
 
       if (response.ok) {
-        // Обновляем данные страницы
         router.refresh();
       } else {
         const data = await response.json();
@@ -57,7 +58,6 @@ export function NewsActions({ newsId, published }: NewsActionsProps) {
       });
 
       if (response.ok) {
-        // Обновляем данные страницы
         router.refresh();
       } else {
         const data = await response.json();
@@ -72,22 +72,23 @@ export function NewsActions({ newsId, published }: NewsActionsProps) {
   };
 
   return (
-    <div className="flex gap-4">
+    <div className="flex gap-2">
       <Button
         variant="outline"
         size="sm"
         onClick={handleToggle}
         disabled={isLoading}
+        className={adminOutlineBtnClass}
       >
         {isLoading ? "Обновление..." : published ? "Снять с публикации" : "Опубликовать"}
       </Button>
-      <Button asChild variant="outline" size="sm">
+      <Button asChild variant="outline" size="sm" className={adminOutlineBtnClass}>
         <Link href={`/admin/news/${newsId}/edit`}>Редактировать</Link>
       </Button>
       <Button
         variant="outline"
         size="sm"
-        className="text-red-600"
+        className={cn(adminOutlineBtnClass, "text-red-600 hover:text-red-700")}
         onClick={handleDelete}
         disabled={isLoading}
       >
@@ -96,4 +97,3 @@ export function NewsActions({ newsId, published }: NewsActionsProps) {
     </div>
   );
 }
-

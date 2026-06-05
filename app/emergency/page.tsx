@@ -3,13 +3,21 @@
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle, CheckCircle } from "lucide-react";
 import Link from "next/link";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
+import {
+  siteFieldClass,
+  siteTextareaClass,
+  sitePrimaryBtnClass,
+  siteOutlineBtnClass,
+  sitePageClass,
+  siteContainerClass,
+} from "@/components/site/site-styles";
 
 export default function EmergencyPage() {
   const { data: session } = useSession();
@@ -78,18 +86,19 @@ export default function EmergencyPage() {
 
   if (success) {
     return (
-      <div className="container py-12 px-4 max-w-2xl">
-        <Card className="animate-fade-in">
-          <CardHeader>
+      <div className={sitePageClass}>
+        <div className={`${siteContainerClass} max-w-2xl`}>
+        <DashboardCard className="animate-fade-in">
+          <div className="p-6 pb-4">
             <div className="flex items-center gap-3 mb-2">
               <CheckCircle className="h-8 w-8 text-green-500" />
-              <CardTitle className="text-2xl">Сообщение отправлено</CardTitle>
+              <h2 className="text-2xl">Сообщение отправлено</h2>
             </div>
-            <CardDescription>
+            <p>
               Ваше сообщение об аварии успешно отправлено. Наши специалисты свяжутся с вами в ближайшее время.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+            </p>
+          </div>
+          <DashboardCardBody>
             <div className="space-y-4">
               <Alert>
                 <AlertTriangle className="h-4 w-4" />
@@ -104,31 +113,33 @@ export default function EmergencyPage() {
                   </a>
                 </AlertDescription>
               </Alert>
-              <Button asChild className="w-full">
+              <Button asChild className={`w-full ${sitePrimaryBtnClass}`}>
                 <Link href="/">Вернуться на главную</Link>
               </Button>
             </div>
-          </CardContent>
-        </Card>
+          </DashboardCardBody>
+        </DashboardCard>
+      </div>
       </div>
     );
   }
 
   return (
-    <div className="container py-12 px-4 max-w-2xl">
+    <div className={sitePageClass}>
+      <div className={`${siteContainerClass} max-w-2xl`}>
       <div className="mb-8 animate-fade-in">
         <h1 className="text-3xl font-bold mb-2">Сообщение об аварии</h1>
-        <p className="text-gray-600">
+        <p className="text-slate-600">
           Заполните форму для сообщения об аварийной ситуации. Мы обработаем ваше сообщение в кратчайшие сроки.
         </p>
       </div>
 
-      <Card className="animate-fade-in animate-delay-100">
-        <CardHeader>
-          <CardTitle>Информация об аварии</CardTitle>
-          <CardDescription>Укажите контактные данные и опишите проблему</CardDescription>
-        </CardHeader>
-        <CardContent>
+      <DashboardCard className="animate-fade-in animate-delay-100">
+        <div className="p-6 pb-4">
+          <h2>Информация об аварии</h2>
+          <p>Укажите контактные данные и опишите проблему</p>
+        </div>
+        <DashboardCardBody>
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
               <Alert variant="destructive">
@@ -145,6 +156,7 @@ export default function EmergencyPage() {
                   value={formData.name}
                   onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
                   placeholder="Ваше имя"
+                  className={siteFieldClass}
                 />
               </div>
               <div>
@@ -158,6 +170,7 @@ export default function EmergencyPage() {
                   value={formData.phone}
                   onChange={(e) => setFormData((prev) => ({ ...prev, phone: e.target.value }))}
                   placeholder="+7 (978) 123-45-67"
+                  className={siteFieldClass}
                 />
               </div>
             </div>
@@ -170,6 +183,7 @@ export default function EmergencyPage() {
                 value={formData.email}
                 onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
                 placeholder="your@email.com"
+                className={siteFieldClass}
               />
             </div>
 
@@ -183,6 +197,7 @@ export default function EmergencyPage() {
                 value={formData.address}
                 onChange={(e) => setFormData((prev) => ({ ...prev, address: e.target.value }))}
                 placeholder="Укажите точный адрес, где произошла авария"
+                className={siteFieldClass}
               />
             </div>
 
@@ -196,7 +211,7 @@ export default function EmergencyPage() {
                 rows={6}
                 value={formData.description}
                 onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                className={`w-full px-3 py-2 resize-none ${siteTextareaClass}`}
                 placeholder="Опишите подробно, что произошло..."
               />
             </div>
@@ -217,16 +232,17 @@ export default function EmergencyPage() {
             </Alert>
 
             <div className="flex gap-4">
-              <Button type="submit" className="flex-1" size="lg" disabled={isSubmitting}>
+              <Button type="submit" className={`flex-1 ${sitePrimaryBtnClass}`} size="lg" disabled={isSubmitting}>
                 {isSubmitting ? "Отправка..." : "Отправить сообщение"}
               </Button>
-              <Button type="button" variant="outline" asChild>
+              <Button type="button" variant="outline" className={siteOutlineBtnClass} asChild>
                 <Link href="/">Отмена</Link>
               </Button>
             </div>
           </form>
-        </CardContent>
-      </Card>
+        </DashboardCardBody>
+      </DashboardCard>
+      </div>
     </div>
   );
 }

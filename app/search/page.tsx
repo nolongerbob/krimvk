@@ -1,9 +1,15 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search as SearchIcon } from "lucide-react";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
+import {
+  siteFieldClass,
+  sitePrimaryBtnClass,
+  sitePageClass,
+  siteContainerClass,
+} from "@/components/site/site-styles";
 
 interface SearchPageProps {
   searchParams: Promise<{ q?: string }> | { q?: string };
@@ -165,21 +171,22 @@ export default async function SearchPage(props: SearchPageProps) {
   }
 
   return (
-    <div className="container py-12 px-4 max-w-4xl">
+    <div className={sitePageClass}>
+      <div className={`${siteContainerClass} max-w-4xl`}>
       <div className="mb-8 animate-fade-in">
         <h1 className="text-3xl font-bold mb-4">Поиск по сайту</h1>
         <form action="/search" method="get" className="flex gap-2">
           <div className="relative flex-1">
-            <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
             <Input
               type="text"
               name="q"
               placeholder="Введите запрос для поиска..."
               defaultValue={query}
-              className="pl-10"
+              className={`pl-10 ${siteFieldClass}`}
             />
           </div>
-          <Button type="submit">Найти</Button>
+          <Button type="submit" className={sitePrimaryBtnClass}>Найти</Button>
         </form>
       </div>
 
@@ -187,55 +194,56 @@ export default async function SearchPage(props: SearchPageProps) {
         <div className="animate-fade-in animate-delay-100">
           {results.length > 0 ? (
             <div className="space-y-4">
-              <p className="text-gray-600">
+              <p className="text-slate-600">
                 Найдено результатов: <strong>{results.length}</strong>
               </p>
               {results.map((result, index) => (
-                <Card key={index} className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
+                <DashboardCard key={index}>
+                  <div className="p-6 pb-4">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <CardTitle className="text-lg mb-2">
+                        <h2 className="text-lg mb-2">
                           <Link href={result.url} className="hover:text-blue-600 transition-colors">
                             {result.title}
                           </Link>
-                        </CardTitle>
-                        <CardDescription className="text-sm">{result.type}</CardDescription>
+                        </h2>
+                        <p className="text-sm">{result.type}</p>
                       </div>
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-700 text-sm">{result.description}</p>
+                  </div>
+                  <DashboardCardBody>
+                    <p className="text-slate-700 text-sm">{result.description}</p>
                     <Link
                       href={result.url}
                       className="text-blue-600 hover:underline text-sm mt-2 inline-block"
                     >
                       Читать далее →
                     </Link>
-                  </CardContent>
-                </Card>
+                  </DashboardCardBody>
+                </DashboardCard>
               ))}
             </div>
           ) : (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <p className="text-gray-500 text-lg mb-2">Ничего не найдено</p>
-                <p className="text-gray-400 text-sm">
+            <DashboardCard>
+              <DashboardCardBody className="py-12 text-center">
+                <p className="text-slate-500 text-lg mb-2">Ничего не найдено</p>
+                <p className="text-slate-400 text-sm">
                   Попробуйте изменить запрос или использовать другие ключевые слова
                 </p>
-              </CardContent>
-            </Card>
+              </DashboardCardBody>
+            </DashboardCard>
           )}
         </div>
       )}
 
       {!query && (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <p className="text-gray-500">Введите запрос для поиска</p>
-          </CardContent>
-        </Card>
+        <DashboardCard>
+          <DashboardCardBody className="py-12 text-center">
+            <p className="text-slate-500">Введите запрос для поиска</p>
+          </DashboardCardBody>
+        </DashboardCard>
       )}
+      </div>
     </div>
   );
 }

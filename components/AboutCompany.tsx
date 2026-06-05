@@ -2,9 +2,9 @@
 
 import { useState, useRef, useLayoutEffect, useEffect } from "react";
 import { Building2, Users, Award, TrendingUp, ChevronLeft, ChevronRight, Droplet, Wrench, Rocket, UserCog, Shield, BookOpen, Construction, Cpu, Waves, Globe, Zap, Leaf } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
 
 const iconBoxClass = "p-2 rounded-none mt-1";
 
@@ -34,7 +34,7 @@ const companyInfo: Array<{
               </div>
               <div>
                 <p className="font-medium">Масштаб:</p>
-                <p className="text-gray-600">Обслуживаем 234 населенных пункта (более 177 000 жителей).</p>
+                <p className="text-slate-600">Обслуживаем 234 населенных пункта (более 177 000 жителей).</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -43,7 +43,7 @@ const companyInfo: Array<{
               </div>
               <div>
                 <p className="font-medium">Инфраструктура:</p>
-                <p className="text-gray-600">2 300 км сетей, 406 скважин и современные очистные сооружения.</p>
+                <p className="text-slate-600">2 300 км сетей, 406 скважин и современные очистные сооружения.</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -52,7 +52,7 @@ const companyInfo: Array<{
               </div>
               <div>
                 <p className="font-medium">Технологии:</p>
-                <p className="text-gray-600">Внедрили дистанционное управление скважинами (IoT) и обновили автопарк на 100%.</p>
+                <p className="text-slate-600">Внедрили дистанционное управление скважинами (IoT) и обновили автопарк на 100%.</p>
               </div>
             </div>
           </div>
@@ -80,7 +80,7 @@ const companyInfo: Array<{
               </div>
               <div>
                 <p className="font-medium">Профессионализм:</p>
-                <p className="text-gray-600">Высококвалифицированные инженеры и мастера, знающие каждый метр крымских коммуникаций.</p>
+                <p className="text-slate-600">Высококвалифицированные инженеры и мастера, знающие каждый метр крымских коммуникаций.</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -89,7 +89,7 @@ const companyInfo: Array<{
               </div>
               <div>
                 <p className="font-medium">Надежность:</p>
-                <p className="text-gray-600">Аварийные бригады работают в режиме 24/7, выезжая на устранение неполадок в любую погоду.</p>
+                <p className="text-slate-600">Аварийные бригады работают в режиме 24/7, выезжая на устранение неполадок в любую погоду.</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -98,7 +98,7 @@ const companyInfo: Array<{
               </div>
               <div>
                 <p className="font-medium">Развитие:</p>
-                <p className="text-gray-600">Мы постоянно учимся, осваивая современное насосное оборудование и цифровые системы управления.</p>
+                <p className="text-slate-600">Мы постоянно учимся, осваивая современное насосное оборудование и цифровые системы управления.</p>
               </div>
             </div>
           </div>
@@ -126,7 +126,7 @@ const companyInfo: Array<{
               </div>
               <div>
                 <p className="font-medium">Модернизация:</p>
-                <p className="text-gray-600">Заменили более 40 км ветхих сетей и реализовали 112 проектов капитального ремонта в селах.</p>
+                <p className="text-slate-600">Заменили более 40 км ветхих сетей и реализовали 112 проектов капитального ремонта в селах.</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -135,7 +135,7 @@ const companyInfo: Array<{
               </div>
               <div>
                 <p className="font-medium">Инновации:</p>
-                <p className="text-gray-600">Внедрили автоматику и дистанционный мониторинг на 189 скважинах, а также обновили насосное оборудование на энергоэффективное.</p>
+                <p className="text-slate-600">Внедрили автоматику и дистанционный мониторинг на 189 скважинах, а также обновили насосное оборудование на энергоэффективное.</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -144,7 +144,7 @@ const companyInfo: Array<{
               </div>
               <div>
                 <p className="font-medium">Стабильность:</p>
-                <p className="text-gray-600">Восстановили 30 заброшенных скважин, что позволило перевести водоснабжение населенных пунктов на круглосуточный режим.</p>
+                <p className="text-slate-600">Восстановили 30 заброшенных скважин, что позволило перевести водоснабжение населенных пунктов на круглосуточный режим.</p>
               </div>
             </div>
           </div>
@@ -172,7 +172,7 @@ const companyInfo: Array<{
               </div>
               <div>
                 <p className="font-medium">Масштабирование:</p>
-                <p className="text-gray-600">Расширение сети водоснабжения для подключения новых абонентов в отдаленных поселках.</p>
+                <p className="text-slate-600">Расширение сети водоснабжения для подключения новых абонентов в отдаленных поселках.</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -181,7 +181,7 @@ const companyInfo: Array<{
               </div>
               <div>
                 <p className="font-medium">Энергоэффективность:</p>
-                <p className="text-gray-600">Снижение затрат и углеродного следа за счет установки умного оборудования.</p>
+                <p className="text-slate-600">Снижение затрат и углеродного следа за счет установки умного оборудования.</p>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -190,7 +190,7 @@ const companyInfo: Array<{
               </div>
               <div>
                 <p className="font-medium">Экология:</p>
-                <p className="text-gray-600">Внедрение «зеленых» стандартов и улучшение качества очистки сточных вод.</p>
+                <p className="text-slate-600">Внедрение «зеленых» стандартов и улучшение качества очистки сточных вод.</p>
               </div>
             </div>
           </div>
@@ -322,7 +322,7 @@ export function AboutCompany({ embedded = false }: { embedded?: boolean }) {
           aria-hidden
         >
           {companyInfo.map((info) => (
-            <div key={info.id} data-measure-panel className="text-base leading-relaxed text-gray-700">
+            <div key={info.id} data-measure-panel className="text-base leading-relaxed text-slate-700">
               {info.content}
             </div>
           ))}
@@ -347,7 +347,7 @@ export function AboutCompany({ embedded = false }: { embedded?: boolean }) {
                       "about-company-tab bvi-no-styles flex items-center gap-2 rounded-none px-5 py-4 transition-colors duration-200",
                       activeTab === index
                         ? "bg-blue-600 text-white shadow-soft-lg"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                     )}
                   >
                     <TabIcon className="about-company-tab-icon-svg h-4 w-4 shrink-0" />
@@ -357,26 +357,26 @@ export function AboutCompany({ embedded = false }: { embedded?: boolean }) {
               })}
             </div>
 
-            <Card
+            <DashboardCard
               className="about-company-panel flex flex-col rounded-none hover:translate-y-0"
               style={syncedPanelHeight ? { height: syncedPanelHeight } : undefined}
             >
-              <CardContent className="flex h-full min-h-0 flex-col p-6">
+              <DashboardCardBody className="flex h-full min-h-0 flex-col p-6">
                 <div className="mb-4 flex h-14 shrink-0 items-center gap-3">
                   <div className="rounded-none bg-blue-100 p-3">
                     <Icon className="h-6 w-6 text-blue-600" />
                   </div>
                   <h3 className="line-clamp-2 text-2xl font-bold leading-tight">{activeInfo.title}</h3>
                 </div>
-                <div className="about-company-panel-content min-h-0 flex-1 overflow-hidden text-base leading-relaxed text-gray-700">
+                <div className="about-company-panel-content min-h-0 flex-1 overflow-hidden text-base leading-relaxed text-slate-700">
                   {typeof activeInfo.content === "string" ? (
                     <p>{activeInfo.content}</p>
                   ) : (
                     activeInfo.content
                   )}
                 </div>
-              </CardContent>
-            </Card>
+              </DashboardCardBody>
+            </DashboardCard>
           </div>
 
           {!bviImagesHidden && (
@@ -394,7 +394,7 @@ export function AboutCompany({ embedded = false }: { embedded?: boolean }) {
             style={syncedPanelHeight ? { height: syncedPanelHeight } : undefined}
           >
             {!isBviActive && (
-              <Card className="about-company-gallery-card relative min-h-[360px] flex-1 overflow-hidden rounded-none hover:translate-y-0">
+              <DashboardCard className="about-company-gallery-card relative min-h-[360px] flex-1 overflow-hidden rounded-none hover:translate-y-0">
                 <div className="about-company-gallery-viewer relative h-full min-h-[360px] w-full bg-gradient-to-br from-blue-100 to-cyan-100">
                   {showMainImage && (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -409,7 +409,7 @@ export function AboutCompany({ embedded = false }: { embedded?: boolean }) {
                   )}
                   {!showMainImage && (
                     <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-200 to-cyan-200">
-                      <div className="text-center text-gray-600">
+                      <div className="text-center text-slate-600">
                         <Building2 className="h-16 w-16 mx-auto mb-2 opacity-50" />
                         <p className="text-sm">Фото {currentImageIndex + 1}</p>
                       </div>
@@ -426,17 +426,17 @@ export function AboutCompany({ embedded = false }: { embedded?: boolean }) {
                     className="absolute left-4 top-1/2 z-20 -translate-y-1/2 rounded-none bg-white/80 p-2 shadow-lg transition-colors hover:bg-white"
                     aria-label="Предыдущее фото"
                   >
-                    <ChevronLeft className="h-6 w-6 text-gray-800" />
+                    <ChevronLeft className="h-6 w-6 text-slate-800" />
                   </button>
                   <button
                     onClick={nextImage}
                     className="absolute right-4 top-1/2 z-20 -translate-y-1/2 rounded-none bg-white/80 p-2 shadow-lg transition-colors hover:bg-white"
                     aria-label="Следующее фото"
                   >
-                    <ChevronRight className="h-6 w-6 text-gray-800" />
+                    <ChevronRight className="h-6 w-6 text-slate-800" />
                   </button>
                 </div>
-              </Card>
+              </DashboardCard>
             )}
 
             <div className="grid shrink-0 grid-cols-3 gap-2">
@@ -448,7 +448,7 @@ export function AboutCompany({ embedded = false }: { embedded?: boolean }) {
                     "relative h-24 overflow-hidden rounded-none border-2 transition-colors",
                     currentImageIndex === index
                       ? "border-blue-600 ring-2 ring-blue-300"
-                      : "border-transparent hover:border-gray-300"
+                      : "border-transparent hover:border-slate-300"
                   )}
                 >
                   {!imageErrors.has(index) ? (
@@ -463,7 +463,7 @@ export function AboutCompany({ embedded = false }: { embedded?: boolean }) {
                     />
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-200 to-cyan-200">
-                      <Building2 className="h-6 w-6 text-gray-400 opacity-50" />
+                      <Building2 className="h-6 w-6 text-slate-400 opacity-50" />
                     </div>
                   )}
                 </button>

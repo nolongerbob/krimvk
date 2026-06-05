@@ -32,7 +32,7 @@ export function Footer() {
 
   return (
     <footer
-      className={`site-footer bvi-no-styles bvi-preserve-ui border-t bg-gray-50 mt-auto transition-all duration-700 ease-out ${
+      className={`site-footer bvi-no-styles bvi-preserve-ui border-t bg-slate-50 mt-auto transition-all duration-700 ease-out ${
         isVisible ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0"
       }`}
     >
@@ -49,7 +49,7 @@ export function Footer() {
               />
               <span className="text-xl font-bold">КрымВК</span>
             </Link>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-slate-600">
               Водоканал Крыма - надежное водоснабжение и водоотведение
             </p>
           </div>
@@ -58,22 +58,22 @@ export function Footer() {
             <h3 className="font-semibold mb-4">Навигация</h3>
                   <ul className="space-y-2 text-sm">
                     <li>
-                      <Link href="/" className="text-gray-600 hover:text-primary">
+                      <Link href="/" className="text-slate-600 hover:text-primary">
                         Главная
                       </Link>
                     </li>
                     <li>
-                      <Link href="/services" className="text-gray-600 hover:text-primary">
+                      <Link href="/services" className="text-slate-600 hover:text-primary">
                         Услуги
                       </Link>
                     </li>
                     <li>
-                      <Link href="/news" className="text-gray-600 hover:text-primary">
+                      <Link href="/news" className="text-slate-600 hover:text-primary">
                         Новости
                       </Link>
                     </li>
                     <li>
-                      <Link href="/contact" className="text-gray-600 hover:text-primary">
+                      <Link href="/contact" className="text-slate-600 hover:text-primary">
                         Контакты
                       </Link>
                     </li>
@@ -84,17 +84,17 @@ export function Footer() {
             <h3 className="font-semibold mb-4">Личный кабинет</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/login" className="text-gray-600 hover:text-primary">
+                <Link href="/login" className="text-slate-600 hover:text-primary">
                   Вход
                 </Link>
               </li>
               <li>
-                <Link href="/register" className="text-gray-600 hover:text-primary">
+                <Link href="/register" className="text-slate-600 hover:text-primary">
                   Регистрация
                 </Link>
               </li>
               <li>
-                <Link href="/dashboard" className="text-gray-600 hover:text-primary">
+                <Link href="/dashboard" className="text-slate-600 hover:text-primary">
                   Личный кабинет
                 </Link>
               </li>
@@ -105,20 +105,20 @@ export function Footer() {
             <h3 className="font-semibold mb-4">Контакты</h3>
             <ul className="space-y-3 text-sm">
               <li className="flex items-center space-x-2">
-                <Phone className="bvi-no-styles h-5 w-5 shrink-0 text-gray-600" aria-hidden />
-                <a href="tel:+79780800366" className="text-gray-600 hover:text-primary">
+                <Phone className="bvi-no-styles h-5 w-5 shrink-0 text-slate-600" aria-hidden />
+                <a href="tel:+79780800366" className="text-slate-600 hover:text-primary">
                   +7 (978) 080-03-66
                 </a>
               </li>
               <li className="flex items-center space-x-2">
-                <Mail className="bvi-no-styles h-5 w-5 shrink-0 text-gray-600" aria-hidden />
-                <a href="mailto:sakwcompany@mail.ru" className="text-gray-600 hover:text-primary">
+                <Mail className="bvi-no-styles h-5 w-5 shrink-0 text-slate-600" aria-hidden />
+                <a href="mailto:sakwcompany@mail.ru" className="text-slate-600 hover:text-primary">
                   sakwcompany@mail.ru
                 </a>
               </li>
               <li className="flex items-start space-x-2">
-                <MapPin className="bvi-no-styles mt-0.5 h-5 w-5 shrink-0 text-gray-600" aria-hidden />
-                <span className="text-gray-600">
+                <MapPin className="bvi-no-styles mt-0.5 h-5 w-5 shrink-0 text-slate-600" aria-hidden />
+                <span className="text-slate-600">
                   ул. Механизаторов, 9<br />
                   с. Лесновка, Сакский район<br />
                   Республика Крым
@@ -128,7 +128,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-8 pt-8 border-t text-center text-sm text-gray-600">
+        <div className="mt-8 pt-8 border-t text-center text-sm text-slate-600">
           <p>&copy; {new Date().getFullYear()} КрымВК. Все права защищены.</p>
           <div className="mt-2 flex flex-wrap items-center justify-center gap-4">
             <Link href="/legal/privacy" className="hover:text-primary">

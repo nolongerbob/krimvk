@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -19,6 +18,8 @@ import {
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import type { ComponentType } from "react";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
+import { sitePageClass, siteContainerClass } from "@/components/site/site-styles";
 
 // Типы для компонента карты
 interface MapMarker {
@@ -39,8 +40,8 @@ const EmergencyMap: ComponentType<EmergencyMapProps> = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="h-[350px] bg-gray-100 rounded-lg flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+      <div className="h-[350px] bg-slate-100 rounded-none flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
       </div>
     ),
   }
@@ -276,16 +277,17 @@ export default function AvariiPage() {
   });
 
   return (
-    <div className="container py-8 px-4 max-w-5xl">
+    <div className={`${sitePageClass} py-8`}>
+      <div className={`${siteContainerClass} max-w-5xl`}>
       {/* Заголовок */}
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-4">
-          <div className="p-3 bg-red-100 rounded-full">
+          <div className="p-3 bg-red-100 rounded-none">
             <AlertTriangle className="h-8 w-8 text-red-600" />
           </div>
           <div>
             <h1 className="text-3xl font-bold">Аварийные работы</h1>
-            <p className="text-gray-600">
+            <p className="text-slate-600">
               Информация об отключениях на {today}
             </p>
           </div>
@@ -308,8 +310,8 @@ export default function AvariiPage() {
       </div>
 
       {/* Карта - всегда показываем */}
-      <Card className="mb-6 overflow-hidden">
-        <CardHeader className="py-3 px-4 bg-gray-50 border-b">
+      <DashboardCard className="mb-6 overflow-hidden">
+        <div className="py-3 px-4 bg-slate-50 border-b p-6 pb-4" >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <MapPin className="h-5 w-5 text-red-500" />
@@ -320,7 +322,7 @@ export default function AvariiPage() {
                 </Badge>
               )}
             </div>
-            <div className="flex items-center gap-2 text-sm text-gray-500">
+            <div className="flex items-center gap-2 text-sm text-slate-500">
               <Clock className="h-4 w-4" />
               {lastUpdate ? (
                 <span>
@@ -344,8 +346,8 @@ export default function AvariiPage() {
               </Button>
             </div>
           </div>
-        </CardHeader>
-        <CardContent className="p-0">
+        </div>
+        <DashboardCardBody className="p-0">
           {mapMarkers.length > 0 ? (
             <EmergencyMap markers={mapMarkers} />
           ) : (
@@ -356,8 +358,8 @@ export default function AvariiPage() {
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </DashboardCardBody>
+      </DashboardCard>
 
       {/* Список новостей */}
       <div className="space-y-4">
@@ -374,25 +376,25 @@ export default function AvariiPage() {
         </div>
 
         {isLoading && messages.length === 0 ? (
-          <Card>
-            <CardContent className="py-8 text-center">
-              <Loader2 className="h-8 w-8 text-gray-400 mx-auto mb-3 animate-spin" />
-              <p className="text-gray-500">Загрузка...</p>
-            </CardContent>
-          </Card>
+          <DashboardCard>
+            <DashboardCardBody className="py-8 text-center">
+              <Loader2 className="h-8 w-8 text-slate-400 mx-auto mb-3 animate-spin" />
+              <p className="text-slate-500">Загрузка...</p>
+            </DashboardCardBody>
+          </DashboardCard>
         ) : error ? (
-          <Card className="border-red-200 bg-red-50">
-            <CardContent className="py-6 text-center">
+          <DashboardCard className="border-red-200 bg-red-50">
+            <DashboardCardBody className="py-6 text-center">
               <AlertTriangle className="h-8 w-8 text-red-400 mx-auto mb-3" />
               <p className="text-red-600 mb-3">{error}</p>
               <Button variant="outline" size="sm" onClick={fetchMessages}>
                 Попробовать снова
               </Button>
-            </CardContent>
-          </Card>
+            </DashboardCardBody>
+          </DashboardCard>
         ) : messages.length === 0 ? (
-          <Card className="border-green-200 bg-green-50">
-            <CardContent className="py-8 text-center">
+          <DashboardCard className="border-green-200 bg-green-50">
+            <DashboardCardBody className="py-8 text-center">
               <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-3" />
               <h3 className="text-xl font-semibold text-green-700 mb-1">
                 Аварий на сегодня нет
@@ -400,25 +402,25 @@ export default function AvariiPage() {
               <p className="text-green-600">
                 Плановых и аварийных отключений не зафиксировано
               </p>
-            </CardContent>
-          </Card>
+            </DashboardCardBody>
+          </DashboardCard>
         ) : (
           <div className="grid gap-3">
             {messages.map((message) => (
-              <Card key={message.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="py-4 px-5">
+              <DashboardCard key={message.id}>
+                <DashboardCardBody className="py-4 px-5">
                   <div className="flex items-center gap-2 mb-2">
                     <Badge variant="outline" className="text-xs">
                       <Clock className="h-3 w-3 mr-1" />
                       {formatTime(message.date)}
                     </Badge>
-                    <span className="text-xs text-gray-400">{formatDate(message.date)}</span>
+                    <span className="text-xs text-slate-400">{formatDate(message.date)}</span>
                   </div>
-                  <div className="whitespace-pre-wrap text-gray-800 leading-relaxed text-sm space-y-1">
+                  <div className="whitespace-pre-wrap text-slate-800 leading-relaxed text-sm space-y-1">
                     {parseMessageText(message.text)}
                   </div>
-                </CardContent>
-              </Card>
+                </DashboardCardBody>
+              </DashboardCard>
             ))}
           </div>
         )}
@@ -444,6 +446,7 @@ export default function AvariiPage() {
             </a>
           </Button>
         )}
+      </div>
       </div>
     </div>
   );

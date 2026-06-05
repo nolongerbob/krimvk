@@ -14,12 +14,12 @@ export function NewsSection({ news }: NewsSectionProps) {
   }
 
   return (
-    <section className="bg-gray-50 py-12 md:py-14">
+    <section className="bg-slate-50 py-12 md:py-14">
       <div className="container mx-auto px-4">
         <div className="mb-8 flex flex-col gap-4 md:mb-10 md:flex-row md:items-end md:justify-between">
           <div>
             <h2 className="mb-2 text-3xl font-semibold tracking-tight md:text-4xl">Новости</h2>
-            <p className="text-base text-gray-600 md:text-lg">Актуальные события и новости компании</p>
+            <p className="text-base text-slate-600 md:text-lg">Актуальные события и новости компании</p>
           </div>
           <Link
             href="/news"

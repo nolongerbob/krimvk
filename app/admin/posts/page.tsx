@@ -3,7 +3,10 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { Plus } from "lucide-react";
 import { PostsClient } from "./PostsClient";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { adminContainerClass, adminPrimaryBtnClass } from "@/components/admin/admin-styles";
 
 export default async function AdminPostsPage() {
   const session = await getSession();
@@ -21,7 +24,6 @@ export default async function AdminPostsPage() {
     redirect("/dashboard");
   }
 
-  // Загружаем все посты
   const posts = await prisma.post.findMany({
     select: {
       id: true,
@@ -36,7 +38,6 @@ export default async function AdminPostsPage() {
     orderBy: { createdAt: "desc" },
   });
 
-  // Загружаем все категории (разделы для постов)
   const categories = await prisma.page.findMany({
     where: { isCategory: true, isActive: true },
     select: { id: true, title: true, slug: true },
@@ -44,24 +45,21 @@ export default async function AdminPostsPage() {
   });
 
   return (
-    <div className="container py-8 px-4">
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Управление постами</h1>
-          <p className="text-gray-600">Создание и редактирование постов в разделах</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <Button asChild>
-            <Link href="/admin/posts/create">Создать пост</Link>
+    <div className={adminContainerClass}>
+      <AdminPageHeader
+        title="Управление постами"
+        description="Создание и редактирование постов в разделах"
+        actions={
+          <Button asChild className={adminPrimaryBtnClass}>
+            <Link href="/admin/posts/create">
+              <Plus className="mr-2 h-4 w-4" />
+              Создать пост
+            </Link>
           </Button>
-          <Button asChild variant="outline">
-            <Link href="/admin">Назад</Link>
-          </Button>
-        </div>
-      </div>
+        }
+      />
 
       <PostsClient posts={posts} categories={categories} />
     </div>
   );
 }
-

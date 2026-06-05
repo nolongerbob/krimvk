@@ -3,9 +3,17 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
+import {
+  adminContainerClass,
+  adminFieldClass,
+  adminOutlineBtnClass,
+  adminPrimaryBtnClass,
+  adminSectionLabelClass,
+} from "@/components/admin/admin-styles";
+import { cn } from "@/lib/utils";
 
 interface Category {
   id: string;
@@ -26,13 +34,11 @@ export default function CreatePostPage() {
   const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
-    // Загружаем список категорий (разделов для постов)
     fetch("/api/admin/pages")
       .then((res) => res.json())
       .then((data) => {
         if (data.pages) {
-          // Фильтруем только категории
-          const cats = data.pages.filter((p: any) => p.isCategory && p.isActive);
+          const cats = data.pages.filter((p: { isCategory: boolean; isActive: boolean }) => p.isCategory && p.isActive);
           setCategories(cats);
         }
       })
@@ -41,11 +47,11 @@ export default function CreatePostPage() {
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    setSelectedFiles(prev => [...prev, ...files]);
+    setSelectedFiles((prev) => [...prev, ...files]);
   };
 
   const handleFileRemove = (index: number) => {
-    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -53,7 +59,6 @@ export default function CreatePostPage() {
     setIsLoading(true);
 
     try {
-      // Создаем пост
       const response = await fetch("/api/admin/posts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -69,21 +74,15 @@ export default function CreatePostPage() {
 
       const { post } = await response.json();
 
-      // Загружаем файлы, если есть
       if (selectedFiles.length > 0) {
         setIsUploading(true);
         for (const file of selectedFiles) {
-          const formData = new FormData();
-          formData.append("file", file);
-
-          const uploadResponse = await fetch(`/api/admin/posts/${post.id}/upload`, {
+          const uploadData = new FormData();
+          uploadData.append("file", file);
+          await fetch(`/api/admin/posts/${post.id}/upload`, {
             method: "POST",
-            body: formData,
+            body: uploadData,
           });
-
-          if (!uploadResponse.ok) {
-            console.error("Ошибка при загрузке файла:", file.name);
-          }
         }
       }
 
@@ -99,27 +98,20 @@ export default function CreatePostPage() {
   };
 
   return (
-    <div className="container py-8 px-4">
-      <div className="mb-8">
-        <Button variant="ghost" asChild className="mb-4">
-          <Link href="/admin/posts">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Назад к списку
-          </Link>
-        </Button>
-        <h1 className="text-3xl font-bold mb-2">Создать пост</h1>
-        <p className="text-gray-600">Создание нового поста в разделе</p>
-      </div>
+    <div className={adminContainerClass}>
+      <AdminPageHeader
+        title="Создать пост"
+        description="Создание нового поста в разделе"
+        backHref="/admin/posts"
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Информация о посте</CardTitle>
-          <CardDescription>Заполните все необходимые поля</CardDescription>
-        </CardHeader>
-        <CardContent>
+      <DashboardCard>
+        <DashboardCardBody>
+          <p className={cn(adminSectionLabelClass, "mb-2")}>Информация о посте</p>
+          <p className="mb-6 text-sm text-slate-600">Заполните все необходимые поля</p>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium mb-2">
+              <label className="mb-2 block text-sm font-medium text-slate-700">
                 Раздел <span className="text-red-500">*</span>
               </label>
               <select
@@ -128,7 +120,7 @@ export default function CreatePostPage() {
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, pageId: e.target.value }))
                 }
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={cn("w-full px-4", adminFieldClass)}
               >
                 <option value="">Выберите раздел</option>
                 {categories.map((category) => (
@@ -140,7 +132,7 @@ export default function CreatePostPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">
+              <label className="mb-2 block text-sm font-medium text-slate-700">
                 Заголовок <span className="text-red-500">*</span>
               </label>
               <input
@@ -150,13 +142,13 @@ export default function CreatePostPage() {
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, title: e.target.value }))
                 }
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={cn("w-full px-4", adminFieldClass)}
                 placeholder="Заголовок поста"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">
+              <label className="mb-2 block text-sm font-medium text-slate-700">
                 Содержимое <span className="text-red-500">*</span>
               </label>
               <textarea
@@ -166,36 +158,37 @@ export default function CreatePostPage() {
                   setFormData((prev) => ({ ...prev, content: e.target.value }))
                 }
                 rows={15}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                className={cn("w-full px-4 py-2 font-mono text-sm", adminFieldClass)}
                 placeholder="HTML или текст содержимого поста"
               />
-              <p className="text-xs text-gray-500 mt-1">
-                Можно использовать HTML разметку
-              </p>
+              <p className="mt-1 text-xs text-slate-500">Можно использовать HTML разметку</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">
+              <label className="mb-2 block text-sm font-medium text-slate-700">
                 Прикрепленные файлы (опционально)
               </label>
               <input
                 type="file"
                 multiple
                 onChange={handleFileSelect}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={cn("w-full px-4", adminFieldClass)}
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="mt-1 text-xs text-slate-500">
                 Максимальный размер файла: 50MB. Можно выбрать несколько файлов.
               </p>
               {selectedFiles.length > 0 && (
                 <div className="mt-2 space-y-1">
                   {selectedFiles.map((file, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                      <span className="text-sm">{file.name}</span>
+                    <div
+                      key={index}
+                      className="flex items-center justify-between bg-slate-50 p-2"
+                    >
+                      <span className="text-sm text-slate-700">{file.name}</span>
                       <button
                         type="button"
                         onClick={() => handleFileRemove(index)}
-                        className="text-red-600 hover:text-red-700 text-sm"
+                        className="text-sm text-red-600 hover:text-red-700"
                       >
                         Удалить
                       </button>
@@ -205,18 +198,17 @@ export default function CreatePostPage() {
               )}
             </div>
 
-            <div className="flex items-center gap-4 pt-4">
-              <Button type="submit" disabled={isLoading || isUploading}>
+            <div className="flex items-center gap-2 pt-4">
+              <Button type="submit" disabled={isLoading || isUploading} className={adminPrimaryBtnClass}>
                 {isLoading || isUploading ? "Создание..." : "Создать пост"}
               </Button>
-              <Button type="button" variant="outline" asChild>
+              <Button type="button" variant="outline" asChild className={adminOutlineBtnClass}>
                 <Link href="/admin/posts">Отмена</Link>
               </Button>
             </div>
           </form>
-        </CardContent>
-      </Card>
+        </DashboardCardBody>
+      </DashboardCard>
     </div>
   );
 }
-

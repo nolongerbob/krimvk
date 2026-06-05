@@ -2,6 +2,8 @@
 
 import { Button } from "@/components/ui/button";
 import { List } from "lucide-react";
+import { adminOutlineBtnClass, adminPrimaryBtnClass } from "@/components/admin/admin-styles";
+import { cn } from "@/lib/utils";
 
 interface ServiceCategoryFiltersProps {
   categories: string[];
@@ -26,17 +28,25 @@ export function ServiceCategoryFilters({
   counts,
 }: ServiceCategoryFiltersProps) {
   return (
-    <div className="flex flex-wrap gap-2 mb-6">
+    <div className="mb-6 flex flex-wrap gap-2">
       <Button
         variant={activeCategory === null ? "default" : "outline"}
         size="sm"
         onClick={() => onCategoryChange(null)}
-        className="flex items-center gap-2"
+        className={cn(
+          "flex items-center gap-2",
+          activeCategory === null ? adminPrimaryBtnClass : adminOutlineBtnClass
+        )}
       >
         <List className="h-4 w-4" />
         <span>Все категории</span>
         {counts.all > 0 && (
-          <span className="bg-white/20 px-1.5 py-0.5 rounded text-xs">
+          <span
+            className={cn(
+              "px-1.5 py-0.5 text-xs",
+              activeCategory === null ? "bg-white/20" : "bg-slate-100 text-slate-600"
+            )}
+          >
             {counts.all}
           </span>
         )}
@@ -50,11 +60,19 @@ export function ServiceCategoryFilters({
             variant={isActive ? "default" : "outline"}
             size="sm"
             onClick={() => onCategoryChange(category)}
-            className="flex items-center gap-2"
+            className={cn(
+              "flex items-center gap-2",
+              isActive ? adminPrimaryBtnClass : adminOutlineBtnClass
+            )}
           >
             <span>{label}</span>
             {counts[category] > 0 && (
-              <span className="bg-white/20 px-1.5 py-0.5 rounded text-xs">
+              <span
+                className={cn(
+                  "px-1.5 py-0.5 text-xs",
+                  isActive ? "bg-white/20" : "bg-slate-100 text-slate-600"
+                )}
+              >
                 {counts[category]}
               </span>
             )}
@@ -64,11 +82,3 @@ export function ServiceCategoryFilters({
     </div>
   );
 }
-
-
-
-
-
-
-
-

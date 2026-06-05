@@ -1,9 +1,11 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Droplet, Wrench, FileText, Phone, Plug, Settings, Truck } from "lucide-react";
 import { prisma, withRetry } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
+import { sitePageClass, siteContainerClass, sitePrimaryBtnClass } from "@/components/site/site-styles";
+import { dashboardTileClass } from "@/components/dashboard/dashboard-styles";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -93,7 +95,7 @@ function getServiceIconAppearance(service: { title: string; category: string }) 
   if (category === "документы") return { boxClass: "bg-orange-100", iconClass: "text-orange-600" };
   if (category === "анализ") return { boxClass: "bg-cyan-100", iconClass: "text-cyan-600" };
   if (category === "подключение") return { boxClass: "bg-blue-100", iconClass: "text-blue-600" };
-  if (category === "консультация") return { boxClass: "bg-gray-100", iconClass: "text-gray-600" };
+  if (category === "консультация") return { boxClass: "bg-slate-100", iconClass: "text-slate-600" };
 
   return { boxClass: "bg-blue-100", iconClass: "text-blue-600" };
 }
@@ -246,24 +248,24 @@ export default async function ServicesPage() {
   const visibleServices = services.filter((service) => !isHiddenService(service.title));
   
   return (
-    <div className="flex min-h-[calc(100dvh-4rem)] flex-col bg-gray-50 lg:min-h-[calc(100dvh-4.5rem)]">
+    <div className={`${sitePageClass} flex min-h-[calc(100dvh-4rem)] flex-col lg:min-h-[calc(100dvh-4.5rem)]`}>
       <div className="container mx-auto flex flex-1 flex-col justify-center px-4 py-8 md:py-10">
         <div className="mb-6 shrink-0 text-center md:mb-8 animate-fade-in">
           <h1 className="mb-3 text-3xl font-semibold tracking-tight md:text-4xl">Наши услуги</h1>
-          <p className="mx-auto max-w-2xl text-base text-gray-600 md:text-lg">
+          <p className="mx-auto max-w-2xl text-base text-slate-600 md:text-lg">
             Полный спектр услуг по водоснабжению и водоотведению для жителей Крыма
           </p>
         </div>
 
         {visibleServices.length === 0 ? (
-          <Card className="rounded-none shadow-none">
-            <CardContent className="py-12 text-center">
-              <p className="text-gray-500 mb-4">Услуги временно недоступны. Пожалуйста, попробуйте позже.</p>
-              <Button asChild className="rounded-none hover:scale-100 active:scale-100">
+          <DashboardCard className="rounded-none shadow-none">
+            <DashboardCardBody className="py-12 text-center">
+              <p className="text-slate-500 mb-4">Услуги временно недоступны. Пожалуйста, попробуйте позже.</p>
+              <Button asChild className={sitePrimaryBtnClass}>
                 <Link href="/">Вернуться на главную</Link>
               </Button>
-            </CardContent>
-          </Card>
+            </DashboardCardBody>
+          </DashboardCard>
         ) : (
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
             {visibleServices.map((service) => {
@@ -275,11 +277,11 @@ export default async function ServicesPage() {
               const cardDescription = getServiceCardDescription(service.title, service.description);
 
               return (
-                <Card
+                <DashboardCard
                   key={service.id}
-                  className="flex h-full flex-col justify-between rounded-none transition-all hover:shadow-lg hover:translate-y-0"
+                  className={cn(dashboardTileClass, "flex h-full flex-col justify-between")}
                 >
-                  <CardHeader className="p-7 pb-0">
+                  <div className="p-7 pb-0 p-6 pb-4" >
                     <div
                       className={cn(
                         "mb-3 flex h-12 w-12 shrink-0 items-center justify-center rounded-none",
@@ -288,19 +290,19 @@ export default async function ServicesPage() {
                     >
                       <Icon className={cn("h-6 w-6", appearance.iconClass)} />
                     </div>
-                    <CardTitle className="mb-2 min-h-[3.25rem] text-xl font-semibold leading-snug text-gray-900 line-clamp-2">
+                    <h2 className="mb-2 min-h-[3.25rem] text-xl font-semibold leading-snug text-slate-900 line-clamp-2">
                       {service.title}
-                    </CardTitle>
-                    <CardDescription className="min-h-[2.75rem] text-base leading-snug line-clamp-2">
+                    </h2>
+                    <p className="min-h-[2.75rem] text-base leading-snug line-clamp-2">
                       {cardDescription}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="p-7 pt-5">
-                    <Button asChild className="h-11 w-full rounded-none text-base hover:scale-100 active:scale-100">
+                    </p>
+                  </div>
+                  <DashboardCardBody className="p-7 pt-5">
+                    <Button asChild className={`h-11 w-full text-base ${sitePrimaryBtnClass}`}>
                       <Link href={serviceLink}>Подать заявку</Link>
                     </Button>
-                  </CardContent>
-                </Card>
+                  </DashboardCardBody>
+                </DashboardCard>
               );
             })}
           </div>

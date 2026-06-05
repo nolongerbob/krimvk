@@ -4,8 +4,10 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2, XCircle, Loader2, Mail } from "lucide-react";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
+import { sitePrimaryBtnClass, siteOutlineBtnClass } from "@/components/site/site-styles";
+import { SitePageShell } from "@/components/site/SitePageShell";
 
 type PollResult = "pending" | "dashboard" | "login";
 
@@ -135,9 +137,9 @@ export default function VerifyEmailPage() {
   ]);
 
   return (
-    <div className="container flex items-center justify-center min-h-[calc(100vh-8rem)] py-12 px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
+    <SitePageShell className="flex min-h-[calc(100vh-8rem)] items-center justify-center" containerClassName="flex justify-center">
+      <DashboardCard className="w-full max-w-md">
+        <DashboardCardBody className="text-center">
           <div className="flex justify-center mb-4">
             {(status === "loading" || status === "waiting") && (
               <Loader2 className="h-12 w-12 text-blue-600 animate-spin" />
@@ -149,43 +151,43 @@ export default function VerifyEmailPage() {
               <XCircle className="h-12 w-12 text-red-600" />
             )}
           </div>
-          <CardTitle className="text-2xl">
+          <h2 className="mb-2 text-2xl font-semibold text-slate-900">
             {status === "loading" && "Подтверждение email..."}
             {status === "waiting" && "Ожидаем подтверждения email"}
             {status === "success" && "Email подтвержден!"}
             {status === "error" && "Ошибка подтверждения"}
-          </CardTitle>
-          <CardDescription>
+          </h2>
+          <p className="mb-6 text-sm text-slate-600">
             {status === "loading" && "Пожалуйста, подождите"}
             {status === "waiting" && "Проверьте вашу почту и перейдите по ссылке в письме"}
             {status === "success" && "Ваш email адрес успешно подтвержден"}
             {status === "error" && "Не удалось подтвердить email адрес"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-center text-gray-700">{message}</p>
+          </p>
+        
+          <div className="space-y-4">
+          <p className="text-center text-slate-700">{message}</p>
 
           {status === "success" && (
             <div className="space-y-3">
               {searchParams.get("already") === "true" ||
               searchParams.get("from") === "other" ? (
                 <>
-                  <p className="text-sm text-gray-600 text-center">
+                  <p className="text-sm text-slate-600 text-center">
                     Для входа в личный кабинет используйте ваш email и пароль.
                   </p>
-                  <Button onClick={() => router.push("/login")} className="w-full">
+                  <Button onClick={() => router.push("/login")} className={`w-full ${sitePrimaryBtnClass}`}>
                     Перейти к входу
                   </Button>
                 </>
               ) : (
                 <>
-                  <p className="text-sm text-gray-600 text-center">
+                  <p className="text-sm text-slate-600 text-center">
                     Ваш email адрес успешно подтвержден.
                   </p>
-                  <p className="text-xs text-gray-500 text-center mt-2">
+                  <p className="text-xs text-slate-500 text-center mt-2">
                     Вы будете перенаправлены в личный кабинет через пару секунд...
                   </p>
-                  <Button onClick={goDashboard} className="w-full">
+                  <Button onClick={goDashboard} className={`w-full ${sitePrimaryBtnClass}`}>
                     Перейти в личный кабинет сейчас
                   </Button>
                 </>
@@ -195,7 +197,7 @@ export default function VerifyEmailPage() {
 
           {status === "error" && (
             <div className="space-y-3">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-none p-4">
                 <div className="flex items-start gap-3">
                   <Mail className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
                   <div>
@@ -211,12 +213,12 @@ export default function VerifyEmailPage() {
               <div className="flex gap-2">
                 <Button
                   variant="outline"
+                  className={`flex-1 ${siteOutlineBtnClass}`}
                   onClick={() => router.push("/login")}
-                  className="flex-1"
                 >
                   Перейти к входу
                 </Button>
-                <Button onClick={() => router.push("/register")} className="flex-1">
+                <Button onClick={() => router.push("/register")} className={`flex-1 ${sitePrimaryBtnClass}`}>
                   Регистрация
                 </Button>
               </div>
@@ -225,7 +227,7 @@ export default function VerifyEmailPage() {
 
           {status === "waiting" && (
             <div className="space-y-4">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+              <div className="bg-blue-50 border border-blue-200 rounded-none p-4 text-center">
                 <Mail className="h-8 w-8 text-blue-600 mx-auto mb-3" />
                 <p className="text-sm text-blue-800 mb-2">
                   Мы отправили письмо с подтверждением на ваш email адрес.
@@ -235,7 +237,7 @@ export default function VerifyEmailPage() {
                   аккаунта.
                 </p>
               </div>
-              <p className="text-xs text-gray-500 text-center">
+              <p className="text-xs text-slate-500 text-center">
                 После подтверждения вы будете автоматически перенаправлены в личный кабинет...
               </p>
             </div>
@@ -243,11 +245,12 @@ export default function VerifyEmailPage() {
 
           {status === "loading" && (
             <div className="text-center">
-              <p className="text-sm text-gray-600">Проверяем токен подтверждения...</p>
+              <p className="text-sm text-slate-600">Проверяем токен подтверждения...</p>
             </div>
           )}
-        </CardContent>
-      </Card>
-    </div>
+          </div>
+        </DashboardCardBody>
+      </DashboardCard>
+    </SitePageShell>
   );
 }

@@ -224,7 +224,7 @@ export default function DashboardPage() {
       <div className="container py-8 px-4">
         <div className="text-center py-12">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-500" />
-          <p className="text-gray-600">Загрузка...</p>
+          <p className="text-slate-600">Загрузка...</p>
         </div>
       </div>
     );

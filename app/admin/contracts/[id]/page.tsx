@@ -3,10 +3,12 @@ import { redirect } from "next/navigation";
 import { prisma, withRetry } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { ArrowLeft, Edit, Trash2, Copy } from "lucide-react";
+import { Edit } from "lucide-react";
 import { ContractDetails } from "./ContractDetails";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { adminContainerClass, adminOutlineBtnClass } from "@/components/admin/admin-styles";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export default async function ContractViewPage({
   params,
@@ -69,23 +71,21 @@ export default async function ContractViewPage({
   }
 
   return (
-    <div className="container py-6 px-4 max-w-7xl">
-      <div className="mb-6 flex items-center justify-between">
-        <Button variant="ghost" asChild>
-          <Link href="/admin/contracts">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Назад к списку
-          </Link>
-        </Button>
-        <div className="flex gap-3">
-          <Button asChild variant="outline" className="border-blue-300 hover:bg-blue-50">
+    <div className={adminContainerClass}>
+      <AdminPageHeader
+        title={`Договор № ${contract.contractNumber}`}
+        description="Просмотр договора на технологическое присоединение"
+        backHref="/admin/contracts"
+        backLabel="Назад к списку"
+        actions={
+          <Button asChild variant="outline" className={adminOutlineBtnClass}>
             <Link href={`/admin/contracts/${contract.id}/edit`}>
-              <Edit className="h-4 w-4 mr-2" />
+              <Edit className="mr-2 h-4 w-4" />
               Редактировать
             </Link>
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       <ContractDetails contract={contract} />
     </div>

@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
+import { adminOutlineBtnClass, adminPrimaryBtnClass, adminSectionLabelClass } from "@/components/admin/admin-styles";
+import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { FileCheck, Upload, X, Download } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -220,7 +222,7 @@ export function ContractDetails({ contract: initialContract }: ContractDetailsPr
       COMPLETED: "bg-green-100 text-green-800",
       CANCELLED: "bg-red-100 text-red-800",
     };
-    return colorMap[status] || "bg-gray-100 text-gray-800";
+    return colorMap[status] || "bg-slate-100 text-slate-700";
   };
 
   // Группируем документы по типам
@@ -238,12 +240,12 @@ export function ContractDetails({ contract: initialContract }: ContractDetailsPr
   return (
     <div className="space-y-6">
       {/* Верхняя панель с основной информацией */}
-      <Card className="border-2 border-blue-200 shadow-lg">
-        <CardContent className="p-6">
+      <DashboardCard className="border-blue-200">
+        <DashboardCardBody>
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1">
               <div className="flex items-center gap-4 mb-3">
-                <h2 className="text-2xl font-bold text-gray-900">
+                <h2 className="text-2xl font-bold text-slate-900">
                   Договор № {contract.contractNumber}
                 </h2>
                 <span
@@ -254,49 +256,49 @@ export function ContractDetails({ contract: initialContract }: ContractDetailsPr
                   {getStatusLabel(contract.status)}
                 </span>
               </div>
-              <div className="flex items-center gap-6 text-sm text-gray-600">
+              <div className="flex items-center gap-6 text-sm text-slate-600">
                 <div className="flex items-center gap-2">
                   <span className="font-medium">Абонент:</span>
-                  <span className="text-gray-900">
+                  <span className="text-slate-900">
                     {contract.lastName} {contract.firstName} {contract.middleName || ""}
                   </span>
                 </div>
                 {contract.phone && (
                   <div className="flex items-center gap-2">
                     <span className="font-medium">Телефон:</span>
-                    <span className="text-gray-900">{contract.phone}</span>
+                    <span className="text-slate-900">{contract.phone}</span>
                   </div>
                 )}
                 {contract.contractDate && (
                   <div className="flex items-center gap-2">
                     <span className="font-medium">Дата договора:</span>
-                    <span className="text-gray-900">{formatDate(contract.contractDate)}</span>
+                    <span className="text-slate-900">{formatDate(contract.contractDate)}</span>
                   </div>
                 )}
               </div>
             </div>
             {contract.receiptDate && (
               <div className="text-right">
-                <div className="inline-block bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-2 rounded-lg text-lg font-bold shadow-md">
+                <div className="inline-block bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-2 text-lg font-bold text-white">
                   ПОДКЛЮЧЕН {formatDate(contract.receiptDate)}
                 </div>
               </div>
             )}
           </div>
           {contract.objectAddress && (
-            <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="mt-4 pt-4 border-t border-slate-200">
               <div className="flex items-start gap-2">
-                <span className="font-medium text-gray-700">Адрес объекта:</span>
-                <span className="text-gray-900">{contract.objectAddress}</span>
+                <span className="font-medium text-slate-700">Адрес объекта:</span>
+                <span className="text-slate-900">{contract.objectAddress}</span>
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </DashboardCardBody>
+      </DashboardCard>
 
       {/* Таблица с информацией о договоре */}
-      <Card className="shadow-md">
-        <CardContent className="p-0">
+      <DashboardCard>
+        <DashboardCardBody className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full border-collapse bg-white">
               <tbody>
@@ -309,34 +311,34 @@ export function ContractDetails({ contract: initialContract }: ContractDetailsPr
                     </div>
                   </td>
                 </tr>
-                <tr className="border-b border-gray-200 hover:bg-blue-50/30 transition-colors">
-                  <td className="p-4 bg-gray-50 text-gray-700 font-semibold w-1/3 border-r border-gray-200">Фамилия</td>
-                  <td className="p-4 text-gray-900 font-medium">{contract.lastName || "—"}</td>
+                <tr className="border-b border-slate-200 hover:bg-blue-50/30 transition-colors">
+                  <td className="p-4 bg-slate-50 text-slate-700 font-semibold w-1/3 border-r border-slate-200">Фамилия</td>
+                  <td className="p-4 text-slate-900 font-medium">{contract.lastName || "—"}</td>
                 </tr>
-                <tr className="border-b border-gray-200 hover:bg-blue-50/30 transition-colors">
-                  <td className="p-4 bg-gray-50 text-gray-700 font-semibold border-r border-gray-200">Имя</td>
-                  <td className="p-4 text-gray-900 font-medium">{contract.firstName || "—"}</td>
+                <tr className="border-b border-slate-200 hover:bg-blue-50/30 transition-colors">
+                  <td className="p-4 bg-slate-50 text-slate-700 font-semibold border-r border-slate-200">Имя</td>
+                  <td className="p-4 text-slate-900 font-medium">{contract.firstName || "—"}</td>
                 </tr>
-                <tr className="border-b border-gray-200 hover:bg-blue-50/30 transition-colors">
-                  <td className="p-4 bg-gray-50 text-gray-700 font-semibold border-r border-gray-200">Отчество</td>
-                  <td className="p-4 text-gray-900 font-medium">{contract.middleName || "—"}</td>
+                <tr className="border-b border-slate-200 hover:bg-blue-50/30 transition-colors">
+                  <td className="p-4 bg-slate-50 text-slate-700 font-semibold border-r border-slate-200">Отчество</td>
+                  <td className="p-4 text-slate-900 font-medium">{contract.middleName || "—"}</td>
                 </tr>
                 {contract.birthDate && (
-                  <tr className="border-b border-gray-200 hover:bg-blue-50/30 transition-colors">
-                    <td className="p-4 bg-gray-50 text-gray-700 font-semibold border-r border-gray-200">Дата рождения</td>
-                    <td className="p-4 text-gray-900">{formatDate(contract.birthDate)}</td>
+                  <tr className="border-b border-slate-200 hover:bg-blue-50/30 transition-colors">
+                    <td className="p-4 bg-slate-50 text-slate-700 font-semibold border-r border-slate-200">Дата рождения</td>
+                    <td className="p-4 text-slate-900">{formatDate(contract.birthDate)}</td>
                   </tr>
                 )}
                 {contract.registrationAddress && (
-                  <tr className="border-b border-gray-200 hover:bg-blue-50/30 transition-colors">
-                    <td className="p-4 bg-gray-50 text-gray-700 font-semibold border-r border-gray-200">Адрес регистрации</td>
-                    <td className="p-4 text-gray-900">{contract.registrationAddress}</td>
+                  <tr className="border-b border-slate-200 hover:bg-blue-50/30 transition-colors">
+                    <td className="p-4 bg-slate-50 text-slate-700 font-semibold border-r border-slate-200">Адрес регистрации</td>
+                    <td className="p-4 text-slate-900">{contract.registrationAddress}</td>
                   </tr>
                 )}
                 {contract.phone && (
-                  <tr className="border-b border-gray-200 hover:bg-blue-50/30 transition-colors">
-                    <td className="p-4 bg-gray-50 text-gray-700 font-semibold border-r border-gray-200">Телефон</td>
-                    <td className="p-4 text-gray-900 font-medium">{contract.phone}</td>
+                  <tr className="border-b border-slate-200 hover:bg-blue-50/30 transition-colors">
+                    <td className="p-4 bg-slate-50 text-slate-700 font-semibold border-r border-slate-200">Телефон</td>
+                    <td className="p-4 text-slate-900 font-medium">{contract.phone}</td>
                   </tr>
                 )}
                 {(contract.passportSeries || contract.passportNumber) && (
@@ -347,33 +349,33 @@ export function ContractDetails({ contract: initialContract }: ContractDetailsPr
                       </td>
                     </tr>
                     {contract.passportSeries && (
-                      <tr className="border-b border-gray-200 hover:bg-blue-50/30 transition-colors">
-                        <td className="p-4 bg-gray-50 text-gray-700 font-semibold border-r border-gray-200 pl-8">Серия</td>
-                        <td className="p-4 text-gray-900 font-medium">{contract.passportSeries}</td>
+                      <tr className="border-b border-slate-200 hover:bg-blue-50/30 transition-colors">
+                        <td className="p-4 bg-slate-50 text-slate-700 font-semibold border-r border-slate-200 pl-8">Серия</td>
+                        <td className="p-4 text-slate-900 font-medium">{contract.passportSeries}</td>
                       </tr>
                     )}
                     {contract.passportNumber && (
-                      <tr className="border-b border-gray-200 hover:bg-blue-50/30 transition-colors">
-                        <td className="p-4 bg-gray-50 text-gray-700 font-semibold border-r border-gray-200 pl-8">Номер</td>
-                        <td className="p-4 text-gray-900 font-medium">{contract.passportNumber}</td>
+                      <tr className="border-b border-slate-200 hover:bg-blue-50/30 transition-colors">
+                        <td className="p-4 bg-slate-50 text-slate-700 font-semibold border-r border-slate-200 pl-8">Номер</td>
+                        <td className="p-4 text-slate-900 font-medium">{contract.passportNumber}</td>
                       </tr>
                     )}
                     {contract.passportIssuedBy && (
-                      <tr className="border-b border-gray-200 hover:bg-blue-50/30 transition-colors">
-                        <td className="p-4 bg-gray-50 text-gray-700 font-semibold border-r border-gray-200 pl-8">Выдан</td>
-                        <td className="p-4 text-gray-900">{contract.passportIssuedBy}</td>
+                      <tr className="border-b border-slate-200 hover:bg-blue-50/30 transition-colors">
+                        <td className="p-4 bg-slate-50 text-slate-700 font-semibold border-r border-slate-200 pl-8">Выдан</td>
+                        <td className="p-4 text-slate-900">{contract.passportIssuedBy}</td>
                       </tr>
                     )}
                     {contract.passportIssueDate && (
-                      <tr className="border-b border-gray-200 hover:bg-blue-50/30 transition-colors">
-                        <td className="p-4 bg-gray-50 text-gray-700 font-semibold border-r border-gray-200 pl-8">Дата выдачи</td>
-                        <td className="p-4 text-gray-900">{formatDate(contract.passportIssueDate)}</td>
+                      <tr className="border-b border-slate-200 hover:bg-blue-50/30 transition-colors">
+                        <td className="p-4 bg-slate-50 text-slate-700 font-semibold border-r border-slate-200 pl-8">Дата выдачи</td>
+                        <td className="p-4 text-slate-900">{formatDate(contract.passportIssueDate)}</td>
                       </tr>
                     )}
                     {contract.passportDivisionCode && (
-                      <tr className="border-b border-gray-200 hover:bg-blue-50/30 transition-colors">
-                        <td className="p-4 bg-gray-50 text-gray-700 font-semibold border-r border-gray-200 pl-8">Код подразделения</td>
-                        <td className="p-4 text-gray-900 font-medium">{contract.passportDivisionCode}</td>
+                      <tr className="border-b border-slate-200 hover:bg-blue-50/30 transition-colors">
+                        <td className="p-4 bg-slate-50 text-slate-700 font-semibold border-r border-slate-200 pl-8">Код подразделения</td>
+                        <td className="p-4 text-slate-900 font-medium">{contract.passportDivisionCode}</td>
                       </tr>
                     )}
                   </>
@@ -381,7 +383,7 @@ export function ContractDetails({ contract: initialContract }: ContractDetailsPr
 
                 {/* Информация об объекте */}
                 <tr>
-                  <td colSpan={2} className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-b-2 border-green-300 border-t-2 border-gray-300">
+                  <td colSpan={2} className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-b-2 border-green-300 border-t-2 border-slate-300">
                     <div className="flex items-center gap-2">
                       <div className="w-1 h-6 bg-green-500 rounded"></div>
                       <span className="font-bold text-green-900 text-lg">Информация об объекте</span>
@@ -389,57 +391,57 @@ export function ContractDetails({ contract: initialContract }: ContractDetailsPr
                   </td>
                 </tr>
                 {contract.objectType && (
-                  <tr className="border-b border-gray-200 hover:bg-green-50/30 transition-colors">
-                    <td className="p-4 bg-gray-50 text-gray-700 font-semibold border-r border-gray-200">Объект</td>
-                    <td className="p-4 text-gray-900 font-medium">{contract.objectType}</td>
+                  <tr className="border-b border-slate-200 hover:bg-green-50/30 transition-colors">
+                    <td className="p-4 bg-slate-50 text-slate-700 font-semibold border-r border-slate-200">Объект</td>
+                    <td className="p-4 text-slate-900 font-medium">{contract.objectType}</td>
                   </tr>
                 )}
                 {contract.objectPurpose && (
-                  <tr className="border-b border-gray-200 hover:bg-green-50/30 transition-colors">
-                    <td className="p-4 bg-gray-50 text-gray-700 font-semibold border-r border-gray-200">Назначение объекта</td>
-                    <td className="p-4 text-gray-900">{contract.objectPurpose}</td>
+                  <tr className="border-b border-slate-200 hover:bg-green-50/30 transition-colors">
+                    <td className="p-4 bg-slate-50 text-slate-700 font-semibold border-r border-slate-200">Назначение объекта</td>
+                    <td className="p-4 text-slate-900">{contract.objectPurpose}</td>
                   </tr>
                 )}
                 {contract.cadastralNumber && (
-                  <tr className="border-b border-gray-200 hover:bg-green-50/30 transition-colors">
-                    <td className="p-4 bg-gray-50 text-gray-700 font-semibold border-r border-gray-200">Кадастровый номер</td>
-                    <td className="p-4 text-gray-900 font-medium">{contract.cadastralNumber}</td>
+                  <tr className="border-b border-slate-200 hover:bg-green-50/30 transition-colors">
+                    <td className="p-4 bg-slate-50 text-slate-700 font-semibold border-r border-slate-200">Кадастровый номер</td>
+                    <td className="p-4 text-slate-900 font-medium">{contract.cadastralNumber}</td>
                   </tr>
                 )}
                 {contract.objectAddress && (
-                  <tr className="border-b border-gray-200 hover:bg-green-50/30 transition-colors">
-                    <td className="p-4 bg-gray-50 text-gray-700 font-semibold border-r border-gray-200">Адрес объекта</td>
-                    <td className="p-4 text-gray-900">{contract.objectAddress}</td>
+                  <tr className="border-b border-slate-200 hover:bg-green-50/30 transition-colors">
+                    <td className="p-4 bg-slate-50 text-slate-700 font-semibold border-r border-slate-200">Адрес объекта</td>
+                    <td className="p-4 text-slate-900">{contract.objectAddress}</td>
                   </tr>
                 )}
                 {contract.objectArea && (
-                  <tr className="border-b border-gray-200 hover:bg-green-50/30 transition-colors">
-                    <td className="p-4 bg-gray-50 text-gray-700 font-semibold border-r border-gray-200">Площадь объекта</td>
-                    <td className="p-4 text-gray-900 font-medium">{contract.objectArea} кв. метров</td>
+                  <tr className="border-b border-slate-200 hover:bg-green-50/30 transition-colors">
+                    <td className="p-4 bg-slate-50 text-slate-700 font-semibold border-r border-slate-200">Площадь объекта</td>
+                    <td className="p-4 text-slate-900 font-medium">{contract.objectArea} кв. метров</td>
                   </tr>
                 )}
                 {contract.objectBasis && (
-                  <tr className="border-b border-gray-200 hover:bg-green-50/30 transition-colors">
-                    <td className="p-4 bg-gray-50 text-gray-700 font-semibold border-r border-gray-200">Объект принадлежит на основании</td>
-                    <td className="p-4 text-gray-900">{contract.objectBasis}</td>
+                  <tr className="border-b border-slate-200 hover:bg-green-50/30 transition-colors">
+                    <td className="p-4 bg-slate-50 text-slate-700 font-semibold border-r border-slate-200">Объект принадлежит на основании</td>
+                    <td className="p-4 text-slate-900">{contract.objectBasis}</td>
                   </tr>
                 )}
                 {contract.siteMaster && (
-                  <tr className="border-b border-gray-200 hover:bg-green-50/30 transition-colors">
-                    <td className="p-4 bg-gray-50 text-gray-700 font-semibold border-r border-gray-200">Мастер участка</td>
-                    <td className="p-4 text-gray-900 font-medium">{contract.siteMaster}</td>
+                  <tr className="border-b border-slate-200 hover:bg-green-50/30 transition-colors">
+                    <td className="p-4 bg-slate-50 text-slate-700 font-semibold border-r border-slate-200">Мастер участка</td>
+                    <td className="p-4 text-slate-900 font-medium">{contract.siteMaster}</td>
                   </tr>
                 )}
                 {contract.position && (
-                  <tr className="border-b border-gray-200 hover:bg-green-50/30 transition-colors">
-                    <td className="p-4 bg-gray-50 text-gray-700 font-semibold border-r border-gray-200">Должность</td>
-                    <td className="p-4 text-gray-900">{contract.position}</td>
+                  <tr className="border-b border-slate-200 hover:bg-green-50/30 transition-colors">
+                    <td className="p-4 bg-slate-50 text-slate-700 font-semibold border-r border-slate-200">Должность</td>
+                    <td className="p-4 text-slate-900">{contract.position}</td>
                   </tr>
                 )}
 
                 {/* Информация о подключении */}
                 <tr>
-                  <td colSpan={2} className="p-4 bg-gradient-to-r from-purple-50 to-purple-100 border-b-2 border-purple-300 border-t-2 border-gray-300">
+                  <td colSpan={2} className="p-4 bg-gradient-to-r from-purple-50 to-purple-100 border-b-2 border-purple-300 border-t-2 border-slate-300">
                     <div className="flex items-center gap-2">
                       <div className="w-1 h-6 bg-purple-500 rounded"></div>
                       <span className="font-bold text-purple-900 text-lg">Информация о подключении</span>
@@ -447,45 +449,45 @@ export function ContractDetails({ contract: initialContract }: ContractDetailsPr
                   </td>
                 </tr>
                 {contract.requestedLoad && (
-                  <tr className="border-b border-gray-200 hover:bg-purple-50/30 transition-colors">
-                    <td className="p-4 bg-gray-50 text-gray-700 font-semibold border-r border-gray-200">Запрошенная нагрузка</td>
-                    <td className="p-4 text-gray-900 font-medium">{contract.requestedLoad} м. куб.</td>
+                  <tr className="border-b border-slate-200 hover:bg-purple-50/30 transition-colors">
+                    <td className="p-4 bg-slate-50 text-slate-700 font-semibold border-r border-slate-200">Запрошенная нагрузка</td>
+                    <td className="p-4 text-slate-900 font-medium">{contract.requestedLoad} м. куб.</td>
                   </tr>
                 )}
                 {contract.costWithVAT && (
-                  <tr className="border-b border-gray-200 hover:bg-purple-50/30 transition-colors bg-yellow-50/20">
-                    <td className="p-4 bg-gray-50 text-gray-700 font-semibold border-r border-gray-200">Стоимость с НДС</td>
-                    <td className="p-4 text-gray-900 font-bold text-lg">{contract.costWithVAT} рублей</td>
+                  <tr className="border-b border-slate-200 hover:bg-purple-50/30 transition-colors bg-yellow-50/20">
+                    <td className="p-4 bg-slate-50 text-slate-700 font-semibold border-r border-slate-200">Стоимость с НДС</td>
+                    <td className="p-4 text-slate-900 font-bold text-lg">{contract.costWithVAT} рублей</td>
                   </tr>
                 )}
-                <tr className="border-b border-gray-200 hover:bg-purple-50/30 transition-colors">
-                  <td className="p-4 bg-gray-50 text-gray-700 font-semibold border-r border-gray-200">Водопровод</td>
+                <tr className="border-b border-slate-200 hover:bg-purple-50/30 transition-colors">
+                  <td className="p-4 bg-slate-50 text-slate-700 font-semibold border-r border-slate-200">Водопровод</td>
                   <td className="p-4">
                     <span className={`px-2 py-1 rounded text-sm font-medium ${
                       contract.hasWaterSupply 
                         ? "bg-green-100 text-green-800" 
-                        : "bg-gray-100 text-gray-600"
+                        : "bg-slate-100 text-slate-600"
                     }`}>
                       {contract.hasWaterSupply ? "Да" : "Нет"}
                     </span>
                   </td>
                 </tr>
-                <tr className="border-b border-gray-200 hover:bg-purple-50/30 transition-colors">
-                  <td className="p-4 bg-gray-50 text-gray-700 font-semibold border-r border-gray-200">Канализация</td>
+                <tr className="border-b border-slate-200 hover:bg-purple-50/30 transition-colors">
+                  <td className="p-4 bg-slate-50 text-slate-700 font-semibold border-r border-slate-200">Канализация</td>
                   <td className="p-4">
                     <span className={`px-2 py-1 rounded text-sm font-medium ${
                       contract.hasSewerage 
                         ? "bg-green-100 text-green-800" 
-                        : "bg-gray-100 text-gray-600"
+                        : "bg-slate-100 text-slate-600"
                     }`}>
                       {contract.hasSewerage ? "Да" : "Нет"}
                     </span>
                   </td>
                 </tr>
                 {contract.connectionType && (
-                  <tr className="border-b border-gray-200 hover:bg-purple-50/30 transition-colors">
-                    <td className="p-4 bg-gray-50 text-gray-700 font-semibold border-r border-gray-200">Тип подключения</td>
-                    <td className="p-4 text-gray-900 font-medium">
+                  <tr className="border-b border-slate-200 hover:bg-purple-50/30 transition-colors">
+                    <td className="p-4 bg-slate-50 text-slate-700 font-semibold border-r border-slate-200">Тип подключения</td>
+                    <td className="p-4 text-slate-900 font-medium">
                       {contract.connectionType === "by-length"
                         ? "по протяженности"
                         : contract.connectionType === "with-well"
@@ -495,9 +497,9 @@ export function ContractDetails({ contract: initialContract }: ContractDetailsPr
                   </tr>
                 )}
                 {contract.wellType && (
-                  <tr className="border-b border-gray-200 hover:bg-purple-50/30 transition-colors">
-                    <td className="p-4 bg-gray-50 text-gray-700 font-semibold border-r border-gray-200">Колодец</td>
-                    <td className="p-4 text-gray-900 font-medium">
+                  <tr className="border-b border-slate-200 hover:bg-purple-50/30 transition-colors">
+                    <td className="p-4 bg-slate-50 text-slate-700 font-semibold border-r border-slate-200">Колодец</td>
+                    <td className="p-4 text-slate-900 font-medium">
                       {contract.wellType === "existing"
                         ? "Существующий"
                         : contract.wellType === "planned"
@@ -507,31 +509,31 @@ export function ContractDetails({ contract: initialContract }: ContractDetailsPr
                   </tr>
                 )}
                 {contract.pipeDiameter && (
-                  <tr className="border-b border-gray-200 hover:bg-purple-50/30 transition-colors">
-                    <td className="p-4 bg-gray-50 text-gray-700 font-semibold border-r border-gray-200">Диаметр водопровода</td>
-                    <td className="p-4 text-gray-900 font-medium">{contract.pipeDiameter} мм</td>
+                  <tr className="border-b border-slate-200 hover:bg-purple-50/30 transition-colors">
+                    <td className="p-4 bg-slate-50 text-slate-700 font-semibold border-r border-slate-200">Диаметр водопровода</td>
+                    <td className="p-4 text-slate-900 font-medium">{contract.pipeDiameter} мм</td>
                   </tr>
                 )}
                 {contract.pipeMaterial && (
-                  <tr className="border-b border-gray-200 hover:bg-purple-50/30 transition-colors">
-                    <td className="p-4 bg-gray-50 text-gray-700 font-semibold border-r border-gray-200">Материал труб</td>
-                    <td className="p-4 text-gray-900">{contract.pipeMaterial}</td>
+                  <tr className="border-b border-slate-200 hover:bg-purple-50/30 transition-colors">
+                    <td className="p-4 bg-slate-50 text-slate-700 font-semibold border-r border-slate-200">Материал труб</td>
+                    <td className="p-4 text-slate-900">{contract.pipeMaterial}</td>
                   </tr>
                 )}
                 {contract.connectionPoint && (
-                  <tr className="border-b border-gray-200 hover:bg-purple-50/30 transition-colors">
-                    <td className="p-4 bg-gray-50 text-gray-700 font-semibold border-r border-gray-200">Расположение точки подключения</td>
-                    <td className="p-4 text-gray-900">{contract.connectionPoint}</td>
+                  <tr className="border-b border-slate-200 hover:bg-purple-50/30 transition-colors">
+                    <td className="p-4 bg-slate-50 text-slate-700 font-semibold border-r border-slate-200">Расположение точки подключения</td>
+                    <td className="p-4 text-slate-900">{contract.connectionPoint}</td>
                   </tr>
                 )}
                 {contract.waterSupplyRestriction && (
-                  <tr className="border-b border-gray-200 bg-orange-50">
+                  <tr className="border-b border-slate-200 bg-orange-50">
                     <td className="p-3 text-orange-700 font-medium">⚠ Ограничение водоснабжения</td>
                     <td className="p-3 text-orange-700">Да</td>
                   </tr>
                 )}
                 {contract.privateNetworkPermission && (
-                  <tr className="border-b border-gray-200 bg-orange-50">
+                  <tr className="border-b border-slate-200 bg-orange-50">
                     <td className="p-3 text-orange-700 font-medium">⚠ Требуется разрешение на подключение к частным сетям</td>
                     <td className="p-3 text-orange-700">Да</td>
                   </tr>
@@ -539,7 +541,7 @@ export function ContractDetails({ contract: initialContract }: ContractDetailsPr
 
                 {/* Сведения о ходе присоединения */}
                 <tr>
-                  <td colSpan={2} className="p-4 bg-gradient-to-r from-amber-50 to-yellow-50 border-b-2 border-amber-300 border-t-2 border-gray-300">
+                  <td colSpan={2} className="p-4 bg-gradient-to-r from-amber-50 to-yellow-50 border-b-2 border-amber-300 border-t-2 border-slate-300">
                     <div className="flex items-center gap-2">
                       <div className="w-1 h-6 bg-amber-500 rounded"></div>
                       <span className="font-bold text-amber-900 text-lg">Сведения о ходе присоединения</span>
@@ -547,28 +549,28 @@ export function ContractDetails({ contract: initialContract }: ContractDetailsPr
                   </td>
                 </tr>
                 {contract.receiptDate && (
-                  <tr className="border-b border-gray-200 hover:bg-amber-50/30 transition-colors">
-                    <td className="p-4 bg-gray-50 text-gray-700 font-semibold border-r border-gray-200">Дата поступления</td>
-                    <td className="p-4 text-gray-900 font-medium">{formatDate(contract.receiptDate)}</td>
+                  <tr className="border-b border-slate-200 hover:bg-amber-50/30 transition-colors">
+                    <td className="p-4 bg-slate-50 text-slate-700 font-semibold border-r border-slate-200">Дата поступления</td>
+                    <td className="p-4 text-slate-900 font-medium">{formatDate(contract.receiptDate)}</td>
                   </tr>
                 )}
                 {(contract.technicalConditionsIssueDate || contract.technicalConditionsNumber) && (
                   <>
                     <tr>
-                      <td colSpan={2} className="p-3 bg-gray-100 border-b border-gray-300">
-                        <span className="font-bold text-gray-800 text-sm ml-2">Технические условия</span>
+                      <td colSpan={2} className="p-3 bg-slate-100 border-b border-slate-300">
+                        <span className="font-bold text-slate-800 text-sm ml-2">Технические условия</span>
                       </td>
                     </tr>
                     {contract.technicalConditionsIssueDate && (
-                      <tr className="border-b border-gray-200 hover:bg-amber-50/30 transition-colors">
-                        <td className="p-4 bg-gray-50 text-gray-700 font-semibold border-r border-gray-200 pl-8">Дата выдачи</td>
-                        <td className="p-4 text-gray-900">{formatDate(contract.technicalConditionsIssueDate)}</td>
+                      <tr className="border-b border-slate-200 hover:bg-amber-50/30 transition-colors">
+                        <td className="p-4 bg-slate-50 text-slate-700 font-semibold border-r border-slate-200 pl-8">Дата выдачи</td>
+                        <td className="p-4 text-slate-900">{formatDate(contract.technicalConditionsIssueDate)}</td>
                       </tr>
                     )}
                     {contract.technicalConditionsNumber && (
-                      <tr className="border-b border-gray-200 hover:bg-amber-50/30 transition-colors">
-                        <td className="p-4 bg-gray-50 text-gray-700 font-semibold border-r border-gray-200 pl-8">№ тех. условий</td>
-                        <td className="p-4 text-gray-900 font-medium">{contract.technicalConditionsNumber}</td>
+                      <tr className="border-b border-slate-200 hover:bg-amber-50/30 transition-colors">
+                        <td className="p-4 bg-slate-50 text-slate-700 font-semibold border-r border-slate-200 pl-8">№ тех. условий</td>
+                        <td className="p-4 text-slate-900 font-medium">{contract.technicalConditionsNumber}</td>
                       </tr>
                     )}
                   </>
@@ -576,20 +578,20 @@ export function ContractDetails({ contract: initialContract }: ContractDetailsPr
                 {(contract.connectionAgreementIssueDate || contract.connectionAgreementNumber) && (
                   <>
                     <tr>
-                      <td colSpan={2} className="p-3 bg-gray-100 border-b border-gray-300">
-                        <span className="font-bold text-gray-800 text-sm ml-2">Договор присоединения</span>
+                      <td colSpan={2} className="p-3 bg-slate-100 border-b border-slate-300">
+                        <span className="font-bold text-slate-800 text-sm ml-2">Договор присоединения</span>
                       </td>
                     </tr>
                     {contract.connectionAgreementIssueDate && (
-                      <tr className="border-b border-gray-200 hover:bg-amber-50/30 transition-colors">
-                        <td className="p-4 bg-gray-50 text-gray-700 font-semibold border-r border-gray-200 pl-8">Дата выдачи</td>
-                        <td className="p-4 text-gray-900">{formatDate(contract.connectionAgreementIssueDate)}</td>
+                      <tr className="border-b border-slate-200 hover:bg-amber-50/30 transition-colors">
+                        <td className="p-4 bg-slate-50 text-slate-700 font-semibold border-r border-slate-200 pl-8">Дата выдачи</td>
+                        <td className="p-4 text-slate-900">{formatDate(contract.connectionAgreementIssueDate)}</td>
                       </tr>
                     )}
                     {contract.connectionAgreementNumber && (
-                      <tr className="border-b border-gray-200 hover:bg-amber-50/30 transition-colors">
-                        <td className="p-4 bg-gray-50 text-gray-700 font-semibold border-r border-gray-200 pl-8">№ договора</td>
-                        <td className="p-4 text-gray-900 font-medium">{contract.connectionAgreementNumber}</td>
+                      <tr className="border-b border-slate-200 hover:bg-amber-50/30 transition-colors">
+                        <td className="p-4 bg-slate-50 text-slate-700 font-semibold border-r border-slate-200 pl-8">№ договора</td>
+                        <td className="p-4 text-slate-900 font-medium">{contract.connectionAgreementNumber}</td>
                       </tr>
                     )}
                   </>
@@ -597,20 +599,20 @@ export function ContractDetails({ contract: initialContract }: ContractDetailsPr
                 {(contract.designAgreementIssueDate || contract.designAgreementNumber) && (
                   <>
                     <tr>
-                      <td colSpan={2} className="p-3 bg-gray-100 border-b border-gray-300">
-                        <span className="font-bold text-gray-800 text-sm ml-2">Договор проектных работ</span>
+                      <td colSpan={2} className="p-3 bg-slate-100 border-b border-slate-300">
+                        <span className="font-bold text-slate-800 text-sm ml-2">Договор проектных работ</span>
                       </td>
                     </tr>
                     {contract.designAgreementIssueDate && (
-                      <tr className="border-b border-gray-200 hover:bg-amber-50/30 transition-colors">
-                        <td className="p-4 bg-gray-50 text-gray-700 font-semibold border-r border-gray-200 pl-8">Дата выдачи</td>
-                        <td className="p-4 text-gray-900">{formatDate(contract.designAgreementIssueDate)}</td>
+                      <tr className="border-b border-slate-200 hover:bg-amber-50/30 transition-colors">
+                        <td className="p-4 bg-slate-50 text-slate-700 font-semibold border-r border-slate-200 pl-8">Дата выдачи</td>
+                        <td className="p-4 text-slate-900">{formatDate(contract.designAgreementIssueDate)}</td>
                       </tr>
                     )}
                     {contract.designAgreementNumber && (
-                      <tr className="border-b border-gray-200 hover:bg-amber-50/30 transition-colors">
-                        <td className="p-4 bg-gray-50 text-gray-700 font-semibold border-r border-gray-200 pl-8">№ договора</td>
-                        <td className="p-4 text-gray-900 font-medium">{contract.designAgreementNumber}</td>
+                      <tr className="border-b border-slate-200 hover:bg-amber-50/30 transition-colors">
+                        <td className="p-4 bg-slate-50 text-slate-700 font-semibold border-r border-slate-200 pl-8">№ договора</td>
+                        <td className="p-4 text-slate-900 font-medium">{contract.designAgreementNumber}</td>
                       </tr>
                     )}
                   </>
@@ -618,37 +620,37 @@ export function ContractDetails({ contract: initialContract }: ContractDetailsPr
                 {contract.contractDate && (
                   <>
                     <tr>
-                      <td colSpan={2} className="p-3 bg-gray-100 border-b border-gray-300">
-                        <span className="font-bold text-gray-800 text-sm ml-2">Договор</span>
+                      <td colSpan={2} className="p-3 bg-slate-100 border-b border-slate-300">
+                        <span className="font-bold text-slate-800 text-sm ml-2">Договор</span>
                       </td>
                     </tr>
-                    <tr className="border-b border-gray-200 hover:bg-amber-50/30 transition-colors">
-                      <td className="p-4 bg-gray-50 text-gray-700 font-semibold border-r border-gray-200 pl-8">Дата договора</td>
-                      <td className="p-4 text-gray-900 font-medium">{formatDate(contract.contractDate)}</td>
+                    <tr className="border-b border-slate-200 hover:bg-amber-50/30 transition-colors">
+                      <td className="p-4 bg-slate-50 text-slate-700 font-semibold border-r border-slate-200 pl-8">Дата договора</td>
+                      <td className="p-4 text-slate-900 font-medium">{formatDate(contract.contractDate)}</td>
                     </tr>
                   </>
                 )}
               </tbody>
             </table>
           </div>
-        </CardContent>
-      </Card>
+        </DashboardCardBody>
+      </DashboardCard>
 
       {/* Таблица документов */}
-      <Card>
-        <CardContent className="p-6">
-          <h3 className="font-semibold text-lg mb-6">Документы</h3>
+      <DashboardCard>
+        <DashboardCardBody>
+          <p className={cn(adminSectionLabelClass, "mb-6")}>Документы</p>
           
           {/* Таблица */}
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="bg-gray-50 border-b-2 border-gray-200">
-                  <th className="text-left p-4 font-semibold text-gray-700">Тип документа</th>
-                  <th className="text-left p-4 font-semibold text-gray-700">Название файла</th>
-                  <th className="text-left p-4 font-semibold text-gray-700">Размер</th>
-                  <th className="text-left p-4 font-semibold text-gray-700">Дата загрузки</th>
-                  <th className="text-left p-4 font-semibold text-gray-700">Действия</th>
+                <tr className="bg-slate-50 border-b-2 border-slate-200">
+                  <th className="text-left p-4 font-semibold text-slate-700">Тип документа</th>
+                  <th className="text-left p-4 font-semibold text-slate-700">Название файла</th>
+                  <th className="text-left p-4 font-semibold text-slate-700">Размер</th>
+                  <th className="text-left p-4 font-semibold text-slate-700">Дата загрузки</th>
+                  <th className="text-left p-4 font-semibold text-slate-700">Действия</th>
                 </tr>
               </thead>
               <tbody>
@@ -657,11 +659,11 @@ export function ContractDetails({ contract: initialContract }: ContractDetailsPr
                   return (
                     <tr 
                       key={docType.id} 
-                      className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
-                        index % 2 === 0 ? "bg-white" : "bg-gray-50/50"
+                      className={`border-b border-slate-100 hover:bg-slate-50 transition-colors ${
+                        index % 2 === 0 ? "bg-white" : "bg-slate-50/50"
                       }`}
                     >
-                      <td className="p-4 font-medium text-gray-900">{docType.label}</td>
+                      <td className="p-4 font-medium text-slate-900">{docType.label}</td>
                       <td className="p-4">
                         {docs.length > 0 ? (
                           <div className="space-y-2">
@@ -671,14 +673,14 @@ export function ContractDetails({ contract: initialContract }: ContractDetailsPr
                                 className="flex items-center gap-2 group"
                               >
                                 <FileCheck className="h-4 w-4 text-blue-600 flex-shrink-0" />
-                                <span className="text-gray-900 group-hover:text-blue-600 transition-colors">
+                                <span className="text-slate-900 group-hover:text-blue-600 transition-colors">
                                   {doc.fileName}
                                 </span>
                               </div>
                             ))}
                           </div>
                         ) : (
-                          <span className="text-gray-400 italic">Нет документов</span>
+                          <span className="text-slate-400 italic">Нет документов</span>
                         )}
                       </td>
                       <td className="p-4">
@@ -687,14 +689,14 @@ export function ContractDetails({ contract: initialContract }: ContractDetailsPr
                             {docs.map((doc) => (
                               <span 
                                 key={doc.id} 
-                                className="text-sm text-gray-600 inline-block"
+                                className="text-sm text-slate-600 inline-block"
                               >
                                 {(doc.fileSize / 1024 / 1024).toFixed(2)} МБ
                               </span>
                             ))}
                           </div>
                         ) : (
-                          <span className="text-gray-400">—</span>
+                          <span className="text-slate-400">—</span>
                         )}
                       </td>
                       <td className="p-4">
@@ -703,7 +705,7 @@ export function ContractDetails({ contract: initialContract }: ContractDetailsPr
                             {docs.map((doc) => (
                               <span 
                                 key={doc.id} 
-                                className="text-sm text-gray-600 inline-block"
+                                className="text-sm text-slate-600 inline-block"
                               >
                                 {new Date(doc.uploadedAt).toLocaleDateString("ru-RU", {
                                   day: "2-digit",
@@ -714,7 +716,7 @@ export function ContractDetails({ contract: initialContract }: ContractDetailsPr
                             ))}
                           </div>
                         ) : (
-                          <span className="text-gray-400">—</span>
+                          <span className="text-slate-400">—</span>
                         )}
                       </td>
                       <td className="p-4">
@@ -744,7 +746,7 @@ export function ContractDetails({ contract: initialContract }: ContractDetailsPr
                             ))}
                           </div>
                         ) : (
-                          <span className="text-gray-400">—</span>
+                          <span className="text-slate-400">—</span>
                         )}
                       </td>
                     </tr>
@@ -755,8 +757,8 @@ export function ContractDetails({ contract: initialContract }: ContractDetailsPr
           </div>
 
           {/* Кнопки типов документов */}
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <h4 className="font-semibold text-gray-700 mb-4">Добавить документ</h4>
+          <div className="mt-8 pt-6 border-t border-slate-200">
+            <p className={cn(adminSectionLabelClass, "mb-4")}>Добавить документ</p>
             <div className="flex flex-wrap gap-2">
               {DOCUMENT_TYPES.map((docType) => (
                 <Button
@@ -768,8 +770,8 @@ export function ContractDetails({ contract: initialContract }: ContractDetailsPr
                   }}
                   className={
                     selectedDocumentType === docType.id
-                      ? "bg-green-600 hover:bg-green-700 text-white border-green-600 shadow-sm"
-                      : "border-gray-300 hover:border-green-500 hover:text-green-600 hover:bg-green-50"
+                      ? adminPrimaryBtnClass
+                      : adminOutlineBtnClass
                   }
                 >
                   {docType.label}
@@ -780,10 +782,10 @@ export function ContractDetails({ contract: initialContract }: ContractDetailsPr
 
           {/* Форма загрузки документа */}
           {showUploadForm && (
-            <div className="mt-6 p-6 border-2 border-green-200 rounded-lg bg-green-50/50">
+            <div className="mt-6 border border-emerald-200 bg-emerald-50/50 p-6">
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
                     Добавить документ: <span className="text-green-700">{getDocumentTypeLabel(selectedDocumentType)}</span>
                   </label>
                   <div className="flex items-center gap-4">
@@ -795,10 +797,10 @@ export function ContractDetails({ contract: initialContract }: ContractDetailsPr
                       className="max-w-md"
                     />
                     {uploadFile && (
-                      <div className="flex items-center gap-2 text-sm text-gray-700">
+                      <div className="flex items-center gap-2 text-sm text-slate-700">
                         <FileCheck className="h-4 w-4 text-green-600" />
                         <span className="font-medium">{uploadFile.name}</span>
-                        <span className="text-gray-500">
+                        <span className="text-slate-500">
                           ({(uploadFile.size / 1024 / 1024).toFixed(2)} МБ)
                         </span>
                       </div>
@@ -809,7 +811,7 @@ export function ContractDetails({ contract: initialContract }: ContractDetailsPr
                   <Button
                     onClick={handleUpload}
                     disabled={!uploadFile || isUploading}
-                    className="bg-green-600 hover:bg-green-700 text-white shadow-sm"
+                    className={adminPrimaryBtnClass}
                   >
                     {isUploading ? (
                       <>
@@ -831,7 +833,7 @@ export function ContractDetails({ contract: initialContract }: ContractDetailsPr
                       const fileInput = document.getElementById("file-input") as HTMLInputElement;
                       if (fileInput) fileInput.value = "";
                     }}
-                    className="border-gray-300 hover:bg-gray-50"
+                    className={adminOutlineBtnClass}
                   >
                     Отмена
                   </Button>
@@ -839,8 +841,8 @@ export function ContractDetails({ contract: initialContract }: ContractDetailsPr
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </DashboardCardBody>
+      </DashboardCard>
     </div>
   );
 }

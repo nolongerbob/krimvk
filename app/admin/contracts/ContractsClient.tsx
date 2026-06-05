@@ -186,7 +186,7 @@ export function ContractsClient({ contracts: initialContracts }: ContractsClient
       COMPLETED: "bg-green-100 text-green-800",
       CANCELLED: "bg-red-100 text-red-800",
     };
-    return colorMap[status] || "bg-gray-100 text-gray-800";
+    return colorMap[status] || "bg-slate-100 text-slate-800";
   };
 
   if (initialContracts.length === 0) {
@@ -216,7 +216,7 @@ export function ContractsClient({ contracts: initialContracts }: ContractsClient
           <div className="space-y-4">
             {/* Поиск */}
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
               <Input
                 placeholder="Быстрый поиск: фамилия, имя, номер договора, телефон, адрес..."
                 value={searchTerm}
@@ -239,8 +239,8 @@ export function ContractsClient({ contracts: initialContracts }: ContractsClient
             {/* Фильтры */}
             <div className="flex items-center gap-3 flex-wrap">
               <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-gray-500" />
-                <span className="text-sm font-medium text-gray-700">Статус:</span>
+                <Filter className="h-4 w-4 text-slate-500" />
+                <span className="text-sm font-medium text-slate-700">Статус:</span>
               </div>
               <div className="flex gap-2 flex-wrap">
                 <Button
@@ -288,13 +288,13 @@ export function ContractsClient({ contracts: initialContracts }: ContractsClient
 
             {/* Статистика */}
             {(searchTerm || statusFilter !== "all") && (
-              <div className="flex items-center justify-between pt-3 border-t border-gray-200">
-                <div className="text-sm text-gray-600">
-                  Найдено: <span className="font-semibold text-gray-900">{filteredContracts.length}</span> из{" "}
-                  <span className="font-semibold text-gray-900">{contracts.length}</span> договоров
+              <div className="flex items-center justify-between pt-3 border-t border-slate-200">
+                <div className="text-sm text-slate-600">
+                  Найдено: <span className="font-semibold text-slate-900">{filteredContracts.length}</span> из{" "}
+                  <span className="font-semibold text-slate-900">{contracts.length}</span> договоров
                 </div>
                 {(searchTerm || statusFilter !== "all") && (
-                  <Button variant="ghost" size="sm" onClick={clearSearch} className="text-gray-600">
+                  <Button variant="ghost" size="sm" onClick={clearSearch} className="text-slate-600">
                     <X className="h-4 w-4 mr-1" />
                     Сбросить фильтры
                   </Button>
@@ -308,14 +308,14 @@ export function ContractsClient({ contracts: initialContracts }: ContractsClient
       {filteredContracts.length === 0 ? (
         <DashboardCard className="border-dashed bg-slate-50/80">
           <DashboardCardBody className="py-12 text-center">
-            <FileCheck className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-lg font-medium text-gray-600 mb-2">
+            <FileCheck className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+            <p className="text-lg font-medium text-slate-600 mb-2">
               {searchTerm || statusFilter !== "all"
                 ? "Ничего не найдено"
                 : "Договоры не найдены"}
             </p>
             {searchTerm && (
-              <p className="text-sm text-gray-500 mb-4">
+              <p className="text-sm text-slate-500 mb-4">
                 По запросу "<span className="font-medium">{searchTerm}</span>" ничего не найдено
               </p>
             )}
@@ -345,7 +345,7 @@ export function ContractsClient({ contracts: initialContracts }: ContractsClient
                         {getStatusLabel(contract.status)}
                       </span>
                     </div>
-                    <div className="space-y-1 text-sm text-gray-600">
+                    <div className="space-y-1 text-sm text-slate-600">
                       <div>
                         <span className="font-medium">Абонент:</span> {getFullName(contract)}
                       </div>

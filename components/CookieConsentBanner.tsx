@@ -61,7 +61,7 @@ export function CookieConsentBanner() {
 
   return (
     <div className="fixed bottom-4 left-4 right-4 z-50 rounded-lg border bg-white p-4 shadow-lg md:left-auto md:max-w-xl">
-      <p className="text-sm text-gray-700">
+      <p className="text-sm text-slate-700">
         Мы используем cookie для корректной работы сайта и повышения удобства.
         Продолжая пользоваться сайтом, вы можете дать согласие на использование
         cookie согласно{" "}
@@ -83,7 +83,7 @@ export function CookieConsentBanner() {
         </button>
         <button
           type="button"
-          className="rounded border px-3 py-2 text-sm hover:bg-gray-50"
+          className="rounded border px-3 py-2 text-sm hover:bg-slate-50"
           onClick={() => {
             persistConsent("declined");
             setConsent("declined");

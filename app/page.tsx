@@ -97,7 +97,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="flex flex-1 flex-col bg-gray-50 pt-10 pb-16 md:pt-12 md:pb-20 lg:pb-24">
+      <section className="flex flex-1 flex-col bg-slate-50 pt-10 pb-16 md:pt-12 md:pb-20 lg:pb-24">
         <div className="container mx-auto flex flex-1 flex-col justify-center px-4">
           <h2 className="text-3xl md:text-4xl font-semibold text-center mb-8 md:mb-10 tracking-tight animate-fade-in">Быстрые действия</h2>
           <div className="quick-actions-grid grid auto-rows-fr grid-cols-1 items-stretch gap-4 pb-0 md:grid-cols-2 lg:grid-cols-4">
@@ -161,25 +161,25 @@ export default async function HomePage() {
                 <div className="flex w-full max-w-lg flex-col space-y-6 text-center">
                   <div className="flex min-h-[88px] flex-col items-center justify-start space-y-1 text-center">
                     <Phone className="h-5 w-5 shrink-0 text-blue-500" />
-                    <a href="tel:+79780800366" className="text-lg font-medium text-gray-900 hover:text-primary">
+                    <a href="tel:+79780800366" className="text-lg font-medium text-slate-900 hover:text-primary">
                       +7 (978) 080-03-66
                     </a>
-                    <p className="max-w-sm text-sm text-gray-600">с 8:00 до 17:00 по будням, в пятницу c 8:00 до 16:00</p>
+                    <p className="max-w-sm text-sm text-slate-600">с 8:00 до 17:00 по будням, в пятницу c 8:00 до 16:00</p>
                   </div>
                   <div className="flex min-h-[88px] flex-col items-center justify-start space-y-1 text-center">
                     <Phone className="h-5 w-5 shrink-0 text-blue-500" />
-                    <a href="tel:+79884648724" className="text-lg font-medium text-gray-900 hover:text-primary">
+                    <a href="tel:+79884648724" className="text-lg font-medium text-slate-900 hover:text-primary">
                       +7 (988) 464-87-24
                     </a>
-                    <p className="max-w-sm text-sm text-gray-600">с 8:00 до 17:00 по будням, в пятницу c 8:00 до 16:00</p>
+                    <p className="max-w-sm text-sm text-slate-600">с 8:00 до 17:00 по будням, в пятницу c 8:00 до 16:00</p>
                   </div>
-                  <div className="flex min-h-[132px] flex-col items-center justify-start border-t border-gray-200 pt-6 text-center">
-                    <Mail className="mb-2 h-5 w-5 shrink-0 text-gray-500" />
-                    <p className="mb-1 font-medium text-gray-900">Email для передачи показаний</p>
-                    <a href="mailto:NVKVK2208@mail.ru" className="text-gray-600 hover:text-primary">
+                  <div className="flex min-h-[132px] flex-col items-center justify-start border-t border-slate-200 pt-6 text-center">
+                    <Mail className="mb-2 h-5 w-5 shrink-0 text-slate-500" />
+                    <p className="mb-1 font-medium text-slate-900">Email для передачи показаний</p>
+                    <a href="mailto:NVKVK2208@mail.ru" className="text-slate-600 hover:text-primary">
                       NVKVK2208@mail.ru
                     </a>
-                    <p className="mt-1 max-w-sm text-sm text-gray-500">
+                    <p className="mt-1 max-w-sm text-sm text-slate-500">
                       Отправляйте показания счетчиков на этот адрес
                     </p>
                   </div>
@@ -200,17 +200,17 @@ export default async function HomePage() {
                 <div className="flex w-full max-w-lg flex-col space-y-6 text-center">
                   <div className="flex min-h-[88px] flex-col items-center justify-start space-y-1 text-center">
                     <Phone className="h-5 w-5 shrink-0 text-red-500" />
-                    <a href="tel:+79787013050" className="text-lg font-medium text-gray-900 hover:text-red-600">
+                    <a href="tel:+79787013050" className="text-lg font-medium text-slate-900 hover:text-red-600">
                       +7 (978) 701-30-50
                     </a>
-                    <p className="text-sm text-gray-600">Круглосуточно</p>
+                    <p className="text-sm text-slate-600">Круглосуточно</p>
                   </div>
                   <div className="flex min-h-[88px] flex-col items-center justify-start space-y-1 text-center">
                     <Phone className="h-5 w-5 shrink-0 text-red-500" />
-                    <a href="tel:+79787460990" className="text-lg font-medium text-gray-900 hover:text-red-600">
+                    <a href="tel:+79787460990" className="text-lg font-medium text-slate-900 hover:text-red-600">
                       +7 (978) 746-09-90
                     </a>
-                    <p className="text-sm text-gray-600">Круглосуточно</p>
+                    <p className="text-sm text-slate-600">Круглосуточно</p>
                   </div>
                   <div className="flex min-h-[132px] flex-col items-center justify-center border-t border-red-200">
                     <Button

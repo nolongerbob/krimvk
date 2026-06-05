@@ -8,7 +8,7 @@ export default function PrivacyPolicyPage() {
   return (
     <div className="container mx-auto px-4 py-10">
       <h1 className="text-3xl font-bold">Политика обработки персональных данных</h1>
-      <div className="mt-6 space-y-4 text-sm text-gray-700">
+      <div className="mt-6 space-y-4 text-sm text-slate-700">
         <p>
           Настоящая Политика определяет порядок обработки персональных данных
           пользователей сайта КрымВК в соответствии с требованиями 152-ФЗ.

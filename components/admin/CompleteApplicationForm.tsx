@@ -3,10 +3,16 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Upload, X, FileText, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
+import {
+  adminFieldClass,
+  adminOutlineBtnClass,
+  adminPrimaryBtnClass,
+} from "@/components/admin/admin-styles";
+import { siteTextareaClass } from "@/components/site/site-styles";
 
 interface CompleteApplicationFormProps {
   applicationId: string;
@@ -30,11 +36,10 @@ export function CompleteApplicationForm({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files);
-      
-      // Проверяем размер каждого файла перед добавлением
+
       const validFiles: File[] = [];
-      const maxSize = 10 * 1024 * 1024; // 10 МБ
-      
+      const maxSize = 10 * 1024 * 1024;
+
       for (const file of newFiles) {
         if (file.size > maxSize) {
           setError(`Файл "${file.name}" слишком большой (${(file.size / 1024 / 1024).toFixed(2)} МБ). Максимальный размер: 10 МБ`);
@@ -46,7 +51,7 @@ export function CompleteApplicationForm({
         }
         validFiles.push(file);
       }
-      
+
       if (validFiles.length > 0) {
         setFiles((prev) => [...prev, ...validFiles]);
         setError(null);
@@ -63,16 +68,14 @@ export function CompleteApplicationForm({
     setIsSubmitting(true);
     setError(null);
 
-    // Валидация: для технических условий файлы обязательны
     if (isTechnicalConditions && files.length === 0) {
       setError("Для завершения заявки на технические условия необходимо загрузить хотя бы один документ");
       setIsSubmitting(false);
       return;
     }
 
-    // Проверяем общий размер всех файлов (макс. 50 МБ)
     const totalSize = files.reduce((sum, file) => sum + file.size, 0);
-    const maxTotalSize = 50 * 1024 * 1024; // 50 МБ
+    const maxTotalSize = 50 * 1024 * 1024;
     if (totalSize > maxTotalSize) {
       setError(`Общий размер всех файлов (${(totalSize / 1024 / 1024).toFixed(2)} МБ) превышает максимальный лимит 50 МБ`);
       setIsSubmitting(false);
@@ -87,7 +90,6 @@ export function CompleteApplicationForm({
         formData.append("comment", comment.trim());
       }
 
-      // Загружаем файлы
       files.forEach((file) => {
         formData.append("files", file);
       });
@@ -99,25 +101,22 @@ export function CompleteApplicationForm({
 
       if (!response.ok) {
         let errorMessage = "Ошибка при завершении заявки";
-        
-        // Специальная обработка ошибки 413 (Payload Too Large)
+
         if (response.status === 413) {
           errorMessage = "Файл слишком большой. Максимальный размер одного файла: 10 МБ. Общий размер всех файлов не должен превышать 50 МБ. Пожалуйста, уменьшите размер файлов или загрузите их по одному.";
           throw new Error(errorMessage);
         }
-        
+
         try {
           const data = await response.json();
           errorMessage = data.error || errorMessage;
-        } catch (jsonError) {
-          // Если ответ не JSON, читаем как текст
+        } catch {
           const text = await response.text();
           errorMessage = text || errorMessage;
         }
         throw new Error(errorMessage);
       }
 
-      // Закрываем форму и обновляем страницу
       setComment("");
       setFiles([]);
       onClose();
@@ -140,9 +139,9 @@ export function CompleteApplicationForm({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Завершить заявку</DialogTitle>
+          <DialogTitle className="text-slate-900">Завершить заявку</DialogTitle>
           <DialogDescription>
             {isTechnicalConditions
               ? "Загрузите документы и оставьте комментарий для завершения заявки на технические условия"
@@ -151,31 +150,29 @@ export function CompleteApplicationForm({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Комментарий */}
           <div className="space-y-2">
-            <Label htmlFor="comment">Комментарий</Label>
-            <Textarea
+            <Label htmlFor="comment" className="text-slate-700">Комментарий</Label>
+            <textarea
               id="comment"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder="Введите комментарий к завершению заявки..."
               rows={4}
-              className="resize-none"
+              className={cn(siteTextareaClass, "w-full resize-none px-3 py-2 text-sm")}
             />
           </div>
 
-          {/* Загрузка файлов */}
           <div className="space-y-2">
-            <Label>
+            <Label className="text-slate-700">
               Документы {isTechnicalConditions && <span className="text-red-500">*</span>}
             </Label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+            <div className="border border-dashed border-slate-200 bg-slate-50/50 p-4">
               <div className="flex flex-col items-center justify-center space-y-4">
-                <Upload className="h-8 w-8 text-gray-400" />
+                <Upload className="h-8 w-8 text-slate-400" />
                 <div className="text-center">
                   <Label
                     htmlFor="file-upload"
-                    className="cursor-pointer text-blue-600 hover:text-blue-700 font-medium"
+                    className="cursor-pointer font-medium text-blue-600 hover:text-blue-700"
                   >
                     Нажмите для загрузки файлов
                   </Label>
@@ -187,10 +184,10 @@ export function CompleteApplicationForm({
                     className="hidden"
                     accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="mt-1 text-xs text-slate-500">
                     PDF, DOC, DOCX, JPG, PNG (макс. 10 МБ на файл, общий размер до 50 МБ)
                     {isTechnicalConditions && (
-                      <span className="block text-red-600 font-medium mt-1">
+                      <span className="mt-1 block font-medium text-red-600">
                         * Обязательно для завершения заявки на технические условия
                       </span>
                     )}
@@ -198,18 +195,17 @@ export function CompleteApplicationForm({
                 </div>
               </div>
 
-              {/* Список загруженных файлов */}
               {files.length > 0 && (
                 <div className="mt-4 space-y-2">
                   {files.map((file, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between bg-gray-50 p-2 rounded border"
+                      className="flex items-center justify-between border border-slate-100 bg-white p-2"
                     >
-                      <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <FileText className="h-4 w-4 text-gray-500 flex-shrink-0" />
-                        <span className="text-sm text-gray-700 truncate">{file.name}</span>
-                        <span className="text-xs text-gray-500 flex-shrink-0">
+                      <div className="flex min-w-0 flex-1 items-center gap-2">
+                        <FileText className="h-4 w-4 shrink-0 text-slate-500" />
+                        <span className="truncate text-sm text-slate-700">{file.name}</span>
+                        <span className="shrink-0 text-xs text-slate-500">
                           ({(file.size / 1024 / 1024).toFixed(2)} МБ)
                         </span>
                       </div>
@@ -219,7 +215,7 @@ export function CompleteApplicationForm({
                         size="sm"
                         onClick={() => removeFile(index)}
                         disabled={isSubmitting}
-                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        className={cn(adminOutlineBtnClass, "h-8 w-8 p-0 text-red-600 hover:bg-red-50 hover:text-red-700")}
                       >
                         <X className="h-4 w-4" />
                       </Button>
@@ -231,28 +227,25 @@ export function CompleteApplicationForm({
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+            <div className="border border-red-200 bg-red-50 p-3">
               <p className="text-sm text-red-800">{error}</p>
             </div>
           )}
 
-          {/* Кнопки */}
-          <div className="flex justify-end gap-3 pt-4 border-t">
+          <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
             <Button
               type="button"
               variant="outline"
               onClick={handleClose}
               disabled={isSubmitting}
+              className={adminOutlineBtnClass}
             >
               Отмена
             </Button>
-            <Button 
-              type="submit" 
-              disabled={isSubmitting}
-            >
+            <Button type="submit" disabled={isSubmitting} className={adminPrimaryBtnClass}>
               {isSubmitting ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Завершение...
                 </>
               ) : (
@@ -265,4 +258,3 @@ export function CompleteApplicationForm({
     </Dialog>
   );
 }
-

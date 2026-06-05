@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,6 +23,7 @@ import {
   Download,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
 
 const TARIFFS = {
   water: {
@@ -84,7 +84,7 @@ function InputWithSuffix({
   return (
     <div className="flex h-12 overflow-hidden rounded-none border border-input bg-background ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
       <Input id={id} className={cn(squareControlClass, "min-w-0 flex-1", className)} {...props} />
-      <span className="flex shrink-0 items-center border-l border-gray-200 bg-gray-100 px-3 text-sm text-gray-600">
+      <span className="flex shrink-0 items-center border-l border-slate-200 bg-slate-100 px-3 text-sm text-slate-600">
         {suffix}
       </span>
     </div>
@@ -93,7 +93,7 @@ function InputWithSuffix({
 
 function FieldHint({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mt-1.5 flex items-start gap-2 rounded-none bg-gray-50 p-2 text-xs text-gray-500">
+    <div className="mt-1.5 flex items-start gap-2 rounded-none bg-slate-50 p-2 text-xs text-slate-500">
       <HelpCircle className="mt-0.5 h-4 w-4 shrink-0" />
       <span>{children}</span>
     </div>
@@ -127,7 +127,7 @@ function ConnectionTypeCard({
         "relative w-full border-2 p-6 text-left transition-all duration-200 rounded-none",
         selected
           ? selectedBorderClass
-          : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50"
+          : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
       )}
     >
       {selected && (
@@ -149,9 +149,9 @@ function ConnectionTypeCard({
         >
           {icon}
         </div>
-        <span className="text-lg font-semibold text-gray-900">{title}</span>
+        <span className="text-lg font-semibold text-slate-900">{title}</span>
       </div>
-      <p className="text-sm text-gray-600">{description}</p>
+      <p className="text-sm text-slate-600">{description}</p>
     </button>
   );
 }
@@ -234,16 +234,16 @@ export default function KalkulyatorStoimostiPodklyucheniyaPage() {
   };
 
   return (
-    <div className="flex min-h-[calc(100dvh-4rem)] flex-col bg-gray-50 py-8 md:py-12 pb-14 lg:min-h-[calc(100dvh-4.5rem)]">
+    <div className="flex min-h-[calc(100dvh-4rem)] flex-col bg-slate-50 py-8 md:py-12 pb-14 lg:min-h-[calc(100dvh-4.5rem)]">
       <div className="container max-w-7xl flex-1 px-4">
         <div className="mb-8 text-center md:mb-10">
           <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-none bg-cyan-100">
             <Calculator className="h-7 w-7 text-cyan-600" />
           </div>
-          <h1 className="mb-3 text-3xl font-semibold tracking-tight text-gray-900 md:text-4xl">
+          <h1 className="mb-3 text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
             Калькулятор стоимости подключения
           </h1>
-          <p className="mx-auto max-w-2xl text-base text-gray-600 md:text-lg">
+          <p className="mx-auto max-w-2xl text-base text-slate-600 md:text-lg">
             Рассчитайте стоимость подключения к системам водоснабжения и водоотведения
           </p>
         </div>
@@ -259,11 +259,11 @@ export default function KalkulyatorStoimostiPodklyucheniyaPage() {
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:items-stretch">
           <div className="space-y-4 lg:col-span-2">
-            <Card className="rounded-none border shadow-none transition-all duration-300">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-semibold">Шаг 1: Выберите тип подключения</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-0">
+            <DashboardCard className="rounded-none border shadow-none transition-all duration-300">
+              <div className="pb-4 p-6 pb-4" >
+                <h2 className="text-lg font-semibold">Шаг 1: Выберите тип подключения</h2>
+              </div>
+              <DashboardCardBody className="space-y-0">
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <ConnectionTypeCard
                     selected={waterEnabled}
@@ -294,10 +294,10 @@ export default function KalkulyatorStoimostiPodklyucheniyaPage() {
                   )}
                 >
                   <div className="overflow-hidden">
-                    <div className="space-y-6 border-t border-gray-200 pt-6">
+                    <div className="space-y-6 border-t border-slate-200 pt-6">
                       {waterEnabled && (
                         <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-                          <h3 className="mb-4 flex items-center gap-2 text-base font-semibold text-gray-900">
+                          <h3 className="mb-4 flex items-center gap-2 text-base font-semibold text-slate-900">
                             <Droplet className="h-5 w-5 text-blue-600" />
                             Шаг 2: Параметры водоснабжения
                           </h3>
@@ -358,7 +358,7 @@ export default function KalkulyatorStoimostiPodklyucheniyaPage() {
                               />
                             </div>
 
-                            <label className="flex cursor-pointer items-center gap-3 rounded-none border border-gray-200 bg-gray-50 p-4">
+                            <label className="flex cursor-pointer items-center gap-3 rounded-none border border-slate-200 bg-slate-50 p-4">
                               <input
                                 type="checkbox"
                                 id="waterWithWells"
@@ -373,12 +373,12 @@ export default function KalkulyatorStoimostiPodklyucheniyaPage() {
                       )}
 
                       {waterEnabled && sewerageEnabled && (
-                        <div className="border-t border-gray-200" aria-hidden />
+                        <div className="border-t border-slate-200" aria-hidden />
                       )}
 
                       {sewerageEnabled && (
                         <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-                          <h3 className="mb-4 flex items-center gap-2 text-base font-semibold text-gray-900">
+                          <h3 className="mb-4 flex items-center gap-2 text-base font-semibold text-slate-900">
                             <Waves className="h-5 w-5 text-cyan-600" />
                             Шаг 2: Параметры водоотведения
                           </h3>
@@ -439,7 +439,7 @@ export default function KalkulyatorStoimostiPodklyucheniyaPage() {
                               />
                             </div>
 
-                            <label className="flex cursor-pointer items-center gap-3 rounded-none border border-gray-200 bg-gray-50 p-4">
+                            <label className="flex cursor-pointer items-center gap-3 rounded-none border border-slate-200 bg-slate-50 p-4">
                               <input
                                 type="checkbox"
                                 id="sewerageWithWells"
@@ -455,8 +455,8 @@ export default function KalkulyatorStoimostiPodklyucheniyaPage() {
                     </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </DashboardCardBody>
+            </DashboardCard>
 
             {hasSelection && (
               <Button
@@ -472,25 +472,25 @@ export default function KalkulyatorStoimostiPodklyucheniyaPage() {
 
           <div className="lg:col-span-1">
             <div className="lg:sticky lg:top-20">
-              <Card className="flex w-full flex-col overflow-hidden rounded-none border border-gray-200 shadow-none">
-              <CardHeader className="border-b border-gray-200 bg-white pb-4">
-                <CardTitle className="text-xl font-semibold">Стоимость подключения</CardTitle>
+              <DashboardCard className="flex w-full flex-col overflow-hidden rounded-none border border-slate-200 shadow-none">
+              <div className="border-b border-slate-200 bg-white pb-4 p-6 pb-4" >
+                <h2 className="text-xl font-semibold">Стоимость подключения</h2>
                 {!hasSelection ? (
-                  <p className="mt-1 text-sm text-gray-500">
+                  <p className="mt-1 text-sm text-slate-500">
                     Выберите тип подключения для расчёта
                   </p>
                 ) : (
-                  <CardDescription className="text-sm">Без учёта НДС</CardDescription>
+                  <p className="text-sm">Без учёта НДС</p>
                 )}
-              </CardHeader>
-              <CardContent className="flex flex-1 flex-col space-y-4 pb-6 pt-5">
-                <div className="border-b border-gray-200 pb-4">
+              </div>
+              <DashboardCardBody className="flex flex-1 flex-col space-y-4 pb-6 pt-5">
+                <div className="border-b border-slate-200 pb-4">
                   <div className="flex items-end justify-between">
                     <div>
                       <span
                         className={cn(
                           "text-lg font-semibold",
-                          hasSelection ? "text-gray-900" : "text-gray-400"
+                          hasSelection ? "text-slate-900" : "text-slate-400"
                         )}
                       >
                         Итого
@@ -498,7 +498,7 @@ export default function KalkulyatorStoimostiPodklyucheniyaPage() {
                       <p
                         className={cn(
                           "text-sm font-medium",
-                          hasSelection ? "text-gray-600" : "text-gray-300"
+                          hasSelection ? "text-slate-600" : "text-slate-300"
                         )}
                       >
                         рублей
@@ -507,7 +507,7 @@ export default function KalkulyatorStoimostiPodklyucheniyaPage() {
                     <span
                       className={cn(
                         "text-3xl font-bold tabular-nums",
-                        hasSelection ? "text-blue-600" : "text-gray-300"
+                        hasSelection ? "text-blue-600" : "text-slate-300"
                       )}
                     >
                       {totalRub.toLocaleString("ru-RU", {
@@ -649,8 +649,8 @@ export default function KalkulyatorStoimostiPodklyucheniyaPage() {
                     </a>
                   </Button>
                 </div>
-              </CardContent>
-              </Card>
+              </DashboardCardBody>
+              </DashboardCard>
             </div>
           </div>
         </div>

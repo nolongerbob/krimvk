@@ -59,13 +59,13 @@ export function HeaderPhoneMenu({ session, onLinkClick }: HeaderPhoneMenuProps) 
   const chatHref = session ? "/dashboard/questions" : "/login?callbackUrl=/dashboard/questions";
 
   return (
-    <div className="w-full border-t border-gray-200/60 bg-white/75 backdrop-blur-xl shadow-[0_24px_48px_-12px_rgba(15,23,42,0.12)] animate-in fade-in slide-in-from-top-1 duration-200">
+    <div className="w-full border-t border-slate-200/60 bg-white/75 backdrop-blur-xl shadow-[0_24px_48px_-12px_rgba(15,23,42,0.12)] animate-in fade-in slide-in-from-top-1 duration-200">
       <div className="w-full px-6 py-8 sm:px-8 lg:px-14 lg:py-10 xl:px-20">
         <div className="grid w-full grid-cols-1 gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 lg:gap-x-20 lg:gap-y-10">
           {phoneSections.map((section) => (
             <div key={section.title}>
               <p
-                className={`mb-4 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500 ${section.titleClassName ?? ""}`}
+                className={`mb-4 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500 ${section.titleClassName ?? ""}`}
               >
                 {section.title}
               </p>
@@ -78,7 +78,7 @@ export function HeaderPhoneMenu({ session, onLinkClick }: HeaderPhoneMenuProps) 
                       className="group/link block transition-colors"
                     >
                       <span
-                        className={`relative inline-block text-base font-medium leading-snug text-gray-900 group-hover/link:text-primary ${link.labelClassName ?? ""}`}
+                        className={`relative inline-block text-base font-medium leading-snug text-slate-900 group-hover/link:text-primary ${link.labelClassName ?? ""}`}
                       >
                         {link.label}
                         <span
@@ -87,7 +87,7 @@ export function HeaderPhoneMenu({ session, onLinkClick }: HeaderPhoneMenuProps) 
                         />
                       </span>
                       {link.description ? (
-                        <span className="mt-1 block text-sm leading-relaxed text-gray-500">
+                        <span className="mt-1 block text-sm leading-relaxed text-slate-500">
                           {link.description}
                         </span>
                       ) : null}
@@ -99,13 +99,13 @@ export function HeaderPhoneMenu({ session, onLinkClick }: HeaderPhoneMenuProps) 
           ))}
 
           <div>
-            <p className="mb-4 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">
+            <p className="mb-4 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
               Онлайн-чат
             </p>
             <Link
               href={chatHref}
               onClick={onLinkClick}
-              className="group/link inline-flex items-center gap-2 text-base leading-snug text-gray-900 transition-colors hover:text-primary"
+              className="group/link inline-flex items-center gap-2 text-base leading-snug text-slate-900 transition-colors hover:text-primary"
             >
               <MessageSquare className="h-5 w-5 shrink-0 text-blue-600" />
               <span className="relative font-medium">

@@ -2,6 +2,8 @@
 
 import { Button } from "@/components/ui/button";
 import { Clock, AlertCircle, CheckCircle, XCircle, List } from "lucide-react";
+import { adminOutlineBtnClass, adminPrimaryBtnClass } from "@/components/admin/admin-styles";
+import { cn } from "@/lib/utils";
 
 type FilterStatus = "ALL" | "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
 
@@ -31,7 +33,7 @@ export function ApplicationFilters({
   ];
 
   return (
-    <div className="flex flex-wrap gap-2 mb-6">
+    <div className="mb-6 flex flex-wrap gap-2">
       {filters.map((filter) => {
         const Icon = filter.icon;
         const isActive = activeFilter === filter.value;
@@ -41,12 +43,20 @@ export function ApplicationFilters({
             variant={isActive ? "default" : "outline"}
             size="sm"
             onClick={() => onFilterChange(filter.value)}
-            className="flex items-center gap-2"
+            className={cn(
+              "flex items-center gap-2",
+              isActive ? adminPrimaryBtnClass : adminOutlineBtnClass
+            )}
           >
             <Icon className="h-4 w-4" />
             <span>{filter.label}</span>
             {filter.count > 0 && (
-              <span className="bg-white/20 px-1.5 py-0.5 rounded text-xs">
+              <span
+                className={cn(
+                  "px-1.5 py-0.5 text-xs",
+                  isActive ? "bg-white/20" : "bg-slate-100 text-slate-600"
+                )}
+              >
                 {filter.count}
               </span>
             )}
@@ -56,10 +66,3 @@ export function ApplicationFilters({
     </div>
   );
 }
-
-
-
-
-
-
-

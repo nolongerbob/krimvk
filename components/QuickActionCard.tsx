@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Droplet, CreditCard, FileText, Wrench, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
+import { dashboardTileClass } from "@/components/dashboard/dashboard-styles";
+import { siteOutlineBtnClass } from "@/components/site/site-styles";
 
 interface QuickActionCardProps {
   iconName: "Droplet" | "CreditCard" | "FileText" | "Wrench" | "AlertTriangle";
@@ -32,15 +34,13 @@ const iconMap = {
   AlertTriangle,
 };
 
-const cardBaseClass =
-  "quick-action-card bvi-no-styles bvi-preserve-ui group flex h-full min-h-0 flex-col cursor-pointer overflow-hidden rounded-none border border-gray-200 bg-white transition-all hover:shadow-lg";
-
 function cardClassName(isEmergency?: boolean) {
-  return cn(cardBaseClass, isEmergency && "quick-action-card--emergency");
+  return cn(
+    dashboardTileClass,
+    "quick-action-card bvi-no-styles bvi-preserve-ui group flex h-full min-h-0 flex-col cursor-pointer overflow-hidden",
+    isEmergency && "quick-action-card--emergency"
+  );
 }
-
-const actionButtonClass =
-  "bvi-no-styles w-full max-w-full box-border pointer-events-none rounded-none hover:scale-100 active:scale-100";
 
 function QuickActionCardContent({
   iconName,
@@ -55,7 +55,7 @@ function QuickActionCardContent({
     : cn("quick-action-card-icon-svg", iconColor);
 
   return (
-    <CardHeader className="flex flex-1 flex-col p-5 pb-2">
+    <div className="flex flex-1 flex-col p-5 pb-2">
       <div className="quick-action-card-icon mb-3 flex h-14 w-14 shrink-0 items-center justify-center">
         <Icon
           className={cn(
@@ -64,9 +64,9 @@ function QuickActionCardContent({
           )}
         />
       </div>
-      <CardTitle className="mb-1.5 text-lg leading-snug">{title}</CardTitle>
-      <CardDescription className="mb-0 leading-snug">{description}</CardDescription>
-    </CardHeader>
+      <h3 className="mb-1.5 text-lg font-semibold leading-snug text-slate-900">{title}</h3>
+      <p className="mb-0 text-sm leading-snug text-slate-600">{description}</p>
+    </div>
   );
 }
 
@@ -82,10 +82,10 @@ function QuickActionCardFooter({
   disabled?: boolean;
 }) {
   const accent = isEmergency ? accentButtonClass.red : buttonAccent ? accentButtonClass[buttonAccent] : "";
-  const btnClass = `${actionButtonClass} ${accent}`;
+  const btnClass = cn(siteOutlineBtnClass, "quick-action-card-footer bvi-no-styles w-full max-w-full box-border pointer-events-none", accent);
 
   return (
-    <CardContent className="quick-action-card-footer mt-auto shrink-0 px-5 pt-0 pb-4">
+    <DashboardCardBody className="quick-action-card-footer mt-auto shrink-0 px-5 pt-0 pb-4">
       <Button
         asChild={!disabled}
         className={btnClass}
@@ -94,7 +94,7 @@ function QuickActionCardFooter({
       >
         {disabled ? label : <span>{label}</span>}
       </Button>
-    </CardContent>
+    </DashboardCardBody>
   );
 }
 
@@ -115,7 +115,7 @@ export function QuickActionCard({
   if (publicAccess) {
     return (
       <Link href={href} className="quick-action-card-link block h-full min-h-0">
-        <Card className={cardClassName(isEmergency)}>
+        <DashboardCard className={cardClassName(isEmergency)}>
           <QuickActionCardContent
             iconName={iconName}
             title={title}
@@ -128,7 +128,7 @@ export function QuickActionCard({
             isEmergency={isEmergency}
             buttonAccent={buttonAccent}
           />
-        </Card>
+        </DashboardCard>
       </Link>
     );
   }
@@ -136,19 +136,19 @@ export function QuickActionCard({
   if (isLoading) {
     return (
       <div className="quick-action-card-link flex h-full min-h-0 flex-col">
-      <Card className={cn(cardClassName(), "flex-1")}>
-        <QuickActionCardContent
-          iconName={iconName}
-          title={title}
-          description={description}
-          iconColor={iconColor}
-        />
-        <QuickActionCardFooter
-          label="Загрузка..."
-          buttonAccent={buttonAccent}
-          disabled
-        />
-      </Card>
+        <DashboardCard className={cn(cardClassName(), "flex-1")}>
+          <QuickActionCardContent
+            iconName={iconName}
+            title={title}
+            description={description}
+            iconColor={iconColor}
+          />
+          <QuickActionCardFooter
+            label="Загрузка..."
+            buttonAccent={buttonAccent}
+            disabled
+          />
+        </DashboardCard>
       </div>
     );
   }
@@ -156,7 +156,7 @@ export function QuickActionCard({
   if (!isAuthenticated) {
     return (
       <Link href="/login" className="quick-action-card-link block h-full min-h-0">
-        <Card className={cn(cardClassName(), "opacity-75")}>
+        <DashboardCard className={cn(cardClassName(), "opacity-75")}>
           <QuickActionCardContent
             iconName={iconName}
             title={title}
@@ -164,14 +164,14 @@ export function QuickActionCard({
             iconColor={iconColor}
           />
           <QuickActionCardFooter label="Войти для доступа" buttonAccent={buttonAccent} />
-        </Card>
+        </DashboardCard>
       </Link>
     );
   }
 
   return (
     <Link href={href} className="quick-action-card-link block h-full min-h-0">
-      <Card className={cardClassName()}>
+      <DashboardCard className={cardClassName()}>
         <QuickActionCardContent
           iconName={iconName}
           title={title}
@@ -179,7 +179,7 @@ export function QuickActionCard({
           iconColor={iconColor}
         />
         <QuickActionCardFooter label={title} buttonAccent={buttonAccent} />
-      </Card>
+      </DashboardCard>
     </Link>
   );
 }

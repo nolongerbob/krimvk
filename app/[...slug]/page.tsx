@@ -1,11 +1,11 @@
 import { prisma, withRetry } from "@/lib/prisma";
 import { notFound } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { File, Download, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { sanitizeHTML } from "@/lib/sanitize-html";
 import { Prisma } from "@prisma/client";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
 
 export const dynamic = 'force-dynamic';
 
@@ -140,38 +140,38 @@ export default async function DynamicPagePage({
 
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">{post.title}</h1>
-          <p className="text-gray-600">
+          <p className="text-slate-600">
             Раздел: {post.page.title} •{" "}
             {new Date(post.createdAt).toLocaleDateString("ru-RU")}
           </p>
         </div>
 
-        <Card>
-          <CardContent className="pt-6">
+        <DashboardCard>
+          <DashboardCardBody className="pt-6">
             <div
               className="prose max-w-none"
               dangerouslySetInnerHTML={{ __html: sanitizeHTML(post.content) }}
             />
-          </CardContent>
-        </Card>
+          </DashboardCardBody>
+        </DashboardCard>
 
         {post.attachments.length > 0 && (
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>Прикрепленные файлы</CardTitle>
-            </CardHeader>
-            <CardContent>
+          <DashboardCard className="mt-6">
+            <div className="p-6 pb-4">
+              <h2>Прикрепленные файлы</h2>
+            </div>
+            <DashboardCardBody>
               <div className="space-y-2">
                 {post.attachments.map((file) => (
                   <div
                     key={file.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    className="flex items-center justify-between p-3 bg-slate-50 rounded-none hover:bg-slate-100 transition-colors"
                   >
                     <div className="flex items-center gap-3 flex-1">
-                      <File className="h-5 w-5 text-gray-500" />
+                      <File className="h-5 w-5 text-slate-500" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{file.fileName}</p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-slate-500">
                           {formatFileSize(file.fileSize)} • {file.mimeType}
                         </p>
                       </div>
@@ -179,7 +179,7 @@ export default async function DynamicPagePage({
                     <Link
                       href={file.filePath}
                       download
-                      className="flex items-center gap-2 px-3 py-1.5 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                      className="flex items-center gap-2 px-3 py-1.5 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-none transition-colors"
                     >
                       <Download className="h-4 w-4" />
                       Скачать
@@ -187,8 +187,8 @@ export default async function DynamicPagePage({
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
+            </DashboardCardBody>
+          </DashboardCard>
         )}
       </div>
     );
@@ -218,30 +218,30 @@ export default async function DynamicPagePage({
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">{page.title}</h1>
         {page.description && (
-          <p className="text-gray-600">{page.description}</p>
+          <p className="text-slate-600">{page.description}</p>
         )}
       </div>
 
       {page.content && (
-        <Card>
-          <CardContent className="pt-6">
+        <DashboardCard>
+          <DashboardCardBody className="pt-6">
             <div
               className="prose max-w-none"
               dangerouslySetInnerHTML={{ __html: sanitizeHTML(page.content) }}
             />
-          </CardContent>
-        </Card>
+          </DashboardCardBody>
+        </DashboardCard>
       )}
 
       {/* Если это категория, показываем список постов */}
       {page.isCategory && (
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>Посты в этом разделе</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <DashboardCard className="mt-6">
+          <div className="p-6 pb-4">
+            <h2>Посты в этом разделе</h2>
+          </div>
+          <DashboardCardBody>
             {page.posts.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">
+              <p className="text-slate-500 text-center py-8">
                 Пока нет опубликованных постов в этом разделе
               </p>
             ) : (
@@ -250,24 +250,24 @@ export default async function DynamicPagePage({
                   <Link
                     key={postItem.id}
                     href={`${page.slug}/${postItem.slug}`}
-                    className="block p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                    className="block p-4 border rounded-none hover:bg-slate-50 transition-colors"
                   >
                     <h3 className="text-lg font-semibold mb-2">{postItem.title}</h3>
                     <div
-                      className="text-sm text-gray-600 line-clamp-2 mb-2"
+                      className="text-sm text-slate-600 line-clamp-2 mb-2"
                       dangerouslySetInnerHTML={{
                         __html: sanitizeHTML(postItem.content.substring(0, 200) + (postItem.content.length > 200 ? "..." : "")),
                       }}
                     />
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-slate-500">
                       {new Date(postItem.createdAt).toLocaleDateString("ru-RU")}
                     </p>
                   </Link>
                 ))}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </DashboardCardBody>
+        </DashboardCard>
       )}
 
     </div>

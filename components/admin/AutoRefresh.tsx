@@ -41,7 +41,7 @@ export function AutoRefresh({ interval = 30 }: AutoRefreshProps) {
   };
 
   return (
-    <div className="flex items-center gap-2 text-sm text-gray-600">
+    <div className="flex items-center gap-2 text-sm text-slate-600">
       {isEnabled && (
         <span className="text-xs">
           Обновление через {timeUntilRefresh}с

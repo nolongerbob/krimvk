@@ -27,7 +27,7 @@ export default async function NewsDetailPage({
   }
 
   return (
-    <div className="bg-gray-50 py-12 md:py-14">
+    <div className="bg-slate-50 py-12 md:py-14">
       <div className="container mx-auto max-w-4xl px-4">
         <Button asChild variant="ghost" className="mb-6 rounded-none hover:scale-100 active:scale-100">
           <Link href="/news">
@@ -36,12 +36,12 @@ export default async function NewsDetailPage({
           </Link>
         </Button>
 
-        <article className="overflow-hidden rounded-none border border-gray-200 bg-white shadow-none">
-          <div className="border-b border-gray-200 px-6 pb-6 pt-8 md:px-8">
-            <h1 className="mb-4 text-3xl font-semibold leading-tight tracking-tight text-gray-900 md:text-4xl">
+        <article className="overflow-hidden rounded-none border border-slate-200 bg-white shadow-none">
+          <div className="border-b border-slate-200 px-6 pb-6 pt-8 md:px-8">
+            <h1 className="mb-4 text-3xl font-semibold leading-tight tracking-tight text-slate-900 md:text-4xl">
               {news.title}
             </h1>
-            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+            <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4" />
                 <span>{formatPublicAuthorName(news.author.name, news.author.email)}</span>
@@ -65,7 +65,7 @@ export default async function NewsDetailPage({
 
           {news.imageUrl && (
             <div className="px-6 py-6 md:px-8">
-              <div className="relative flex h-96 w-full items-center justify-center overflow-hidden bg-gray-100">
+              <div className="relative flex h-96 w-full items-center justify-center overflow-hidden bg-slate-100">
                 <Image
                   src={news.imageUrl}
                   alt={news.title}
@@ -78,8 +78,8 @@ export default async function NewsDetailPage({
           )}
 
           <div className="px-6 py-8 md:px-8">
-            <div className="prose prose-lg max-w-none prose-headings:font-bold prose-headings:text-gray-900 prose-p:mb-4 prose-p:leading-relaxed prose-p:text-gray-700 prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline prose-strong:text-gray-900 prose-ul:list-disc prose-ul:pl-6 prose-ol:list-decimal prose-ol:pl-6 prose-li:mb-2">
-              <div className="whitespace-pre-line text-base leading-7 text-gray-700">
+            <div className="prose prose-lg max-w-none prose-headings:font-bold prose-headings:text-slate-900 prose-p:mb-4 prose-p:leading-relaxed prose-p:text-slate-700 prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline prose-strong:text-slate-900 prose-ul:list-disc prose-ul:pl-6 prose-ol:list-decimal prose-ol:pl-6 prose-li:mb-2">
+              <div className="whitespace-pre-line text-base leading-7 text-slate-700">
                 {news.content.split("\n").map((paragraph: string, index: number) => {
                   if (paragraph.trim() === "") {
                     return <br key={index} className="mb-4" />;

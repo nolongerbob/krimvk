@@ -3,13 +3,15 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
 import { Badge } from "@/components/ui/badge";
 import { User, Phone, MapPin, FileText, Building, Settings, Calendar, Download, Eye, AlertCircle } from "lucide-react";
 import { ApplicationForm } from "@/app/stat-abonentom/application-form";
 import { fileHrefForStoredUrl } from "@/lib/file-url";
 import { ApplicationAdminFiles } from "@/components/admin/application-details/ApplicationAdminFiles";
 import { ApplicationStatusBadge } from "@/components/admin/application-details/ApplicationStatusBadge";
+import { cn } from "@/lib/utils";
+import { adminOutlineBtnClass } from "@/components/admin/admin-styles";
 
 interface ApplicationDetailsProps {
   application: {
@@ -236,8 +238,8 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <Eye className="h-4 w-4 mr-2" />
+        <Button variant="outline" size="sm" className={adminOutlineBtnClass}>
+          <Eye className="mr-2 h-4 w-4" />
           Подробнее
         </Button>
       </DialogTrigger>
@@ -269,56 +271,54 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
           <div className="space-y-4">
             {/* Кнопка скачать PDF */}
             <div className="flex justify-end mb-4">
-              <Button onClick={handleDownloadPDF} variant="outline">
-                <Download className="h-4 w-4 mr-2" />
+              <Button onClick={handleDownloadPDF} variant="outline" className={adminOutlineBtnClass}>
+                <Download className="mr-2 h-4 w-4" />
                 Скачать заявление (PDF)
               </Button>
             </div>
 
             {/* Предпросмотр заявления */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Заявление на технические условия</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="border rounded-lg p-4 bg-white max-h-[400px] overflow-y-auto">
+            <DashboardCard>
+              <DashboardCardBody>
+                <h3 className="mb-4 text-base font-semibold text-slate-900">
+                  Заявление на технические условия
+                </h3>
+                <div className="max-h-[400px] overflow-y-auto border border-slate-100 bg-white p-4">
                   <ApplicationForm formData={data} isPreview={true} />
                 </div>
-              </CardContent>
-            </Card>
+              </DashboardCardBody>
+            </DashboardCard>
 
             {/* Детальная информация */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Личные данные */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
+              <DashboardCard>
+                <DashboardCardBody className="space-y-2 text-sm">
+                  <h3 className="mb-3 flex items-center gap-2 text-base font-semibold text-slate-900">
                     <User className="h-5 w-5" />
                     Личные данные
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 text-sm">
+                  </h3>
                   <div>
-                    <span className="text-gray-600">ФИО:</span>{" "}
+                    <span className="text-slate-600">ФИО:</span>{" "}
                     <span className="font-medium">
                       {data.lastName || "-"} {data.firstName || "-"} {data.middleName || ""}
                     </span>
                   </div>
                   {data.birthDate && (
                     <div>
-                      <span className="text-gray-600">Дата рождения:</span>{" "}
+                      <span className="text-slate-600">Дата рождения:</span>{" "}
                       <span className="font-medium">{data.birthDate}</span>
                     </div>
                   )}
                   {data.registrationAddress && (
                     <div>
-                      <span className="text-gray-600">Адрес регистрации:</span>{" "}
+                      <span className="text-slate-600">Адрес регистрации:</span>{" "}
                       <span className="font-medium">{data.registrationAddress}</span>
                     </div>
                   )}
                   {data.passportSeries && data.passportNumber && (
                     <div>
-                      <span className="text-gray-600">Паспорт:</span>{" "}
+                      <span className="text-slate-600">Паспорт:</span>{" "}
                       <span className="font-medium">
                         {data.passportSeries} № {data.passportNumber}
                       </span>
@@ -326,134 +326,130 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
                   )}
                   {data.passportIssuedBy && (
                     <div>
-                      <span className="text-gray-600">Выдан:</span>{" "}
+                      <span className="text-slate-600">Выдан:</span>{" "}
                       <span className="font-medium">{data.passportIssuedBy}</span>
                     </div>
                   )}
                   {data.passportIssueDate && (
                     <div>
-                      <span className="text-gray-600">Дата выдачи паспорта:</span>{" "}
+                      <span className="text-slate-600">Дата выдачи паспорта:</span>{" "}
                       <span className="font-medium">{data.passportIssueDate}</span>
                     </div>
                   )}
                   {data.passportDivisionCode && (
                     <div>
-                      <span className="text-gray-600">Код подразделения:</span>{" "}
+                      <span className="text-slate-600">Код подразделения:</span>{" "}
                       <span className="font-medium">{data.passportDivisionCode}</span>
                     </div>
                   )}
                   {data.inn && (
                     <div>
-                      <span className="text-gray-600">ИНН:</span>{" "}
+                      <span className="text-slate-600">ИНН:</span>{" "}
                       <span className="font-medium">{data.inn}</span>
                     </div>
                   )}
                   {data.snils && (
                     <div>
-                      <span className="text-gray-600">СНИЛС:</span>{" "}
+                      <span className="text-slate-600">СНИЛС:</span>{" "}
                       <span className="font-medium">{data.snils}</span>
                     </div>
                   )}
                   {(application.user.phone || data.phone) && (
                     <div>
-                      <span className="text-gray-600">Телефон:</span>{" "}
+                      <span className="text-slate-600">Телефон:</span>{" "}
                       <span className="font-medium">{application.user.phone || data.phone}</span>
                     </div>
                   )}
-                </CardContent>
-              </Card>
+                </DashboardCardBody>
+              </DashboardCard>
 
               {/* Информация об объекте */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
+              <DashboardCard>
+                <DashboardCardBody className="space-y-2 text-sm">
+                  <h3 className="mb-3 flex items-center gap-2 text-base font-semibold text-slate-900">
                     <Building className="h-5 w-5" />
                     Информация об объекте
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 text-sm">
+                  </h3>
                   {data.objectType && (
                     <div>
-                      <span className="text-gray-600">Тип объекта:</span>{" "}
+                      <span className="text-slate-600">Тип объекта:</span>{" "}
                       <span className="font-medium">{data.objectType}</span>
                     </div>
                   )}
                   {data.objectPurpose && (
                     <div>
-                      <span className="text-gray-600">Назначение:</span>{" "}
+                      <span className="text-slate-600">Назначение:</span>{" "}
                       <span className="font-medium">{data.objectPurpose}</span>
                     </div>
                   )}
                   {data.cadastralNumber && (
                     <div>
-                      <span className="text-gray-600">Кадастровый номер:</span>{" "}
+                      <span className="text-slate-600">Кадастровый номер:</span>{" "}
                       <span className="font-medium">{data.cadastralNumber}</span>
                     </div>
                   )}
                   {data.objectAddress && (
                     <div>
-                      <span className="text-gray-600">Адрес объекта:</span>{" "}
+                      <span className="text-slate-600">Адрес объекта:</span>{" "}
                       <span className="font-medium">{data.objectAddress}</span>
                     </div>
                   )}
                   {data.area && (
                     <div>
-                      <span className="text-gray-600">Площадь:</span>{" "}
+                      <span className="text-slate-600">Площадь:</span>{" "}
                       <span className="font-medium">{data.area} кв.м</span>
                     </div>
                   )}
                   {data.constructionType && (
                     <div>
-                      <span className="text-gray-600">Тип строительства:</span>{" "}
+                      <span className="text-slate-600">Тип строительства:</span>{" "}
                       <span className="font-medium">{data.constructionType}</span>
                     </div>
                   )}
                   {data.objectHeight && (
                     <div>
-                      <span className="text-gray-600">Высота:</span>{" "}
+                      <span className="text-slate-600">Высота:</span>{" "}
                       <span className="font-medium">{data.objectHeight} м</span>
                     </div>
                   )}
                   {data.objectFloors && (
                     <div>
-                      <span className="text-gray-600">Этажность:</span>{" "}
+                      <span className="text-slate-600">Этажность:</span>{" "}
                       <span className="font-medium">{data.objectFloors}</span>
                     </div>
                   )}
                   {data.networkLength && (
                     <div>
-                      <span className="text-gray-600">Протяженность сети:</span>{" "}
+                      <span className="text-slate-600">Протяженность сети:</span>{" "}
                       <span className="font-medium">{data.networkLength} м</span>
                     </div>
                   )}
-                </CardContent>
-              </Card>
+                </DashboardCardBody>
+              </DashboardCard>
             </div>
 
             {/* Параметры подключения */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
+            <DashboardCard>
+              <DashboardCardBody className="space-y-2 text-sm">
+                <h3 className="mb-3 flex items-center gap-2 text-base font-semibold text-slate-900">
                   <Settings className="h-5 w-5" />
                   Параметры подключения
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
+                </h3>
                 <div className="flex items-center gap-4">
-                  <span className="text-gray-600">Водоснабжение:</span>
+                  <span className="text-slate-600">Водоснабжение:</span>
                   <Badge variant={data.connectionTypeWater ? "default" : "secondary"}>
                     {data.connectionTypeWater ? "Да" : "Нет"}
                   </Badge>
                 </div>
                 <div className="flex items-center gap-4">
-                  <span className="text-gray-600">Водоотведение:</span>
+                  <span className="text-slate-600">Водоотведение:</span>
                   <Badge variant={data.connectionTypeSewerage ? "default" : "secondary"}>
                     {data.connectionTypeSewerage ? "Да" : "Нет"}
                   </Badge>
                 </div>
                 {data.connectionMethod && (
                   <div>
-                    <span className="text-gray-600">Тип подключения:</span>{" "}
+                    <span className="text-slate-600">Тип подключения:</span>{" "}
                     <span className="font-medium">
                       {data.connectionMethod === "with-well" ? "С колодцем" : "По протяженности"}
                     </span>
@@ -461,7 +457,7 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
                 )}
                 {data.wellType && (
                   <div>
-                    <span className="text-gray-600">Тип колодца:</span>{" "}
+                    <span className="text-slate-600">Тип колодца:</span>{" "}
                     <span className="font-medium">
                       {data.wellType === "existing" ? "Существующий" : "Проектируемый"}
                     </span>
@@ -469,58 +465,56 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
                 )}
                 {data.requestedLoad && (
                   <div>
-                    <span className="text-gray-600">Запрошенная нагрузка:</span>{" "}
+                    <span className="text-slate-600">Запрошенная нагрузка:</span>{" "}
                     <span className="font-medium">{data.requestedLoad} м³</span>
                   </div>
                 )}
                 {data.connectionPointLocation && (
                   <div>
-                    <span className="text-gray-600">Расположение точки подключения:</span>{" "}
+                    <span className="text-slate-600">Расположение точки подключения:</span>{" "}
                     <span className="font-medium">{data.connectionPointLocation}</span>
                   </div>
                 )}
                 {data.pipeDiameter && (
                   <div>
-                    <span className="text-gray-600">Диаметр водопровода:</span>{" "}
+                    <span className="text-slate-600">Диаметр водопровода:</span>{" "}
                     <span className="font-medium">{data.pipeDiameter} мм</span>
                   </div>
                 )}
                 {data.pipeMaterial && (
                   <div>
-                    <span className="text-gray-600">Материал труб:</span>{" "}
+                    <span className="text-slate-600">Материал труб:</span>{" "}
                     <span className="font-medium">{data.pipeMaterial}</span>
                   </div>
                 )}
                 <div className="flex items-center gap-4">
-                  <span className="text-gray-600">Ограничение водоснабжения:</span>
+                  <span className="text-slate-600">Ограничение водоснабжения:</span>
                   <Badge variant={data.waterSupplyRestriction ? "default" : "secondary"}>
                     {data.waterSupplyRestriction ? "Да" : "Нет"}
                   </Badge>
                 </div>
                 <div className="flex items-center gap-4">
-                  <span className="text-gray-600">Разрешение на подключение к частным сетям:</span>
+                  <span className="text-slate-600">Разрешение на подключение к частным сетям:</span>
                   <Badge variant={data.privateNetworkPermission ? "default" : "secondary"}>
                     {data.privateNetworkPermission ? "Да" : "Нет"}
                   </Badge>
                 </div>
-              </CardContent>
-            </Card>
+              </DashboardCardBody>
+            </DashboardCard>
 
             {/* Параметры потребления */}
             {(data.maxWaterConsumptionLps || data.maxWaterConsumptionM3h || data.maxWaterConsumptionM3day || 
               data.fireExtinguishingExternal || data.fireExtinguishingInternal || data.fireHydrantsCount ||
               data.fireExtinguishingAutomatic || data.wastewaterLps || data.wastewaterM3h || data.wastewaterM3day) && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
+              <DashboardCard>
+                <DashboardCardBody className="space-y-2 text-sm">
+                  <h3 className="mb-3 flex items-center gap-2 text-base font-semibold text-slate-900">
                     <Settings className="h-5 w-5" />
                     Параметры потребления
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 text-sm">
+                  </h3>
                   {(data.maxWaterConsumptionLps || data.maxWaterConsumptionM3h || data.maxWaterConsumptionM3day) && (
                     <div>
-                      <span className="text-gray-600">Макс. потребление холодной воды:</span>{" "}
+                      <span className="text-slate-600">Макс. потребление холодной воды:</span>{" "}
                       <span className="font-medium">
                         {data.maxWaterConsumptionLps && `${data.maxWaterConsumptionLps} л/с`}
                         {data.maxWaterConsumptionLps && (data.maxWaterConsumptionM3h || data.maxWaterConsumptionM3day) && ", "}
@@ -532,28 +526,28 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
                   )}
                   {(data.fireExtinguishingExternal || data.fireExtinguishingInternal || data.fireHydrantsCount || data.fireExtinguishingAutomatic) && (
                     <div className="mt-2 pt-2 border-t">
-                      <span className="text-gray-600 font-medium">Пожаротушение:</span>
+                      <span className="text-slate-600 font-medium">Пожаротушение:</span>
                       {data.fireExtinguishingExternal && (
                         <div className="ml-4">
-                          <span className="text-gray-600">Наружное:</span>{" "}
+                          <span className="text-slate-600">Наружное:</span>{" "}
                           <span className="font-medium">{data.fireExtinguishingExternal} л/сек</span>
                         </div>
                       )}
                       {data.fireExtinguishingInternal && (
                         <div className="ml-4">
-                          <span className="text-gray-600">Внутреннее:</span>{" "}
+                          <span className="text-slate-600">Внутреннее:</span>{" "}
                           <span className="font-medium">{data.fireExtinguishingInternal} л/сек</span>
                         </div>
                       )}
                       {data.fireHydrantsCount && (
                         <div className="ml-4">
-                          <span className="text-gray-600">Количество пожарных кранов:</span>{" "}
+                          <span className="text-slate-600">Количество пожарных кранов:</span>{" "}
                           <span className="font-medium">{data.fireHydrantsCount} шт</span>
                         </div>
                       )}
                       {data.fireExtinguishingAutomatic && (
                         <div className="ml-4">
-                          <span className="text-gray-600">Автоматическое:</span>{" "}
+                          <span className="text-slate-600">Автоматическое:</span>{" "}
                           <span className="font-medium">{data.fireExtinguishingAutomatic} л/сек</span>
                         </div>
                       )}
@@ -561,7 +555,7 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
                   )}
                   {(data.wastewaterLps || data.wastewaterM3h || data.wastewaterM3day) && (
                     <div>
-                      <span className="text-gray-600">Водоотведение:</span>{" "}
+                      <span className="text-slate-600">Водоотведение:</span>{" "}
                       <span className="font-medium">
                         {data.wastewaterLps && `${data.wastewaterLps} л/с`}
                         {data.wastewaterLps && (data.wastewaterM3h || data.wastewaterM3day) && " "}
@@ -571,40 +565,38 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
                       </span>
                     </div>
                   )}
-                </CardContent>
-              </Card>
+                </DashboardCardBody>
+              </DashboardCard>
             )}
 
             {/* Дополнительная информация */}
             {(data.resourceType || data.plannedCommissioningDate || data.notificationMethod) && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
+              <DashboardCard>
+                <DashboardCardBody className="space-y-2 text-sm">
+                  <h3 className="mb-3 flex items-center gap-2 text-base font-semibold text-slate-900">
                     <Calendar className="h-5 w-5" />
                     Дополнительная информация
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 text-sm">
+                  </h3>
                   {data.resourceType && (
                     <div>
-                      <span className="text-gray-600">Виды ресурсов или услуг:</span>{" "}
+                      <span className="text-slate-600">Виды ресурсов или услуг:</span>{" "}
                       <span className="font-medium">{data.resourceType}</span>
                     </div>
                   )}
                   {data.plannedCommissioningDate && (
                     <div>
-                      <span className="text-gray-600">Планируемый срок ввода в эксплуатацию:</span>{" "}
+                      <span className="text-slate-600">Планируемый срок ввода в эксплуатацию:</span>{" "}
                       <span className="font-medium">{data.plannedCommissioningDate}</span>
                     </div>
                   )}
                   {data.notificationMethod && (
                     <div>
-                      <span className="text-gray-600">Способ уведомления:</span>{" "}
+                      <span className="text-slate-600">Способ уведомления:</span>{" "}
                       <span className="font-medium">{data.notificationMethod}</span>
                     </div>
                   )}
-                </CardContent>
-              </Card>
+                </DashboardCardBody>
+              </DashboardCard>
             )}
 
             {/* Приложенные документы пользователем */}
@@ -626,14 +618,12 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
               
               return hasFiles;
             })() ? (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
+              <DashboardCard>
+                <DashboardCardBody>
+                  <h3 className="mb-3 flex items-center gap-2 text-base font-semibold text-slate-900">
                     <FileText className="h-5 w-5" />
                     Приложенные документы пользователем ({data.uploadedFiles.length})
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
+                  </h3>
                   <div className="space-y-2">
                     {data.uploadedFiles.map((file: string, index: number) => {
                       // Обрабатываем как URL или путь к файлу
@@ -655,65 +645,59 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
                           href={fileUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-blue-600 hover:underline p-2 rounded hover:bg-gray-50 transition-colors"
+                          className="flex items-center gap-2 rounded-none p-2 text-blue-600 transition-colors hover:bg-slate-50 hover:underline"
                       >
                           <FileText className="h-4 w-4 flex-shrink-0" />
                           <span className="flex-1">{fileName}</span>
-                          <Download className="h-3 w-3 ml-auto text-gray-400" />
+                          <Download className="h-3 w-3 ml-auto text-slate-400" />
                         </a>
                       );
                     })}
                   </div>
-                </CardContent>
-              </Card>
+                </DashboardCardBody>
+              </DashboardCard>
             ) : data && isTechnicalConditions && (
-              <Card className="border-gray-200">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
+              <DashboardCard>
+                <DashboardCardBody className="p-4">
+                  <div className="flex items-center gap-2 text-sm text-slate-500">
                     <AlertCircle className="h-4 w-4" />
                     <span>Пользователь не приложил документы</span>
                   </div>
-                </CardContent>
-              </Card>
+                </DashboardCardBody>
+              </DashboardCard>
             )}
 
             <ApplicationAdminFiles applicationId={application.id} active={isOpen} />
           </div>
         ) : (
           <div className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Описание заявки</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="whitespace-pre-wrap">{application.description || "Без описания"}</p>
-              </CardContent>
-            </Card>
+            <DashboardCard>
+              <DashboardCardBody>
+                <h3 className="mb-4 text-base font-semibold text-slate-900">Описание заявки</h3>
+                <p className="whitespace-pre-wrap text-slate-700">{application.description || "Без описания"}</p>
+              </DashboardCardBody>
+            </DashboardCard>
             {application.address && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+              <DashboardCard>
+                <DashboardCardBody>
+                  <h3 className="mb-4 flex items-center gap-2 text-base font-semibold text-slate-900">
                     <MapPin className="h-5 w-5" />
                     Адрес
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p>{application.address}</p>
-                </CardContent>
-              </Card>
+                  </h3>
+                  <p className="text-slate-700">{application.address}</p>
+                </DashboardCardBody>
+              </DashboardCard>
             )}
             {application.phone && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+              <DashboardCard>
+                <DashboardCardBody>
+                  <h3 className="mb-4 flex items-center gap-2 text-base font-semibold text-slate-900">
                     <Phone className="h-5 w-5" />
                     Контакты
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p>{application.phone}</p>
-                </CardContent>
-              </Card>
+                  </h3>
+                  <p className="text-slate-700">{application.phone}</p>
+                </DashboardCardBody>
+              </DashboardCard>
             )}
           </div>
         )}

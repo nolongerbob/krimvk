@@ -8,7 +8,7 @@ export default function CookiesPolicyPage() {
   return (
     <div className="container mx-auto px-4 py-10">
       <h1 className="text-3xl font-bold">Политика использования cookie</h1>
-      <div className="mt-6 space-y-4 text-sm text-gray-700">
+      <div className="mt-6 space-y-4 text-sm text-slate-700">
         <p>
           Сайт использует обязательные cookie для работы аутентификации,
           безопасности и корректной работы интерфейса.

@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Droplet, Snowflake, CheckCircle, AlertCircle, ArrowLeft } from "lucide-react";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
+import { adminContainerClass, adminFieldClass, adminOutlineBtnClass, adminPrimaryBtnClass } from "@/components/admin/admin-styles";
+import { cn } from "@/lib/utils";
 
 interface Meter {
   id: string;
@@ -125,27 +127,27 @@ export default function DirectAccountMetersPage() {
 
   if (loading) {
     return (
-      <div className="container py-8 px-4">
-        <div className="text-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-500" />
-          <p className="text-gray-600">Загрузка счетчиков...</p>
+      <div className={cn(adminContainerClass, "max-w-4xl")}>
+        <div className="py-12 text-center">
+          <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-blue-500" />
+          <p className="text-slate-600">Загрузка счетчиков...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="container mx-auto max-w-4xl">
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-3xl font-bold text-gray-900">Передача показаний</h1>
-            <Button variant="outline" onClick={() => window.close()}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Закрыть
-            </Button>
+    <div className="min-h-screen bg-slate-50">
+      <div className={cn(adminContainerClass, "max-w-4xl")}>
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 className="mb-2 text-3xl font-bold tracking-tight text-slate-900">Передача показаний</h1>
+            <p className="text-sm text-slate-600">Лицевой счет: {accountNumber}</p>
           </div>
-          <p className="text-gray-600">Лицевой счет: {accountNumber}</p>
+          <Button variant="outline" onClick={() => window.close()} className={adminOutlineBtnClass}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Закрыть
+          </Button>
         </div>
 
         {!canSubmit && (
@@ -176,30 +178,30 @@ export default function DirectAccountMetersPage() {
         )}
 
         {meters.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <p className="text-gray-600">Счетчики холодной воды не найдены</p>
-            </CardContent>
-          </Card>
+          <DashboardCard>
+            <DashboardCardBody className="py-12 text-center">
+              <p className="text-slate-600">Счетчики холодной воды не найдены</p>
+            </DashboardCardBody>
+          </DashboardCard>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
             {meters.map((meter) => (
-              <Card key={meter.id}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Snowflake className="h-5 w-5 text-blue-500" />
-                    {meter.serviceName || "Холодная вода"}
-                  </CardTitle>
-                  <CardDescription>
-                    Прибор учета № {meter.serialNumber}
-                    {meter.lastReading && (
-                      <span className="ml-2">
-                        • Последнее показание: <span className="font-medium">{meter.lastReading}</span> м³
-                      </span>
-                    )}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
+              <DashboardCard key={meter.id}>
+                <DashboardCardBody>
+                  <div className="mb-4 border-b border-slate-100 pb-4">
+                    <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900">
+                      <Snowflake className="h-5 w-5 text-blue-500" />
+                      {meter.serviceName || "Холодная вода"}
+                    </h3>
+                    <p className="mt-1 text-sm text-slate-600">
+                      Прибор учета № {meter.serialNumber}
+                      {meter.lastReading && (
+                        <span className="ml-2">
+                          • Последнее показание: <span className="font-medium">{meter.lastReading}</span> м³
+                        </span>
+                      )}
+                    </p>
+                  </div>
                   <div className="space-y-2">
                     <Label htmlFor={`reading-${meter.id}`}>Текущее показание (м³)</Label>
                     <Input
@@ -216,17 +218,17 @@ export default function DirectAccountMetersPage() {
                         }))
                       }
                       disabled={!canSubmit || submitting}
+                      className={adminFieldClass}
                     />
                   </div>
-                </CardContent>
-              </Card>
+                </DashboardCardBody>
+              </DashboardCard>
             ))}
 
             <Button
               type="submit"
-              className="w-full"
+              className={cn("w-full", adminPrimaryBtnClass)}
               disabled={!canSubmit || submitting || Object.keys(readings).length === 0}
-              size="lg"
             >
               {submitting ? (
                 <>

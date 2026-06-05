@@ -2,13 +2,20 @@
 
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Loader2, User, Building, Settings, FileText, Upload, AlertCircle, Search, X, FileCheck, ChevronDown } from "lucide-react";
-import Link from "next/link";
+import { Loader2, User, Building, Settings, FileText, Search, X, FileCheck, ChevronDown } from "lucide-react";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
+import {
+  adminContainerClass,
+  adminOutlineBtnClass,
+  adminPrimaryBtnClass,
+  adminSectionLabelClass,
+} from "@/components/admin/admin-styles";
+import { cn } from "@/lib/utils";
 
 type Tab = "abonent" | "object" | "params" | "progress";
 
@@ -468,25 +475,20 @@ export default function CreateContractPage() {
   ];
 
   return (
-    <div className="container py-8 px-4 max-w-5xl">
-      <div className="mb-8">
-        <Button variant="ghost" asChild className="mb-4">
-          <Link href="/admin/contracts">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Назад к списку
-          </Link>
-        </Button>
-        <h1 className="text-3xl font-bold mb-2">Создать договор</h1>
-        <p className="text-gray-600">Заполните форму для создания договора на технологическое присоединение</p>
-      </div>
+    <div className={cn(adminContainerClass, "max-w-5xl")}>
+      <AdminPageHeader
+        title="Создать договор"
+        description="Заполните форму для создания договора на технологическое присоединение"
+        backHref="/admin/contracts"
+        backLabel="Назад к списку"
+      />
 
-      {/* Выбор заявки для автозаполнения */}
-      <Card className="mb-4 border-blue-200">
-        <CardContent className="py-4">
+      <DashboardCard className="mb-4 border-blue-200">
+        <DashboardCardBody className="py-4">
           <div className="flex items-center gap-3 mb-3">
             <FileCheck className="h-5 w-5 text-blue-600" />
-            <span className="font-medium text-gray-700">Заполнить из заявки</span>
-            <span className="text-sm text-gray-500">(опционально)</span>
+            <span className="font-medium text-slate-700">Заполнить из заявки</span>
+            <span className="text-sm text-slate-500">(опционально)</span>
           </div>
           
           <div className="relative">
@@ -502,7 +504,7 @@ export default function CreateContractPage() {
                   variant="ghost"
                   size="sm"
                   onClick={handleClearApplication}
-                  className="text-gray-500 hover:text-red-600"
+                  className="text-slate-500 hover:text-red-600"
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -514,7 +516,7 @@ export default function CreateContractPage() {
                   className="flex items-center border rounded-lg cursor-pointer hover:border-blue-400 transition-colors"
                   onClick={() => setIsApplicationDropdownOpen(!isApplicationDropdownOpen)}
                 >
-                  <Search className="h-4 w-4 text-gray-400 ml-3" />
+                  <Search className="h-4 w-4 text-slate-400 ml-3" />
                   <Input
                     placeholder="Поиск по ФИО, адресу или телефону..."
                     value={applicationSearch}
@@ -529,9 +531,9 @@ export default function CreateContractPage() {
                     className="border-0 focus-visible:ring-0"
                   />
                   {isLoadingApplications ? (
-                    <Loader2 className="h-4 w-4 animate-spin text-gray-400 mr-3" />
+                    <Loader2 className="h-4 w-4 animate-spin text-slate-400 mr-3" />
                   ) : (
-                    <ChevronDown className={`h-4 w-4 text-gray-400 mr-3 transition-transform ${isApplicationDropdownOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`h-4 w-4 text-slate-400 mr-3 transition-transform ${isApplicationDropdownOpen ? 'rotate-180' : ''}`} />
                   )}
                 </div>
 
@@ -539,7 +541,7 @@ export default function CreateContractPage() {
                 {isApplicationDropdownOpen && (
                   <div className="absolute z-50 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-80 overflow-y-auto">
                     {filteredApplications.length === 0 ? (
-                      <div className="p-4 text-center text-gray-500">
+                      <div className="p-4 text-center text-slate-500">
                         {isLoadingApplications ? "Загрузка..." : "Заявки не найдены"}
                       </div>
                     ) : (
@@ -551,11 +553,11 @@ export default function CreateContractPage() {
                         >
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
-                              <div className="font-medium text-gray-900">{app.fullName}</div>
+                              <div className="font-medium text-slate-900">{app.fullName}</div>
                               {app.address && (
-                                <div className="text-sm text-gray-600 mt-1">{app.address}</div>
+                                <div className="text-sm text-slate-600 mt-1">{app.address}</div>
                               )}
-                              <div className="flex items-center gap-4 mt-1 text-xs text-gray-500">
+                              <div className="flex items-center gap-4 mt-1 text-xs text-slate-500">
                                 {app.phone && <span>📞 {app.phone}</span>}
                                 <span>📅 {new Date(app.createdAt).toLocaleDateString("ru-RU")}</span>
                               </div>
@@ -565,7 +567,7 @@ export default function CreateContractPage() {
                                 app.status === "COMPLETED" ? "bg-green-100 text-green-700" :
                                 app.status === "IN_PROGRESS" ? "bg-blue-100 text-blue-700" :
                                 app.status === "PENDING" ? "bg-yellow-100 text-yellow-700" :
-                                "bg-gray-100 text-gray-700"
+                                "bg-slate-100 text-slate-700"
                               }`}>
                                 {app.status === "COMPLETED" ? "Завершена" :
                                  app.status === "IN_PROGRESS" ? "В работе" :
@@ -591,15 +593,13 @@ export default function CreateContractPage() {
               <span className="text-sm">Загрузка данных...</span>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </DashboardCardBody>
+      </DashboardCard>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Информация</CardTitle>
-          <CardDescription>Заполните все необходимые поля</CardDescription>
-        </CardHeader>
-        <CardContent>
+      <DashboardCard>
+        <DashboardCardBody>
+          <p className={cn(adminSectionLabelClass, "mb-2")}>Информация</p>
+          <p className="mb-6 text-sm text-slate-600">Заполните все необходимые поля</p>
           {/* Вкладки */}
           <div className="flex gap-2 mb-6 border-b">
             {tabs.map((tab) => {
@@ -612,7 +612,7 @@ export default function CreateContractPage() {
                   className={`px-4 py-2 flex items-center gap-2 border-b-2 transition-colors ${
                     activeTab === tab.id
                       ? "border-blue-500 text-blue-600"
-                      : "border-transparent text-gray-600 hover:text-gray-900"
+                      : "border-transparent text-slate-600 hover:text-slate-800"
                   }`}
                 >
                   <TabIcon className="h-4 w-4" />
@@ -1060,7 +1060,7 @@ export default function CreateContractPage() {
                 <div>
                   <Label className="mb-3 block">Вид подключения</Label>
                   <div className="flex gap-6">
-                    <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-lg hover:bg-gray-50">
+                    <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-lg hover:bg-slate-50">
                       <input
                         type="checkbox"
                         checked={formData.hasWaterSupply}
@@ -1069,7 +1069,7 @@ export default function CreateContractPage() {
                       />
                       Водопровод
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-lg hover:bg-gray-50">
+                    <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-lg hover:bg-slate-50">
                       <input
                         type="checkbox"
                         checked={formData.hasSewerage}
@@ -1084,7 +1084,7 @@ export default function CreateContractPage() {
                 <div>
                   <Label className="mb-3 block">Тип подключения</Label>
                   <div className="space-y-2">
-                    <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-lg hover:bg-gray-50">
+                    <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-lg hover:bg-slate-50">
                       <input
                         type="radio"
                         name="connectionMethod"
@@ -1095,7 +1095,7 @@ export default function CreateContractPage() {
                       />
                       по протяженности
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-lg hover:bg-gray-50">
+                    <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-lg hover:bg-slate-50">
                       <input
                         type="radio"
                         name="connectionMethod"
@@ -1113,7 +1113,7 @@ export default function CreateContractPage() {
                   <div>
                     <Label className="mb-3 block">Колодец</Label>
                     <div className="space-y-2">
-                      <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-lg hover:bg-gray-50">
+                      <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-lg hover:bg-slate-50">
                         <input
                           type="radio"
                           name="wellType"
@@ -1124,7 +1124,7 @@ export default function CreateContractPage() {
                         />
                         Существующий
                       </label>
-                      <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-lg hover:bg-gray-50">
+                      <label className="flex items-center gap-2 cursor-pointer p-3 border rounded-lg hover:bg-slate-50">
                         <input
                           type="radio"
                           name="wellType"
@@ -1513,7 +1513,7 @@ export default function CreateContractPage() {
                       }}
                     />
                     {contractFile && (
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-slate-600">
                         Выбран файл: {contractFile.name} ({(contractFile.size / 1024 / 1024).toFixed(2)} МБ)
                       </p>
                     )}
@@ -1534,6 +1534,7 @@ export default function CreateContractPage() {
                         type="button"
                         variant="outline"
                         onClick={() => setActiveTab(tab.id)}
+                        className={adminOutlineBtnClass}
                       >
                         {tab.label}
                       </Button>
@@ -1552,12 +1553,13 @@ export default function CreateContractPage() {
                         setActiveTab(tabs[currentIndex + 1].id);
                       }
                     }}
+                    className={adminPrimaryBtnClass}
                   >
                     Далее
                   </Button>
                 )}
                 {activeTab === tabs[tabs.length - 1].id && (
-                  <Button type="submit" disabled={isSubmitting}>
+                  <Button type="submit" disabled={isSubmitting} className={adminPrimaryBtnClass}>
                     {isSubmitting ? (
                       <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -1571,8 +1573,8 @@ export default function CreateContractPage() {
               </div>
             </div>
           </form>
-        </CardContent>
-      </Card>
+        </DashboardCardBody>
+      </DashboardCard>
     </div>
   );
 }

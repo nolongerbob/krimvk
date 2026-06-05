@@ -3,9 +3,18 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
-import { ArrowLeft, Upload, File, Download, Trash2 } from "lucide-react";
+import { File, Download, Trash2 } from "lucide-react";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
+import {
+  adminContainerClass,
+  adminFieldClass,
+  adminOutlineBtnClass,
+  adminPrimaryBtnClass,
+  adminSectionLabelClass,
+} from "@/components/admin/admin-styles";
+import { cn } from "@/lib/utils";
 
 interface Post {
   id: string;
@@ -177,8 +186,8 @@ export default function EditPostPage() {
 
   if (isLoading) {
     return (
-      <div className="container py-8 px-4">
-        <div className="text-center">Загрузка...</div>
+      <div className={adminContainerClass}>
+        <div className="text-center text-slate-600">Загрузка...</div>
       </div>
     );
   }
@@ -188,24 +197,18 @@ export default function EditPostPage() {
   }
 
   return (
-    <div className="container py-8 px-4">
-      <div className="mb-8">
-        <Button variant="ghost" asChild className="mb-4">
-          <Link href="/admin/posts">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Назад к списку
-          </Link>
-        </Button>
-        <h1 className="text-3xl font-bold mb-2">Редактировать пост</h1>
-        <p className="text-gray-600">Редактирование поста: {post.title}</p>
-      </div>
+    <div className={adminContainerClass}>
+      <AdminPageHeader
+        title="Редактировать пост"
+        description={`Редактирование поста: ${post.title}`}
+        backHref="/admin/posts"
+        backLabel="Назад к списку"
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Информация о посте</CardTitle>
-          <CardDescription>Измените необходимые поля</CardDescription>
-        </CardHeader>
-        <CardContent>
+      <DashboardCard>
+        <DashboardCardBody>
+          <p className={cn(adminSectionLabelClass, "mb-2")}>Информация о посте</p>
+          <p className="mb-6 text-sm text-slate-600">Измените необходимые поля</p>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-medium mb-2">
@@ -217,7 +220,7 @@ export default function EditPostPage() {
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, pageId: e.target.value }))
                 }
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={cn("w-full px-4", adminFieldClass)}
               >
                 <option value="">Выберите раздел</option>
                 {categories.map((category) => (
@@ -239,7 +242,7 @@ export default function EditPostPage() {
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, title: e.target.value }))
                 }
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={cn("w-full px-4", adminFieldClass)}
               />
             </div>
 
@@ -254,29 +257,27 @@ export default function EditPostPage() {
                   setFormData((prev) => ({ ...prev, content: e.target.value }))
                 }
                 rows={15}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                className={cn("w-full px-4 py-2 font-mono text-sm", adminFieldClass)}
               />
             </div>
 
-            <div className="flex items-center gap-4 pt-4">
-              <Button type="submit" disabled={isSaving}>
+            <div className="flex items-center gap-2 pt-4">
+              <Button type="submit" disabled={isSaving} className={adminPrimaryBtnClass}>
                 {isSaving ? "Сохранение..." : "Сохранить изменения"}
               </Button>
-              <Button type="button" variant="outline" asChild>
+              <Button type="button" variant="outline" asChild className={adminOutlineBtnClass}>
                 <Link href="/admin/posts">Отмена</Link>
               </Button>
             </div>
           </form>
-        </CardContent>
-      </Card>
+        </DashboardCardBody>
+      </DashboardCard>
 
       {/* Управление файлами */}
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle>Прикрепленные файлы</CardTitle>
-          <CardDescription>Загрузите файлы для этого поста</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <DashboardCard className="mt-6">
+        <DashboardCardBody className="space-y-4">
+          <p className={adminSectionLabelClass}>Прикрепленные файлы</p>
+          <p className="text-sm text-slate-600">Загрузите файлы для этого поста</p>
           <div>
             <label className="block text-sm font-medium mb-2">
               Загрузить файл
@@ -286,29 +287,29 @@ export default function EditPostPage() {
                 type="file"
                 onChange={handleFileUpload}
                 disabled={isUploading}
-                className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={cn("flex-1 px-4", adminFieldClass)}
               />
               {isUploading && (
-                <span className="text-sm text-gray-500">Загрузка...</span>
+                <span className="text-sm text-slate-500">Загрузка...</span>
               )}
             </div>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-slate-500 mt-1">
               Максимальный размер файла: 50MB
             </p>
           </div>
 
           {files.length > 0 && (
-            <div className="border rounded-lg p-4 space-y-2">
+            <div className="space-y-2 border border-slate-200 p-4">
               {files.map((file) => (
                 <div
                   key={file.id}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  className="flex items-center justify-between bg-slate-50 p-3"
                 >
                   <div className="flex items-center gap-3 flex-1">
-                    <File className="h-5 w-5 text-gray-500" />
+                    <File className="h-5 w-5 text-slate-500" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{file.fileName}</p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-slate-500">
                         {formatFileSize(file.fileSize)} • {file.mimeType}
                       </p>
                     </div>
@@ -328,7 +329,7 @@ export default function EditPostPage() {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleFileDelete(file.id)}
-                      className="text-red-600 hover:text-red-700"
+                      className="rounded-none text-red-600 hover:text-red-700"
                       title="Удалить"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -340,12 +341,12 @@ export default function EditPostPage() {
           )}
 
           {files.length === 0 && (
-            <p className="text-sm text-gray-500 text-center py-4">
+            <p className="text-sm text-slate-500 text-center py-4">
               Нет прикрепленных файлов
             </p>
           )}
-        </CardContent>
-      </Card>
+        </DashboardCardBody>
+      </DashboardCard>
     </div>
   );
 }

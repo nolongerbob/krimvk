@@ -1,12 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Edit, Trash2, Eye, FileText } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
+import {
+  adminOutlineBtnClass,
+  adminPrimaryBtnClass,
+  adminSectionLabelClass,
+} from "@/components/admin/admin-styles";
+import { cn } from "@/lib/utils";
 
 interface Post {
   id: string;
@@ -72,19 +78,16 @@ export function PostsClient({ posts: initialPosts, categories }: PostsClientProp
     }
   };
 
-
   return (
     <div className="space-y-6">
-      {/* Фильтр по категориям */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Фильтр по разделам</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <DashboardCard>
+        <DashboardCardBody>
+          <p className={cn(adminSectionLabelClass, "mb-4")}>Фильтр по разделам</p>
           <div className="flex flex-wrap gap-2">
             <Button
               variant={selectedCategory === "all" ? "default" : "outline"}
               onClick={() => setSelectedCategory("all")}
+              className={selectedCategory === "all" ? adminPrimaryBtnClass : adminOutlineBtnClass}
             >
               Все разделы
             </Button>
@@ -93,59 +96,59 @@ export function PostsClient({ posts: initialPosts, categories }: PostsClientProp
                 key={category.id}
                 variant={selectedCategory === category.id ? "default" : "outline"}
                 onClick={() => setSelectedCategory(category.id)}
+                className={
+                  selectedCategory === category.id ? adminPrimaryBtnClass : adminOutlineBtnClass
+                }
               >
                 {category.title}
               </Button>
             ))}
           </div>
-        </CardContent>
-      </Card>
+        </DashboardCardBody>
+      </DashboardCard>
 
-      {/* Список постов */}
       {filteredPosts.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <FileText className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-            <p className="text-gray-500 mb-4">Нет постов</p>
-            <Button asChild>
+        <DashboardCard className="border-dashed bg-slate-50/80">
+          <DashboardCardBody className="py-12 text-center">
+            <FileText className="mx-auto mb-4 h-12 w-12 text-slate-300" />
+            <p className="mb-4 text-slate-500">Нет постов</p>
+            <Button asChild className={adminPrimaryBtnClass}>
               <Link href="/admin/posts/create">Создать первый пост</Link>
             </Button>
-          </CardContent>
-        </Card>
+          </DashboardCardBody>
+        </DashboardCard>
       ) : (
         <div className="space-y-4">
           {filteredPosts.map((post) => (
-            <Card key={post.id}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <CardTitle>{post.title}</CardTitle>
+            <DashboardCard key={post.id}>
+              <DashboardCardBody>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-2 flex flex-wrap items-center gap-2">
+                      <h2 className="text-lg font-semibold text-slate-900">{post.title}</h2>
                       {post._count.attachments > 0 && (
-                        <Badge variant="outline">
+                        <Badge variant="outline" className="rounded-none">
                           {post._count.attachments} файлов
                         </Badge>
                       )}
                     </div>
-                    <CardDescription>
-                      <div className="space-y-1">
-                        <p className="text-sm">
-                          Раздел: <span className="font-medium">{post.page.title}</span>
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          Автор: {post.author.name || post.author.email} • 
-                          Создан: {new Date(post.createdAt).toLocaleDateString("ru-RU")}
-                        </p>
-                      </div>
-                    </CardDescription>
+                    <div className="space-y-1 text-sm text-slate-600">
+                      <p>
+                        Раздел: <span className="font-medium text-slate-800">{post.page.title}</span>
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        Автор: {post.author.name || post.author.email} • Создан:{" "}
+                        {new Date(post.createdAt).toLocaleDateString("ru-RU")}
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon" asChild>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <Button variant="ghost" size="icon" asChild className="rounded-none">
                       <Link href={`${post.page.slug}/${post.slug}`} target="_blank">
                         <Eye className="h-4 w-4" />
                       </Link>
                     </Button>
-                    <Button variant="ghost" size="icon" asChild>
+                    <Button variant="ghost" size="icon" asChild className="rounded-none">
                       <Link href={`/admin/posts/${post.id}/edit`}>
                         <Edit className="h-4 w-4" />
                       </Link>
@@ -154,18 +157,17 @@ export function PostsClient({ posts: initialPosts, categories }: PostsClientProp
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDelete(post.id)}
-                      className="text-red-600 hover:text-red-700"
+                      className="rounded-none text-red-600 hover:text-red-700"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
-              </CardHeader>
-            </Card>
+              </DashboardCardBody>
+            </DashboardCard>
           ))}
         </div>
       )}
     </div>
   );
 }
-

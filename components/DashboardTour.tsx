@@ -135,13 +135,13 @@ export default function DashboardTour() {
           <button
             type="button"
             onClick={decline}
-            className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+            className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
             aria-label="Закрыть"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
-        <p className="mb-4 text-sm text-gray-600">
+        <p className="mb-4 text-sm text-slate-600">
           Хотите пройти короткий обзор главных разделов: баланс, счётчики, счета и быстрые действия?
         </p>
         <div className="flex gap-2">

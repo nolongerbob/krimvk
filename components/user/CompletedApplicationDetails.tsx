@@ -91,11 +91,11 @@ export function CompletedApplicationDetails({
         <div className="space-y-6">
           {/* Данные заявки на технические условия */}
           {actualIsTechnicalConditions && applicationData && applicationData.type === "technical_conditions" && (
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-              <h3 className="font-semibold text-gray-900 mb-4">Данные заявки</h3>
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+              <h3 className="font-semibold text-slate-900 mb-4">Данные заявки</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-gray-600">ФИО:</span>
+                  <span className="text-slate-600">ФИО:</span>
                   <span className="ml-2 font-medium">
                     {[applicationData.lastName, applicationData.firstName, applicationData.middleName]
                       .filter(Boolean)
@@ -104,24 +104,24 @@ export function CompletedApplicationDetails({
                 </div>
                 {applicationData.objectAddress && (
                   <div>
-                    <span className="text-gray-600">Адрес объекта:</span>
+                    <span className="text-slate-600">Адрес объекта:</span>
                     <span className="ml-2 font-medium">{applicationData.objectAddress}</span>
                   </div>
                 )}
                 {applicationData.cadastralNumber && (
                   <div>
-                    <span className="text-gray-600">Кадастровый номер:</span>
+                    <span className="text-slate-600">Кадастровый номер:</span>
                     <span className="ml-2 font-medium">{applicationData.cadastralNumber}</span>
                   </div>
                 )}
                 {applicationData.area && (
                   <div>
-                    <span className="text-gray-600">Площадь:</span>
+                    <span className="text-slate-600">Площадь:</span>
                     <span className="ml-2 font-medium">{applicationData.area} м²</span>
                   </div>
                 )}
                 <div>
-                  <span className="text-gray-600">Тип подключения:</span>
+                  <span className="text-slate-600">Тип подключения:</span>
                   <span className="ml-2 font-medium">
                     {applicationData.connectionTypeWater && applicationData.connectionTypeSewerage
                       ? "Водоснабжение и водоотведение"
@@ -163,13 +163,13 @@ export function CompletedApplicationDetails({
                     href={fileHrefForStoredUrl(file.filePath)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg border transition-colors"
+                    className="flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 rounded-lg border transition-colors"
                   >
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       <FileText className="h-5 w-5 text-blue-600 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 truncate">{file.fileName}</p>
-                        <p className="text-xs text-gray-500">
+                        <p className="font-medium text-slate-900 truncate">{file.fileName}</p>
+                        <p className="text-xs text-slate-500">
                           {(file.fileSize / 1024).toFixed(1)} KB • 
                           Загружено {new Date(file.uploadedAt).toLocaleDateString("ru-RU")}
                         </p>
@@ -184,14 +184,14 @@ export function CompletedApplicationDetails({
               </div>
             </div>
           ) : (
-            <div className="border border-dashed border-gray-300 rounded-lg p-6 text-center">
-              <FileText className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-500">Документы не загружены</p>
+            <div className="border border-dashed border-slate-300 rounded-lg p-6 text-center">
+              <FileText className="h-12 w-12 text-slate-400 mx-auto mb-3" />
+              <p className="text-slate-500">Документы не загружены</p>
             </div>
           )}
 
           {!completionComment && !hasFiles && (
-            <div className="text-center text-gray-500 py-8">
+            <div className="text-center text-slate-500 py-8">
               <p>Дополнительная информация отсутствует</p>
             </div>
           )}

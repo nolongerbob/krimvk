@@ -2,10 +2,18 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
+import {
+  adminContainerClass,
+  adminFieldClass,
+  adminOutlineBtnClass,
+  adminPrimaryBtnClass,
+  adminSectionLabelClass,
+} from "@/components/admin/admin-styles";
+import { cn } from "@/lib/utils";
 
 export default function CreateNewsPage() {
   const [title, setTitle] = useState("");
@@ -71,29 +79,20 @@ export default function CreateNewsPage() {
   };
 
   return (
-    <div className="container py-8 px-4">
-      <div className="mb-8 flex items-center gap-4">
-        <Button asChild variant="outline" size="sm">
-          <Link href="/admin/news">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Назад
-          </Link>
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Создать новость</h1>
-          <p className="text-gray-600">Добавить новую новость</p>
-        </div>
-      </div>
+    <div className={adminContainerClass}>
+      <AdminPageHeader
+        title="Создать новость"
+        description="Добавить новую новость"
+        backHref="/admin/news"
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Новая новость</CardTitle>
-          <CardDescription>Заполните форму для создания новости</CardDescription>
-        </CardHeader>
-        <CardContent>
+      <DashboardCard>
+        <DashboardCardBody>
+          <p className={cn(adminSectionLabelClass, "mb-2")}>Новая новость</p>
+          <p className="mb-6 text-sm text-slate-600">Заполните форму для создания новости</p>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="title" className="text-sm font-medium mb-2 block">
+              <label htmlFor="title" className="mb-2 block text-sm font-medium text-slate-700">
                 Заголовок
               </label>
               <input
@@ -102,12 +101,12 @@ export default function CreateNewsPage() {
                 required
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                className={cn("w-full px-3", adminFieldClass)}
                 placeholder="Введите заголовок новости"
               />
             </div>
             <div>
-              <label htmlFor="content" className="text-sm font-medium mb-2 block">
+              <label htmlFor="content" className="mb-2 block text-sm font-medium text-slate-700">
                 Содержание
               </label>
               <textarea
@@ -115,12 +114,12 @@ export default function CreateNewsPage() {
                 required
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary min-h-[300px]"
+                className={cn("w-full min-h-[300px] px-3 py-2", adminFieldClass)}
                 placeholder="Введите содержание новости"
               />
             </div>
             <div>
-              <label htmlFor="image" className="text-sm font-medium mb-2 block">
+              <label htmlFor="image" className="mb-2 block text-sm font-medium text-slate-700">
                 Изображение (опционально)
               </label>
               <input
@@ -129,17 +128,17 @@ export default function CreateNewsPage() {
                 accept="image/*"
                 onChange={handleFileUpload}
                 disabled={isUploading}
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                className={cn("w-full px-3", adminFieldClass)}
               />
               {isUploading && (
-                <p className="text-sm text-gray-500 mt-2">Загрузка изображения...</p>
+                <p className="mt-2 text-sm text-slate-500">Загрузка изображения...</p>
               )}
               {imageUrl && (
                 <div className="mt-4">
                   <img
                     src={imageUrl}
                     alt="Предпросмотр"
-                    className="max-w-md h-auto rounded-md border"
+                    className="max-w-md h-auto border border-slate-200"
                   />
                   <button
                     type="button"
@@ -151,38 +150,37 @@ export default function CreateNewsPage() {
                 </div>
               )}
             </div>
-            <div className="flex items-center gap-3 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
+            <div className="flex items-center gap-3 border border-blue-200 bg-blue-50 p-4">
               <input
                 id="published"
                 type="checkbox"
                 checked={published}
                 onChange={(e) => setPublished(e.target.checked)}
-                className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-5 w-5 rounded-none border-slate-300 text-blue-600 focus:ring-blue-500"
               />
-              <label htmlFor="published" className="text-sm font-semibold text-blue-900 cursor-pointer">
+              <label htmlFor="published" className="cursor-pointer text-sm font-semibold text-blue-900">
                 Опубликовать сразу (новость будет видна на сайте)
               </label>
             </div>
             {!published && (
-              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <p className="text-sm text-yellow-800">
-                  ⚠️ Новость будет создана как черновик и не будет отображаться на сайте. 
+              <div className="border border-amber-200 bg-amber-50 p-3">
+                <p className="text-sm text-amber-800">
+                  Новость будет создана как черновик и не будет отображаться на сайте.
                   Вы сможете опубликовать её позже из списка новостей.
                 </p>
               </div>
             )}
-            <div className="flex gap-4">
-              <Button type="submit" disabled={isLoading}>
+            <div className="flex gap-2">
+              <Button type="submit" disabled={isLoading} className={adminPrimaryBtnClass}>
                 {isLoading ? "Создание..." : "Создать новость"}
               </Button>
-              <Button asChild type="button" variant="outline">
+              <Button asChild type="button" variant="outline" className={adminOutlineBtnClass}>
                 <Link href="/admin/news">Отмена</Link>
               </Button>
             </div>
           </form>
-        </CardContent>
-      </Card>
+        </DashboardCardBody>
+      </DashboardCard>
     </div>
   );
 }
-

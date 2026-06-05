@@ -8,7 +8,7 @@ export default function TermsPage() {
   return (
     <div className="container mx-auto px-4 py-10">
       <h1 className="text-3xl font-bold">Пользовательское соглашение</h1>
-      <div className="mt-6 space-y-4 text-sm text-gray-700">
+      <div className="mt-6 space-y-4 text-sm text-slate-700">
         <p>
           Используя сайт КрымВК, пользователь подтверждает согласие с
           условиями использования сервиса, правилами личного кабинета и

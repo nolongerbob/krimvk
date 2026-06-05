@@ -141,8 +141,8 @@ export default function EmergencyMap({ markers }: EmergencyMapProps) {
         style={{ zIndex: 1 }}
       >
         {!isReady && (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-            <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+          <div className="absolute inset-0 flex items-center justify-center bg-slate-100">
+            <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
           </div>
         )}
       </div>

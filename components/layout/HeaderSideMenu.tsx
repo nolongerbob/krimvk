@@ -42,7 +42,7 @@ function SideMenuLink({
       href={href}
       onClick={onClose}
       className={`header-side-menu-item block px-8 py-3 text-[22px] leading-tight font-normal transition-colors ${
-        active ? "text-primary" : "text-gray-900 hover:text-primary"
+        active ? "text-primary" : "text-slate-900 hover:text-primary"
       }`}
     >
       {label}
@@ -78,14 +78,14 @@ function SideMenuExpandable({
       >
         <span
           className={`header-side-menu-item text-[22px] leading-tight font-normal transition-colors ${
-            sectionActive ? "text-primary" : "text-gray-900"
+            sectionActive ? "text-primary" : "text-slate-900"
           }`}
         >
           {label}
         </span>
         <ChevronDown
           className={`h-6 w-6 shrink-0 stroke-[2] transition-transform duration-200 ${
-            sectionActive ? "text-primary" : "text-gray-900"
+            sectionActive ? "text-primary" : "text-slate-900"
           } ${expanded ? "rotate-180" : ""}`}
           aria-hidden
         />
@@ -97,7 +97,7 @@ function SideMenuExpandable({
             section.links.map((link) => {
               const active = !link.href.startsWith("tel:") && isPathActive(pathname, link.href);
               const className = `header-side-menu-sublink block px-8 py-2.5 pl-12 text-[17px] leading-snug transition-colors ${
-                active ? "text-primary font-medium" : "text-gray-700 hover:text-primary"
+                active ? "text-primary font-medium" : "text-slate-700 hover:text-primary"
               }`;
 
               if (link.href.startsWith("tel:")) {
@@ -151,7 +151,7 @@ export function HeaderSideMenu({ isOpen, onClose, pathname, session, navLinks }:
           <button
             type="button"
             onClick={onClose}
-            className="p-1 text-gray-900 hover:text-primary transition-colors"
+            className="p-1 text-slate-900 hover:text-primary transition-colors"
             aria-label="Закрыть меню"
           >
             <X className="h-7 w-7 stroke-[1.75]" />
@@ -211,13 +211,13 @@ export function HeaderSideMenu({ isOpen, onClose, pathname, session, navLinks }:
           />
         </div>
 
-        <div className="shrink-0 border-t border-gray-200 bg-white px-8 pt-7 pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] space-y-4">
+        <div className="shrink-0 border-t border-slate-200 bg-white px-8 pt-7 pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] space-y-4">
           {session ? (
             <>
               <Link
                 href="/dashboard"
                 onClick={onClose}
-                className="header-side-menu-footer-link block py-1.5 text-[20px] text-gray-900 hover:text-primary transition-colors"
+                className="header-side-menu-footer-link block py-1.5 text-[20px] text-slate-900 hover:text-primary transition-colors"
               >
                 Личный кабинет
               </Link>
@@ -225,7 +225,7 @@ export function HeaderSideMenu({ isOpen, onClose, pathname, session, navLinks }:
                 <Link
                   href="/admin"
                   onClick={onClose}
-                  className="header-side-menu-footer-link block py-1.5 text-[20px] text-gray-900 hover:text-primary transition-colors"
+                  className="header-side-menu-footer-link block py-1.5 text-[20px] text-slate-900 hover:text-primary transition-colors"
                 >
                   Админ-панель
                 </Link>
@@ -236,7 +236,7 @@ export function HeaderSideMenu({ isOpen, onClose, pathname, session, navLinks }:
                   void signOutToHome();
                   onClose();
                 }}
-                className="header-side-menu-footer-link block py-1.5 text-[20px] text-gray-500 hover:text-primary transition-colors"
+                className="header-side-menu-footer-link block py-1.5 text-[20px] text-slate-500 hover:text-primary transition-colors"
               >
                 Выйти
               </button>
@@ -246,14 +246,14 @@ export function HeaderSideMenu({ isOpen, onClose, pathname, session, navLinks }:
               <Link
                 href="/login"
                 onClick={onClose}
-                className="header-side-menu-footer-link block py-1.5 text-[20px] text-gray-900 hover:text-primary transition-colors"
+                className="header-side-menu-footer-link block py-1.5 text-[20px] text-slate-900 hover:text-primary transition-colors"
               >
                 Войти
               </Link>
               <Link
                 href="/register"
                 onClick={onClose}
-                className="header-side-menu-footer-link block py-1.5 text-[20px] text-gray-900 hover:text-primary transition-colors"
+                className="header-side-menu-footer-link block py-1.5 text-[20px] text-slate-900 hover:text-primary transition-colors"
               >
                 Регистрация
               </Link>
@@ -278,7 +278,7 @@ export function HeaderSideMenuToggle({
     <Button
       variant="ghost"
       size="icon"
-      className="header-side-menu-toggle 2xl:hidden h-10 w-10 rounded-full hover:bg-gray-100"
+      className="header-side-menu-toggle 2xl:hidden h-10 w-10 rounded-full hover:bg-slate-100"
       onClick={onToggle}
       aria-label="Ещё"
       aria-expanded={isOpen}

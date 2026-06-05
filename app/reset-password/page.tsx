@@ -3,11 +3,13 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CheckCircle2, XCircle, Loader2, Lock, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
+import { siteFieldClass, sitePrimaryBtnClass, siteOutlineBtnClass } from "@/components/site/site-styles";
+import { SitePageShell } from "@/components/site/SitePageShell";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -75,10 +77,10 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className="container flex items-center justify-center min-h-[calc(100vh-8rem)] py-12 px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
+    <SitePageShell className="flex min-h-[calc(100vh-8rem)] items-center justify-center" containerClassName="flex justify-center">
+      <DashboardCard className="w-full max-w-md">
+        <DashboardCardBody className="text-center">
+          <div className="mb-4 flex justify-center">
             {status === 'form' && (
               <Lock className="h-12 w-12 text-blue-600" />
             )}
@@ -89,49 +91,47 @@ export default function ResetPasswordPage() {
               <XCircle className="h-12 w-12 text-red-600" />
             )}
           </div>
-          <CardTitle className="text-2xl">
+          <h2 className="mb-2 text-2xl font-semibold text-slate-900">
             {status === 'form' && 'Сброс пароля'}
             {status === 'success' && 'Пароль изменен'}
             {status === 'error' && 'Ошибка'}
-          </CardTitle>
-          <CardDescription>
+          </h2>
+          <p className="mb-6 text-sm text-slate-600">
             {status === 'form' && 'Введите новый пароль для вашего аккаунта'}
             {status === 'success' && 'Ваш пароль успешно изменен'}
             {status === 'error' && 'Не удалось сбросить пароль'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+          </p>
           {status === 'success' ? (
             <div className="space-y-4">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="bg-green-50 border border-green-200 rounded-none p-4">
                 <p className="text-sm text-green-800">{message}</p>
               </div>
-              <p className="text-sm text-gray-600 text-center">
+              <p className="text-sm text-slate-600 text-center">
                 Вы будете перенаправлены на страницу входа...
               </p>
               <Button
                 onClick={() => router.push("/login?passwordReset=true")}
-                className="w-full"
+                className={`w-full ${sitePrimaryBtnClass}`}
               >
                 Перейти к входу
               </Button>
             </div>
           ) : status === 'error' ? (
             <div className="space-y-4">
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="bg-red-50 border border-red-200 rounded-none p-4">
                 <p className="text-sm text-red-800">{message}</p>
               </div>
               <div className="flex gap-2">
                 <Button
                   onClick={() => router.push("/forgot-password")}
                   variant="outline"
-                  className="flex-1"
+                  className={`flex-1 ${siteOutlineBtnClass}`}
                 >
                   Запросить новое письмо
                 </Button>
                 <Button
                   onClick={() => router.push("/login")}
-                  className="flex-1"
+                  className={`flex-1 ${sitePrimaryBtnClass}`}
                 >
                   Вернуться к входу
                 </Button>
@@ -140,7 +140,7 @@ export default function ResetPasswordPage() {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               {message && (
-                <div className="bg-red-50 border border-red-200 text-red-800 text-sm p-3 rounded-md">
+                <div className="bg-red-50 border border-red-200 text-red-800 text-sm p-3 rounded-none">
                   {message}
                 </div>
               )}
@@ -156,12 +156,12 @@ export default function ResetPasswordPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Минимум 6 символов"
                     disabled={isLoading}
-                    className="pr-10"
+                    className={`pr-10 ${siteFieldClass}`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
                   >
                     {showPassword ? (
                       <EyeOff className="h-4 w-4" />
@@ -183,12 +183,12 @@ export default function ResetPasswordPage() {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Повторите пароль"
                     disabled={isLoading}
-                    className="pr-10"
+                    className={`pr-10 ${siteFieldClass}`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
                   >
                     {showConfirmPassword ? (
                       <EyeOff className="h-4 w-4" />
@@ -199,7 +199,7 @@ export default function ResetPasswordPage() {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className={`w-full ${sitePrimaryBtnClass}`} disabled={isLoading}>
                 {isLoading ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -223,8 +223,8 @@ export default function ResetPasswordPage() {
               </div>
             </form>
           )}
-        </CardContent>
-      </Card>
-    </div>
+        </DashboardCardBody>
+      </DashboardCard>
+    </SitePageShell>
   );
 }

@@ -2,6 +2,7 @@
 
 import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
 import { cn } from "@/lib/utils";
+import { adminOutlineBtnClass } from "@/components/admin/admin-styles";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { User, Phone, MapPin, FileText, Building, Settings, Calendar, FileCheck } from "lucide-react";
@@ -270,7 +271,7 @@ export function TechnicalConditionsApplication({ application }: TechnicalConditi
                 currentStatus={application.status}
                 isTechnicalConditions={true}
               />
-              <Button asChild variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100">
+              <Button asChild variant="outline" className={cn(adminOutlineBtnClass, "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100")}>
                 <Link href={`/admin/contracts/create?fromApplication=${application.id}`}>
                   <FileCheck className="mr-2 h-4 w-4" />
                   Создать договор
@@ -302,31 +303,31 @@ export function TechnicalConditionsApplication({ application }: TechnicalConditi
             
             <div className="space-y-3 mt-4">
               {/* Личные данные */}
-              <div className="bg-white p-4 rounded-lg border">
-                <h4 className="font-semibold mb-3 flex items-center gap-2">
+              <div className="border border-slate-100 p-4">
+                <h4 className="mb-3 flex items-center gap-2 font-semibold text-slate-900">
                   <User className="h-4 w-4" />
                   Личные данные
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                   <div>
-                    <span className="text-gray-600">ФИО:</span>{" "}
+                    <span className="text-slate-600">ФИО:</span>{" "}
                     <span className="font-medium">{fullName || "не указано"}</span>
                   </div>
                   {data.birthDate && (
                     <div>
-                      <span className="text-gray-600">Дата рождения:</span>{" "}
+                      <span className="text-slate-600">Дата рождения:</span>{" "}
                       <span className="font-medium">{data.birthDate}</span>
                     </div>
                   )}
                   {data.registrationAddress && (
                     <div className="md:col-span-2">
-                      <span className="text-gray-600">Адрес регистрации:</span>{" "}
+                      <span className="text-slate-600">Адрес регистрации:</span>{" "}
                       <span className="font-medium">{data.registrationAddress}</span>
                     </div>
                   )}
                   {passportInfo !== "не указано" && (
                     <div className="md:col-span-2">
-                      <span className="text-gray-600">Паспорт:</span>{" "}
+                      <span className="text-slate-600">Паспорт:</span>{" "}
                       <span className="font-medium">{passportInfo}</span>
                       {data.passportIssuedBy && `, выдан ${data.passportIssuedBy}`}
                       {data.passportIssueDate && `, ${data.passportIssueDate}`}
@@ -335,20 +336,20 @@ export function TechnicalConditionsApplication({ application }: TechnicalConditi
                   )}
                   {data.inn && (
                     <div>
-                      <span className="text-gray-600">ИНН:</span>{" "}
+                      <span className="text-slate-600">ИНН:</span>{" "}
                       <span className="font-medium">{data.inn}</span>
                     </div>
                   )}
                   {data.snils && (
                     <div>
-                      <span className="text-gray-600">СНИЛС:</span>{" "}
+                      <span className="text-slate-600">СНИЛС:</span>{" "}
                       <span className="font-medium">{data.snils}</span>
                     </div>
                   )}
                   {application.user.phone && (
                     <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-gray-600" />
-                      <span className="text-gray-600">Телефон:</span>{" "}
+                      <Phone className="h-4 w-4 text-slate-600" />
+                      <span className="text-slate-600">Телефон:</span>{" "}
                       <span className="font-medium">{application.user.phone}</span>
                     </div>
                   )}
@@ -357,42 +358,42 @@ export function TechnicalConditionsApplication({ application }: TechnicalConditi
 
               {/* Информация об объекте */}
               {(data.objectType || data.objectAddress) && (
-                <div className="bg-white p-4 rounded-lg border">
-                  <h4 className="font-semibold mb-3 flex items-center gap-2">
+                <div className="border border-slate-100 p-4">
+                  <h4 className="mb-3 flex items-center gap-2 font-semibold text-slate-900">
                     <Building className="h-4 w-4" />
                     Информация об объекте
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                     {data.objectType && (
                       <div>
-                        <span className="text-gray-600">Тип объекта:</span>{" "}
+                        <span className="text-slate-600">Тип объекта:</span>{" "}
                         <span className="font-medium">{getObjectTypeLabel(data.objectType)}</span>
                       </div>
                     )}
                     {data.objectAddress && (
                       <div className="md:col-span-2 flex items-start gap-2">
-                        <MapPin className="h-4 w-4 text-gray-600 mt-0.5" />
+                        <MapPin className="h-4 w-4 text-slate-600 mt-0.5" />
                         <div>
-                          <span className="text-gray-600">Адрес объекта:</span>{" "}
+                          <span className="text-slate-600">Адрес объекта:</span>{" "}
                           <span className="font-medium">{data.objectAddress}</span>
                         </div>
                       </div>
                     )}
                     {data.constructionType && (
                       <div>
-                        <span className="text-gray-600">Тип строительства:</span>{" "}
+                        <span className="text-slate-600">Тип строительства:</span>{" "}
                         <span className="font-medium">{data.constructionType}</span>
                       </div>
                     )}
                     {data.objectHeight && (
                       <div>
-                        <span className="text-gray-600">Высота:</span>{" "}
+                        <span className="text-slate-600">Высота:</span>{" "}
                         <span className="font-medium">{data.objectHeight} м</span>
                       </div>
                     )}
                     {data.objectFloors && (
                       <div>
-                        <span className="text-gray-600">Этажность:</span>{" "}
+                        <span className="text-slate-600">Этажность:</span>{" "}
                         <span className="font-medium">{data.objectFloors}</span>
                       </div>
                     )}
@@ -401,27 +402,27 @@ export function TechnicalConditionsApplication({ application }: TechnicalConditi
               )}
 
               {/* Параметры подключения */}
-              <div className="bg-white p-4 rounded-lg border">
-                <h4 className="font-semibold mb-3 flex items-center gap-2">
+              <div className="border border-slate-100 p-4">
+                <h4 className="mb-3 flex items-center gap-2 font-semibold text-slate-900">
                   <Settings className="h-4 w-4" />
                   Параметры подключения
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                   <div>
-                    <span className="text-gray-600">Водоснабжение:</span>{" "}
+                    <span className="text-slate-600">Водоснабжение:</span>{" "}
                     <Badge variant={data.connectionTypeWater ? "default" : "secondary"}>
                       {data.connectionTypeWater ? "Да" : "Нет"}
                     </Badge>
                   </div>
                   <div>
-                    <span className="text-gray-600">Водоотведение:</span>{" "}
+                    <span className="text-slate-600">Водоотведение:</span>{" "}
                     <Badge variant={data.connectionTypeSewerage ? "default" : "secondary"}>
                       {data.connectionTypeSewerage ? "Да" : "Нет"}
                     </Badge>
                   </div>
                   {data.maxWaterConsumptionLps && (
                     <div>
-                      <span className="text-gray-600">Макс. потребление воды:</span>{" "}
+                      <span className="text-slate-600">Макс. потребление воды:</span>{" "}
                       <span className="font-medium">
                         {data.maxWaterConsumptionLps} л/с
                         {data.maxWaterConsumptionM3h && `, ${data.maxWaterConsumptionM3h} м³/ч`}
@@ -431,8 +432,8 @@ export function TechnicalConditionsApplication({ application }: TechnicalConditi
                   )}
                   {data.plannedCommissioningDate && (
                     <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-gray-600" />
-                      <span className="text-gray-600">Планируемый срок ввода:</span>{" "}
+                      <Calendar className="h-4 w-4 text-slate-600" />
+                      <span className="text-slate-600">Планируемый срок ввода:</span>{" "}
                       <span className="font-medium">{data.plannedCommissioningDate}</span>
                     </div>
                   )}
@@ -441,8 +442,8 @@ export function TechnicalConditionsApplication({ application }: TechnicalConditi
 
               {/* Файлы */}
               {data.uploadedFiles && data.uploadedFiles.length > 0 && (
-                <div className="bg-white p-4 rounded-lg border">
-                  <h4 className="font-semibold mb-3 flex items-center gap-2">
+                <div className="border border-slate-100 p-4">
+                  <h4 className="mb-3 flex items-center gap-2 font-semibold text-slate-900">
                     <FileText className="h-4 w-4" />
                     Прикрепленные документы ({data.uploadedFiles.length})
                   </h4>
@@ -462,7 +463,7 @@ export function TechnicalConditionsApplication({ application }: TechnicalConditi
                 </div>
               )}
 
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-slate-500">
                 Создана: {new Date(application.createdAt).toLocaleString("ru-RU")}
               </div>
             </div>
@@ -476,7 +477,7 @@ export function TechnicalConditionsApplication({ application }: TechnicalConditi
             currentStatus={application.status}
             isTechnicalConditions={true}
           />
-          <Button asChild variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100">
+          <Button asChild variant="outline" className={cn(adminOutlineBtnClass, "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100")}>
             <Link href={`/admin/contracts/create?fromApplication=${application.id}`}>
               <FileCheck className="mr-2 h-4 w-4" />
               Создать договор

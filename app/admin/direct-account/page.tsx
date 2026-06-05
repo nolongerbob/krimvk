@@ -236,7 +236,7 @@ export default function DirectAccountPage() {
                       const balance = parseAmount(accountData?.CommonDuty ?? accountData?.commonDuty ?? "0");
                       if (balance > 0.01) return "text-red-600";
                       if (balance < -0.01) return "text-green-600";
-                      return "text-gray-900";
+                      return "text-slate-900";
                     })()
                   }`}>
                     {parseAmount(accountData?.CommonDuty ?? accountData?.commonDuty ?? "0")

@@ -2,10 +2,18 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
+import {
+  adminContainerClass,
+  adminFieldClass,
+  adminOutlineBtnClass,
+  adminPrimaryBtnClass,
+  adminSectionLabelClass,
+} from "@/components/admin/admin-styles";
+import { cn } from "@/lib/utils";
 
 export default function EditNewsPage() {
   const params = useParams();
@@ -19,7 +27,6 @@ export default function EditNewsPage() {
   const [isLoadingData, setIsLoadingData] = useState(true);
 
   useEffect(() => {
-    // Загружаем данные новости
     fetch(`/api/admin/news/${params.id}`)
       .then((res) => res.json())
       .then((data) => {
@@ -92,36 +99,27 @@ export default function EditNewsPage() {
 
   if (isLoadingData) {
     return (
-      <div className="container py-8 px-4">
-        <p>Загрузка...</p>
+      <div className={adminContainerClass}>
+        <p className="text-slate-600">Загрузка...</p>
       </div>
     );
   }
 
   return (
-    <div className="container py-8 px-4">
-      <div className="mb-8 flex items-center gap-4">
-        <Button asChild variant="outline" size="sm">
-          <Link href="/admin/news">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Назад
-          </Link>
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Редактировать новость</h1>
-          <p className="text-gray-600">Изменить новость</p>
-        </div>
-      </div>
+    <div className={adminContainerClass}>
+      <AdminPageHeader
+        title="Редактировать новость"
+        description="Изменить новость"
+        backHref="/admin/news"
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Редактирование новости</CardTitle>
-          <CardDescription>Измените данные новости</CardDescription>
-        </CardHeader>
-        <CardContent>
+      <DashboardCard>
+        <DashboardCardBody>
+          <p className={cn(adminSectionLabelClass, "mb-2")}>Редактирование новости</p>
+          <p className="mb-6 text-sm text-slate-600">Измените данные новости</p>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="title" className="text-sm font-medium mb-2 block">
+              <label htmlFor="title" className="mb-2 block text-sm font-medium text-slate-700">
                 Заголовок
               </label>
               <input
@@ -130,12 +128,12 @@ export default function EditNewsPage() {
                 required
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                className={cn("w-full px-3", adminFieldClass)}
                 placeholder="Введите заголовок новости"
               />
             </div>
             <div>
-              <label htmlFor="content" className="text-sm font-medium mb-2 block">
+              <label htmlFor="content" className="mb-2 block text-sm font-medium text-slate-700">
                 Содержание
               </label>
               <textarea
@@ -143,12 +141,12 @@ export default function EditNewsPage() {
                 required
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary min-h-[300px]"
+                className={cn("w-full min-h-[300px] px-3 py-2", adminFieldClass)}
                 placeholder="Введите содержание новости"
               />
             </div>
             <div>
-              <label htmlFor="image" className="text-sm font-medium mb-2 block">
+              <label htmlFor="image" className="mb-2 block text-sm font-medium text-slate-700">
                 Изображение (опционально)
               </label>
               <input
@@ -157,17 +155,17 @@ export default function EditNewsPage() {
                 accept="image/*"
                 onChange={handleFileUpload}
                 disabled={isUploading}
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                className={cn("w-full px-3", adminFieldClass)}
               />
               {isUploading && (
-                <p className="text-sm text-gray-500 mt-2">Загрузка изображения...</p>
+                <p className="mt-2 text-sm text-slate-500">Загрузка изображения...</p>
               )}
               {imageUrl && (
                 <div className="mt-4">
                   <img
                     src={imageUrl}
                     alt="Предпросмотр"
-                    className="max-w-md h-auto rounded-md border"
+                    className="max-w-md h-auto border border-slate-200"
                   />
                   <button
                     type="button"
@@ -185,24 +183,23 @@ export default function EditNewsPage() {
                 type="checkbox"
                 checked={published}
                 onChange={(e) => setPublished(e.target.checked)}
-                className="h-4 w-4"
+                className="h-4 w-4 rounded-none"
               />
-              <label htmlFor="published" className="text-sm font-medium">
+              <label htmlFor="published" className="text-sm font-medium text-slate-700">
                 Опубликовать
               </label>
             </div>
-            <div className="flex gap-4">
-              <Button type="submit" disabled={isLoading}>
+            <div className="flex gap-2">
+              <Button type="submit" disabled={isLoading} className={adminPrimaryBtnClass}>
                 {isLoading ? "Сохранение..." : "Сохранить изменения"}
               </Button>
-              <Button asChild type="button" variant="outline">
+              <Button asChild type="button" variant="outline" className={adminOutlineBtnClass}>
                 <Link href="/admin/news">Отмена</Link>
               </Button>
             </div>
           </form>
-        </CardContent>
-      </Card>
+        </DashboardCardBody>
+      </DashboardCard>
     </div>
   );
 }
-

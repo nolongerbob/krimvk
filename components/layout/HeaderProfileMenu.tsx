@@ -53,14 +53,14 @@ const quickActions = [
     href: "/dashboard/applications",
     label: "Мои заявки",
     icon: FileText,
-    iconClass: "text-gray-600",
-    boxClass: "bg-gray-100",
+    iconClass: "text-slate-600",
+    boxClass: "bg-slate-100",
   },
 ] as const;
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mb-4 text-xs font-semibold uppercase tracking-[0.12em] text-gray-500">
+    <p className="mb-4 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
       {children}
     </p>
   );
@@ -85,7 +85,7 @@ function QuickActionTile({
     <Link
       href={href}
       onClick={onLinkClick}
-      className="flex flex-col items-center justify-center gap-3 rounded-none border border-gray-100 bg-white px-3 py-5 text-center transition-all hover:border-blue-500"
+      className="flex flex-col items-center justify-center gap-3 rounded-none border border-slate-100 bg-white px-3 py-5 text-center transition-all hover:border-blue-500"
     >
       <span
         className={cn(
@@ -95,7 +95,7 @@ function QuickActionTile({
       >
         <Icon className={cn("h-5 w-5", iconClass)} />
       </span>
-      <span className="text-sm leading-tight text-gray-900">{label}</span>
+      <span className="text-sm leading-tight text-slate-900">{label}</span>
     </Link>
   );
 }
@@ -125,8 +125,8 @@ function AccountMenuItem({
 
   const content = (
     <>
-      <Icon className={cn("h-5 w-5 shrink-0", iconClass ?? "text-gray-500")} />
-      <span className={cn("min-w-0 flex-1", active ? "text-primary" : "text-gray-900")}>
+      <Icon className={cn("h-5 w-5 shrink-0", iconClass ?? "text-slate-500")} />
+      <span className={cn("min-w-0 flex-1", active ? "text-primary" : "text-slate-900")}>
         {title}
       </span>
       {trailing}
@@ -160,14 +160,14 @@ export function HeaderProfileMenu({ session, pathname, onLinkClick }: HeaderProf
   const adminActive = pathname.startsWith("/admin");
 
   return (
-    <div className="w-full border-t border-gray-200/60 bg-white/75 backdrop-blur-xl shadow-[0_24px_48px_-12px_rgba(15,23,42,0.12)] animate-in fade-in slide-in-from-top-1 duration-200">
+    <div className="w-full border-t border-slate-200/60 bg-white/75 backdrop-blur-xl shadow-[0_24px_48px_-12px_rgba(15,23,42,0.12)] animate-in fade-in slide-in-from-top-1 duration-200">
       <div className="w-full px-6 py-8 sm:px-8 lg:px-14 lg:py-10 xl:px-20">
         <div className="grid w-full grid-cols-1 gap-x-10 gap-y-8 lg:grid-cols-12 lg:gap-x-16 lg:gap-y-10">
           <div className="lg:col-span-3">
-            <p className="text-base font-semibold text-gray-900">
+            <p className="text-base font-semibold text-slate-900">
               {session.user.name || "Пользователь"}
             </p>
-            <p className="mt-1 text-sm text-gray-500">{session.user.email}</p>
+            <p className="mt-1 text-sm text-slate-500">{session.user.email}</p>
           </div>
 
           <div className="lg:col-span-6">
@@ -185,7 +185,7 @@ export function HeaderProfileMenu({ session, pathname, onLinkClick }: HeaderProf
               <AccountMenuItem
                 title="Личный кабинет"
                 icon={LayoutGrid}
-                iconClass={dashboardActive ? "text-primary" : "text-gray-500"}
+                iconClass={dashboardActive ? "text-primary" : "text-slate-500"}
                 active={dashboardActive}
                 href="/dashboard"
                 onClick={onLinkClick}
@@ -193,7 +193,7 @@ export function HeaderProfileMenu({ session, pathname, onLinkClick }: HeaderProf
               <AccountMenuItem
                 title="Настройки"
                 icon={Settings}
-                iconClass={settingsActive ? "text-primary" : "text-gray-500"}
+                iconClass={settingsActive ? "text-primary" : "text-slate-500"}
                 active={settingsActive}
                 href="/dashboard/settings"
                 onClick={onLinkClick}
@@ -202,7 +202,7 @@ export function HeaderProfileMenu({ session, pathname, onLinkClick }: HeaderProf
                 <AccountMenuItem
                   title="Админ-панель"
                   icon={Shield}
-                  iconClass={adminActive ? "text-primary" : "text-gray-500"}
+                  iconClass={adminActive ? "text-primary" : "text-slate-500"}
                   active={adminActive}
                   href="/admin"
                   onClick={onLinkClick}

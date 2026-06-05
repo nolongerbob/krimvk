@@ -2,13 +2,20 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Loader2, User, Building, Settings, FileText, Upload } from "lucide-react";
-import Link from "next/link";
+import { Loader2, User, Building, Settings, FileText } from "lucide-react";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
+import {
+  adminContainerClass,
+  adminOutlineBtnClass,
+  adminPrimaryBtnClass,
+  adminSectionLabelClass,
+} from "@/components/admin/admin-styles";
+import { cn } from "@/lib/utils";
 
 type Tab = "abonent" | "object" | "params" | "progress";
 
@@ -200,8 +207,8 @@ export default function EditContractPage() {
 
   if (isLoading) {
     return (
-      <div className="container py-8 px-4">
-        <div className="flex items-center justify-center min-h-[400px]">
+      <div className={adminContainerClass}>
+        <div className="flex min-h-[400px] items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
         </div>
       </div>
@@ -211,24 +218,18 @@ export default function EditContractPage() {
   // Используем ту же форму, что и при создании, но с загруженными данными
   // Для краткости, скопируем структуру из create/page.tsx, но с изменениями
   return (
-    <div className="container py-8 px-4 max-w-5xl">
-      <div className="mb-8">
-        <Button variant="ghost" asChild className="mb-4">
-          <Link href="/admin/contracts">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Назад к списку
-          </Link>
-        </Button>
-        <h1 className="text-3xl font-bold mb-2">Редактировать договор</h1>
-        <p className="text-gray-600">Измените данные договора</p>
-      </div>
+    <div className={cn(adminContainerClass, "max-w-5xl")}>
+      <AdminPageHeader
+        title="Редактировать договор"
+        description="Измените данные договора"
+        backHref="/admin/contracts"
+        backLabel="Назад к списку"
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Информация</CardTitle>
-          <CardDescription>Измените необходимые поля</CardDescription>
-        </CardHeader>
-        <CardContent>
+      <DashboardCard>
+        <DashboardCardBody>
+          <p className={cn(adminSectionLabelClass, "mb-2")}>Информация</p>
+          <p className="mb-6 text-sm text-slate-600">Измените необходимые поля</p>
           <div className="flex gap-2 mb-6 border-b">
             {tabs.map((tab) => {
               const TabIcon = tab.icon;
@@ -240,7 +241,7 @@ export default function EditContractPage() {
                   className={`px-4 py-2 flex items-center gap-2 border-b-2 transition-colors ${
                     activeTab === tab.id
                       ? "border-blue-500 text-blue-600"
-                      : "border-transparent text-gray-600 hover:text-gray-900"
+                      : "border-transparent text-slate-600 hover:text-slate-800"
                   }`}
                 >
                   <TabIcon className="h-4 w-4" />
@@ -762,8 +763,8 @@ export default function EditContractPage() {
                 <div className="border-t pt-4">
                   <h4 className="font-semibold mb-3">Файл договора</h4>
                   {formData.contractFileUrl && (
-                    <div className="mb-2 p-2 bg-gray-50 rounded">
-                      <p className="text-sm text-gray-600">
+                    <div className="mb-2 p-2 bg-slate-50 rounded">
+                      <p className="text-sm text-slate-600">
                         Текущий файл: {formData.contractFileName || "договор.pdf"}
                       </p>
                       <a
@@ -790,7 +791,7 @@ export default function EditContractPage() {
                       }}
                     />
                     {contractFile && (
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-slate-600">
                         Выбран файл: {contractFile.name} ({(contractFile.size / 1024 / 1024).toFixed(2)} МБ)
                       </p>
                     )}
@@ -811,6 +812,7 @@ export default function EditContractPage() {
                         type="button"
                         variant="outline"
                         onClick={() => setActiveTab(tab.id)}
+                        className={adminOutlineBtnClass}
                       >
                         {tab.label}
                       </Button>
@@ -829,16 +831,17 @@ export default function EditContractPage() {
                         setActiveTab(tabs[currentIndex + 1].id);
                       }
                     }}
+                    className={adminPrimaryBtnClass}
                   >
                     Далее
                   </Button>
                 )}
                 {activeTab === tabs[tabs.length - 1].id && (
                   <>
-                    <Button type="button" variant="outline" onClick={() => router.push("/admin/contracts")}>
+                    <Button type="button" variant="outline" onClick={() => router.push("/admin/contracts")} className={adminOutlineBtnClass}>
                       Отмена
                     </Button>
-                    <Button type="submit" disabled={isSubmitting}>
+                    <Button type="submit" disabled={isSubmitting} className={adminPrimaryBtnClass}>
                       {isSubmitting ? (
                         <>
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -853,8 +856,8 @@ export default function EditContractPage() {
               </div>
             </div>
           </form>
-        </CardContent>
-      </Card>
+        </DashboardCardBody>
+      </DashboardCard>
     </div>
   );
 }

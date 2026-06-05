@@ -3,9 +3,17 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
+import {
+  adminContainerClass,
+  adminFieldClass,
+  adminOutlineBtnClass,
+  adminPrimaryBtnClass,
+  adminSectionLabelClass,
+} from "@/components/admin/admin-styles";
+import { cn } from "@/lib/utils";
 
 interface Page {
   id: string;
@@ -83,24 +91,18 @@ export default function CreatePagePage() {
   };
 
   return (
-    <div className="container py-8 px-4">
-      <div className="mb-8">
-        <Button variant="ghost" asChild className="mb-4">
-          <Link href="/admin/pages">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Назад к списку
-          </Link>
-        </Button>
-        <h1 className="text-3xl font-bold mb-2">Создать страницу</h1>
-        <p className="text-gray-600">Создание новой страницы сайта</p>
-      </div>
+    <div className={adminContainerClass}>
+      <AdminPageHeader
+        title="Создать страницу"
+        description="Создание новой страницы сайта"
+        backHref="/admin/pages"
+        backLabel="Назад к списку"
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Информация о странице</CardTitle>
-          <CardDescription>Заполните все необходимые поля</CardDescription>
-        </CardHeader>
-        <CardContent>
+      <DashboardCard>
+        <DashboardCardBody>
+          <p className={cn(adminSectionLabelClass, "mb-2")}>Информация о странице</p>
+          <p className="mb-6 text-sm text-slate-600">Заполните все необходимые поля</p>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-medium mb-2">
@@ -111,7 +113,7 @@ export default function CreatePagePage() {
                 required
                 value={formData.title}
                 onChange={handleTitleChange}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={cn("w-full px-4", adminFieldClass)}
                 placeholder="Например: О компании"
               />
             </div>
@@ -127,10 +129,10 @@ export default function CreatePagePage() {
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, slug: e.target.value }))
                 }
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                className={cn("w-full px-4 py-2 font-mono text-sm", adminFieldClass)}
                 placeholder="/o-kompanii/rukovodstvo"
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 URL должен начинаться с / и содержать только латинские буквы, цифры и дефисы
               </p>
             </div>
@@ -145,7 +147,7 @@ export default function CreatePagePage() {
                   setFormData((prev) => ({ ...prev, description: e.target.value }))
                 }
                 rows={3}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={cn("w-full px-4", adminFieldClass)}
                 placeholder="Краткое описание страницы для поисковых систем"
               />
             </div>
@@ -160,10 +162,10 @@ export default function CreatePagePage() {
                   setFormData((prev) => ({ ...prev, content: e.target.value }))
                 }
                 rows={15}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                className={cn("w-full px-4 py-2 font-mono text-sm", adminFieldClass)}
                 placeholder="HTML или текст содержимого страницы (оставьте пустым для категории постов)"
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 Можно использовать HTML разметку. Оставьте пустым, если это категория для постов.
               </p>
             </div>
@@ -180,7 +182,7 @@ export default function CreatePagePage() {
                 />
                 <span className="text-sm font-medium">Категория для постов</span>
               </label>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 Если отмечено, в этом разделе можно будет создавать посты
               </p>
             </div>
@@ -194,7 +196,7 @@ export default function CreatePagePage() {
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, parentId: e.target.value }))
                 }
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={cn("w-full px-4", adminFieldClass)}
               >
                 <option value="">Нет (корневая страница)</option>
                 {pages.map((page) => (
@@ -219,7 +221,7 @@ export default function CreatePagePage() {
                       order: Number(e.target.value) || 0,
                     }))
                   }
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={cn("w-full px-4", adminFieldClass)}
                 />
               </div>
 
@@ -235,7 +237,7 @@ export default function CreatePagePage() {
                       isActive: e.target.value === "true",
                     }))
                   }
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={cn("w-full px-4", adminFieldClass)}
                 >
                   <option value="true">Активна</option>
                   <option value="false">Неактивна</option>
@@ -243,17 +245,17 @@ export default function CreatePagePage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-4 pt-4">
-              <Button type="submit" disabled={isLoading}>
+            <div className="flex items-center gap-2 pt-4">
+              <Button type="submit" disabled={isLoading} className={adminPrimaryBtnClass}>
                 {isLoading ? "Создание..." : "Создать страницу"}
               </Button>
-              <Button type="button" variant="outline" asChild>
+              <Button type="button" variant="outline" asChild className={adminOutlineBtnClass}>
                 <Link href="/admin/pages">Отмена</Link>
               </Button>
             </div>
           </form>
-        </CardContent>
-      </Card>
+        </DashboardCardBody>
+      </DashboardCard>
     </div>
   );
 }

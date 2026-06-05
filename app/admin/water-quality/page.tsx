@@ -42,9 +42,7 @@ export default async function AdminWaterQualityPage() {
   });
 
   return (
-    <div className="container py-8 px-4">
-      <WaterQualityClient initialDistricts={JSON.parse(JSON.stringify(districts))} />
-    </div>
+    <WaterQualityClient initialDistricts={JSON.parse(JSON.stringify(districts))} />
   );
 }
 

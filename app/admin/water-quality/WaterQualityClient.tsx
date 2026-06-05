@@ -1,10 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
+import { cn } from "@/lib/utils";
+import {
+  dashboardButtonClass,
+  dashboardPageClass,
+} from "@/components/dashboard/dashboard-styles";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +17,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Droplet, Plus, Trash2, Edit, FileText, Calendar, MapPin, Upload, Building2, Search } from "lucide-react";
+import {
+  Droplet,
+  Plus,
+  Trash2,
+  Edit,
+  FileText,
+  Calendar,
+  MapPin,
+  Upload,
+  Building2,
+  Search,
+  ArrowLeft,
+} from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
 import { publicFileHref } from "@/lib/public-file-url";
@@ -55,6 +72,18 @@ interface WaterQualityDistrict {
 interface WaterQualityClientProps {
   initialDistricts: WaterQualityDistrict[];
 }
+
+const fieldClass =
+  "h-10 rounded-none border-slate-200 bg-white focus-visible:border-blue-500 focus-visible:ring-1 focus-visible:ring-blue-500";
+const outlineBtnClass = cn(
+  dashboardButtonClass,
+  "h-9 border-slate-200 text-slate-700 hover:bg-slate-50"
+);
+const primaryBtnClass = cn(
+  dashboardButtonClass,
+  "h-9 bg-blue-600 text-white hover:bg-blue-700"
+);
+const dangerBtnClass = cn(dashboardButtonClass, "h-9");
 
 function formatFileSize(bytes: number): string {
   if (bytes === 0) return "0 Bytes";
@@ -115,44 +144,37 @@ export function WaterQualityClient({ initialDistricts }: WaterQualityClientProps
       filtered = filtered.filter((d) => d.id === selectedDistrictFilter);
     }
 
-    // Поиск по районам, городам и годам
+    // Поиск: при совпадении района/города показываем всё внутри, иначе — только подходящие годы/документы
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
       filtered = filtered
         .map((district) => {
-          // Проверяем, совпадает ли название района
           const districtMatches = district.name.toLowerCase().includes(query);
 
-          // Фильтруем города
           const filteredCities = district.cities
             .map((city) => {
-              // Проверяем, совпадает ли название города
               const cityMatches = city.name.toLowerCase().includes(query);
+              const years =
+                districtMatches || cityMatches
+                  ? city.years
+                  : city.years.filter((year) => {
+                      const yearMatches = year.year.toString().includes(query);
+                      const documentMatches = year.documents.some((doc) =>
+                        doc.fileName.toLowerCase().includes(query)
+                      );
+                      return yearMatches || documentMatches;
+                    });
 
-              // Фильтруем годы
-              const filteredYears = city.years.filter((year) => {
-                // Проверяем, совпадает ли год
-                const yearMatches = year.year.toString().includes(query);
-                // Проверяем документы
-                const documentMatches = year.documents.some((doc) =>
-                  doc.fileName.toLowerCase().includes(query)
-                );
-                return yearMatches || documentMatches;
-              });
-
-              return {
-                ...city,
-                years: filteredYears,
-              };
+              return { ...city, years };
             })
             .filter((city) => {
               const cityMatches = city.name.toLowerCase().includes(query);
-              return cityMatches || city.years.length > 0;
+              return districtMatches || cityMatches || city.years.length > 0;
             });
 
           return {
             ...district,
-            cities: filteredCities,
+            cities: districtMatches ? district.cities : filteredCities,
           };
         })
         .filter((district) => {
@@ -366,6 +388,7 @@ export function WaterQualityClient({ initialDistricts }: WaterQualityClientProps
         setEditingYear(null);
         setYearValue("");
         setYearOrder(0);
+        alert("Год успешно добавлен");
       } else {
         const error = await response.json();
         alert(error.error || "Ошибка при создании года");
@@ -523,97 +546,115 @@ export function WaterQualityClient({ initialDistricts }: WaterQualityClientProps
   };
 
   return (
-    <div>
-      <div className="mb-8 flex items-center justify-between">
+    <div
+      className={cn(
+        dashboardPageClass,
+        "container max-w-6xl px-4 py-8 [&_button]:!rounded-none [&_input]:!rounded-none [&_select]:!rounded-none"
+      )}
+    >
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Управление качеством питьевой воды</h1>
-          <p className="text-gray-600">Создание районов, городов, годов и загрузка документов</p>
+          <h1 className="mb-2 text-3xl font-bold tracking-tight text-slate-900">
+            Управление качеством питьевой воды
+          </h1>
+          <p className="text-sm text-slate-600">
+            Создание районов, городов, годов и загрузка документов
+          </p>
         </div>
-        <div className="flex gap-4">
-          <Button onClick={() => openDistrictDialog()} disabled={loading}>
-            <Plus className="h-4 w-4 mr-2" />
+        <div className="flex shrink-0 flex-wrap gap-2">
+          <Button
+            onClick={() => openDistrictDialog()}
+            disabled={loading}
+            className={primaryBtnClass}
+          >
+            <Plus className="mr-2 h-4 w-4" />
             Создать район
           </Button>
-          <Button asChild variant="outline">
-            <Link href="/admin">Назад</Link>
+          <Button asChild variant="outline" className={outlineBtnClass}>
+            <Link href="/admin">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Назад
+            </Link>
           </Button>
         </div>
       </div>
 
-      {/* Поиск и фильтры */}
-      <div className="mb-6 space-y-4">
-        <div className="flex flex-col md:flex-row gap-4">
-          {/* Поиск */}
-          <div className="flex-1">
-            <Label htmlFor="search">Поиск</Label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <Input
-                id="search"
-                type="text"
-                placeholder="Поиск по районам, городам, годам, документам..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
+      <div className="mb-6 grid gap-4 md:grid-cols-2">
+        <div>
+          <Label htmlFor="search" className="mb-1.5 text-sm text-slate-700">
+            Поиск
+          </Label>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Input
+              id="search"
+              type="text"
+              placeholder="Районы, города, годы, документы…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={cn(fieldClass, "pl-9")}
+            />
           </div>
+        </div>
 
-          {/* Фильтр по району */}
-          <div className="flex-1">
-            <Label htmlFor="district-filter">Фильтр по району</Label>
-            <select
-              id="district-filter"
-              value={selectedDistrictFilter}
-              onChange={(e) => setSelectedDistrictFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">Все районы</option>
-              {districts.map((district) => (
-                <option key={district.id} value={district.id}>
-                  {district.name}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div>
+          <Label htmlFor="district-filter" className="mb-1.5 text-sm text-slate-700">
+            Фильтр по району
+          </Label>
+          <select
+            id="district-filter"
+            value={selectedDistrictFilter}
+            onChange={(e) => setSelectedDistrictFilter(e.target.value)}
+            className={cn(fieldClass, "w-full px-3")}
+          >
+            <option value="">Все районы</option>
+            {districts.map((district) => (
+              <option key={district.id} value={district.id}>
+                {district.name}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
       {filteredDistricts.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <Droplet className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500 mb-4">
+        <DashboardCard className="border-dashed bg-slate-50/80">
+          <DashboardCardBody className="py-12 text-center">
+            <Droplet className="mx-auto mb-4 h-10 w-10 text-slate-400" strokeWidth={1.75} />
+            <p className="mb-4 text-sm text-slate-600">
               {searchQuery || selectedDistrictFilter
                 ? "По запросу ничего не найдено"
                 : "Нет районов"}
             </p>
-            {!searchQuery && !selectedDistrictFilter && (
-              <Button onClick={() => openDistrictDialog()}>
-                <Plus className="h-4 w-4 mr-2" />
+            {!searchQuery && !selectedDistrictFilter ? (
+              <Button onClick={() => openDistrictDialog()} className={primaryBtnClass}>
+                <Plus className="mr-2 h-4 w-4" />
                 Создать первый район
               </Button>
-            )}
-          </CardContent>
-        </Card>
+            ) : null}
+          </DashboardCardBody>
+        </DashboardCard>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {filteredDistricts.map((district) => (
-            <Card key={district.id} className="shadow-lg">
-              <CardHeader>
-                <div className="flex items-center justify-between">
+            <DashboardCard key={district.id}>
+              <DashboardCardBody className="p-0">
+                <div className="flex flex-col gap-3 border-b border-slate-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
                   <div className="flex items-center gap-3">
-                    <Building2 className="h-6 w-6 text-blue-600" />
-                    <CardTitle className="text-2xl">{district.name}</CardTitle>
+                    <Building2 className="h-5 w-5 text-blue-600" strokeWidth={1.75} />
+                    <h2 className="text-lg font-semibold text-slate-900">
+                      {district.name}
+                    </h2>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => openDistrictDialog(district)}
                       disabled={loading}
+                      className={outlineBtnClass}
                     >
-                      <Edit className="h-4 w-4 mr-2" />
+                      <Edit className="mr-2 h-4 w-4" />
                       Редактировать
                     </Button>
                     <Button
@@ -621,113 +662,139 @@ export function WaterQualityClient({ initialDistricts }: WaterQualityClientProps
                       size="sm"
                       onClick={() => openCityDialog(district.id)}
                       disabled={loading}
+                      className={outlineBtnClass}
                     >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Добавить город
+                      <Plus className="mr-2 h-4 w-4" />
+                      Город
                     </Button>
                     <Button
                       variant="destructive"
                       size="sm"
                       onClick={() => handleDeleteDistrict(district.id)}
                       disabled={loading}
+                      className={dangerBtnClass}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent>
-                {district.cities.length === 0 ? (
-                  <p className="text-gray-500">Города для этого района пока не добавлены</p>
-                ) : (
-                  <div className="space-y-4">
-                    {district.cities.map((city) => (
-                      <div key={city.id} className="border-l-4 border-l-green-500 pl-4">
-                        <div className="flex items-center justify-between mb-3">
+
+                <div className="space-y-3 px-4 py-4 sm:px-5 sm:py-5">
+                  {district.cities.length === 0 ? (
+                    <p className="text-sm text-slate-500">
+                      Города для этого района пока не добавлены
+                    </p>
+                  ) : (
+                    district.cities.map((city) => (
+                      <div
+                        key={city.id}
+                        className="border border-slate-200 bg-white"
+                      >
+                        <div className="flex flex-col gap-3 border-b border-slate-100 bg-slate-50/80 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                           <div className="flex items-center gap-2">
-                            <MapPin className="h-5 w-5 text-green-600" />
-                            <h3 className="text-xl font-semibold">{city.name}</h3>
+                            <MapPin className="h-4 w-4 text-slate-500" strokeWidth={1.75} />
+                            <h3 className="text-base font-semibold text-slate-900">
+                              {city.name}
+                            </h3>
                           </div>
-                          <div className="flex gap-2">
+                          <div className="flex flex-wrap gap-2">
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => openCityDialog(district.id, city)}
                               disabled={loading}
+                              className={outlineBtnClass}
                             >
-                              <Edit className="h-4 w-4 mr-2" />
-                              Редактировать
+                              <Edit className="mr-2 h-4 w-4" />
+                              Изменить
                             </Button>
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => openYearDialog(city.id)}
                               disabled={loading}
+                              className={outlineBtnClass}
                             >
-                              <Plus className="h-4 w-4 mr-2" />
-                              Добавить год
+                              <Plus className="mr-2 h-4 w-4" />
+                              Год
                             </Button>
                             <Button
                               variant="destructive"
                               size="sm"
                               onClick={() => handleDeleteCity(city.id)}
                               disabled={loading}
+                              className={dangerBtnClass}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         </div>
+
                         {city.years.length === 0 ? (
-                          <p className="text-gray-500 text-sm">Годы для этого города пока не добавлены</p>
+                          <p className="px-4 py-4 text-sm text-slate-500">
+                            Годы для этого города пока не добавлены
+                          </p>
                         ) : (
-                          <div className="space-y-3 mt-3">
+                          <div className="divide-y divide-slate-100">
                             {city.years.map((year) => (
-                              <div key={year.id} className="border-l-4 border-l-blue-500 pl-4">
-                                <div className="flex items-center justify-between mb-2">
+                              <div key={year.id} className="px-4 py-4">
+                                <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                                   <div className="flex items-center gap-2">
-                                    <Calendar className="h-4 w-4 text-blue-600" />
-                                    <h4 className="font-semibold">{year.year} год</h4>
+                                    <Calendar
+                                      className="h-4 w-4 text-slate-500"
+                                      strokeWidth={1.75}
+                                    />
+                                    <h4 className="text-sm font-semibold text-slate-900">
+                                      {year.year} год
+                                    </h4>
                                   </div>
-                                  <div className="flex gap-2">
+                                  <div className="flex flex-wrap gap-2">
                                     <Button
                                       variant="outline"
                                       size="sm"
                                       onClick={() => openUploadDialog(year.id)}
                                       disabled={loading}
+                                      className={outlineBtnClass}
                                     >
-                                      <Upload className="h-4 w-4 mr-2" />
-                                      Загрузить документ
+                                      <Upload className="mr-2 h-4 w-4" />
+                                      Загрузить
                                     </Button>
                                     <Button
                                       variant="destructive"
                                       size="sm"
                                       onClick={() => handleDeleteYear(year.id)}
                                       disabled={loading}
+                                      className={dangerBtnClass}
                                     >
                                       <Trash2 className="h-4 w-4" />
                                     </Button>
                                   </div>
                                 </div>
+
                                 {year.documents.length === 0 ? (
-                                  <p className="text-gray-500 text-xs">Документы для этого года пока не загружены</p>
+                                  <p className="text-xs text-slate-500">
+                                    Документы для этого года пока не загружены
+                                  </p>
                                 ) : (
-                                  <div className="grid gap-2 mt-2">
+                                  <ul className="space-y-2">
                                     {year.documents.map((doc) => (
-                                      <div
+                                      <li
                                         key={doc.id}
-                                        className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg"
+                                        className="flex items-center gap-3 rounded-none border border-slate-200 bg-white px-3 py-2.5"
                                       >
-                                        <FileText className="h-4 w-4 text-blue-600 flex-shrink-0" />
-                                        <div className="flex-1 min-w-0">
+                                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-none bg-blue-100">
+                                          <FileText className="h-4 w-4 text-blue-600" />
+                                        </div>
+                                        <div className="min-w-0 flex-1">
                                           <a
                                             href={publicFileHref(doc.fileUrl)}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="font-medium text-gray-900 hover:text-blue-600 truncate block text-sm"
+                                            className="block truncate text-sm font-medium text-slate-900 hover:text-blue-600"
                                           >
                                             {doc.fileName}
                                           </a>
-                                          <p className="text-xs text-gray-500">
+                                          <p className="text-xs text-slate-500">
                                             {formatFileSize(doc.fileSize)}
                                           </p>
                                         </div>
@@ -736,30 +803,34 @@ export function WaterQualityClient({ initialDistricts }: WaterQualityClientProps
                                           size="sm"
                                           onClick={() => handleDeleteDocument(doc.id)}
                                           disabled={loading}
+                                          className={cn(
+                                            dashboardButtonClass,
+                                            "h-8 w-8 p-0 text-red-600 hover:bg-red-50"
+                                          )}
                                         >
-                                          <Trash2 className="h-3 w-3 text-red-500" />
+                                          <Trash2 className="h-4 w-4" />
                                         </Button>
-                                      </div>
+                                      </li>
                                     ))}
-                                  </div>
+                                  </ul>
                                 )}
                               </div>
                             ))}
                           </div>
                         )}
                       </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                    ))
+                  )}
+                </div>
+              </DashboardCardBody>
+            </DashboardCard>
           ))}
         </div>
       )}
 
       {/* Диалог создания/редактирования района */}
       <Dialog open={districtDialogOpen} onOpenChange={setDistrictDialogOpen}>
-        <DialogContent>
+        <DialogContent className="rounded-none sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
               {editingDistrict ? "Редактировать район" : "Создать район"}
@@ -778,6 +849,7 @@ export function WaterQualityClient({ initialDistricts }: WaterQualityClientProps
                 value={districtName}
                 onChange={(e) => setDistrictName(e.target.value)}
                 placeholder="Например: Сакский район"
+                className={fieldClass}
               />
             </div>
             <div>
@@ -787,6 +859,7 @@ export function WaterQualityClient({ initialDistricts }: WaterQualityClientProps
                 type="number"
                 value={districtOrder}
                 onChange={(e) => setDistrictOrder(parseInt(e.target.value) || 0)}
+                className={fieldClass}
               />
             </div>
             <div className="flex justify-end gap-2">
@@ -798,6 +871,7 @@ export function WaterQualityClient({ initialDistricts }: WaterQualityClientProps
                   setDistrictName("");
                   setDistrictOrder(0);
                 }}
+                className={outlineBtnClass}
               >
                 Отмена
               </Button>
@@ -810,6 +884,7 @@ export function WaterQualityClient({ initialDistricts }: WaterQualityClientProps
                   }
                 }}
                 disabled={loading || !districtName.trim()}
+                className={primaryBtnClass}
               >
                 {editingDistrict ? "Сохранить" : "Создать"}
               </Button>
@@ -820,7 +895,7 @@ export function WaterQualityClient({ initialDistricts }: WaterQualityClientProps
 
       {/* Диалог создания/редактирования города */}
       <Dialog open={cityDialogOpen} onOpenChange={setCityDialogOpen}>
-        <DialogContent>
+        <DialogContent className="rounded-none sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
               {editingCity ? "Редактировать город" : "Создать город"}
@@ -838,7 +913,7 @@ export function WaterQualityClient({ initialDistricts }: WaterQualityClientProps
                 id="city-district"
                 value={selectedDistrictId}
                 onChange={(e) => setSelectedDistrictId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                className={cn(fieldClass, "w-full px-3")}
                 disabled={!!editingCity}
               >
                 <option value="">Выберите район</option>
@@ -856,6 +931,7 @@ export function WaterQualityClient({ initialDistricts }: WaterQualityClientProps
                 value={cityName}
                 onChange={(e) => setCityName(e.target.value)}
                 placeholder="Например: Симферополь"
+                className={fieldClass}
               />
             </div>
             <div>
@@ -865,6 +941,7 @@ export function WaterQualityClient({ initialDistricts }: WaterQualityClientProps
                 type="number"
                 value={cityOrder}
                 onChange={(e) => setCityOrder(parseInt(e.target.value) || 0)}
+                className={fieldClass}
               />
             </div>
             <div className="flex justify-end gap-2">
@@ -877,6 +954,7 @@ export function WaterQualityClient({ initialDistricts }: WaterQualityClientProps
                   setCityOrder(0);
                   setSelectedDistrictId("");
                 }}
+                className={outlineBtnClass}
               >
                 Отмена
               </Button>
@@ -889,6 +967,7 @@ export function WaterQualityClient({ initialDistricts }: WaterQualityClientProps
                   }
                 }}
                 disabled={loading || !cityName.trim() || !selectedDistrictId}
+                className={primaryBtnClass}
               >
                 {editingCity ? "Сохранить" : "Создать"}
               </Button>
@@ -899,7 +978,7 @@ export function WaterQualityClient({ initialDistricts }: WaterQualityClientProps
 
       {/* Диалог создания года */}
       <Dialog open={yearDialogOpen} onOpenChange={setYearDialogOpen}>
-        <DialogContent>
+        <DialogContent className="rounded-none sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Добавить год</DialogTitle>
             <DialogDescription>
@@ -917,6 +996,7 @@ export function WaterQualityClient({ initialDistricts }: WaterQualityClientProps
                 placeholder="Например: 2024"
                 min="2000"
                 max="2100"
+                className={fieldClass}
               />
             </div>
             <div>
@@ -926,6 +1006,7 @@ export function WaterQualityClient({ initialDistricts }: WaterQualityClientProps
                 type="number"
                 value={yearOrder}
                 onChange={(e) => setYearOrder(parseInt(e.target.value) || 0)}
+                className={fieldClass}
               />
             </div>
             <div className="flex justify-end gap-2">
@@ -937,12 +1018,14 @@ export function WaterQualityClient({ initialDistricts }: WaterQualityClientProps
                   setYearValue("");
                   setYearOrder(0);
                 }}
+                className={outlineBtnClass}
               >
                 Отмена
               </Button>
               <Button
                 onClick={handleCreateYear}
                 disabled={loading || !yearValue}
+                className={primaryBtnClass}
               >
                 Создать
               </Button>
@@ -953,7 +1036,7 @@ export function WaterQualityClient({ initialDistricts }: WaterQualityClientProps
 
       {/* Диалог загрузки документа */}
       <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
-        <DialogContent>
+        <DialogContent className="rounded-none sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Загрузить документ</DialogTitle>
             <DialogDescription>
@@ -967,13 +1050,13 @@ export function WaterQualityClient({ initialDistricts }: WaterQualityClientProps
                 id="file-upload"
                 type="file"
                 onChange={handleFileSelect}
-                className="cursor-pointer"
+                className={cn(fieldClass, "cursor-pointer")}
               />
-              {selectedFile && (
-                <p className="text-sm text-gray-500 mt-2">
+              {selectedFile ? (
+                <p className="mt-2 text-sm text-slate-500">
                   Выбран: {selectedFile.name} ({formatFileSize(selectedFile.size)})
                 </p>
-              )}
+              ) : null}
             </div>
             <div className="flex justify-end gap-2">
               <Button
@@ -983,14 +1066,16 @@ export function WaterQualityClient({ initialDistricts }: WaterQualityClientProps
                   setSelectedFile(null);
                   setSelectedYearId(null);
                 }}
+                className={outlineBtnClass}
               >
                 Отмена
               </Button>
               <Button
                 onClick={handleUploadDocument}
                 disabled={uploading || !selectedFile || !selectedYearId}
+                className={primaryBtnClass}
               >
-                {uploading ? "Загрузка..." : "Загрузить"}
+                {uploading ? "Загрузка…" : "Загрузить"}
               </Button>
             </div>
           </div>

@@ -1,9 +1,15 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import {
   Select,
   SelectContent,
@@ -50,6 +56,10 @@ const cardClass = "rounded-none border border-gray-200 shadow-none";
 const fieldClass =
   "h-10 rounded-none border-gray-200 bg-white focus-visible:border-blue-500 focus-visible:ring-1 focus-visible:ring-blue-500";
 
+function countCityDocuments(city: WaterQualityCity) {
+  return city.years.reduce((sum, year) => sum + year.documents.length, 0);
+}
+
 function formatFileSize(bytes: number): string {
   if (bytes === 0) return "0 Bytes";
   const k = 1024;
@@ -61,6 +71,7 @@ function formatFileSize(bytes: number): string {
 export function KachestvoVodyClient({ districts }: KachestvoVodyClientProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDistrictId, setSelectedDistrictId] = useState<string>("all");
+  const [openCityIds, setOpenCityIds] = useState<string[]>([]);
 
   const filteredDistricts = useMemo(() => {
     let filtered = districts;
@@ -83,6 +94,14 @@ export function KachestvoVodyClient({ districts }: KachestvoVodyClientProps) {
 
     return filtered;
   }, [districts, searchQuery, selectedDistrictId]);
+
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      setOpenCityIds(
+        filteredDistricts.flatMap((district) => district.cities.map((city) => city.id))
+      );
+    }
+  }, [searchQuery, filteredDistricts]);
 
   return (
     <div className="flex min-h-[calc(100dvh-4rem)] flex-col bg-gray-50 py-8 md:py-12 pb-14 lg:min-h-[calc(100dvh-4.5rem)]">
@@ -167,75 +186,104 @@ export function KachestvoVodyClient({ districts }: KachestvoVodyClientProps) {
                       Населённые пункты для этого района пока не добавлены
                     </p>
                   ) : (
-                    district.cities.map((city) => (
-                      <div
-                        key={city.id}
-                        className="border border-gray-100 bg-white"
-                      >
-                        <div className="flex items-center gap-2 border-b border-gray-100 bg-gray-50/80 px-4 py-3">
-                          <MapPin className="h-4 w-4 text-gray-500" strokeWidth={1.75} />
-                          <h3 className="text-base font-semibold text-gray-900">
-                            {city.name}
-                          </h3>
-                        </div>
+                    <Accordion
+                      type="multiple"
+                      value={openCityIds}
+                      onValueChange={setOpenCityIds}
+                      className="space-y-2"
+                    >
+                      {district.cities.map((city) => {
+                        const docCount = countCityDocuments(city);
 
-                        {city.years.length === 0 ? (
-                          <p className="px-4 py-4 text-sm text-gray-500">
-                            Документы для этого населённого пункта пока не добавлены
-                          </p>
-                        ) : (
-                          <div className="divide-y divide-gray-100">
-                            {city.years.map((year) => (
-                              <div key={year.id} className="px-4 py-4">
-                                <div className="mb-3 flex items-center gap-2">
-                                  <Calendar
-                                    className="h-4 w-4 text-gray-500"
-                                    strokeWidth={1.75}
-                                  />
-                                  <h4 className="text-sm font-semibold text-gray-900">
-                                    {year.year} год
-                                  </h4>
-                                </div>
-
-                                {year.documents.length === 0 ? (
-                                  <p className="text-sm text-gray-500">
-                                    Документы за этот год пока не добавлены
-                                  </p>
-                                ) : (
-                                  <ul className="space-y-2">
-                                    {year.documents.map((doc) => (
-                                      <li key={doc.id}>
-                                        <a
-                                          href={publicFileHref(doc.fileUrl)}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="group flex items-center gap-3 rounded-none border border-gray-200 bg-white px-4 py-3 transition-colors hover:border-blue-500 hover:bg-blue-50/40"
-                                        >
-                                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-none bg-blue-100">
-                                            <FileText className="h-5 w-5 text-blue-600" />
-                                          </div>
-                                          <div className="min-w-0 flex-1">
-                                            <p className="truncate text-sm font-medium text-gray-900 group-hover:text-blue-700">
-                                              {doc.fileName}
-                                            </p>
-                                            <p className="text-xs text-gray-500">
-                                              {formatFileSize(doc.fileSize)}
-                                            </p>
-                                          </div>
-                                          <span className="shrink-0 text-xs font-medium text-gray-400 group-hover:text-blue-600">
-                                            Скачать
-                                          </span>
-                                        </a>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                )}
+                        return (
+                          <AccordionItem
+                            key={city.id}
+                            value={city.id}
+                            className="rounded-none border border-gray-200 border-b last:border-b"
+                          >
+                            <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-gray-50/80 [&[data-state=open]]:border-b [&[data-state=open]]:border-gray-100">
+                              <div className="flex min-w-0 flex-1 items-center gap-2 text-left">
+                                <MapPin
+                                  className="h-4 w-4 shrink-0 text-gray-500"
+                                  strokeWidth={1.75}
+                                />
+                                <span className="text-base font-semibold text-gray-900">
+                                  {city.name}
+                                </span>
+                                {docCount > 0 ? (
+                                  <span className="shrink-0 text-xs font-normal text-gray-500">
+                                    {docCount}{" "}
+                                    {docCount === 1
+                                      ? "документ"
+                                      : docCount < 5
+                                        ? "документа"
+                                        : "документов"}
+                                  </span>
+                                ) : null}
                               </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ))
+                            </AccordionTrigger>
+                            <AccordionContent className="px-0 pb-0">
+                              {city.years.length === 0 ? (
+                                <p className="px-4 py-4 text-sm text-gray-500">
+                                  Документы для этого населённого пункта пока не
+                                  добавлены
+                                </p>
+                              ) : (
+                                <div className="divide-y divide-gray-100 border-t border-gray-100">
+                                  {city.years.map((year) => (
+                                    <div key={year.id} className="px-4 py-4">
+                                      <div className="mb-3 flex items-center gap-2">
+                                        <Calendar
+                                          className="h-4 w-4 text-gray-500"
+                                          strokeWidth={1.75}
+                                        />
+                                        <h4 className="text-sm font-semibold text-gray-900">
+                                          {year.year} год
+                                        </h4>
+                                      </div>
+
+                                      {year.documents.length === 0 ? (
+                                        <p className="text-sm text-gray-500">
+                                          Документы за этот год пока не добавлены
+                                        </p>
+                                      ) : (
+                                        <ul className="space-y-2">
+                                          {year.documents.map((doc) => (
+                                            <li key={doc.id}>
+                                              <a
+                                                href={publicFileHref(doc.fileUrl)}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="group flex items-center gap-3 rounded-none border border-gray-200 bg-white px-4 py-3 transition-colors hover:border-blue-500 hover:bg-blue-50/40"
+                                              >
+                                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-none bg-blue-100">
+                                                  <FileText className="h-5 w-5 text-blue-600" />
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                  <p className="truncate text-sm font-medium text-gray-900 group-hover:text-blue-700">
+                                                    {doc.fileName}
+                                                  </p>
+                                                  <p className="text-xs text-gray-500">
+                                                    {formatFileSize(doc.fileSize)}
+                                                  </p>
+                                                </div>
+                                                <span className="shrink-0 text-xs font-medium text-gray-400 group-hover:text-blue-600">
+                                                  Скачать
+                                                </span>
+                                              </a>
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </AccordionContent>
+                          </AccordionItem>
+                        );
+                      })}
+                    </Accordion>
                   )}
                 </CardContent>
               </Card>

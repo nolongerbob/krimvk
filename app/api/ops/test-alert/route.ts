@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { reportServerError } from '@/lib/report-server-error';
 
-export { dynamic } from '@/lib/force-dynamic-route';
+export const dynamic = 'force-dynamic';
 
 /**
  * Проверка полного формата алерта (только с секретом).

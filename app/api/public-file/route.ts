@@ -3,7 +3,7 @@ import { publicFilePathForS3Key } from '@/lib/public-file-url';
 import { getRedirectBaseUrl } from '@/lib/site-url';
 import { servePublicS3File } from '@/lib/serve-public-s3-file';
 
-export { dynamic } from '@/lib/force-dynamic-route';
+export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 /** Старый формат ?key= — редирект на /files/... */

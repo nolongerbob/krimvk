@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth-config";
 import { requireAdmin } from "@/lib/require-admin";
 import { prisma } from "@/lib/prisma";
 
-export { dynamic } from "@/lib/force-dynamic-route";
+export const dynamic = 'force-dynamic';
 
 // Безопасная функция для парсинга JSON из description
 function safeParseDescription(description: string | null): any | null {

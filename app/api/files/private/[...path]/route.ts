@@ -4,7 +4,7 @@ import { canAccessPrivateS3Key } from '@/lib/authorize-private-file';
 import { isPrivateS3Key } from '@/lib/s3-file-access';
 import { serveS3File } from '@/lib/serve-s3-file';
 
-export { dynamic } from '@/lib/force-dynamic-route';
+export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 type RouteContext = { params: { path: string[] } };

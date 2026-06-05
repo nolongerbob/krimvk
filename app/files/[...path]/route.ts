@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { servePublicS3File } from '@/lib/serve-public-s3-file';
 
-export { dynamic } from '@/lib/force-dynamic-route';
+export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 type RouteContext = { params: { path: string[] } };

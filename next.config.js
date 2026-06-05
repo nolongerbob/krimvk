@@ -75,8 +75,8 @@ const nextConfig = {
   // Лимиты тела запроса: Next 15.5+ буферизует body в middleware/proxy (по умолчанию ~10MB).
   // Без этого multipart обрезается → "Failed to parse body as FormData".
   experimental: {
+    // proxyClientMaxBodySize — только Next.js 16+; в 15.5 достаточно middleware + serverActions
     middlewareClientMaxBodySize: '200mb',
-    proxyClientMaxBodySize: '200mb',
     serverActions: {
       bodySizeLimit: '200mb',
     },

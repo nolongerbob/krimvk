@@ -355,8 +355,8 @@ export default function ReceiptViewPage() {
               const periodMonth = periodDate.toLocaleDateString("ru-RU", { month: "long" });
               const periodYear = periodDate.getFullYear();
               const periodStr = `${periodMonth} ${periodYear} г.`;
-              const nextMonthDate = new Date(periodDate.getFullYear(), periodDate.getMonth() + 1, 10);
-              const payByStr = `10.${String(nextMonthDate.getMonth() + 1).padStart(2, "0")}.${nextMonthDate.getFullYear()}`;
+              const nextMonthDate = new Date(periodDate.getFullYear(), periodDate.getMonth() + 1, 15);
+              const payByStr = `15.${String(nextMonthDate.getMonth() + 1).padStart(2, "0")}.${nextMonthDate.getFullYear()}`;
               const receiptNum = receiptData.LSCode || accountInfo?.accountNumber || "";
               // В 1С: положительное CommonDuty = долг к оплате (недоплата), отрицательное = переплата
               const isOverpaid = commonDutyAmount < 0;
@@ -461,11 +461,11 @@ export default function ReceiptViewPage() {
                   const contractNumber = String(receiptData.ContractNumber ?? "").trim();
                   const contractDate = String(receiptData.ContractDate ?? "").trim();
                   if (!contractNumber && !contractDate) {
-                    return <li>Договор рассрочки не оформлен.</li>;
+                    return <li>Договор не оформлен.</li>;
                   }
                   return (
                     <li>
-                      Договор рассрочки:{" "}
+                      Договор:{" "}
                       <span className="font-medium text-slate-800">
                         {contractNumber ? `№ ${contractNumber}` : "без номера"}
                         {contractDate ? ` от ${contractDate}` : ""}
@@ -652,13 +652,6 @@ export default function ReceiptViewPage() {
                             const numStart = startVal != null && startVal !== "" ? Number(startVal) : NaN;
                             const numEnd = endVal != null && endVal !== "" ? Number(endVal) : NaN;
                             const qty = !isNaN(numStart) && !isNaN(numEnd) ? (numEnd - numStart) : (c.Volume != null && c.Volume !== "" ? String(c.Volume) : "—");
-                            const normNum = parseAmount(c.Norm);
-                            const volumeNum = parseAmount(c.Volume);
-                            const ratio = normNum > 0 ? volumeNum / normNum : 0;
-                            const hasRaisingCoefficient = ratio > 1.01;
-                            const coeffLabel = hasRaisingCoefficient
-                              ? ` (повыш. коэф. ${ratio.toLocaleString("ru-RU", { minimumFractionDigits: 0, maximumFractionDigits: 2 })})`
-                              : "";
                             rows.push(
                               <tr key={`c-${idx}`} className="hover:bg-slate-50/80">
                                 <td className="border-b border-slate-100 px-1.5 py-1 text-slate-900 break-words align-top">{c.Service}</td>
@@ -673,7 +666,7 @@ export default function ReceiptViewPage() {
                                 <td className="border-b border-slate-100 px-1 py-1 text-right font-medium text-slate-900 tabular-nums">{formatCurrency(c.ChargeFull || c.Charge)}</td>
                                 <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-600 tabular-nums">{c.Norm || "—"}</td>
                                 <td className="border-b border-slate-100 px-1 py-1 text-center text-slate-600 tabular-nums">
-                                  {c.Volume && c.Volume !== "" ? `${c.Volume}${coeffLabel}` : "—"}
+                                  {c.Volume && c.Volume !== "" ? c.Volume : "—"}
                                 </td>
                               </tr>
                             );

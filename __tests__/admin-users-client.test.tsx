@@ -67,4 +67,16 @@ describe("admin users page controls", () => {
     expect(screen.getByText(/Заявок: 37/)).toBeInTheDocument();
     expect(mockRefresh).toHaveBeenCalledTimes(1);
   });
+
+  it('reloads balances after the server refreshes user records without changing the page', async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({
+      stats: { total: 1, admins: 0, debtors: 1, overpaid: 0, noDebt: 0, unknown: 0, pending: 0 },
+      running: false, error: false, finishedAt: 3, balances: { one: { totalDebt: 20, unpaidBillsCount: 1 } },
+    }) });
+    const { rerender } = render(<UsersClient users={[user]} totalUsers={1} query="" />);
+    await act(async () => {});
+    rerender(<UsersClient users={[{ ...user, role: 'ADMIN' }]} totalUsers={1} query="" />);
+    await act(async () => {});
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+  });
 });

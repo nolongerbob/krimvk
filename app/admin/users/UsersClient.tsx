@@ -183,7 +183,7 @@ export function UsersClient({
     };
     void poll();
     return () => { cancelled = true; controller.abort(); clearTimeout(timer); };
-  }, [query, filter, snapshotVersion, router]);
+  }, [query, filter, snapshotVersion, router, initialUsers]);
 
   // Обработчик изменения роли
   const handleRoleChange = (userId: string, newRole: string) => {

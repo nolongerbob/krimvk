@@ -8,6 +8,29 @@ export type MeterReadingRow = {
 
 type DeviceLike = Record<string, unknown>;
 
+/** Use the final IPU readings for charges only when the service matches uniquely. */
+export function syncChargesWithMeterReadings(
+  charges: Record<string, unknown>[] | undefined,
+  readings: MeterReadingRow[],
+  serviceKey: (service: string) => string,
+): void {
+  if (!charges?.length) return;
+  for (const charge of charges) {
+    const key = serviceKey(String(charge.Service ?? ""));
+    if (!key) continue;
+    // Several devices or tariff rows need explicit device/period mapping.
+    if (charges.filter((item) => serviceKey(String(item.Service ?? "")) === key).length !== 1) continue;
+    const matches = readings.filter((row) => serviceKey(row.Service) === key);
+    if (matches.length !== 1) continue;
+    const row = matches[0];
+    const start = Number(String(row.PastReading ?? "").replace(/\s/g, "").replace(",", "."));
+    const end = Number(String(row.Reading ?? "").replace(/\s/g, "").replace(",", "."));
+    if (!isPresent(row.PastReading) || !isPresent(row.Reading) || !Number.isFinite(start) || !Number.isFinite(end)) continue;
+    charge.StartReading = start;
+    charge.EndReading = end;
+  }
+}
+
 function isPresent(value: unknown): boolean {
   return value !== null && value !== undefined && String(value).trim() !== "";
 }

@@ -3,7 +3,7 @@ import { requireAdmin } from "@/lib/require-admin";
 import { get1CUserData, getMeteringDeviceHistory, formatDateFor1C, getPaymentHistory } from "@/lib/1c-api";
 import { parseMeterHistory, type MeterHistoryItem } from "@/lib/parse-meter-history";
 import { directAccountCredentialsFromToken } from "@/lib/direct-account-route";
-import { buildMeterReadingsFromDevices, hasValidMeterReadings } from "@/lib/receipt-meter-mapping";
+import { buildMeterReadingsFromDevices, hasValidMeterReadings, syncChargesWithMeterReadings } from "@/lib/receipt-meter-mapping";
 
 export const dynamic = 'force-dynamic';
 
@@ -349,6 +349,8 @@ export async function GET(request: NextRequest) {
         });
       });
     }
+
+    syncChargesWithMeterReadings(chargesRaw, meterReadings, canonicalServiceKey);
 
     const res = {
       success: true,

@@ -3,7 +3,7 @@ import { getAppSession } from "@/lib/get-app-session";
 import { prisma } from "@/lib/prisma";
 import { get1CUserData, getMeteringDeviceHistory, formatDateFor1C, getPaymentHistory } from "@/lib/1c-api";
 import { parseMeterHistory, type MeterHistoryItem } from "@/lib/parse-meter-history";
-import { buildMeterReadingsFromDevices, hasValidMeterReadings } from "@/lib/receipt-meter-mapping";
+import { buildMeterReadingsFromDevices, hasValidMeterReadings, syncChargesWithMeterReadings } from "@/lib/receipt-meter-mapping";
 import { decryptPassword1c } from "@/lib/password1c-crypto";
 import { isAdminUser } from "@/lib/require-admin";
 
@@ -343,6 +343,8 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    syncChargesWithMeterReadings(chargesRaw, meterReadings, canonicalServiceKey);
+
     const res: { success: boolean; data: object; _debug?: typeof debug } = {
       success: true,
       data: {
@@ -374,5 +376,4 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
 

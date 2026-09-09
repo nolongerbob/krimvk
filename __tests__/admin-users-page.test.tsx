@@ -1,3 +1,7 @@
+jest.mock('@/lib/admin-users-index', () => ({
+  getBalanceSnapshot: () => ({ balances: new Map([['outside-page', { totalDebt: 50, unpaidBillsCount: 1 }]]), finishedAt: 1 }),
+  directoryStats: () => ({ total: 51, admins: 1, debtors: 1, overpaid: 0, noDebt: 49, pending: 0, unknown: 1 }),
+}));
 jest.mock("@/lib/get-session", () => ({ getSession: jest.fn() }));
 jest.mock("next/navigation", () => ({ redirect: jest.fn(() => { throw new Error("redirect"); }) }));
 jest.mock("@/lib/prisma", () => ({
@@ -26,7 +30,7 @@ describe("admin users server pagination", () => {
       skip: 25, take: 25, orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       select: expect.objectContaining({ id: true, email: true }),
     }));
-    const args = (prisma.user.findMany as jest.Mock).mock.calls[0][0];
+    const args = (prisma.user.findMany as jest.Mock).mock.calls.find(([args]) => args.take)[0];
     expect(args.select.password).toBeUndefined();
     expect(args.select.userAccounts.select.password1c).toBeUndefined();
   });
@@ -50,6 +54,19 @@ describe("admin users server pagination", () => {
   it("clamps pages to the final non-empty page", async () => {
     await Page({ searchParams: Promise.resolve({ page: "999" }) });
     expect(prisma.user.findMany).toHaveBeenCalledWith(expect.objectContaining({ skip: 50 }));
+  });
+
+  it('filters administrators before count and pagination', async () => {
+    await Page({ searchParams: Promise.resolve({ filter: 'admins', q: 'test' }) });
+    const where = (prisma.user.count as jest.Mock).mock.calls[0][0].where;
+    expect(where.AND[1]).toEqual({ role: 'ADMIN' });
+    expect(prisma.user.findMany).toHaveBeenCalledWith(expect.objectContaining({ where, take: 25 }));
+  });
+
+  it('finds debtors outside the current page and excludes unknown balances', async () => {
+    (prisma.user.findMany as jest.Mock).mockResolvedValueOnce([{ id: 'outside-page', role: 'USER' }, { id: 'unknown', role: 'USER' }]).mockResolvedValue([]);
+    await Page({ searchParams: Promise.resolve({ filter: 'debtors' }) });
+    expect(prisma.user.count).toHaveBeenCalledWith({ where: { AND: [{}, { id: { in: ['outside-page'] } }] } });
   });
 
   it("blocks regular users before reading the user directory", async () => {

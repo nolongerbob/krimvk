@@ -5,6 +5,8 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { adminContainerClass } from "@/components/admin/admin-styles";
 import { UsersClient } from "./UsersClient";
 import type { Prisma } from "@prisma/client";
+import { userFilter, userSearch, classifyBalance } from '@/lib/admin-users-filters';
+import { directoryStats, getBalanceSnapshot } from '@/lib/admin-users-index';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,6 +21,7 @@ function mapUser(user: Awaited<ReturnType<typeof fetchUsers>>[number]) {
     address: user.address,
     role: user.role,
     createdAt: user.createdAt.toISOString(),
+    applicationsCount: user._count.applications,
     userAccounts: user.userAccounts.map((acc) => ({
       id: acc.id,
       accountNumber: acc.accountNumber,
@@ -66,6 +69,7 @@ async function fetchUsers(page: number, where: Prisma.UserWhereInput) {
       select: {
         id: true, email: true, name: true, phone: true, address: true,
         role: true, createdAt: true,
+        _count: { select: { applications: true } },
         userAccounts: {
           select: {
             id: true, accountNumber: true, address: true, name: true,
@@ -114,7 +118,7 @@ async function fetchUsers(page: number, where: Prisma.UserWhereInput) {
 export default async function AdminUsersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; q?: string }>;
+  searchParams: Promise<{ page?: string; q?: string; filter?: string }>;
 }) {
   const session = await getSession();
 
@@ -135,13 +139,20 @@ export default async function AdminUsersPage({
 
   const params = await searchParams;
   const query = (typeof params.q === "string" ? params.q : "").trim().slice(0, 200);
-  const contains = { contains: query, mode: "insensitive" as const };
-  const where: Prisma.UserWhereInput = query ? {
-    OR: [
-      { name: contains }, { email: contains }, { phone: contains }, { address: contains },
-      { userAccounts: { some: { OR: [{ accountNumber: contains }, { address: contains }] } } },
-    ],
-  } : {};
+  const filter = userFilter(params.filter);
+  const search = userSearch(query);
+  const directory = await withRetry(() => prisma.user.findMany({ where: search, select: { id: true, role: true } }));
+  const snapshot = getBalanceSnapshot();
+  const snapshotVersion = snapshot.finishedAt;
+  const stats = directoryStats(directory);
+  const financial = filter !== 'all' && filter !== 'admins';
+  const ids = financial ? directory.filter(u => {
+    const balance = snapshot.balances.get(u.id);
+    return balance && classifyBalance(balance) === filter;
+  }).map(u => u.id) : [];
+  const where: Prisma.UserWhereInput = filter === 'all' ? search : {
+    AND: [search, filter === 'admins' ? { role: 'ADMIN' } : { id: { in: ids } }],
+  };
   const totalUsers = await withRetry(() => prisma.user.count({ where }));
   const totalPages = Math.max(1, Math.ceil(totalUsers / USERS_PAGE_SIZE));
   const requestedPage = Number(params.page || 1);
@@ -162,7 +173,10 @@ export default async function AdminUsersPage({
         pageSize={USERS_PAGE_SIZE}
         totalUsers={totalUsers}
         query={query}
-        key={`${page}:${query}`}
+        filter={filter}
+        initialStats={stats}
+        snapshotVersion={snapshotVersion}
+        key={`${page}:${query}:${filter}:${snapshotVersion}`}
       />
     </div>
   );

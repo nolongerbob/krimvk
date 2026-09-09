@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
 import { adminFieldClass, adminOutlineBtnClass, adminSectionLabelClass } from "@/components/admin/admin-styles";
 import { cn } from "@/lib/utils";
@@ -25,6 +25,8 @@ import {
 } from "lucide-react";
 import { UserDetailsDialog } from "@/components/admin/UserDetailsDialog";
 import Link from "next/link";
+import { useRouter } from 'next/navigation';
+import type { UserFilter, DirectoryStats, BalanceResult } from '@/lib/admin-users-filters';
 
 interface UserAccount {
   id: string;
@@ -76,6 +78,7 @@ interface User {
   createdAt: string;
   userAccounts: UserAccount[];
   applications: Application[];
+  applicationsCount?: number;
   bills: Bill[];
   totalDebt: number;
   unpaidBillsCount: number;
@@ -90,6 +93,9 @@ interface UsersClientProps {
   pageSize?: number;
   totalUsers: number;
   query: string;
+  filter?: UserFilter;
+  initialStats?: DirectoryStats;
+  snapshotVersion?: number;
 }
 
 const statusConfig = {
@@ -115,7 +121,7 @@ const statusConfig = {
   },
 };
 
-type DebtFilter = "all" | "debtors" | "overpaid" | "no-debt" | "admins";
+
 
 export function UsersClient({
   users: initialUsers,
@@ -124,75 +130,64 @@ export function UsersClient({
   pageSize = 25,
   totalUsers,
   query,
+  filter = "all",
+  initialStats,
+  snapshotVersion = 0,
 }: UsersClientProps) {
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [searchQuery, setSearchQuery] = useState(query);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [debtFilter, setDebtFilter] = useState<DebtFilter>("all");
+  const router = useRouter();
+  const debtFilter = filter;
+  const [stats, setStats] = useState<DirectoryStats>(initialStats ?? { total: totalUsers, admins: 0, debtors: 0, overpaid: 0, noDebt: 0, unknown: 0, pending: totalUsers });
+  const [indexError, setIndexError] = useState(false);
+  const [balanceUpdatedAt, setBalanceUpdatedAt] = useState(snapshotVersion);
+  const setDebtFilter = (value: UserFilter) => router.push('/admin/users?' + new URLSearchParams({ filter: value, ...(query ? { q: query } : {}) }));
 
   useEffect(() => {
     setUsers(initialUsers);
   }, [initialUsers]);
 
   useEffect(() => {
+    if (initialStats) setStats(initialStats);
+  }, [initialStats]);
+
+  useEffect(() => {
     let cancelled = false;
+    let timer: ReturnType<typeof setTimeout>;
     const controller = new AbortController();
-    let nextIndex = 0;
-    let nextRequestAt = 0;
-
-    const loadBalances = async () => {
-      while (nextIndex < initialUsers.length) {
-        const user = initialUsers[nextIndex++];
+    const poll = async () => {
+      try {
+        const response = await fetch('/api/admin/users/balance-index?' + new URLSearchParams({ q: query }), { signal: controller.signal, cache: 'no-store' });
+        if (!response.ok) throw new Error('Balances unavailable');
+        const data = await response.json() as { stats: DirectoryStats; running: boolean; error: boolean; finishedAt: number; balances: Record<string, BalanceResult | null> };
         if (cancelled) return;
-        try {
-          // Respect the admin API limit (60 requests/minute) even for fast replies.
-          const requestAt = Math.max(Date.now(), nextRequestAt);
-          nextRequestAt = requestAt + 1100;
-          await new Promise((resolve) => setTimeout(resolve, requestAt - Date.now()));
-          if (cancelled) return;
-          const response = await fetch(`/api/admin/users/${user.id}/balance`, { signal: controller.signal });
-          if (!response.ok) throw new Error("Balance unavailable");
-          const data = (await response.json()) as {
-            totalDebt: number;
-            unpaidBillsCount: number;
-          };
-          if (!Number.isFinite(data.totalDebt) || !Number.isFinite(data.unpaidBillsCount)) throw new Error("Invalid balance");
-          if (cancelled) return;
-          setUsers((prev) =>
-            prev.map((u) =>
-              u.id === user.id
-                ? {
-                    ...u,
-                    totalDebt: data.totalDebt,
-                    unpaidBillsCount: data.unpaidBillsCount,
-                    balanceLoading: false,
-                    balanceError: false,
-                  }
-                : u
-            )
-          );
-        } catch {
-          if (!cancelled) {
-            setUsers((prev) =>
-              prev.map((u) =>
-                u.id === user.id ? { ...u, balanceLoading: false, balanceError: true } : u
-              )
-            );
-          }
+        setStats(data.stats);
+        setIndexError(data.error);
+        if (!data.running) setBalanceUpdatedAt(data.finishedAt);
+        setUsers(previous => previous.map(user => {
+          const balance = data.balances[user.id];
+          if (balance === undefined) return user;
+          return balance === null ? { ...user, balanceLoading: false, balanceError: true }
+            : { ...user, ...balance, balanceLoading: false, balanceError: false };
+        }));
+        if (!data.running) {
+          if (filter !== 'all' && filter !== 'admins' && data.finishedAt !== snapshotVersion) router.refresh();
+          return;
         }
+      } catch {
+        if (cancelled) return;
+        setIndexError(true);
       }
+      timer = setTimeout(poll, 3000);
     };
-
-    void loadBalances();
-    void loadBalances();
-    return () => {
-      cancelled = true;
-      controller.abort();
-    };
-  }, [initialUsers]);
+    void poll();
+    return () => { cancelled = true; controller.abort(); clearTimeout(timer); };
+  }, [query, filter, snapshotVersion, router]);
 
   // Обработчик изменения роли
   const handleRoleChange = (userId: string, newRole: string) => {
+    router.refresh();
     // Обновляем список пользователей
     setUsers((prevUsers) =>
       prevUsers.map((u) =>
@@ -205,37 +200,10 @@ export function UsersClient({
     }
   };
 
-  // Фильтрация пользователей по поисковому запросу и фильтру должников
-  const filteredUsers = useMemo(() => {
-    let filtered = users;
-
-    // Фильтр по балансу (положительный = долг, отрицательный = переплата) и по ролям
-    if (debtFilter === "debtors") {
-      filtered = filtered.filter((user) => !user.balanceLoading && !user.balanceError && user.totalDebt > 0.01);
-    } else if (debtFilter === "overpaid") {
-      filtered = filtered.filter((user) => !user.balanceLoading && !user.balanceError && user.totalDebt < -0.01);
-    } else if (debtFilter === "no-debt") {
-      filtered = filtered.filter((user) => !user.balanceLoading && !user.balanceError && Math.abs(user.totalDebt) <= 0.01);
-    } else if (debtFilter === "admins") {
-      filtered = filtered.filter((user) => user.role === "ADMIN");
-    }
-
-    return filtered;
-  }, [users, debtFilter]);
-
-  // Статистика для фильтров
-  const stats = useMemo(() => {
-    const total = users.length;
-    const loaded = users.filter((u) => !u.balanceLoading && !u.balanceError);
-    const debtors = loaded.filter((u) => u.totalDebt > 0.01).length;
-    const overpaid = loaded.filter((u) => u.totalDebt < -0.01).length;
-    const admins = users.filter((u) => u.role === "ADMIN").length;
-    const noDebt = loaded.length - debtors - overpaid;
-    return { total, debtors, overpaid, noDebt, admins };
-  }, [users]);
+  const filteredUsers = users;
 
   const totalPages = Math.max(1, Math.ceil(totalUsers / pageSize));
-  const pageHref = (value: number) => `/admin/users?${new URLSearchParams({ page: String(value), ...(query ? { q: query } : {}) })}`;
+  const pageHref = (value: number) => `/admin/users?${new URLSearchParams({ page: String(value), filter, ...(query ? { q: query } : {}) })}`;
   const pagination = (
     <nav aria-label="Страницы пользователей" className="my-4 flex flex-wrap items-center justify-center gap-3">
       {page > 1 && <Button asChild variant="outline"><Link prefetch={false} href={pageHref(page - 1)}>← Назад</Link></Button>}
@@ -249,7 +217,7 @@ export function UsersClient({
       <div className="mb-6 space-y-4">
         {/* Фильтры по балансу */}
         <div className="flex flex-wrap items-center gap-2">
-          <span className={adminSectionLabelClass}>На текущей странице</span>
+          <span className={adminSectionLabelClass}>По всей базе с учётом поиска</span>
           <Button
             variant={debtFilter === "all" ? "default" : "outline"}
             size="sm"
@@ -264,7 +232,7 @@ export function UsersClient({
             className={debtFilter === "debtors" ? "bg-red-600 hover:bg-red-700" : ""}
           >
             <DollarSign className="h-4 w-4 mr-1" />
-            Должники ({stats.debtors})
+            Должники ({stats.pending ? '…' : stats.debtors})
           </Button>
           <Button
             variant={debtFilter === "overpaid" ? "default" : "outline"}
@@ -273,7 +241,7 @@ export function UsersClient({
             className={debtFilter === "overpaid" ? "bg-blue-600 hover:bg-blue-700" : ""}
           >
             <DollarSign className="h-4 w-4 mr-1" />
-            Переплата ({stats.overpaid})
+            Переплата ({stats.pending ? '…' : stats.overpaid})
           </Button>
           <Button
             variant={debtFilter === "no-debt" ? "default" : "outline"}
@@ -282,7 +250,7 @@ export function UsersClient({
             className={debtFilter === "no-debt" ? "bg-green-600 hover:bg-green-700" : ""}
           >
             <CheckCircle className="h-4 w-4 mr-1" />
-            Без долгов ({stats.noDebt})
+            Без долгов ({stats.pending ? '…' : stats.noDebt})
           </Button>
           <div className="h-4 w-px bg-gray-300 mx-1" />
           <Button
@@ -296,8 +264,13 @@ export function UsersClient({
           </Button>
         </div>
 
+        {stats.pending > 0 && <p role="status" className="text-sm text-slate-600">Проверяем балансы 1С: {stats.total - stats.pending} из {stats.total}. Финансовая выборка пока неполная.</p>}
+        {stats.unknown > 0 && <p className="text-sm text-amber-700">Баланс недоступен у {stats.unknown} пользователей. Они не включены в финансовые фильтры.</p>}
+        {balanceUpdatedAt > 0 && stats.pending === 0 && <p className="text-xs text-slate-500">Балансы проверены: {new Date(balanceUpdatedAt).toLocaleString('ru-RU')}. Результат сохраняется на 5 минут.</p>}
+        {indexError && <p role="alert">Не удалось обновить балансы. Счётчики финансовых фильтров могут быть неполными. Повторная попытка — после обновления страницы.</p>}
         {/* Поиск */}
         <form action="/admin/users" method="get" className="flex flex-wrap gap-2">
+        <input type="hidden" name="filter" value={filter} />
         <div className="relative min-w-0 flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input
@@ -437,7 +410,7 @@ export function UsersClient({
                       <div className="flex items-center gap-2">
                         <FileText className="h-4 w-4 text-slate-500" />
                         <span className="text-slate-600">
-                          Заявок: {user.applications.length}
+                          Заявок: {user.applicationsCount ?? user.applications.length}
                         </span>
                       </div>
                     </div>
@@ -465,7 +438,9 @@ export function UsersClient({
           <DashboardCardBody className="py-12 text-center">
             <Users className="mx-auto mb-4 h-12 w-12 text-slate-300" />
             <p className="text-slate-500">
-              {searchQuery
+              {stats.pending > 0 && filter !== 'all' && filter !== 'admins'
+                ? "Ожидаем проверку балансов — результаты появятся автоматически"
+                : searchQuery
                 ? "Пользователи не найдены"
                 : "Нет пользователей"}
             </p>

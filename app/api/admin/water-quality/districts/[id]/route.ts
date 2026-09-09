@@ -9,8 +9,9 @@ export const dynamic = 'force-dynamic';
 // PUT - обновить район
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params: routeParams }: { params: Promise<{ id: string }> }
 ) {
+  const params = await routeParams;
   try {
     const auth = await requireAdmin();
     if (!auth.ok) return auth.response;
@@ -40,8 +41,9 @@ export async function PUT(
 // DELETE - удалить район
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params: routeParams }: { params: Promise<{ id: string }> }
 ) {
+  const params = await routeParams;
   try {
     const auth = await requireAdmin();
     if (!auth.ok) return auth.response;

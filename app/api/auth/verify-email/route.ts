@@ -1,3 +1,4 @@
+import type { NextRequest } from "next/server";
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { getAppSession } from "@/lib/get-app-session";
@@ -11,7 +12,7 @@ function clearPendingVerify(res: NextResponse) {
   res.cookies.set('pending_verify', '', { maxAge: 0, path: '/' });
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const token = searchParams.get('token');
 

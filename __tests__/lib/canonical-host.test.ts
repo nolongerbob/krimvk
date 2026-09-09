@@ -12,7 +12,7 @@ describe('canonicalHostRedirect', () => {
   });
 
   it('redirects IP host to canonical domain in production', () => {
-    process.env.NODE_ENV = 'production';
+    process.env = { ...process.env, NODE_ENV: 'production' };
     process.env.CANONICAL_HOST = 'krimvk.ru';
 
     const req = new NextRequest('http://89.111.165.160/dashboard', {
@@ -24,7 +24,7 @@ describe('canonicalHostRedirect', () => {
   });
 
   it('does not redirect when already on canonical host', () => {
-    process.env.NODE_ENV = 'production';
+    process.env = { ...process.env, NODE_ENV: 'production' };
     process.env.CANONICAL_HOST = 'krimvk.ru';
 
     const req = new NextRequest('https://krimvk.ru/', {
@@ -34,7 +34,7 @@ describe('canonicalHostRedirect', () => {
   });
 
   it('redirects www to apex when canonical is apex', () => {
-    process.env.NODE_ENV = 'production';
+    process.env = { ...process.env, NODE_ENV: 'production' };
     process.env.CANONICAL_HOST = 'krimvk.ru';
 
     const req = new NextRequest('https://www.krimvk.ru/login?x=1', {

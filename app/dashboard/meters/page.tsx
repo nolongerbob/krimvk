@@ -28,6 +28,8 @@ interface Meter {
 
 interface MeterHistoryItem {
   NumberOfDevice?: string;
+  DeviceId?: string;
+  Id?: string;
   DeviceNumber?: string;
   Number?: string;
   Reading?: number;
@@ -363,6 +365,11 @@ export default function MetersPage() {
       for (const meterId of meterIds) {
         const value = parseFloat(readings[meterId]);
         const meter = meters.find((m) => m.id === meterId);
+        if (!meter) {
+          setError("Счётчик не найден. Обновите страницу и повторите ввод показаний.");
+          setSubmitting(false);
+          return;
+        }
         
         if (isNaN(value) || value < 0) {
           setError("Показания должны быть положительным числом");

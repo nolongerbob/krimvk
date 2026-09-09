@@ -4,10 +4,10 @@ import { servePublicS3File } from '@/lib/serve-public-s3-file';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-type RouteContext = { params: { path: string[] } };
+type RouteContext = { params: Promise<{ path: string[] }> };
 
 export async function GET(_request: NextRequest, context: RouteContext) {
-  const segments = context.params.path || [];
+  const segments = (await context.params).path || [];
   if (!segments.length) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }

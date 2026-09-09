@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
 import { adminFieldClass, adminOutlineBtnClass, adminSectionLabelClass } from "@/components/admin/admin-styles";
 import { cn } from "@/lib/utils";
@@ -79,11 +79,17 @@ interface User {
   bills: Bill[];
   totalDebt: number;
   unpaidBillsCount: number;
+  balanceLoading?: boolean;
+  balanceError?: boolean;
 }
 
 interface UsersClientProps {
   users: User[];
   currentUserId?: string;
+  page?: number;
+  pageSize?: number;
+  totalUsers: number;
+  query: string;
 }
 
 const statusConfig = {
@@ -111,11 +117,79 @@ const statusConfig = {
 
 type DebtFilter = "all" | "debtors" | "overpaid" | "no-debt" | "admins";
 
-export function UsersClient({ users: initialUsers, currentUserId }: UsersClientProps) {
+export function UsersClient({
+  users: initialUsers,
+  currentUserId,
+  page = 1,
+  pageSize = 25,
+  totalUsers,
+  query,
+}: UsersClientProps) {
   const [users, setUsers] = useState<User[]>(initialUsers);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(query);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [debtFilter, setDebtFilter] = useState<DebtFilter>("all");
+
+  useEffect(() => {
+    setUsers(initialUsers);
+  }, [initialUsers]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const controller = new AbortController();
+    let nextIndex = 0;
+    let nextRequestAt = 0;
+
+    const loadBalances = async () => {
+      while (nextIndex < initialUsers.length) {
+        const user = initialUsers[nextIndex++];
+        if (cancelled) return;
+        try {
+          // Respect the admin API limit (60 requests/minute) even for fast replies.
+          const requestAt = Math.max(Date.now(), nextRequestAt);
+          nextRequestAt = requestAt + 1100;
+          await new Promise((resolve) => setTimeout(resolve, requestAt - Date.now()));
+          if (cancelled) return;
+          const response = await fetch(`/api/admin/users/${user.id}/balance`, { signal: controller.signal });
+          if (!response.ok) throw new Error("Balance unavailable");
+          const data = (await response.json()) as {
+            totalDebt: number;
+            unpaidBillsCount: number;
+          };
+          if (!Number.isFinite(data.totalDebt) || !Number.isFinite(data.unpaidBillsCount)) throw new Error("Invalid balance");
+          if (cancelled) return;
+          setUsers((prev) =>
+            prev.map((u) =>
+              u.id === user.id
+                ? {
+                    ...u,
+                    totalDebt: data.totalDebt,
+                    unpaidBillsCount: data.unpaidBillsCount,
+                    balanceLoading: false,
+                    balanceError: false,
+                  }
+                : u
+            )
+          );
+        } catch {
+          if (!cancelled) {
+            setUsers((prev) =>
+              prev.map((u) =>
+                u.id === user.id ? { ...u, balanceLoading: false, balanceError: true } : u
+              )
+            );
+          }
+        }
+      }
+    };
+
+    void loadBalances();
+    void loadBalances();
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [initialUsers]);
 
   // Обработчик изменения роли
   const handleRoleChange = (userId: string, newRole: string) => {
@@ -137,52 +211,45 @@ export function UsersClient({ users: initialUsers, currentUserId }: UsersClientP
 
     // Фильтр по балансу (положительный = долг, отрицательный = переплата) и по ролям
     if (debtFilter === "debtors") {
-      filtered = filtered.filter((user) => user.totalDebt > 0.01);
+      filtered = filtered.filter((user) => !user.balanceLoading && !user.balanceError && user.totalDebt > 0.01);
     } else if (debtFilter === "overpaid") {
-      filtered = filtered.filter((user) => user.totalDebt < -0.01);
+      filtered = filtered.filter((user) => !user.balanceLoading && !user.balanceError && user.totalDebt < -0.01);
     } else if (debtFilter === "no-debt") {
-      filtered = filtered.filter((user) => Math.abs(user.totalDebt) <= 0.01);
+      filtered = filtered.filter((user) => !user.balanceLoading && !user.balanceError && Math.abs(user.totalDebt) <= 0.01);
     } else if (debtFilter === "admins") {
       filtered = filtered.filter((user) => user.role === "ADMIN");
     }
 
-    // Фильтр по поисковому запросу
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter((user) => {
-        // Поиск по имени
-        if (user.name?.toLowerCase().includes(query)) return true;
-        // Поиск по email
-        if (user.email.toLowerCase().includes(query)) return true;
-        // Поиск по телефону
-        if (user.phone?.toLowerCase().includes(query)) return true;
-        // Поиск по адресу
-        if (user.address?.toLowerCase().includes(query)) return true;
-        // Поиск по номеру лицевого счета
-        if (user.userAccounts.some((acc) => acc.accountNumber.includes(query))) return true;
-        return false;
-      });
-    }
-
     return filtered;
-  }, [users, searchQuery, debtFilter]);
+  }, [users, debtFilter]);
 
   // Статистика для фильтров
   const stats = useMemo(() => {
     const total = users.length;
-    const debtors = users.filter((u) => u.totalDebt > 0.01).length;
-    const overpaid = users.filter((u) => u.totalDebt < -0.01).length;
+    const loaded = users.filter((u) => !u.balanceLoading && !u.balanceError);
+    const debtors = loaded.filter((u) => u.totalDebt > 0.01).length;
+    const overpaid = loaded.filter((u) => u.totalDebt < -0.01).length;
     const admins = users.filter((u) => u.role === "ADMIN").length;
-    const noDebt = total - debtors - overpaid;
+    const noDebt = loaded.length - debtors - overpaid;
     return { total, debtors, overpaid, noDebt, admins };
   }, [users]);
+
+  const totalPages = Math.max(1, Math.ceil(totalUsers / pageSize));
+  const pageHref = (value: number) => `/admin/users?${new URLSearchParams({ page: String(value), ...(query ? { q: query } : {}) })}`;
+  const pagination = (
+    <nav aria-label="Страницы пользователей" className="my-4 flex flex-wrap items-center justify-center gap-3">
+      {page > 1 && <Button asChild variant="outline"><Link prefetch={false} href={pageHref(page - 1)}>← Назад</Link></Button>}
+      <span className="text-sm text-slate-600">Страница {page} из {totalPages} · по {pageSize} пользователей</span>
+      {page < totalPages && <Button asChild variant="outline"><Link prefetch={false} href={pageHref(page + 1)}>Далее →</Link></Button>}
+    </nav>
+  );
 
   return (
     <>
       <div className="mb-6 space-y-4">
         {/* Фильтры по балансу */}
         <div className="flex flex-wrap items-center gap-2">
-          <span className={adminSectionLabelClass}>Фильтр</span>
+          <span className={adminSectionLabelClass}>На текущей странице</span>
           <Button
             variant={debtFilter === "all" ? "default" : "outline"}
             size="sm"
@@ -230,18 +297,24 @@ export function UsersClient({ users: initialUsers, currentUserId }: UsersClientP
         </div>
 
         {/* Поиск */}
-        <div className="relative">
+        <form action="/admin/users" method="get" className="flex flex-wrap gap-2">
+        <div className="relative min-w-0 flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input
             type="text"
+            name="q"
+            maxLength={200}
             placeholder="Поиск по имени, email, телефону, адресу или номеру лицевого счета..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className={cn("pl-10", adminFieldClass)}
           />
         </div>
+        <Button type="submit">Найти</Button>
+        {query && <Button asChild variant="outline"><Link href="/admin/users" prefetch={false}>Сбросить</Link></Button>}
+        </form>
         <p className="text-sm text-slate-500">
-          Найдено пользователей: {filteredUsers.length}
+          Найдено в базе: {totalUsers}. Показано на странице: {filteredUsers.length}.
           {debtFilter !== "all" && (
             <span className="ml-2">
               ({debtFilter === "debtors" 
@@ -256,6 +329,7 @@ export function UsersClient({ users: initialUsers, currentUserId }: UsersClientP
         </p>
       </div>
 
+      {pagination}
       <div className="space-y-4">
         {filteredUsers.map((user) => (
           <DashboardCard key={user.id}>
@@ -335,14 +409,20 @@ export function UsersClient({ users: initialUsers, currentUserId }: UsersClientP
                         />
                         <span
                           className={`font-medium ${
-                            user.totalDebt > 0.01
+                            user.balanceLoading
+                              ? "text-slate-500"
+                              : user.totalDebt > 0.01
                               ? "text-red-600"
                               : user.totalDebt < -0.01
                               ? "text-blue-600"
                               : "text-green-600"
                           }`}
                         >
-                          {user.totalDebt > 0.01
+                          {user.balanceLoading
+                            ? "Баланс: загрузка…"
+                            : user.balanceError
+                            ? "Баланс недоступен"
+                            : user.totalDebt > 0.01
                             ? `Долг: ${user.totalDebt.toFixed(2)} ₽`
                             : user.totalDebt < -0.01
                             ? `Переплата: ${Math.abs(user.totalDebt).toFixed(2)} ₽`
@@ -393,9 +473,11 @@ export function UsersClient({ users: initialUsers, currentUserId }: UsersClientP
         </DashboardCard>
       )}
 
+      {pagination}
+
       {selectedUser && (
         <UserDetailsDialog
-          user={selectedUser}
+          user={users.find((u) => u.id === selectedUser.id) ?? selectedUser}
           open={!!selectedUser}
           onOpenChange={(open) => !open && setSelectedUser(null)}
           onRoleChange={handleRoleChange}
@@ -405,4 +487,3 @@ export function UsersClient({ users: initialUsers, currentUserId }: UsersClientP
     </>
   );
 }
-

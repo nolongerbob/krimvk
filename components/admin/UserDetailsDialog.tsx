@@ -102,6 +102,8 @@ interface UserDetails {
   bills: Bill[];
   totalDebt: number;
   unpaidBillsCount: number;
+  balanceLoading?: boolean;
+  balanceError?: boolean;
 }
 
 interface UserDetailsDialogProps {
@@ -370,7 +372,7 @@ export function UserDetailsDialog({ user, open, onOpenChange, onRoleChange, curr
                       ? "text-blue-600" 
                       : "text-green-600"
                   }`}>
-                    {user.totalDebt > 0.01 
+                    {user.balanceLoading ? "Загрузка…" : user.balanceError ? "Баланс недоступен" : user.totalDebt > 0.01
                       ? `Долг: ${user.totalDebt.toFixed(2)} ₽` 
                       : user.totalDebt < -0.01 
                       ? `Переплата: ${Math.abs(user.totalDebt).toFixed(2)} ₽`
@@ -607,7 +609,7 @@ export function UserDetailsDialog({ user, open, onOpenChange, onRoleChange, curr
                     ? "text-blue-600" 
                     : "text-green-600"
                 }`}>
-                  {user.totalDebt > 0.01 
+                  {user.balanceLoading ? "Загрузка…" : user.balanceError ? "Баланс недоступен" : user.totalDebt > 0.01
                     ? `Долг: ${user.totalDebt.toFixed(2)} ₽` 
                     : user.totalDebt < -0.01 
                     ? `Переплата: ${Math.abs(user.totalDebt).toFixed(2)} ₽`
@@ -668,4 +670,3 @@ export function UserDetailsDialog({ user, open, onOpenChange, onRoleChange, curr
     </Dialog>
   );
 }
-

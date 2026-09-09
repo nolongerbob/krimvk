@@ -14,7 +14,7 @@ const directAccountSessions = new Map<string, DirectAccountSession>();
 
 function cleanupExpiredSessions(): void {
   const now = Date.now();
-  for (const [token, session] of directAccountSessions.entries()) {
+  for (const [token, session] of Array.from(directAccountSessions.entries())) {
     if (session.expiresAt <= now) {
       directAccountSessions.delete(token);
     }

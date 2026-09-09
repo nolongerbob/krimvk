@@ -4,8 +4,9 @@ import { prisma } from "@/lib/prisma";
 // GET - получить страницу по slug (публичный доступ)
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params: routeParams }: { params: Promise<{ slug: string }> }
 ) {
+  const params = await routeParams;
   try {
     const page = await prisma.page.findUnique({
       where: { 

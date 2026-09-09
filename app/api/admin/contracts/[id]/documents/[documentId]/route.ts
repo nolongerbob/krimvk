@@ -7,8 +7,9 @@ import { prisma } from "@/lib/prisma";
 // DELETE - удалить документ
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; documentId: string } }
+  { params: routeParams }: { params: Promise<{ id: string; documentId: string }> }
 ) {
+  const params = await routeParams;
   try {
     const auth = await requireAdmin();
     if (!auth.ok) return auth.response;

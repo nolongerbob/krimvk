@@ -7,8 +7,9 @@ import { prisma } from "@/lib/prisma";
 // GET - получить все файлы поста
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params: routeParams }: { params: Promise<{ id: string }> }
 ) {
+  const params = await routeParams;
   try {
     const auth = await requireAdmin();
     if (!auth.ok) return auth.response;
@@ -31,8 +32,9 @@ export async function GET(
 // DELETE - удалить файл
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params: routeParams }: { params: Promise<{ id: string }> }
 ) {
+  const params = await routeParams;
   try {
     const auth = await requireAdmin();
     if (!auth.ok) return auth.response;

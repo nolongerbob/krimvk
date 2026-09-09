@@ -1,3 +1,4 @@
+import type { NextRequest } from "next/server";
 import { NextResponse } from 'next/server';
 import { getAppSession } from "@/lib/get-app-session";
 import { prisma } from '@/lib/prisma';
@@ -7,7 +8,7 @@ import crypto from 'crypto';
 // Force dynamic rendering - this route uses headers() via getServerSession
 export const dynamic = 'force-dynamic';
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     console.log('[resend-verification] Начало запроса');
     const session = await getAppSession(request);

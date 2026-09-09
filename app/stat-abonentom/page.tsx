@@ -541,10 +541,7 @@ export default function BecomeSubscriberPage() {
       }
 
       // Генерируем документ
-      const docxBlob = doc.getZip().generate({
-        type: "blob",
-        mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      });
+      const docxBlob = doc.toBlob();
 
       // Сохраняем файл
       const fileName = personType === "legal"

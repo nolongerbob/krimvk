@@ -95,14 +95,14 @@ interface ReceiptData {
     PastDate?: string;
     PastReading?: number | string;
     Reading: number | string;
-    Volume?: number;
+    Volume?: number | string;
   }>;
   meterReadings?: Array<{
     Service: string;
     PastDate?: string;
     PastReading?: number | string;
     Reading: number | string;
-    Volume?: number;
+    Volume?: number | string;
   }>;
 }
 
@@ -181,7 +181,6 @@ export default function ReceiptViewPage() {
         removeContainer: true,
         imageTimeout: 0,
         // Высокое качество для четкости
-        quality: 1.0, // Максимальное качество
         // Дополнительные настройки для четкости
         allowTaint: false,
         foreignObjectRendering: false,

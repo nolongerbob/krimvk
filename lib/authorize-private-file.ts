@@ -74,13 +74,17 @@ export async function canAccessPrivateS3Key(
     const doc = await prisma.contractDocument.findFirst({
       where: {
         fileUrl: { contains: key },
-        contract: {
-          OR: [{ userId }, { application: { userId } }],
-        },
       },
+      select: { contract: { select: { userId: true, applicationId: true } } },
+    });
+    if (!doc) return false;
+    if (doc.contract.userId === userId) return true;
+    if (!doc.contract.applicationId) return false;
+    const application = await prisma.application.findFirst({
+      where: { id: doc.contract.applicationId, userId },
       select: { id: true },
     });
-    return Boolean(doc);
+    return Boolean(application);
   }
 
   return false;

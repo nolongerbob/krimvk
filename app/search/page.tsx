@@ -12,7 +12,7 @@ import {
 } from "@/components/site/site-styles";
 
 interface SearchPageProps {
-  searchParams: Promise<{ q?: string }> | { q?: string };
+  searchParams: Promise<{ q?: string }>;
 }
 
 export default async function SearchPage(props: SearchPageProps) {
@@ -247,4 +247,3 @@ export default async function SearchPage(props: SearchPageProps) {
     </div>
   );
 }
-

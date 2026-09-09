@@ -85,8 +85,8 @@ function parseTechnicalConditions(description: string | null) {
     if (commentIndex !== -1) {
       jsonPart = description.substring(0, commentIndex).trim();
     }
-    const parsed = JSON.parse(jsonPart) as { type?: string };
-    if (parsed.type === "technical_conditions") {
+    const parsed: Record<string, unknown> = JSON.parse(jsonPart);
+    if (parsed && typeof parsed === "object" && parsed.type === "technical_conditions") {
       return { isTechnicalConditions: true, techData: parsed };
     }
   } catch {

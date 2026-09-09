@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-config";
 import { requireAdmin } from "@/lib/require-admin";
 import { prisma, withRetry } from "@/lib/prisma";
 import { storage } from "@/lib/storage";
@@ -10,15 +8,16 @@ export const maxDuration = 30;
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const auth = await requireAdmin();
     if (!auth.ok) return auth.response;
+    const { id } = await params;
 
     const application = await withRetry(() =>
       prisma.application.findUnique({
-        where: { id: params.id },
+        where: { id },
       })
     );
 
@@ -48,7 +47,7 @@ export async function POST(
 
     const timestamp = Date.now();
     const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-    const fileName = `${params.id}_${timestamp}_${originalName}`;
+    const fileName = `${id}_${timestamp}_${originalName}`;
     const filePath = `applications/${fileName}`;
 
     // Загружаем файл через абстракцию хранилища
@@ -60,12 +59,12 @@ export async function POST(
     const applicationFile = await withRetry(() =>
       prisma.applicationFile.create({
         data: {
-          applicationId: params.id,
+          applicationId: id,
           fileName: file.name,
           filePath: result.url, // Сохраняем URL файла
           fileSize: file.size,
           mimeType: file.type || "application/octet-stream",
-          uploadedBy: session.user.id,
+          uploadedBy: auth.admin.userId,
         },
       })
     );
@@ -89,4 +88,3 @@ export async function POST(
     );
   }
 }
-

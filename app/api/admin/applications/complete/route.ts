@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-config";
 import { requireAdmin } from "@/lib/require-admin";
 import { prisma, withRetry } from "@/lib/prisma";
 import { storage } from "@/lib/storage";
@@ -89,7 +87,7 @@ export async function POST(request: NextRequest) {
                 filePath: result.url, // Сохраняем URL файла
                 fileSize: file.size,
                 mimeType: file.type || "application/octet-stream",
-                uploadedBy: session.user.id,
+                uploadedBy: auth.admin.userId,
               },
             })
           );
@@ -171,4 +169,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

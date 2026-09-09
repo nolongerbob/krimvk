@@ -11,7 +11,8 @@ const mockUseSession = useSession as jest.MockedFunction<typeof useSession>
 describe('QuickActionCard', () => {
   beforeEach(() => {
     mockUseSession.mockReturnValue({
-      data: { user: { id: '1', email: 'test@test.com' } },
+      data: { user: { id: '1', email: 'test@test.com' }, expires: '2099-01-01' },
+      update: jest.fn(),
       status: 'authenticated',
     })
   })
@@ -69,6 +70,7 @@ describe('QuickActionCard', () => {
     mockUseSession.mockReturnValue({
       data: null,
       status: 'unauthenticated',
+      update: jest.fn(),
     })
 
     render(

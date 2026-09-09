@@ -4,8 +4,9 @@ import { prisma, withRetry } from "@/lib/prisma";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params: routeParams }: { params: Promise<{ id: string }> }
 ) {
+  const params = await routeParams;
   try {
     const auth = await requireAdmin();
     if (!auth.ok) return auth.response;
@@ -29,8 +30,9 @@ export async function GET(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params: routeParams }: { params: Promise<{ id: string }> }
 ) {
+  const params = await routeParams;
   try {
     const auth = await requireAdmin();
     if (!auth.ok) return auth.response;

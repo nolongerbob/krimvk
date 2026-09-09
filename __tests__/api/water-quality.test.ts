@@ -44,7 +44,7 @@ describe('/api/water-quality', () => {
     prisma.waterQualityDistrict.findMany.mockResolvedValue(mockData)
 
     const request = new NextRequest('http://localhost:3000/api/water-quality')
-    const response = await GET(request)
+    const response = await GET()
     const data = await response.json()
 
     expect(response.status).toBe(200)
@@ -60,7 +60,7 @@ describe('/api/water-quality', () => {
     )
 
     const request = new NextRequest('http://localhost:3000/api/water-quality')
-    const response = await GET(request)
+    const response = await GET()
     const data = await response.json()
 
     expect(response.status).toBe(500)

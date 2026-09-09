@@ -8,8 +8,9 @@ import { generateSlug } from "@/lib/slug";
 // GET - получить пост по ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params: routeParams }: { params: Promise<{ id: string }> }
 ) {
+  const params = await routeParams;
   try {
     const auth = await requireAdmin();
     if (!auth.ok) return auth.response;
@@ -42,8 +43,9 @@ export async function GET(
 // PUT - обновить пост
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params: routeParams }: { params: Promise<{ id: string }> }
 ) {
+  const params = await routeParams;
   try {
     const auth = await requireAdmin();
     if (!auth.ok) return auth.response;
@@ -110,8 +112,9 @@ export async function PUT(
 // DELETE - удалить пост
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params: routeParams }: { params: Promise<{ id: string }> }
 ) {
+  const params = await routeParams;
   try {
     const auth = await requireAdmin();
     if (!auth.ok) return auth.response;

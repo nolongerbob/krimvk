@@ -145,7 +145,7 @@ export default function DashboardTour() {
           Хотите пройти короткий обзор главных разделов: баланс, счётчики, счета и быстрые действия?
         </p>
         <div className="flex gap-2">
-          <Button onClick={runTour} size="sm" className="flex-1">
+          <Button onClick={() => void runTour()} size="sm" className="flex-1">
             Пройти тур
           </Button>
           <Button onClick={decline} variant="ghost" size="sm">

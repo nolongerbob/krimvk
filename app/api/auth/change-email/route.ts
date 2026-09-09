@@ -1,3 +1,4 @@
+import type { NextRequest } from "next/server";
 import { NextResponse } from 'next/server';
 import { getAppSession } from "@/lib/get-app-session";
 import { prisma } from '@/lib/prisma';
@@ -13,7 +14,7 @@ const changeEmailSchema = z.object({
   newEmail: z.string().email('Некорректный email'),
 });
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const session = await getAppSession(request);
     

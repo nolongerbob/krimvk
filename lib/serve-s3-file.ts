@@ -30,7 +30,7 @@ export async function serveS3File(
     const fileName = key.split('/').pop() || 'file';
     const contentType = result.ContentType || 'application/octet-stream';
 
-    return new NextResponse(bytes, {
+    return new NextResponse(new Uint8Array(bytes), {
       status: 200,
       headers: {
         'Content-Type': contentType,

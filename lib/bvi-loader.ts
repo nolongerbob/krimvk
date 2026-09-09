@@ -10,7 +10,10 @@ declare global {
         panelFixed?: boolean;
         panelHide?: boolean;
         reload?: boolean;
-      }) => void;
+      }) => {
+        _init?: () => void;
+        _config?: Record<string, string | number | boolean>;
+      };
     };
     __bviInstance?: InstanceType<NonNullable<typeof window.isvek>['Bvi']> & {
       _init?: () => void;

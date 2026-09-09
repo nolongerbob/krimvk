@@ -7,7 +7,7 @@ import { serveS3File } from '@/lib/serve-s3-file';
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-type RouteContext = { params: { path: string[] } };
+type RouteContext = { params: Promise<{ path: string[] }> };
 
 export async function GET(request: NextRequest, context: RouteContext) {
   const session = await getAppSession(request);
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
   }
 
-  const segments = context.params.path || [];
+  const segments = (await context.params).path || [];
   if (!segments.length) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }

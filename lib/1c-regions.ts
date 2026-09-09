@@ -15,15 +15,7 @@ export const ONE_C_REGION_OPTIONS = [
 
 export const ALLOWED_1C_REGIONS = ONE_C_REGION_OPTIONS.map(
   (o) => o.value
-) as readonly [
-  'krasn',
-  'saki',
-  'pervom',
-  'nignegorsk',
-  'ruch',
-  'sovetskoe',
-  'chernomorsk',
-];
+);
 
 export type OneCRegion = (typeof ALLOWED_1C_REGIONS)[number];
 

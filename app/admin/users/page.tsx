@@ -4,115 +4,72 @@ import { prisma, withRetry } from "@/lib/prisma";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { adminContainerClass } from "@/components/admin/admin-styles";
 import { UsersClient } from "./UsersClient";
-import { get1CUserData } from "@/lib/1c-api";
-import { tryDecryptPassword1c } from "@/lib/password1c-crypto";
+import type { Prisma } from "@prisma/client";
 
 export const dynamic = 'force-dynamic';
 
-// Функция для парсинга суммы
-const parseAmount = (value: string | number): number => {
-  if (typeof value === "number") return value;
-  if (!value) return 0;
-  const normalized = String(value).replace(/,/g, ".").replace(/\s/g, "");
-  const parsed = parseFloat(normalized);
-  return isNaN(parsed) ? 0 : parsed;
-};
+const USERS_PAGE_SIZE = 25;
 
-// Функция для расчета баланса пользователя (положительное = долг, отрицательное = переплата)
-async function calculateUserBalance(userId: string): Promise<{ totalDebt: number; unpaidBillsCount: number }> {
-  try {
-    // Получаем лицевые счета пользователя
-    const userAccounts = await withRetry(() =>
-      prisma.userAccount.findMany({
-        where: {
-          userId: userId,
-          isActive: true,
-        },
-      })
-    );
-
-    let totalBalance = 0; // Положительное = долг, отрицательное = переплата
-    let unpaidBillsCount = 0;
-
-    // Для каждого лицевого счета получаем данные из 1С
-    for (const account of userAccounts) {
-      try {
-        if (!account.region) {
-          continue;
-        }
-
-        const responseData = await get1CUserData(
-          account.accountNumber,
-          tryDecryptPassword1c(account.password1c) || "",
-          account.region
-        );
-
-        if (responseData) {
-          // Получаем баланс из CommonDuty (положительное = долг, отрицательное = переплата)
-          const commonDutyAmount = parseAmount(responseData.CommonDuty || responseData.commonDuty || "0");
-          totalBalance += commonDutyAmount;
-
-          // Считаем неоплаченные только если есть реальный долг
-          if (commonDutyAmount > 0.01) {
-            unpaidBillsCount += 1;
-          }
-        }
-      } catch (error) {
-        console.error(`Error fetching 1C data for account ${account.accountNumber}:`, error);
-        // Продолжаем обработку других счетов
-      }
-    }
-
-    // Также считаем неоплаченные счета из локальной БД
-    const localBills = await withRetry(() =>
-      prisma.bill.findMany({
-        where: {
-          userId: userId,
-          status: {
-            in: ["UNPAID", "OVERDUE"],
-          },
-        },
-      })
-    );
-
-    const localDebt = localBills.reduce((sum, bill) => sum + bill.amount, 0);
-    // Добавляем локальный долг только если он больше уже посчитанного
-    if (localDebt > 0 && localDebt > totalBalance) {
-      totalBalance = localDebt;
-    }
-    unpaidBillsCount = Math.max(unpaidBillsCount, localBills.length);
-
-    return { totalDebt: totalBalance, unpaidBillsCount };
-  } catch (error) {
-    console.error("Error calculating user balance:", error);
-    return { totalDebt: 0, unpaidBillsCount: 0 };
-  }
+function mapUser(user: Awaited<ReturnType<typeof fetchUsers>>[number]) {
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    phone: user.phone,
+    address: user.address,
+    role: user.role,
+    createdAt: user.createdAt.toISOString(),
+    userAccounts: user.userAccounts.map((acc) => ({
+      id: acc.id,
+      accountNumber: acc.accountNumber,
+      address: acc.address,
+      name: acc.name,
+      phone: acc.phone,
+      isActive: acc.isActive,
+      region: acc.region,
+      createdAt: acc.createdAt.toISOString(),
+      meters: acc.meters.map((meter) => ({
+        id: meter.id,
+        serialNumber: meter.serialNumber,
+        type: meter.type,
+        lastReading: meter.lastReading,
+        address: meter.address,
+      })),
+    })),
+    applications: user.applications.map((app) => ({
+      id: app.id,
+      status: app.status,
+      description: app.description,
+      service: app.service,
+      createdAt: app.createdAt.toISOString(),
+      address: app.address,
+      phone: app.phone,
+    })),
+    bills: user.bills.map((bill) => ({
+      id: bill.id,
+      amount: bill.amount,
+      period: bill.period,
+      status: bill.status,
+      dueDate: bill.dueDate.toISOString(),
+      paidAt: bill.paidAt?.toISOString() || null,
+    })),
+    totalDebt: 0,
+    unpaidBillsCount: 0,
+    balanceLoading: true,
+  };
 }
 
-export default async function AdminUsersPage() {
-  const session = await getSession();
-  
-  if (!session) {
-    redirect("/login?callbackUrl=/admin/users");
-  }
-
-  const user = await withRetry(() =>
-    prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { role: true },
-    })
-  );
-
-  if (user?.role !== "ADMIN") {
-    redirect("/dashboard");
-  }
-
-  // Загружаем всех пользователей с полными данными
-  const rawUsers = await withRetry(() =>
+async function fetchUsers(page: number, where: Prisma.UserWhereInput) {
+  return withRetry(() =>
     prisma.user.findMany({
-      include: {
+      where,
+      select: {
+        id: true, email: true, name: true, phone: true, address: true,
+        role: true, createdAt: true,
         userAccounts: {
-          include: {
+          select: {
+            id: true, accountNumber: true, address: true, name: true,
+            phone: true, isActive: true, region: true, createdAt: true,
             meters: {
               select: {
                 id: true,
@@ -140,82 +97,73 @@ export default async function AdminUsersPage() {
             },
           },
           orderBy: { createdAt: "desc" },
+          take: 10,
         },
         bills: {
           orderBy: { createdAt: "desc" },
-          take: 50, // Ограничиваем количество для производительности
+          take: 20,
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      take: USERS_PAGE_SIZE,
+      skip: Math.max(0, page - 1) * USERS_PAGE_SIZE,
+    })
+  );
+}
+
+export default async function AdminUsersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string; q?: string }>;
+}) {
+  const session = await getSession();
+
+  if (!session) {
+    redirect("/login?callbackUrl=/admin/users");
+  }
+
+  const user = await withRetry(() =>
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true },
     })
   );
 
-  // Рассчитываем баланс для каждого пользователя
-  const usersWithDebt = await Promise.all(
-    rawUsers.map(async (user) => {
-      const { totalDebt, unpaidBillsCount } = await calculateUserBalance(user.id);
-      
-      return {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        phone: user.phone,
-        address: user.address,
-        role: user.role,
-        createdAt: user.createdAt.toISOString(),
-        userAccounts: user.userAccounts.map((acc) => ({
-          id: acc.id,
-          accountNumber: acc.accountNumber,
-          address: acc.address,
-          name: acc.name,
-          phone: acc.phone,
-          isActive: acc.isActive,
-          region: acc.region,
-          createdAt: acc.createdAt.toISOString(),
-          meters: acc.meters.map((meter) => ({
-            id: meter.id,
-            serialNumber: meter.serialNumber,
-            type: meter.type,
-            lastReading: meter.lastReading,
-            address: meter.address,
-          })),
-        })),
-        applications: user.applications.map((app) => ({
-          id: app.id,
-          status: app.status,
-          description: app.description,
-          service: app.service,
-          createdAt: app.createdAt.toISOString(),
-          address: app.address,
-          phone: app.phone,
-        })),
-        bills: user.bills.map((bill) => ({
-          id: bill.id,
-          amount: bill.amount,
-          period: bill.period,
-          status: bill.status,
-          dueDate: bill.dueDate.toISOString(),
-          paidAt: bill.paidAt?.toISOString() || null,
-        })),
-        totalDebt,
-        unpaidBillsCount,
-      };
-    })
-  );
+  if (user?.role !== "ADMIN") {
+    redirect("/dashboard");
+  }
+
+  const params = await searchParams;
+  const query = (typeof params.q === "string" ? params.q : "").trim().slice(0, 200);
+  const contains = { contains: query, mode: "insensitive" as const };
+  const where: Prisma.UserWhereInput = query ? {
+    OR: [
+      { name: contains }, { email: contains }, { phone: contains }, { address: contains },
+      { userAccounts: { some: { OR: [{ accountNumber: contains }, { address: contains }] } } },
+    ],
+  } : {};
+  const totalUsers = await withRetry(() => prisma.user.count({ where }));
+  const totalPages = Math.max(1, Math.ceil(totalUsers / USERS_PAGE_SIZE));
+  const requestedPage = Number(params.page || 1);
+  const page = Number.isSafeInteger(requestedPage) ? Math.min(totalPages, Math.max(1, requestedPage)) : 1;
+  const rawUsers = await fetchUsers(page, where);
+  const users = rawUsers.map(mapUser);
 
   return (
     <div className={adminContainerClass}>
       <AdminPageHeader
         title="Управление пользователями"
-        description="База пользователей со всеми данными, лицевыми счетами и задолженностью"
+        description="База пользователей (баланс 1С подгружается отдельно для ускорения страницы)"
       />
-      <UsersClient users={usersWithDebt} currentUserId={session.user.id} />
+      <UsersClient
+        users={users}
+        currentUserId={session.user.id}
+        page={page}
+        pageSize={USERS_PAGE_SIZE}
+        totalUsers={totalUsers}
+        query={query}
+        key={`${page}:${query}`}
+      />
     </div>
   );
 }
-
-
-
-
-
-

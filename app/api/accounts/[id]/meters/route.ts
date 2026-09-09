@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 // GET - получить счетчики по лицевому счету
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> | { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getAppSession(request);
@@ -15,7 +15,7 @@ export async function GET(
     }
 
     // Обрабатываем params как Promise или обычный объект (для совместимости)
-    const resolvedParams = params instanceof Promise ? await params : params;
+    const resolvedParams = await params;
 
     const account = await prisma.userAccount.findFirst({
       where: {
@@ -65,4 +65,3 @@ export async function GET(
     );
   }
 }
-

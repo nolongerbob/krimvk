@@ -284,8 +284,8 @@ export async function GET(request: NextRequest) {
         meterReadings.push({
           Service: String(service),
           PastDate: pastDateStr,
-          PastReading: pastReading,
-          Reading: reading,
+          PastReading: typeof pastReading === "string" || typeof pastReading === "number" ? pastReading : undefined,
+          Reading: typeof reading === "string" || typeof reading === "number" ? reading : "",
           Volume: volume,
         });
       });
@@ -336,8 +336,8 @@ export async function GET(request: NextRequest) {
         const vol = c.Volume != null && c.Volume !== "" ? parseFloat(String(c.Volume).replace(",", ".").replace(/\s/g, "")) : NaN;
         meterReadings.push({
           Service: service,
-          PastReading: startVal,
-          Reading: endVal ?? startVal,
+          PastReading: typeof startVal === "string" || typeof startVal === "number" ? startVal : undefined,
+          Reading: String(endVal ?? startVal ?? ""),
           Volume: !isNaN(vol) ? vol : undefined,
         });
       });
@@ -376,4 +376,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

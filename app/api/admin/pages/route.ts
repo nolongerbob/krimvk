@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
         order: order || 0,
         isActive: isActive !== undefined ? isActive : true,
         isCategory: isCategory || false,
-        authorId: session.user.id,
+        authorId: auth.admin.userId,
       },
       include: {
         author: { select: { name: true, email: true } },
@@ -91,4 +91,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

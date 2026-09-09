@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
         title,
         slug,
         content,
-        authorId: session.user.id,
+        authorId: auth.admin.userId,
       },
       include: {
         page: { select: { id: true, title: true, slug: true } },
@@ -107,4 +107,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

@@ -3,14 +3,6 @@
 import Script from "next/script";
 import { useEffect } from "react";
 
-declare global {
-  interface Window {
-    isvek?: {
-      Bvi: new (options?: any) => void;
-    };
-  }
-}
-
 export function BVIScript() {
   useEffect(() => {
     // Проверяем, загружен ли скрипт после монтирования компонента
@@ -65,4 +57,3 @@ export function BVIScript() {
     />
   );
 }
-

@@ -15,15 +15,30 @@ interface EmergencyMapProps {
   markers: Marker[];
 }
 
+// Leaflet is loaded by a script; describe the browser API used here.
+interface MapBounds { isValid(): boolean; }
+interface BrowserMap {
+  remove(): void;
+  fitBounds(bounds: MapBounds, options: { padding: [number, number]; maxZoom: number }): void;
+}
+interface MapLayer { addTo(map: BrowserMap): MapLayer; }
+interface BrowserLeaflet {
+  map(element: HTMLElement, options: { center: [number, number]; zoom: number; scrollWheelZoom: boolean; attributionControl: boolean }): BrowserMap;
+  tileLayer(url: string, options: { maxZoom: number }): MapLayer;
+  divIcon(options: { className: string; html: string; iconSize: [number, number]; iconAnchor: [number, number]; popupAnchor: [number, number] }): object;
+  marker(coords: [number, number], options: { icon: object }): { bindPopup(html: string, options: { maxWidth: number; className: string }): MapLayer };
+  featureGroup(): MapLayer & { addLayer(layer: MapLayer): void; getBounds(): MapBounds };
+}
+
 declare global {
   interface Window {
-    L: typeof import("leaflet");
+    L?: BrowserLeaflet;
   }
 }
 
 export default function EmergencyMap({ markers }: EmergencyMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<any>(null);
+  const mapInstanceRef = useRef<BrowserMap | null>(null);
   const [isReady, setIsReady] = useState(false);
 
   // Проверяем, загружен ли Leaflet
@@ -151,7 +166,7 @@ export default function EmergencyMap({ markers }: EmergencyMapProps) {
 }
 
 // Функция добавления маркеров
-function addMarkers(L: any, map: any, markers: Marker[]) {
+function addMarkers(L: BrowserLeaflet, map: BrowserMap, markers: Marker[]) {
   // Красная иконка для аварий
   const emergencyIcon = L.divIcon({
     className: "emergency-marker",

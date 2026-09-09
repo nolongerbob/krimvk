@@ -70,11 +70,12 @@ const nextConfig = {
   // Отключаем проверку типов во время сборки для Vercel (если есть проблемы)
   typescript: {
     // Next 15: async route/page params — миграция по файлам на develop
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   // Лимиты тела запроса: Next 15.5+ буферизует body в middleware/proxy (по умолчанию ~10MB).
   // Без этого multipart обрезается → "Failed to parse body as FormData".
   experimental: {
+    cpus: 2,
     // proxyClientMaxBodySize — только Next.js 16+; в 15.5 достаточно middleware + serverActions
     middlewareClientMaxBodySize: '200mb',
     serverActions: {
@@ -142,4 +143,3 @@ const nextConfig = {
 }
 
 module.exports = nextConfig
-

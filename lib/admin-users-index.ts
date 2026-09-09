@@ -10,8 +10,8 @@ const TTL = 5 * 60_000;
 
 export function getBalanceSnapshot() { return state; }
 
-export function ensureBalanceSnapshot() {
-  if (state.running || Date.now() - state.finishedAt < TTL) return;
+export function ensureBalanceSnapshot(force = false) {
+  if (state.running || (!force && !state.error && Date.now() - state.finishedAt < TTL)) return;
   state.running = true;
   state.error = false;
   state.startedAt = Date.now();

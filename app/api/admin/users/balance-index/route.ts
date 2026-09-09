@@ -12,6 +12,8 @@ export async function GET(request: NextRequest) {
   const query = (request.nextUrl.searchParams.get('q') || '').trim().slice(0, 200);
   const users = await withRetry(() => prisma.user.findMany({ where: userSearch(query), select: { id: true, role: true } }));
   const snapshot = getBalanceSnapshot();
+  // A registration after the snapshot must not leave the UI waiting indefinitely.
+  if (!snapshot.running && !snapshot.error && directoryStats(users).pending > 0) ensureBalanceSnapshot(true);
   return NextResponse.json({
     stats: directoryStats(users), running: snapshot.running, error: snapshot.error,
     finishedAt: snapshot.finishedAt,

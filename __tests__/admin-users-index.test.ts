@@ -51,3 +51,19 @@ it('rejects unauthenticated requests before querying the directory or starting 1
   expect(prisma.user.findMany).not.toHaveBeenCalled();
   expect(loadAdminUserBalance).not.toHaveBeenCalled();
 });
+
+it('refreshes a fresh snapshot when a newly registered user is missing', async () => {
+  Object.assign(getBalanceSnapshot(), { finishedAt: Date.now(), startedAt: 0 });
+  getBalanceSnapshot().balances.set('old', { totalDebt: 0, unpaidBillsCount: 0 });
+  (requireAdmin as jest.Mock).mockResolvedValue({ ok: true, admin: { userId: 'admin' } });
+  (prisma.user.findMany as jest.Mock)
+    .mockResolvedValueOnce([{ id: 'old', role: 'USER' }, { id: 'new', role: 'USER' }])
+    .mockResolvedValueOnce([{ id: 'old', userAccounts: [], bills: [] }, { id: 'new', userAccounts: [], bills: [] }]);
+  (loadAdminUserBalance as jest.Mock).mockResolvedValue({ totalDebt: 0, unpaidBillsCount: 0 });
+  const response = await GET(new NextRequest('https://example.test/api/admin/users/balance-index'));
+  expect(response.status).toBe(200);
+  expect(response.headers.get('cache-control')).toBe('private, no-store');
+  expect(getBalanceSnapshot().startedAt).toBeGreaterThan(0);
+  for (let i = 0; i < 10 && getBalanceSnapshot().running; i++) await new Promise(resolve => setImmediate(resolve));
+  expect(getBalanceSnapshot().balances.has('new')).toBe(true);
+});

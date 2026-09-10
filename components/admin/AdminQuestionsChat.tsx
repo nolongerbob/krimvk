@@ -87,17 +87,17 @@ function formatMessageTime(date: Date | string) {
   });
 }
 
-function AdminMessageBubble({ message }: { message: Message }) {
+export function AdminMessageBubble({ message }: { message: Message }) {
   const isAdmin = message.isFromAdmin;
 
   return (
-    <div className={cn("flex w-full", isAdmin ? "justify-start" : "justify-end")}>
+    <div className={cn("flex w-full", isAdmin ? "justify-end" : "justify-start")}>
       <div
         className={cn(
           "relative h-auto max-w-[min(85%,28rem)] shrink-0 rounded-none shadow-none",
           isAdmin
-            ? "border border-slate-200 bg-white px-5 py-4 text-slate-900"
-            : "border border-blue-700 bg-blue-600 px-4 py-3 text-white"
+            ? "border border-blue-700 bg-blue-600 px-4 py-3 text-white"
+            : "border border-slate-200 bg-white px-5 py-4 text-slate-900"
         )}
       >
         {message.imageUrl ? (
@@ -118,7 +118,7 @@ function AdminMessageBubble({ message }: { message: Message }) {
         <p
           className={cn(
             "mt-1.5 text-right text-xs",
-            isAdmin ? "text-slate-400" : "text-blue-100"
+            isAdmin ? "text-blue-100" : "text-slate-400"
           )}
         >
           {formatMessageTime(message.createdAt)}

@@ -1,3 +1,4 @@
+import { adminUserSelect, mapAdminUser } from '@/lib/admin-user-details';
 import { getSession } from "@/lib/get-session";
 import { redirect } from "next/navigation";
 import { prisma, withRetry } from "@/lib/prisma";
@@ -12,102 +13,11 @@ export const dynamic = 'force-dynamic';
 
 const USERS_PAGE_SIZE = 25;
 
-function mapUser(user: Awaited<ReturnType<typeof fetchUsers>>[number]) {
-  return {
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    phone: user.phone,
-    address: user.address,
-    role: user.role,
-    createdAt: user.createdAt.toISOString(),
-    applicationsCount: user._count.applications,
-    userAccounts: user.userAccounts.map((acc) => ({
-      id: acc.id,
-      accountNumber: acc.accountNumber,
-      address: acc.address,
-      name: acc.name,
-      phone: acc.phone,
-      isActive: acc.isActive,
-      region: acc.region,
-      createdAt: acc.createdAt.toISOString(),
-      meters: acc.meters.map((meter) => ({
-        id: meter.id,
-        serialNumber: meter.serialNumber,
-        type: meter.type,
-        lastReading: meter.lastReading,
-        address: meter.address,
-      })),
-    })),
-    applications: user.applications.map((app) => ({
-      id: app.id,
-      status: app.status,
-      description: app.description,
-      service: app.service,
-      createdAt: app.createdAt.toISOString(),
-      address: app.address,
-      phone: app.phone,
-    })),
-    bills: user.bills.map((bill) => ({
-      id: bill.id,
-      amount: bill.amount,
-      period: bill.period,
-      status: bill.status,
-      dueDate: bill.dueDate.toISOString(),
-      paidAt: bill.paidAt?.toISOString() || null,
-    })),
-    totalDebt: 0,
-    unpaidBillsCount: 0,
-    balanceLoading: true,
-  };
-}
-
 async function fetchUsers(page: number, where: Prisma.UserWhereInput) {
   return withRetry(() =>
     prisma.user.findMany({
       where,
-      select: {
-        id: true, email: true, name: true, phone: true, address: true,
-        role: true, createdAt: true,
-        _count: { select: { applications: true } },
-        userAccounts: {
-          select: {
-            id: true, accountNumber: true, address: true, name: true,
-            phone: true, isActive: true, region: true, createdAt: true,
-            meters: {
-              select: {
-                id: true,
-                serialNumber: true,
-                type: true,
-                lastReading: true,
-                address: true,
-              },
-            },
-          },
-        },
-        applications: {
-          select: {
-            id: true,
-            status: true,
-            description: true,
-            address: true,
-            phone: true,
-            createdAt: true,
-            service: {
-              select: {
-                title: true,
-                category: true,
-              },
-            },
-          },
-          orderBy: { createdAt: "desc" },
-          take: 10,
-        },
-        bills: {
-          orderBy: { createdAt: "desc" },
-          take: 20,
-        },
-      },
+      select: adminUserSelect,
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       take: USERS_PAGE_SIZE,
       skip: Math.max(0, page - 1) * USERS_PAGE_SIZE,
@@ -158,7 +68,7 @@ export default async function AdminUsersPage({
   const requestedPage = Number(params.page || 1);
   const page = Number.isSafeInteger(requestedPage) ? Math.min(totalPages, Math.max(1, requestedPage)) : 1;
   const rawUsers = await fetchUsers(page, where);
-  const users = rawUsers.map(mapUser);
+  const users = rawUsers.map(mapAdminUser);
 
   return (
     <div className={adminContainerClass}>

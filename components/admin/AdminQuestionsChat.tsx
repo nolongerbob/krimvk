@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { ChatUserProfile } from './ChatUserProfile';
 
 interface Message {
   id: string;
@@ -52,6 +53,7 @@ interface Question {
   createdAt: Date;
   updatedAt: Date;
   user: {
+    id: string;
     name: string | null;
     email: string;
   };
@@ -72,6 +74,7 @@ interface KBArticle {
 
 interface AdminQuestionsChatProps {
   questions: Question[];
+  currentUserId: string;
 }
 
 function formatMessageTime(date: Date | string) {
@@ -125,7 +128,8 @@ function AdminMessageBubble({ message }: { message: Message }) {
   );
 }
 
-export function AdminQuestionsChat({ questions: initialQuestions }: AdminQuestionsChatProps) {
+export function AdminQuestionsChat({ questions: initialQuestions, currentUserId }: AdminQuestionsChatProps) {
+  const [profileUserId, setProfileUserId] = useState<string | null>(null);
   const [questions, setQuestions] = useState(initialQuestions);
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(
     initialQuestions.find((q) => q.status !== "COMPLETED")?.id || initialQuestions[0]?.id || null
@@ -618,7 +622,8 @@ export function AdminQuestionsChat({ questions: initialQuestions }: AdminQuestio
   const completedQuestions = questions.filter((q) => q.status === "COMPLETED");
 
   return (
-    <div ref={containerRef} className="flex h-[calc(100vh-80px)]">
+    <div ref={containerRef} className="flex min-h-0 flex-1">
+      {profileUserId && <ChatUserProfile key={profileUserId} userId={profileUserId} currentUserId={currentUserId} onClose={() => setProfileUserId(null)} />}
       {/* ЛЕВАЯ КОЛОНКА - Список чатов */}
       <DashboardCard
         style={{ width: isLeftCollapsed ? 48 : leftWidth }}
@@ -721,9 +726,11 @@ export function AdminQuestionsChat({ questions: initialQuestions }: AdminQuestio
             {/* Шапка чата */}
             <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 p-4">
               <div>
-                <p className="font-semibold text-slate-900">
+                <button type="button" onClick={() => setProfileUserId(selectedQuestion.user.id)}
+                  aria-label={`Открыть профиль: ${selectedQuestion.user.name || selectedQuestion.user.email}`}
+                  className="text-left font-semibold text-blue-700 underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2">
                   {selectedQuestion.user.name || selectedQuestion.user.email}
-                </p>
+                </button>
                 <p className="text-xs text-slate-500">
                   Создан: {new Date(selectedQuestion.createdAt).toLocaleString("ru-RU")}
                 </p>

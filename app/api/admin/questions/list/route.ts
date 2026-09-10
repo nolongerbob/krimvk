@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     // Загружаем все диалоги
     const questions = await prisma.question.findMany({
       include: {
-        user: { select: { name: true, email: true } },
+        user: { select: { id: true, name: true, email: true } },
         messages: {
           orderBy: { createdAt: "asc" },
         },
@@ -34,4 +34,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

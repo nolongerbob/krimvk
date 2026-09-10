@@ -89,7 +89,7 @@ interface Bill {
   paidAt: string | null;
 }
 
-interface UserDetails {
+export interface UserDetails {
   id: string;
   email: string;
   name: string | null;

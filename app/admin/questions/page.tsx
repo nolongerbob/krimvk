@@ -22,7 +22,7 @@ export default async function AdminQuestionsPage() {
 
   const questions = await prisma.question.findMany({
     include: {
-      user: { select: { name: true, email: true } },
+      user: { select: { id: true, name: true, email: true } },
       messages: {
         orderBy: { createdAt: "asc" },
       },
@@ -34,14 +34,14 @@ export default async function AdminQuestionsPage() {
   });
 
   return (
-    <div className="flex min-h-[calc(100dvh-4rem)] flex-col px-4 py-6">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden px-4 py-6">
       <AdminPageHeader
         title="Вопросы и ответы"
         description={`${questions.length} диалогов`}
-        className="mb-4"
+        className="mb-4 shrink-0"
       />
       <div className="flex min-h-0 flex-1 flex-col">
-        <AdminQuestionsChat questions={questions} />
+        <AdminQuestionsChat questions={questions} currentUserId={session.user.id} />
       </div>
     </div>
   );

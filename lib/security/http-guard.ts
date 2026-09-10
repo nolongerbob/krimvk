@@ -28,7 +28,17 @@ const SCANNER_PATHS =
 
 export function blockScannerPaths(req: NextRequest): NextResponse | null {
   const path = req.nextUrl.pathname;
-  if (SCANNER_PATHS.test(path) || path.includes('..')) {
+  // Dots inside an authenticated attachment filename are not traversal.
+  let safePrivateFile = false;
+  if (path.startsWith('/api/files/private/')) {
+    try {
+      const key = decodeURIComponent(path.slice('/api/files/private/'.length));
+      safePrivateFile = /^(applications|messages|meters|contracts)\//.test(key)
+        && !/[\\%\u0000-\u001f\u007f]/.test(key)
+        && key.split('/').every((part) => part !== '' && part !== '.' && part !== '..');
+    } catch { /* Malformed encoding is not exempt from the scanner guard. */ }
+  }
+  if (SCANNER_PATHS.test(path) || (path.includes('..') && !safePrivateFile)) {
     return new NextResponse(null, { status: 404 });
   }
   return null;

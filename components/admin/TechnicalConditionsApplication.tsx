@@ -10,6 +10,7 @@ import { ApplicationActions } from "@/components/admin/ApplicationActions";
 import { ApplicationDetails } from "@/components/admin/ApplicationDetails";
 import Link from "next/link";
 import { fileHrefForStoredUrl } from "@/lib/file-url";
+import { applicationFileLabel } from "@/lib/application-file-name";
 
 interface TechnicalConditionsData {
   type: string;
@@ -456,7 +457,7 @@ export function TechnicalConditionsApplication({ application }: TechnicalConditi
                         rel="noopener noreferrer"
                         className="block text-sm text-blue-600 hover:underline"
                       >
-                        {file.split("/").pop()}
+                        {applicationFileLabel(file, index)}
                       </a>
                     ))}
                   </div>
@@ -488,4 +489,3 @@ export function TechnicalConditionsApplication({ application }: TechnicalConditi
     </DashboardCard>
   );
 }
-

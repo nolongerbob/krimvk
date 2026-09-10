@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { User, Phone, MapPin, FileText, Building, Settings, Calendar, Download, Eye, AlertCircle } from "lucide-react";
 import { ApplicationForm } from "@/app/stat-abonentom/application-form";
 import { fileHrefForStoredUrl } from "@/lib/file-url";
+import { applicationFileLabel } from "@/lib/application-file-name";
 import { ApplicationAdminFiles } from "@/components/admin/application-details/ApplicationAdminFiles";
 import { ApplicationStatusBadge } from "@/components/admin/application-details/ApplicationStatusBadge";
 import { cn } from "@/lib/utils";
@@ -634,10 +635,7 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
                       fileUrl = fileHrefForStoredUrl(fileUrl);
                       
                       // Извлекаем имя файла
-                      let fileName = file;
-                      if (file.includes('/')) {
-                        fileName = file.split("/").pop() || `Документ ${index + 1}`;
-                      }
+                      const fileName = applicationFileLabel(file, index);
                       
                       return (
                       <a
@@ -705,4 +703,3 @@ export function ApplicationDetails({ application }: ApplicationDetailsProps) {
     </Dialog>
   );
 }
-

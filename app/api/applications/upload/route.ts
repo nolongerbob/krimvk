@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { randomUUID } from "node:crypto";
+import { cleanApplicationFileName } from "@/lib/application-file-name";
 import { getAppSession } from "@/lib/get-app-session";
 import { storage } from "@/lib/storage";
 import { validateUserApplicationFile } from "@/lib/security/validate-upload";
@@ -35,10 +37,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Генерируем уникальное имя файла
-    const timestamp = Date.now();
-    const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-    const fileName = `user_${session.user.id}_${timestamp}_${originalName}`;
-    const filePath = `applications/user/${fileName}`;
+    const fileName = cleanApplicationFileName(file.name);
+    const filePath = `applications/user/${session.user.id}/${randomUUID().replaceAll("-", "")}/${fileName}`;
 
     // Загружаем файл через абстракцию хранилища
     const result = await storage.upload(file, filePath, {
@@ -60,5 +60,4 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
 

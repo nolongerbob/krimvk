@@ -15,5 +15,8 @@ export function safeContentDisposition(
   const safeName =
     fileName.replace(/[^\w.\-() ]+/g, '_').slice(0, 200) || 'file';
   const mode = INLINE_SAFE_MIME.has(mime) ? 'inline' : 'attachment';
-  return `${mode}; filename="${safeName.replace(/"/g, '')}"`;
+  const unicodeName = fileName.replace(/[\u0000-\u001f\u007f/\\]/g, '').slice(0, 200) || 'file';
+  const encoded = encodeURIComponent(unicodeName).replace(/['()*]/g, (c) =>
+    '%' + c.charCodeAt(0).toString(16).toUpperCase());
+  return `${mode}; filename="${safeName.replace(/"/g, '')}"; filename*=UTF-8''${encoded}`;
 }

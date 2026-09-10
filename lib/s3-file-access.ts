@@ -21,7 +21,9 @@ export const PRIVATE_S3_PREFIXES = [
 ] as const;
 
 export function isValidS3Key(key: string): boolean {
-  return Boolean(key) && !key.includes('..') && !key.startsWith('/');
+  return Boolean(key)
+    && !/[\\%\u0000-\u001f\u007f]/.test(key)
+    && key.split('/').every((segment) => segment !== '' && segment !== '.' && segment !== '..');
 }
 
 export function isPublicS3Key(key: string): boolean {

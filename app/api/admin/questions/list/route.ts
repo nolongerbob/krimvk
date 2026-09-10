@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
 
     // Загружаем все диалоги
     const questions = await prisma.question.findMany({
+      where: { messages: { some: { isFromAdmin: false } } },
       include: {
         user: { select: { id: true, name: true, email: true } },
         messages: {

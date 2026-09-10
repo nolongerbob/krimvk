@@ -41,70 +41,76 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Пользователь не найден" }, { status: 404 });
     }
 
-    // Находим или создаем диалог для пользователя
-    let question = await prisma.question.findFirst({
-      where: { userId: session.user.id },
-      include: {
-        messages: {
-          orderBy: { createdAt: "asc" },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-    });
-
-    if (!question) {
-      question = await prisma.question.create({
-        data: {
-          userId: session.user.id,
-          status: "PENDING",
-        },
+    // Persist the conversation and its first message together. Serialize sends
+    // for this user so simultaneous first messages cannot create duplicate chats.
+    const message = await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM users WHERE id = ${session.user.id} FOR UPDATE`;
+      let question = await tx.question.findFirst({
+        where: { userId: session.user.id },
         include: {
           messages: {
             orderBy: { createdAt: "asc" },
           },
         },
+        orderBy: { createdAt: "desc" },
       });
-    }
 
-    // Проверяем, это первое сообщение или диалог был завершен
-    const isFirstMessage = question.messages.length === 0;
-    const wasCompleted = question.status === "COMPLETED";
+      if (!question) {
+        question = await tx.question.create({
+          data: {
+            userId: session.user.id,
+            status: "PENDING",
+          },
+          include: {
+            messages: {
+              orderBy: { createdAt: "asc" },
+            },
+          },
+        });
+      }
 
-    // Если диалог был завершен, меняем статус на "ожидает ответа" перед созданием сообщения
-    if (wasCompleted) {
-      await prisma.question.update({
-        where: { id: question.id },
-        data: { status: "PENDING" },
-      });
-      // Обновляем локальную переменную, сохраняя messages
-      question = { 
-        ...question, 
-        status: "PENDING" as const,
-        messages: question.messages // Сохраняем существующие сообщения
-      };
-    }
+      // Проверяем, это первое сообщение или диалог был завершен
+      const isFirstMessage = question.messages.length === 0;
+      const wasCompleted = question.status === "COMPLETED";
 
-    // Создаем сообщение пользователя
-    const message = await prisma.message.create({
-      data: {
-        questionId: question.id,
-        text: hasText ? (text as string).trim() : "",
-        imageUrl: hasImage ? (imageUrl as string) : null,
-        isFromAdmin: false,
-      },
-    });
+      // Если диалог был завершен, меняем статус на "ожидает ответа" перед созданием сообщения
+      if (wasCompleted) {
+        await tx.question.update({
+          where: { id: question.id },
+          data: { status: "PENDING" },
+        });
+        // Обновляем локальную переменную, сохраняя messages
+        question = {
+          ...question,
+          status: "PENDING" as const,
+          messages: question.messages // Сохраняем существующие сообщения
+        };
+      }
 
-    // Если это первое сообщение или диалог был завершен, отправляем автоматическое сообщение
-    if (isFirstMessage || wasCompleted) {
-      await prisma.message.create({
+      // Создаем сообщение пользователя
+      const message = await tx.message.create({
         data: {
           questionId: question.id,
-          text: "Спасибо за обращение! Наш оператор скоро ответит на ваш вопрос. Пожалуйста, опишите проблему детально, чтобы мы могли помочь вам максимально эффективно.",
-          isFromAdmin: true,
-          authorId: null, // Системное сообщение
+          text: hasText ? (text as string).trim() : "",
+          imageUrl: hasImage ? (imageUrl as string) : null,
+          isFromAdmin: false,
         },
       });
-    }
+
+      // Если это первое сообщение или диалог был завершен, отправляем автоматическое сообщение
+      if (isFirstMessage || wasCompleted) {
+        await tx.message.create({
+          data: {
+            questionId: question.id,
+            text: "Спасибо за обращение! Наш оператор скоро ответит на ваш вопрос. Пожалуйста, опишите проблему детально, чтобы мы могли помочь вам максимально эффективно.",
+            isFromAdmin: true,
+            authorId: null, // Системное сообщение
+          },
+        });
+      }
+
+      return message;
+    });
 
     return NextResponse.json({ success: true, message }, { status: 201 });
   } catch (error) {
@@ -119,4 +125,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

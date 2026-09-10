@@ -21,6 +21,7 @@ export default async function AdminQuestionsPage() {
   }
 
   const questions = await prisma.question.findMany({
+    where: { messages: { some: { isFromAdmin: false } } },
     include: {
       user: { select: { id: true, name: true, email: true } },
       messages: {

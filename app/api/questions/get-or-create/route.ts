@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Находим или создаем диалог для пользователя
-    let question = await prisma.question.findFirst({
+    const question = await prisma.question.findFirst({
       where: { userId: session.user.id },
       include: {
         messages: {
@@ -33,21 +33,7 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: "desc" },
     });
 
-    // Если диалога нет, создаем новый
-    if (!question) {
-      question = await prisma.question.create({
-        data: {
-          userId: session.user.id,
-          status: "PENDING",
-        },
-        include: {
-          messages: {
-            orderBy: { createdAt: "asc" },
-          },
-          user: { select: { name: true, email: true } },
-        },
-      });
-    }
+    // Opening the chat is read-only; the first message creates the conversation.
 
     return NextResponse.json({ question });
   } catch (error) {
@@ -58,4 +44,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

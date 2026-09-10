@@ -26,7 +26,7 @@ interface Question {
 }
 
 interface QuestionsChatProps {
-  question: Question;
+  question: Question | null;
   className?: string;
 }
 
@@ -112,7 +112,8 @@ export function QuestionsChat({
   question: initialQuestion,
   className,
 }: QuestionsChatProps) {
-  const [question, setQuestion] = useState(initialQuestion);
+  // A local draft has no persisted conversation until the first message is sent.
+  const [question, setQuestion] = useState(initialQuestion ?? { messages: [] as Message[] });
   const [newMessage, setNewMessage] = useState("");
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);

@@ -23,7 +23,7 @@ export default async function QuestionsPage() {
     redirect("/login?callbackUrl=/dashboard/questions");
   }
 
-  let question = await prisma.question.findFirst({
+  const question = await prisma.question.findFirst({
     where: { userId: session.user.id },
     include: {
       messages: {
@@ -32,20 +32,6 @@ export default async function QuestionsPage() {
     },
     orderBy: { createdAt: "desc" },
   });
-
-  if (!question) {
-    question = await prisma.question.create({
-      data: {
-        userId: session.user.id,
-        status: "PENDING",
-      },
-      include: {
-        messages: {
-          orderBy: { createdAt: "asc" },
-        },
-      },
-    });
-  }
 
   return (
     <div

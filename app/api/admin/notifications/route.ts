@@ -12,8 +12,8 @@ export async function GET(request: NextRequest) {
     // Простые запросы с обработкой ошибок и переподключением
     const [newApplications, newQuestions, inProgressQuestions] = await Promise.all([
       withRetry(() => prisma.application.count({ where: { status: "PENDING" } })).catch(() => 0),
-      withRetry(() => prisma.question.count({ where: { status: "PENDING" } })).catch(() => 0),
-      withRetry(() => prisma.question.count({ where: { status: "IN_PROGRESS" } })).catch(() => 0),
+      withRetry(() => prisma.question.count({ where: { status: "PENDING", messages: { some: { isFromAdmin: false } } } })).catch(() => 0),
+      withRetry(() => prisma.question.count({ where: { status: "IN_PROGRESS", messages: { some: { isFromAdmin: false } } } })).catch(() => 0),
     ]);
 
     return NextResponse.json({
@@ -29,4 +29,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

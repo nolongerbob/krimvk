@@ -166,7 +166,8 @@ export async function POST(request: NextRequest) {
       const serialNumber: string = meter.SerialNumber || meter.Number || meter.DeviceNumber || meter.Номер || `Счетчик-${meter.Number || createdMeters.length + 1}`;
       const serviceName = meter.ServiceName || meter.Услуга || "";
       const type = serviceName.toLowerCase().includes("горяч") ? "горячая" : "холодная";
-      const lastReading = meter.LastReading ? parseFloat(meter.LastReading) : null;
+      const parsedReading = parseMeterNumber(meter.LastReading);
+      const lastReading = Number.isFinite(parsedReading) ? parsedReading : null;
 
       const createdMeter = await prisma.waterMeter.create({
         data: {
@@ -210,4 +211,4 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
+import { parseMeterNumber } from '@/lib/parse-meter-number';

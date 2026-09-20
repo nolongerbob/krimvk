@@ -1,103 +1,28 @@
-import type { NextRequest } from "next/server";
-import { NextResponse } from 'next/server';
-import { getAppSession } from "@/lib/get-app-session";
-import { prisma } from '@/lib/prisma';
-import { sendVerificationEmail } from '@/lib/resend';
-import { getUserByEmail } from '@/lib/auth';
-import crypto from 'crypto';
+import { NextRequest, NextResponse } from 'next/server';
+import { getAppSession } from '@/lib/get-app-session';
+import { requestEmailChange, confirmEmailChange, EmailChangeError } from '@/lib/email-change';
 import { z } from 'zod';
 
-// Force dynamic rendering - this route uses headers() via getServerSession
 export const dynamic = 'force-dynamic';
-
-const changeEmailSchema = z.object({
-  newEmail: z.string().email('Некорректный email'),
-});
+const input = z.union([
+  z.object({ action: z.literal('confirm'), token: z.string().regex(/^[a-f0-9]{64}$/) }),
+  z.object({ action: z.literal('request').optional(), newEmail: z.string().trim().toLowerCase().email().max(254) }),
+]);
 
 export async function POST(request: NextRequest) {
+  const session = await getAppSession(request);
+  if (!session?.user?.id) return NextResponse.json({ error: 'Войдите в свой личный кабинет' }, { status: 401 });
+  const body = input.safeParse(await request.json().catch(() => null));
+  if (!body.success) return NextResponse.json({ error: 'Проверьте email или ссылку подтверждения' }, { status: 400 });
   try {
-    const session = await getAppSession(request);
-    
-    if (!session || !session.user || !session.user.id) {
-      return NextResponse.json(
-        { error: 'Не авторизован' },
-        { status: 401 }
-      );
+    if (body.data.action === 'confirm') {
+      await confirmEmailChange(session.user.id, body.data.token);
+      return NextResponse.json({ message: 'Email изменён. Для входа используйте новый адрес.' });
     }
-
-    const body = await request.json();
-    const validatedData = changeEmailSchema.parse(body);
-
-    // Проверяем, не занят ли новый email
-    const existingUser = await getUserByEmail(validatedData.newEmail);
-    if (existingUser && existingUser.id !== session.user.id) {
-      return NextResponse.json(
-        { error: 'Email уже используется другим пользователем' },
-        { status: 400 }
-      );
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-    });
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Пользователь не найден' },
-        { status: 404 }
-      );
-    }
-
-    // Обновляем email и сбрасываем подтверждение
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        email: validatedData.newEmail,
-        emailVerified: null,
-      },
-    });
-
-    // Удаляем старые токены
-    await prisma.emailVerificationToken.deleteMany({
-      where: { userId: user.id },
-    });
-
-    // Генерируем новый токен для нового email
-    const token = crypto.randomBytes(32).toString('hex');
-    const expires = new Date();
-    expires.setHours(expires.getHours() + 24);
-
-    await prisma.emailVerificationToken.create({
-      data: {
-        userId: user.id,
-        token,
-        expires,
-      },
-    });
-
-    // Отправляем письмо на новый email
-    await sendVerificationEmail(validatedData.newEmail, token, user.name || undefined);
-
-    return NextResponse.json(
-      { 
-        message: 'Email изменен. Письмо с подтверждением отправлено на новый адрес.',
-        newEmail: validatedData.newEmail,
-      },
-      { status: 200 }
-    );
+    await requestEmailChange(session.user.id, body.data.newEmail);
+    return NextResponse.json({ message: 'Письмо отправлено на новый адрес. До подтверждения действует прежний email.' });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: error.errors[0].message },
-        { status: 400 }
-      );
-    }
-
-    console.error('Error changing email:', error);
-    return NextResponse.json(
-      { error: 'Ошибка при изменении email' },
-      { status: 500 }
-    );
+    if (error instanceof EmailChangeError) return NextResponse.json({ error: error.message }, { status: error.status });
+    return NextResponse.json({ error: 'Не удалось изменить email. Попробуйте позже.' }, { status: 503 });
   }
 }
-

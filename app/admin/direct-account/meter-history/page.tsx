@@ -1,4 +1,6 @@
 "use client";
+import { formatMeterNumber } from "@/lib/parse-meter-number";
+
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
@@ -121,8 +123,8 @@ export default function DirectAccountMeterHistoryPage() {
               const exists = groupedHistory[normalizedKey].some(existing => {
                 const existingDate = existing.ReadingDate || existing.Date;
                 const itemDate = item.ReadingDate || item.Date;
-                const existingReading = existing.Reading || existing.Value;
-                const itemReading = item.Reading || item.Value;
+                const existingReading = existing.Reading ?? existing.Value;
+                const itemReading = item.Reading ?? item.Value;
                 return existingDate === itemDate && existingReading === itemReading;
               });
 
@@ -221,7 +223,7 @@ export default function DirectAccountMeterHistoryPage() {
                       </h4>
                       <div className="space-y-2 max-h-96 overflow-y-auto">
                         {history.map((item, index) => {
-                          const readingValue = item.Reading || item.Value;
+                          const readingValue = item.Reading ?? item.Value;
                           const readingDate = item.ReadingDate || item.Date || item.DateOfHistory;
                           if (readingValue === undefined && !readingDate) return null;
 
@@ -232,10 +234,7 @@ export default function DirectAccountMeterHistoryPage() {
                                   <div>
                                     <p className="font-medium text-slate-900">
                                       {readingValue !== undefined && readingValue !== null
-                                        ? `${parseFloat(String(readingValue)).toLocaleString("ru-RU", {
-                                            minimumFractionDigits: 2,
-                                            maximumFractionDigits: 2,
-                                          })} м³`
+                                        ? `${formatMeterNumber(readingValue)} м³`
                                         : "—"}
                                     </p>
                                   </div>
@@ -243,10 +242,7 @@ export default function DirectAccountMeterHistoryPage() {
                                     <div className="text-right ml-4">
                                       <p className="text-xs text-slate-600">Объем:</p>
                                       <p className="text-sm font-medium">
-                                        {parseFloat(String(item.Volume)).toLocaleString("ru-RU", {
-                                          minimumFractionDigits: 2,
-                                          maximumFractionDigits: 2,
-                                        })} м³
+                                        {formatMeterNumber(item.Volume)} м³
                                       </p>
                                     </div>
                                   )}
@@ -262,10 +258,7 @@ export default function DirectAccountMeterHistoryPage() {
                                 )}
                                 {item.PastReading !== undefined && item.PastReading !== null && (
                                   <p className="text-xs text-slate-400 mt-0.5">
-                                    Предыдущее: {parseFloat(String(item.PastReading)).toLocaleString("ru-RU", {
-                                      minimumFractionDigits: 2,
-                                      maximumFractionDigits: 2,
-                                    })} м³
+                                    Предыдущее: {formatMeterNumber(item.PastReading)} м³
                                   </p>
                                 )}
                               </div>

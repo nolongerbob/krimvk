@@ -1,3 +1,4 @@
+import { parseMeterNumber } from "@/lib/parse-meter-number";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/require-admin";
 import { get1CUserData, getMeteringDeviceHistory, formatDateFor1C, getPaymentHistory } from "@/lib/1c-api";
@@ -276,8 +277,8 @@ export async function GET(request: NextRequest) {
         const pastReading = prev ? (prev.Reading ?? (prev as Record<string, unknown>)?.Value) : (cur?.PastReading ?? (cur as Record<string, unknown>)?.PreviousReading);
         const pastDate = prev?.ReadingDate ?? prev?.Date;
         const pastDateStr = pastDate ? (typeof pastDate === "string" && pastDate.length >= 10 ? pastDate.slice(0, 10) : String(pastDate)) : undefined;
-        const rNum = typeof reading === "number" ? reading : parseFloat(String(reading).replace(",", "."));
-        const pNum = pastReading != null && pastReading !== "" ? (typeof pastReading === "number" ? pastReading : parseFloat(String(pastReading).replace(",", "."))) : NaN;
+        const rNum = parseMeterNumber(reading);
+        const pNum = pastReading != null && pastReading !== "" ? (parseMeterNumber(pastReading)) : NaN;
         const volume = !isNaN(rNum) && !isNaN(pNum) ? rNum - pNum : undefined;
         meterReadings.push({
           Service: String(service),

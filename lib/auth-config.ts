@@ -180,6 +180,21 @@ export const authOptions: NextAuthOptions = {
         });
       }
       
+      // Refresh profile fields from the database, never from client JWT data.
+      if (trigger === 'update') {
+        const userId = typeof token.id === 'string' ? token.id : token.sub;
+        if (userId) {
+          const profile = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { name: true, email: true },
+          });
+          if (profile) {
+            token.name = profile.name;
+            token.email = profile.email;
+          }
+        }
+      }
+
       // Если токен уже имеет id (создан вручную), используем его
       // Это нужно для токенов, созданных после подтверждения email
       if (token.id && !user) {
@@ -228,4 +243,3 @@ export const authOptions: NextAuthOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
-

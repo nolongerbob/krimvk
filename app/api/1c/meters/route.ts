@@ -1,3 +1,4 @@
+import { parseMeterNumber } from "@/lib/parse-meter-number";
 import { NextRequest, NextResponse } from "next/server";
 import { getAppSession } from "@/lib/get-app-session";
 import { prisma } from "@/lib/prisma";
@@ -93,7 +94,7 @@ export async function GET(request: NextRequest) {
             `Счетчик ${index + 1}`,
           type: meter.ServiceName?.toLowerCase().includes("горяч") ? "горячая" : "холодная",
           address: account.address,
-          lastReading: meter.LastReading ? parseFloat(meter.LastReading) : null,
+          lastReading: Number.isFinite(parseMeterNumber(meter.LastReading)) ? parseMeterNumber(meter.LastReading) : null,
           lastReadingDate: meter.LastReadingDate || null,
           serviceName: meter.ServiceName || "Водоснабжение",
         };
@@ -110,5 +111,4 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
 

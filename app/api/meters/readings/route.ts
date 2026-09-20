@@ -1,3 +1,4 @@
+import { parseMeterNumber } from "@/lib/parse-meter-number";
 import { NextRequest, NextResponse } from "next/server";
 import { withApiRoute } from "@/lib/api-route";
 import { getAppSession } from "@/lib/get-app-session";
@@ -64,7 +65,7 @@ async function postReadings(request: NextRequest) {
     // Создаем показания для каждого счетчика
     const createdReadings = [];
     for (const meterId of meterIds) {
-      const value = parseFloat(readings[meterId]);
+      const value = parseMeterNumber(readings[meterId]);
       
       if (isNaN(value) || value < 0) {
         return NextResponse.json(

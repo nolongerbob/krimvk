@@ -1,3 +1,5 @@
+import { parseMeterNumber } from './parse-meter-number';
+
 export type MeterReadingRow = {
   Service: string;
   PastDate?: string;
@@ -23,8 +25,8 @@ export function syncChargesWithMeterReadings(
     const matches = readings.filter((row) => serviceKey(row.Service) === key);
     if (matches.length !== 1) continue;
     const row = matches[0];
-    const start = Number(String(row.PastReading ?? "").replace(/\s/g, "").replace(",", "."));
-    const end = Number(String(row.Reading ?? "").replace(/\s/g, "").replace(",", "."));
+    const start = parseMeterNumber(row.PastReading);
+    const end = parseMeterNumber(row.Reading);
     if (!isPresent(row.PastReading) || !isPresent(row.Reading) || !Number.isFinite(start) || !Number.isFinite(end)) continue;
     charge.StartReading = start;
     charge.EndReading = end;
@@ -36,9 +38,7 @@ function isPresent(value: unknown): boolean {
 }
 
 function toNumber(value: unknown): number {
-  if (typeof value === "number") return value;
-  if (!isPresent(value)) return Number.NaN;
-  return parseFloat(String(value).replace(",", ".").replace(/\s/g, ""));
+  return parseMeterNumber(value);
 }
 
 export function buildMeterReadingsFromDevices(devices: DeviceLike[]): MeterReadingRow[] {

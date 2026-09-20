@@ -1,3 +1,4 @@
+import { parseMeterNumber } from "@/lib/parse-meter-number";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/require-admin";
 import { get1CUserData } from "@/lib/1c-api";
@@ -53,7 +54,7 @@ export async function GET(request: NextRequest) {
             `Счетчик ${index + 1}`,
           type: meter.ServiceName?.toLowerCase().includes("горяч") ? "горячая" : "холодная",
           address: data?.Address || data?.address || "",
-          lastReading: meter.LastReading ? parseFloat(meter.LastReading) : null,
+          lastReading: Number.isFinite(parseMeterNumber(meter.LastReading)) ? parseMeterNumber(meter.LastReading) : null,
           lastReadingDate: meter.LastReadingDate || null,
           serviceName: meter.ServiceName || "Водоснабжение",
           nextVerificationDate: nextVerificationDate,

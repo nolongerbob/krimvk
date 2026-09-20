@@ -16,6 +16,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import Link from "next/link";
+import { ChangeEmailForm } from "@/components/dashboard/change-email-form";
 import { cn } from "@/lib/utils";
 import {
   dashboardButtonClass,
@@ -32,6 +33,7 @@ export default function SettingsPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [profileLoaded, setProfileLoaded] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -56,7 +58,7 @@ export default function SettingsPage() {
     if (status === "authenticated" && session?.user) {
       fetchProfile();
     }
-  }, [status, session, router]);
+  }, [status, session?.user?.id, router]);
 
   const fetchProfile = async () => {
     try {
@@ -68,9 +70,13 @@ export default function SettingsPage() {
           email: data.user?.email || "",
           phone: data.user?.phone || "",
         });
+        setProfileLoaded(true);
+      } else {
+        setError("Не удалось загрузить профиль. Обновите страницу.");
       }
     } catch (err) {
       console.error("Error fetching profile:", err);
+      setError("Не удалось загрузить профиль. Обновите страницу.");
     } finally {
       setLoading(false);
     }
@@ -78,6 +84,7 @@ export default function SettingsPage() {
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!profileLoaded || saving) return;
     setError("");
     setSuccess("");
     setSaving(true);
@@ -86,14 +93,20 @@ export default function SettingsPage() {
       const response = await fetch("/api/user/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(profileData),
+        body: JSON.stringify({ name: profileData.name, phone: profileData.phone }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
+        setProfileData(prev => ({ ...prev, name: data.user.name, phone: data.user.phone || '' }));
         setSuccess("Профиль успешно обновлён");
-        await update();
+        try {
+          await update();
+          router.refresh();
+        } catch {
+          setSuccess("Профиль сохранён. Обновите страницу, чтобы увидеть новое имя в меню.");
+        }
         setTimeout(() => setSuccess(""), 3000);
       } else {
         setError(data.error || "Ошибка при обновлении профиля");
@@ -232,6 +245,11 @@ export default function SettingsPage() {
             <Input
               id="name"
               type="text"
+              required
+              maxLength={150}
+              autoComplete="name"
+              disabled={saving}
+              aria-describedby="profile-name-help"
               value={profileData.name}
               onChange={(e) =>
                 setProfileData({ ...profileData, name: e.target.value })
@@ -239,6 +257,9 @@ export default function SettingsPage() {
               placeholder="Иванов Иван Иванович"
               className={settingsInputClass}
             />
+            <p id="profile-name-help" className="text-xs text-slate-500">
+              Имя в личном кабинете. Изменение не меняет владельца лицевого счёта и данные в 1С.
+            </p>
           </div>
 
           <div className="space-y-1.5">
@@ -261,7 +282,7 @@ export default function SettingsPage() {
                 )}
               />
             </div>
-            <p className="text-xs text-slate-500">Email нельзя изменить</p>
+            <p className="text-xs text-slate-500">Для смены адреса используйте кнопку «Изменить email» ниже.</p>
           </div>
 
           <div className="space-y-1.5">
@@ -282,7 +303,7 @@ export default function SettingsPage() {
 
           <Button
             type="submit"
-            disabled={saving}
+            disabled={saving || !profileLoaded}
             className={cn(
               dashboardButtonClass,
               "mt-2 h-auto w-fit rounded-none bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
@@ -301,6 +322,7 @@ export default function SettingsPage() {
             )}
           </Button>
         </form>
+        <div className="mt-6">{profileLoaded && <ChangeEmailForm />}</div>
       </section>
 
       <div className="border-t border-slate-100" aria-hidden />

@@ -1,3 +1,4 @@
+import { parseMeterNumber } from "@/lib/parse-meter-number";
 import { NextRequest, NextResponse } from "next/server";
 import { getAppSession } from "@/lib/get-app-session";
 import { prisma } from "@/lib/prisma";
@@ -28,7 +29,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const readingValue = parseFloat(reading);
+    const readingValue = parseMeterNumber(reading);
     if (isNaN(readingValue) || readingValue < 0) {
       return NextResponse.json(
         { error: "Неверное значение показаний" },
@@ -141,5 +142,4 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
 

@@ -114,9 +114,8 @@ export function useDashboardEmailVerification({
       const data = await response.json();
       if (response.ok) {
         setEmailMessage(
-          'Email изменен! Письмо с подтверждением отправлено на новый адрес.'
+          'Письмо отправлено на новый адрес. До подтверждения действует прежний email.'
         );
-        setUserEmail(data.newEmail);
         setNewEmail('');
         setTimeout(() => fetchUserEmailStatus(), 1000);
       } else {

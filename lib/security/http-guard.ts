@@ -90,6 +90,7 @@ export function applyRateLimit(req: NextRequest): NextResponse | null {
     path.startsWith('/api/auth/register') ||
     path.startsWith('/api/auth/forgot-password') ||
     path.startsWith('/api/auth/reset-password') ||
+    path === '/api/auth/change-email' ||
     path === '/api/auth/auto-login' ||
     path === '/api/auth/mobile-login';
 

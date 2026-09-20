@@ -1,4 +1,6 @@
 "use client";
+import { parseMeterNumber, formatMeterNumber } from "@/lib/parse-meter-number";
+
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -246,8 +248,8 @@ export default function MetersPage() {
               const exists = groupedHistory[normalizedKey].some(existing => {
                 const existingDate = existing.ReadingDate || existing.Date;
                 const itemDate = item.ReadingDate || item.Date;
-                const existingReading = existing.Reading || existing.Value;
-                const itemReading = item.Reading || item.Value;
+                const existingReading = existing.Reading ?? existing.Value;
+                const itemReading = item.Reading ?? item.Value;
                 return existingDate === itemDate && existingReading === itemReading;
               });
               
@@ -294,9 +296,10 @@ export default function MetersPage() {
               }
               
               // Сохраняем последнее показание для автозаполнения
-              const readingValue = latestReading.Reading || latestReading.Value;
+              const readingValue = latestReading.Reading ?? latestReading.Value;
               if (readingValue !== undefined && readingValue !== null) {
-                lastReadings[key] = String(readingValue);
+                const parsed = parseMeterNumber(readingValue);
+                if (Number.isFinite(parsed)) lastReadings[key] = String(parsed);
               }
             }
           }
@@ -363,7 +366,7 @@ export default function MetersPage() {
       }
 
       for (const meterId of meterIds) {
-        const value = parseFloat(readings[meterId]);
+        const value = parseMeterNumber(readings[meterId]);
         const meter = meters.find((m) => m.id === meterId);
         if (!meter) {
           setError("Счётчик не найден. Обновите страницу и повторите ввод показаний.");
@@ -415,7 +418,7 @@ export default function MetersPage() {
           body: JSON.stringify({
             accountId: selectedAccountId,
             deviceNumber: meter.id, // Номер счетчика из 1С
-            reading: parseFloat(value),
+            reading: parseMeterNumber(value),
           }),
         });
 
@@ -593,8 +596,8 @@ export default function MetersPage() {
                   latestHistory?.DateOfHistory;
                 const enteredRaw = readings[meter.id]?.trim();
                 const enteredFormatted =
-                  enteredRaw && !isNaN(parseFloat(enteredRaw))
-                    ? `${parseFloat(enteredRaw).toLocaleString("ru-RU", {
+                  enteredRaw && !isNaN(parseMeterNumber(enteredRaw))
+                    ? `${parseMeterNumber(enteredRaw).toLocaleString("ru-RU", {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })} м³`
@@ -681,7 +684,7 @@ export default function MetersPage() {
                             handleReadingChange(meter.id, value);
 
                             if (value && lastReading !== null) {
-                              const numValue = parseFloat(value);
+                              const numValue = parseMeterNumber(value);
                               if (!isNaN(numValue) && numValue < lastReading) {
                                 setError(
                                   `Показания не могут быть меньше предыдущих (${lastReading.toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} м³)`
@@ -736,10 +739,7 @@ export default function MetersPage() {
                           <p>
                             <span className="text-slate-500">Последнее показание:</span>{" "}
                             <span className="font-medium text-slate-900">
-                              {parseFloat(String(historyValue)).toLocaleString("ru-RU", {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                              })}{" "}
+                              {formatMeterNumber(historyValue)}{" "}
                               м³
                             </span>
                             {historyDate ? (
@@ -824,17 +824,14 @@ export default function MetersPage() {
                           </h4>
                           <ul className="max-h-64 divide-y divide-slate-100 overflow-y-auto">
                             {historyForMeter.slice(0, 10).map((item, index) => {
-                              const readingValue = item.Reading || item.Value;
+                              const readingValue = item.Reading ?? item.Value;
                               const readingDate =
                                 item.ReadingDate || item.Date || item.DateOfHistory;
                               if (readingValue === undefined && !readingDate) return null;
 
                               const valueText =
                                 readingValue !== undefined && readingValue !== null
-                                  ? `${parseFloat(String(readingValue)).toLocaleString("ru-RU", {
-                                      minimumFractionDigits: 2,
-                                      maximumFractionDigits: 2,
-                                    })} м³`
+                                  ? `${formatMeterNumber(readingValue)} м³`
                                   : "—";
                               const dateText = readingDate
                                 ? new Date(readingDate).toLocaleDateString("ru-RU", {
@@ -861,10 +858,7 @@ export default function MetersPage() {
                                   {item.Volume !== undefined && item.Volume !== null ? (
                                     <span className="text-xs text-slate-500">
                                       объём{" "}
-                                      {parseFloat(String(item.Volume)).toLocaleString("ru-RU", {
-                                        minimumFractionDigits: 2,
-                                        maximumFractionDigits: 2,
-                                      })}{" "}
+                                      {formatMeterNumber(item.Volume)}{" "}
                                       м³
                                     </span>
                                   ) : null}

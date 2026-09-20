@@ -1,0 +1,31 @@
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { ChangeEmailForm } from '@/components/dashboard/change-email-form';
+import ConfirmEmailChangePage from '@/app/confirm-email-change/page';
+const mockUpdate = jest.fn();
+jest.mock('next-auth/react', () => ({ useSession: () => ({ status: 'authenticated', update: mockUpdate }) }));
+const originalFetch = global.fetch;
+beforeEach(() => { jest.clearAllMocks(); });
+afterEach(() => { global.fetch = originalFetch; window.history.replaceState(null, '', '/'); });
+it('lets the user request a change without submitting the profile form', async () => {
+  global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ message: 'Подтвердите адрес по письму' }) });
+  render(<ChangeEmailForm />);
+  fireEvent.click(screen.getByRole('button', { name: 'Изменить email' }));
+  fireEvent.change(screen.getByLabelText('Новый email'), { target: { value: 'new@example.test' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Отправить подтверждение' }));
+  expect(await screen.findByRole('status')).toHaveTextContent('Подтвердите адрес');
+  expect(global.fetch).toHaveBeenCalledWith('/api/auth/change-email', expect.objectContaining({ body: JSON.stringify({ newEmail: 'new@example.test' }) }));
+});
+it('opening the link never changes email; explicit confirmation refreshes the session', async () => {
+  const token = 'a'.repeat(64);
+  window.location.hash = token;
+  global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ message: 'Email изменён' }) });
+  render(<ConfirmEmailChangePage />);
+  const button = screen.getByRole('button', { name: 'Подтвердить смену email' });
+  await waitFor(() => expect(button).toBeEnabled());
+  expect(global.fetch).not.toHaveBeenCalled();
+  fireEvent.click(button);
+  await screen.findByText('Email изменён');
+  expect(global.fetch).toHaveBeenCalledWith('/api/auth/change-email', expect.objectContaining({ body: JSON.stringify({ action: 'confirm', token }) }));
+  expect(mockUpdate).toHaveBeenCalled();
+  expect(window.location.hash).toBe('');
+});

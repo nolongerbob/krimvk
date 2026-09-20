@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withApiRoute } from '@/lib/api-route';
 import { getAppSession } from '@/lib/get-app-session';
 import { prisma } from '@/lib/prisma';
+import { z } from 'zod';
+
+const profileUpdateSchema = z.object({
+  name: z.string().trim().min(1, 'Укажите имя').max(150, 'Имя слишком длинное')
+    .refine(value => !/[\u0000-\u001f\u007f]/.test(value), 'Имя содержит недопустимые символы')
+    .transform(value => value.replace(/\s+/g, ' ')).optional(),
+  phone: z.string().trim().max(50, 'Телефон слишком длинный').nullable().optional(),
+}).refine(value => value.name !== undefined || value.phone !== undefined, 'Нет данных для обновления');
 
 export const dynamic = 'force-dynamic';
 
@@ -52,7 +60,12 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
     }
 
-    const { name, phone } = await request.json();
+    const body = await request.json().catch(() => null);
+    const parsed = profileUpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.issues[0]?.message || 'Некорректные данные' }, { status: 400 });
+    }
+    const { name, phone } = parsed.data;
 
     const updatedUser = await prisma.user.update({
       where: { id: session.user.id },

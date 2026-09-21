@@ -4,6 +4,7 @@
  */
 
 import { assertValid1cRegion } from '@/lib/1c-regions';
+import { hasMonthlyReading, meterPeriod, MeterSubmissionError, reserveMeterSubmission } from '@/lib/meter-submission-guard';
 
 /** Прежний захардкоженный адрес — fallback, если PM2 не подхватил .env */
 const LEGACY_1C_BASE_URL = 'http://46.172.223.34';
@@ -149,6 +150,29 @@ export async function submitMeterReading(
   region?: string
 ): Promise<any> {
   const regionPath = getRegion(region);
+  if(typeof deviceNumber!=='string'||!deviceNumber.trim()||!Number.isFinite(reading)||reading<0)throw new MeterSubmissionError('Некорректные показания','METER_INVALID',400);
+  const period=meterPeriod();
+  if(period.day<6||period.day>25)throw new MeterSubmissionError('Показания можно передавать только с 6 по 25 число','METER_PERIOD',400);
+  try{
+    const last=new Date(Date.UTC(period.year,period.month,0)).getUTCDate(),month=String(period.month).padStart(2,'0');
+    const history=await getMeteringDeviceHistory(accountNumber,password,region,`01.${month}.${period.year}`,`${last}.${month}.${period.year}`);
+    if(hasMonthlyReading(history,deviceNumber,period.key))throw new MeterSubmissionError('Показания для этого счётчика уже переданы в этом месяце. Для исправления обратитесь к оператору.','METER_ALREADY_SENT');
+  }catch(error){
+    if(error instanceof MeterSubmissionError)throw error;
+    throw new MeterSubmissionError('Не удалось проверить предыдущие показания. Новые показания не отправлены. Попробуйте позже.','METER_HISTORY_UNAVAILABLE',503);
+  }
+  const finish=await reserveMeterSubmission(regionPath,accountNumber,deviceNumber,reading,period.key);
+  try{
+    const result=await sendMeterReadingOnce(accountNumber,password,deviceNumber,reading,regionPath);
+    if(result===null||(typeof result==='object'&&(result.Error||result.error||result.success===false)))throw new Error('Unconfirmed receipt');
+    await finish('accepted');return result;
+  }catch{
+    await finish('unknown').catch(()=>{});
+    throw new MeterSubmissionError('Не удалось подтвердить результат отправки. 1С могла принять показания. Повторная отправка заблокирована — обратитесь к оператору.','METER_RESULT_UNKNOWN',409);
+  }
+}
+
+async function sendMeterReadingOnce(accountNumber:string,password:string,deviceNumber:string,reading:number,regionPath:string):Promise<any>{
   /**
    * ВАЖНО:
    * Старый PHP-сайт формировал URL вручную:
@@ -174,7 +198,7 @@ export async function submitMeterReading(
   const query =
     `WaLsCode=${encodeURIComponent(accountNumber.trim())}` +
     `&WaPass=${encodeURIComponent(password)}` +
-    `&WaNumberOfDevice=${deviceNumber.replace(/\s/g, "%20")}` +
+    `&WaNumberOfDevice=${encodeURIComponent(deviceNumber.trim())}` +
     `&WaReading=${reading.toString()}`;
 
   const url = `${baseUrl}?${query}`;
@@ -183,6 +207,8 @@ export async function submitMeterReading(
   try {
     response = await fetch(url, {
       method: "GET",
+      cache: 'no-store',
+      redirect: 'error',
       headers: {
         "Accept": "application/json",
       },
@@ -291,6 +317,7 @@ export async function getMeteringDeviceHistory(
   try {
     response = await fetch(url, {
       method: "GET",
+      cache: 'no-store',
       headers: {
         "Accept": "application/json",
       },
@@ -310,5 +337,3 @@ export async function getMeteringDeviceHistory(
 
   return await response.json();
 }
-
-

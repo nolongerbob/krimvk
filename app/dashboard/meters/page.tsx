@@ -2,7 +2,7 @@
 import { parseMeterNumber, formatMeterNumber } from "@/lib/parse-meter-number";
 
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,6 +65,7 @@ export default function MetersPage() {
   const [meters, setMeters] = useState<Meter[]>([]);
   const [loading, setLoading] = useState(true);
   const [readings, setReadings] = useState<Record<string, string>>({});
+  const sending = useRef(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -307,21 +308,8 @@ export default function MetersPage() {
         
         setHasCurrentMonthReading(currentMonthReadings);
         
-        // Автоматически заполняем поля последними показаниями (только если нет показаний за текущий месяц)
-        if (Object.keys(lastReadings).length > 0) {
-          setReadings(prev => {
-            const updated = { ...prev };
-            Object.keys(lastReadings).forEach(key => {
-              // Заполняем только если:
-              // 1. Поле пустое
-              // 2. Нет показаний за текущий месяц (чтобы не заполнять, если уже передано)
-              if (!updated[key] && !currentMonthReadings[key]) {
-                updated[key] = lastReadings[key];
-              }
-            });
-            return updated;
-          });
-        }
+        // Previous readings remain visible in history, but must not silently
+        // become a new submission without an explicit user entry.
         
         if (process.env.NODE_ENV === 'development') {
           console.log('[Meters] Grouped history:', groupedHistory);
@@ -352,6 +340,8 @@ export default function MetersPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if(sending.current)return;
+    sending.current=true;
     setSubmitting(true);
     setError(null);
     setSuccess(false);
@@ -427,10 +417,15 @@ export default function MetersPage() {
           throw new Error(errorData.error || `Ошибка при отправке показаний для счетчика ${meter.serialNumber}`);
         }
 
-        return await response.json();
+        const result=await response.json();
+        setReadings(previous=>{const next={...previous};delete next[meterId];return next;});
+        setHasCurrentMonthReading(previous=>({...previous,[meterId]:true}));
+        return result;
       });
 
-      await Promise.all(submitPromises);
+      const outcomes=await Promise.allSettled(submitPromises);
+      const failures=outcomes.filter((r):r is PromiseRejectedResult=>r.status==='rejected');
+      if(failures.length)throw new Error(failures.map(r=>r.reason instanceof Error?r.reason.message:'Отправка не подтверждена').join('\n'));
 
       setSuccess(true);
       setReadings({});
@@ -443,8 +438,9 @@ export default function MetersPage() {
       }, 1500);
     } catch (error) {
       console.error("Error submitting readings:", error);
-      setError("Ошибка при отправке показаний");
+      setError(error instanceof Error?error.message:"Отправка не подтверждена. Обратитесь к оператору.");
     } finally {
+      sending.current=false;
       setSubmitting(false);
     }
   };

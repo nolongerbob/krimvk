@@ -80,6 +80,7 @@ water_reports_2025/
 
 # флаг режима обслуживания на VPS (touch .maintenance)
 .maintenance
+.meter-submissions/
 
 # uploads (большие файлы должны быть в Blob Storage)
 public/uploads/

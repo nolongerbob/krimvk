@@ -211,8 +211,11 @@ button:focus:not(:focus-visible),
    Oversized sections remain scrollable, including news with several rows. */
 html:has([data-seasonal-home]) {
   --home-sticky-header: 56px;
-  scroll-snap-type: y mandatory;
   scroll-padding-top: var(--home-sticky-header);
+}
+/* Do not let streamed content re-snap a fresh visit to the footer. */
+html:where([data-home-snap-ready]):has([data-seasonal-home]) {
+  scroll-snap-type: y mandatory;
 }
 @media (min-width: 640px) {
   html:has([data-seasonal-home]) { --home-sticky-header: 72px; }
@@ -234,7 +237,7 @@ html:has([data-seasonal-home]):has([aria-label="Важное уведомлен�
   min-height: calc(100svh - var(--home-sticky-header, 72px));
 }
 @media (prefers-reduced-motion: reduce) {
-  html:has([data-seasonal-home]) { scroll-snap-type: y proximity; }
+  html:where([data-home-snap-ready]):has([data-seasonal-home]) { scroll-snap-type: y proximity; }
 }
 @media (max-width: 1279px) {
   [data-home-contacts], html:has([data-seasonal-home]) footer {

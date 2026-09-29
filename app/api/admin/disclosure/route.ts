@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
 import { requireAdmin } from "@/lib/require-admin";
 import { prisma } from "@/lib/prisma";
+import { revalidateDisclosurePaths } from "@/lib/revalidate-public-cache";
 
 export const dynamic = 'force-dynamic';
 
@@ -64,6 +65,8 @@ export async function POST(request: NextRequest) {
         isActive: isActive !== undefined ? isActive : true,
       },
     });
+
+    revalidateDisclosurePaths(document.category);
 
     return NextResponse.json(document);
   } catch (error) {

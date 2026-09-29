@@ -1,4 +1,6 @@
 "use client";
+import { UserSettingsPanel, type UserProfileUpdate } from './UserSettingsPanel';
+import { AdminAddAccountForm } from './AdminAddAccountForm';
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
@@ -111,6 +113,10 @@ interface UserDetailsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onRoleChange?: (userId: string, newRole: string) => void;
+  onAccountUnlinked?: (accountId: string) => void;
+  onAccountAdded?: (account: UserDetails['userAccounts'][number]) => void;
+  onUserUpdated?: (user: UserProfileUpdate) => void;
+  onUserDeleted?: (userId: string) => void;
   currentUserId?: string; // ID текущего админа, чтобы не давать менять свою роль
 }
 
@@ -152,7 +158,8 @@ const billStatusConfig = {
   },
 };
 
-export function UserDetailsDialog({ user, open, onOpenChange, onRoleChange, currentUserId }: UserDetailsDialogProps) {
+export function UserDetailsDialog({ user, open, onOpenChange, onRoleChange, currentUserId, onAccountUnlinked, onAccountAdded, onUserUpdated, onUserDeleted }: UserDetailsDialogProps) {
+  const [settingsBusy, setSettingsBusy] = useState(false);
   const [receiptDateFrom, setReceiptDateFrom] = useState("");
   const [receiptDateTo, setReceiptDateTo] = useState("");
   const [isChangingRole, setIsChangingRole] = useState(false);
@@ -227,7 +234,7 @@ export function UserDetailsDialog({ user, open, onOpenChange, onRoleChange, curr
   // Нельзя менять свою роль
   const isSelf = currentUserId === user.id;
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={value => { if (!settingsBusy) onOpenChange(value); }}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl flex items-center gap-2">
@@ -239,12 +246,13 @@ export function UserDetailsDialog({ user, open, onOpenChange, onRoleChange, curr
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="info" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="info">Основное</TabsTrigger>
-            <TabsTrigger value="accounts">Лицевые счета</TabsTrigger>
-            <TabsTrigger value="applications">Заявки</TabsTrigger>
-            <TabsTrigger value="bills">Счета и задолженность</TabsTrigger>
+        <Tabs key={user.id} defaultValue="info" className="min-w-0 w-full">
+          <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 sm:grid sm:grid-cols-5">
+            <TabsTrigger disabled={settingsBusy} value="info">Основное</TabsTrigger>
+            <TabsTrigger disabled={settingsBusy} value="accounts">Лицевые счета</TabsTrigger>
+            <TabsTrigger disabled={settingsBusy} value="applications">Заявки</TabsTrigger>
+            <TabsTrigger disabled={settingsBusy} value="bills">Счета и долг</TabsTrigger>
+            <TabsTrigger disabled={settingsBusy} value="settings">Настройки</TabsTrigger>
           </TabsList>
 
           {/* Основная информация */}
@@ -390,6 +398,7 @@ export function UserDetailsDialog({ user, open, onOpenChange, onRoleChange, curr
 
           {/* Лицевые счета */}
           <TabsContent value="accounts" className="space-y-4">
+            <AdminAddAccountForm key={user.id} user={user} disabled={settingsBusy} onBusyChange={setSettingsBusy} onAdded={onAccountAdded} />
             {user.userAccounts.length > 0 ? (
               user.userAccounts.map((account) => (
                 <DashboardCard key={account.id}>
@@ -664,6 +673,14 @@ export function UserDetailsDialog({ user, open, onOpenChange, onRoleChange, curr
                 </DashboardCardBody>
               </DashboardCard>
             )}
+          </TabsContent>
+          <TabsContent value="settings">
+            <UserSettingsPanel key={user.id} user={user} currentUserId={currentUserId}
+              onBusyChange={setSettingsBusy}
+              onSaved={updated => onUserUpdated?.(updated)}
+              onAccountUnlinked={accountId => onAccountUnlinked?.(accountId)}
+              onAccountAdded={onAccountAdded}
+              onDeleted={id => { onUserDeleted?.(id); onOpenChange(false); }} />
           </TabsContent>
         </Tabs>
       </DialogContent>

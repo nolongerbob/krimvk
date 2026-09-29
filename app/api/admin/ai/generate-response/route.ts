@@ -84,6 +84,7 @@ export async function POST(request: NextRequest) {
             where: { id: questionId },
             include: {
               messages: {
+                where: { isSensitive: false },
                 orderBy: { createdAt: "asc" },
               },
               user: { select: { name: true } },
@@ -97,7 +98,7 @@ export async function POST(request: NextRequest) {
       }),
       // Загружаем последние ответы админов для примера стиля
       prisma.message.findMany({
-        where: { isFromAdmin: true },
+        where: { isFromAdmin: true, isSensitive: false },
         orderBy: { createdAt: "desc" },
         take: 10,
         select: { text: true },

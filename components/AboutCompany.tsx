@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useRef, useLayoutEffect, useEffect } from "react";
 import { Building2, Users, Award, TrendingUp, ChevronLeft, ChevronRight, Droplet, Wrench, Rocket, UserCog, Shield, BookOpen, Construction, Cpu, Waves, Globe, Zap, Leaf } from "lucide-react";
 import { ReactNode } from "react";
@@ -201,12 +202,12 @@ const companyInfo: Array<{
 ];
 
 const galleryImages = [
-  "/images/gallery/1.jpg",
-  "/images/gallery/2.jpg",
-  "/images/gallery/3.jpg",
-  "/images/gallery/4.jpg",
-  "/images/gallery/5.jpg",
-  "/images/gallery/6.jpg",
+  "/images/gallery/1.webp",
+  "/images/gallery/2.webp",
+  "/images/gallery/3.webp",
+  "/images/gallery/4.webp",
+  "/images/gallery/5.webp",
+  "/images/gallery/6.webp",
 ];
 
 const CARD_CHROME_HEIGHT = 56 + 16 + 48; // заголовок + отступ + padding
@@ -397,11 +398,13 @@ export function AboutCompany({ embedded = false }: { embedded?: boolean }) {
               <DashboardCard className="about-company-gallery-card relative min-h-[360px] flex-1 overflow-hidden rounded-none hover:translate-y-0">
                 <div className="about-company-gallery-viewer relative h-full min-h-[360px] w-full bg-gradient-to-br from-blue-100 to-cyan-100">
                   {showMainImage && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    <Image
                       src={mainImageSrc}
                       alt={`Фото ${currentImageIndex + 1}`}
-                      className="about-company-gallery-img about-company-gallery-img--hero bvi-no-style absolute inset-0 z-[1] h-full w-full object-cover"
+                      fill
+                      sizes="(max-width: 1024px) 100vw, 50vw"
+                      priority={currentImageIndex === 0}
+                      className="about-company-gallery-img about-company-gallery-img--hero bvi-no-style z-[1] object-cover"
                       onError={() => {
                         setImageErrors((prev) => new Set(prev).add(currentImageIndex));
                       }}
@@ -452,11 +455,13 @@ export function AboutCompany({ embedded = false }: { embedded?: boolean }) {
                   )}
                 >
                   {!imageErrors.has(index) ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    <Image
                       src={image}
                       alt={`Миниатюра ${index + 1}`}
-                      className="about-company-gallery-img bvi-no-style absolute inset-0 z-[1] h-full w-full object-cover"
+                      fill
+                      sizes="96px"
+                      loading="lazy"
+                      className="about-company-gallery-img bvi-no-style z-[1] object-cover"
                       onError={() => {
                         setImageErrors((prev) => new Set(prev).add(index));
                       }}

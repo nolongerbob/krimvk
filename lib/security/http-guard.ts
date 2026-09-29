@@ -5,7 +5,7 @@ type Bucket = { count: number; resetAt: number };
 
 const buckets = new Map<string, Bucket>();
 
-/** Простой in-memory rate limit (один PM2-процесс на VPS). */
+/** In-memory rate limit (middleware / Edge — без Redis). */
 export function rateLimit(key: string, limit: number, windowMs: number): boolean {
   const now = Date.now();
   const bucket = buckets.get(key);
@@ -52,7 +52,7 @@ function clientIp(req: NextRequest): string {
   return req.headers.get('x-real-ip') || 'unknown';
 }
 
-/** Лимиты на чувствительные API (дополнение к nginx). */
+/** Лимиты на чувствительные API (in-memory; для shared Redis — отдельный API guard). */
 export function applyRateLimit(req: NextRequest): NextResponse | null {
   const path = req.nextUrl.pathname;
 

@@ -5,6 +5,7 @@ import { requireAdmin } from "@/lib/require-admin";
 import { prisma } from "@/lib/prisma";
 import { storage } from "@/lib/storage";
 import { validateDisclosureFile } from "@/lib/security/validate-upload";
+import { revalidateDisclosurePaths } from "@/lib/revalidate-public-cache";
 
 export const maxDuration = 300; // 5 минут для больших файлов
 
@@ -66,6 +67,8 @@ export async function POST(request: NextRequest) {
         isActive: true,
       },
     });
+
+    revalidateDisclosurePaths(document.category);
 
     return NextResponse.json({
       success: true,

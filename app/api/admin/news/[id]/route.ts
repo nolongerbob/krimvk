@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
 import { requireAdmin } from "@/lib/require-admin";
 import { prisma } from "@/lib/prisma";
+import { revalidateNewsPaths } from "@/lib/revalidate-public-cache";
 
 export async function GET(
   request: NextRequest,
@@ -65,6 +66,10 @@ export async function PUT(
         publishedAt: published && !existingNews.publishedAt ? new Date() : existingNews.publishedAt,
       },
     });
+
+    if (news.published || existingNews.published) {
+      revalidateNewsPaths(params.id);
+    }
 
     return NextResponse.json({ success: true, news });
   } catch (error) {

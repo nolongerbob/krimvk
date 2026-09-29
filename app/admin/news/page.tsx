@@ -1,3 +1,4 @@
+import { noticesEnabled } from '@/lib/release-features';
 import { getSession } from "@/lib/get-session";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -48,6 +49,9 @@ export default async function AdminNewsPage() {
         }
       />
 
+      {noticesEnabled() && <Link href="/admin/news/notices" className="mb-6 flex items-center justify-between border border-blue-100 bg-blue-50 px-6 py-4 text-blue-800 hover:bg-blue-100">
+        <span><strong className="block">Важные уведомления</strong><span className="text-sm">Полоса на сайте · привязка к новости · расписание показа</span></span><span aria-hidden="true">→</span>
+      </Link>}
       <div className="space-y-4">
         {news.map((item) => (
           <DashboardCard key={item.id}>

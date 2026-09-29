@@ -185,11 +185,28 @@ export function QuestionsChat({
   }, [question.messages]);
 
   useEffect(() => {
+    const lastSyncRef = { current: new Date().toISOString() };
+
     const interval = setInterval(async () => {
       try {
-        const response = await fetch("/api/questions/list");
+        const since = encodeURIComponent(lastSyncRef.current);
+        const response = await fetch(`/api/questions/list?since=${since}`);
         if (response.ok) {
           const data = await response.json();
+          lastSyncRef.current = new Date().toISOString();
+
+          if (data.delta && data.messages?.length) {
+            const wasNearBottom = isNearBottom();
+            setQuestion((prev) => ({
+              ...prev,
+              messages: [...prev.messages, ...data.messages],
+            }));
+            if (wasNearBottom) {
+              setTimeout(() => scrollToBottom(), 100);
+            }
+            return;
+          }
+
           if (data.question) {
             const wasNearBottom = isNearBottom();
             setQuestion((prev) => {
@@ -207,7 +224,7 @@ export function QuestionsChat({
       } catch (error) {
         console.error("Error fetching messages:", error);
       }
-    }, 5000);
+    }, 10_000);
 
     return () => clearInterval(interval);
   }, []);

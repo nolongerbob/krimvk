@@ -207,6 +207,74 @@ button:focus:not(:focus-visible),
 }
 
 /* Плавные переходы для страниц */
+/* Homepage sections snap natively: no wheel interception or nested scroller.
+   Oversized sections remain scrollable, including news with several rows. */
+html:has([data-seasonal-home]) {
+  --home-sticky-header: 56px;
+  scroll-snap-type: y mandatory;
+  scroll-padding-top: var(--home-sticky-header);
+}
+@media (min-width: 640px) {
+  html:has([data-seasonal-home]) { --home-sticky-header: 72px; }
+}
+html:has([data-seasonal-home]) [aria-label="Важное уведомление"],
+[data-seasonal-home],
+[data-home-news],
+[data-home-about],
+[data-home-contacts],
+html:has([data-seasonal-home]) footer {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+/* The opening screen includes the notice above the hero. */
+html:has([data-seasonal-home]):has([aria-label="Важное уведомление"]) [data-seasonal-home] {
+  scroll-snap-align: none;
+}
+[data-home-about] > section {
+  min-height: calc(100svh - var(--home-sticky-header, 72px));
+}
+@media (prefers-reduced-motion: reduce) {
+  html:has([data-seasonal-home]) { scroll-snap-type: y proximity; }
+}
+@media (max-width: 1279px) {
+  [data-home-contacts], html:has([data-seasonal-home]) footer {
+    scroll-snap-align: none;
+    scroll-snap-stop: normal;
+  }
+  html[data-home-free-scroll]:has([data-seasonal-home]) { scroll-snap-type: none; }
+  /* An expanded account map extends past the opening screen. Do not snap
+     users away from its account buttons into the news section. */
+  html:has([data-seasonal-home] .home-expandable-map[data-open="true"]) { scroll-snap-type: none; }
+}
+@media (max-width: 639px) {
+  /* Phone layouts use ordinary scrolling, without section snapping or bounce. */
+  html:has([data-seasonal-home]) {
+    scroll-snap-type: none;
+    scroll-behavior: auto;
+    overscroll-behavior-y: none;
+  }
+  body:has([data-seasonal-home]) { overscroll-behavior-y: none; }
+  html:has([data-seasonal-home]) :is([aria-label="Важное уведомление"], [data-seasonal-home], [data-home-news], [data-home-about], [data-home-contacts], footer) {
+    scroll-snap-align: none;
+    scroll-snap-stop: normal;
+  }
+}
+
+.seasonal-corner-enter {
+  animation: seasonal-corner-enter 450ms cubic-bezier(.22, 1, .36, 1) both;
+}
+[data-seasonal-ui][data-assistant-open] button[aria-label="Открыть помощника Капельку"] {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+@keyframes seasonal-corner-enter {
+  from { opacity: 0; translate: 0 20px; }
+  to { opacity: 1; translate: 0 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .seasonal-corner-enter { animation: none; }
+}
+
 main {
   transition: opacity 0.2s ease-in-out;
 }
@@ -225,6 +293,47 @@ main {
 
 .page-content {
   animation: page-fade-in 0.5s ease-out;
+}
+
+@keyframes route-reveal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes side-menu-close {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
+}
+@keyframes header-dropdown-open {
+  from { opacity: 0; transform: translateY(-8px); clip-path: inset(0 0 100% 0); }
+  to { opacity: 1; transform: translateY(0); clip-path: inset(0 0 -60px 0); }
+}
+@keyframes header-dropdown-close {
+  from { opacity: 1; transform: translateY(0); clip-path: inset(0 0 -60px 0); }
+  to { opacity: 0; transform: translateY(-8px); clip-path: inset(0 0 100% 0); }
+}
+.header-dropdown-enter { animation: header-dropdown-open 280ms cubic-bezier(.2,.8,.2,1) both; }
+.header-dropdown-exit { animation: header-dropdown-close 280ms ease-in-out both; }
+.header-mega-dropdown > div { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .header-dropdown-enter, .header-dropdown-exit { animation: none; }
+}
+@keyframes side-menu-dim-close {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+.side-menu-panel-exit { animation: side-menu-close 300ms cubic-bezier(.4, 0, .2, 1) both; }
+.side-menu-backdrop-exit { animation: side-menu-dim-close 300ms ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .header-side-menu-panel, .header-side-menu-backdrop { animation: none !important; }
+}
+
+.route-entrance {
+  animation: route-reveal 650ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-entrance { animation: none; }
 }
 
 body.bvi-active .bvi-body {

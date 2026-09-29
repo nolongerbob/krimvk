@@ -1,5 +1,7 @@
 # Инструкция по переносу на VPS
 
+> Обновление 21.09.2026: для очередных релизов используйте [SAFE_RELEASE.md](./SAFE_RELEASE.md). `scripts/deploy-vps.sh` теперь требует `--prepare` и только готовит отдельный релиз. Старые команды автоматического reload/rollback ниже не являются актуальной процедурой безопасного переключения.
+
 ## Архитектура решения
 
 ### Рекомендуемая схема:
@@ -287,6 +289,23 @@ server {
         expires 30d;
         add_header Cache-Control "public, immutable";
     }
+
+    # Кэш статики Next и публичных файлов (см. nginx.conf.example)
+    location /_next/static/ {
+        proxy_pass http://127.0.0.1:3000;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+    }
+
+    location /files/ {
+        proxy_pass http://127.0.0.1:3000;
+        add_header Cache-Control "public, max-age=86400";
+    }
+
+    location /images/ {
+        proxy_pass http://127.0.0.1:3000;
+        expires 7d;
+        add_header Cache-Control "public";
+    }
 }
 ```
 
@@ -430,4 +449,3 @@ curl -sI "http://127.0.0.1:3000/_next/static/chunks/webpack.js" | head -5
   - `scripts/backup-db.sh`
   - `scripts/backup-uploads.sh`
   - `scripts/restore-db.sh`
-

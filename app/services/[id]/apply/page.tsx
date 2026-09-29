@@ -208,7 +208,7 @@ export default function ApplyServicePage() {
                     У вас уже есть активная заявка
                   </h3>
                   <p className="text-sm text-blue-800 mb-2">
-                    На услугу "{existingApplication.serviceTitle}" уже подана заявка{" "}
+                    На услугу «{existingApplication.serviceTitle}» уже подана заявка{" "}
                     {new Date(existingApplication.createdAt).toLocaleDateString("ru-RU", {
                       day: "numeric",
                       month: "long",
@@ -320,5 +320,4 @@ export default function ApplyServicePage() {
     </div>
   );
 }
-
 

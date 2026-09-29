@@ -109,6 +109,7 @@ export async function POST(request: NextRequest) {
         });
       }
 
+      await tx.question.update({ where: { id: question.id }, data: { updatedAt: new Date() } });
       return message;
     });
 

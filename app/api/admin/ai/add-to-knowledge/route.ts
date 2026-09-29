@@ -9,7 +9,11 @@ export async function POST(request: NextRequest) {
     const auth = await requireAdmin();
     if (!auth.ok) return auth.response;
 
-    const { questionId, messages } = await request.json();
+    const { questionId } = await request.json();
+    // Never trust a client-supplied transcript to strip credential messages.
+    const messages = typeof questionId === 'string' ? await prisma.message.findMany({
+      where: { questionId, isSensitive: false }, orderBy: { createdAt: 'asc' }, select: { text: true, isFromAdmin: true },
+    }) : [];
 
     if (!questionId || !messages || messages.length === 0) {
       return NextResponse.json({ error: "Недостаточно данных" }, { status: 400 });

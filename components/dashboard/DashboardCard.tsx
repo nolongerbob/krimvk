@@ -5,7 +5,7 @@ type DashboardCardProps = React.HTMLAttributes<HTMLDivElement>;
 
 export function DashboardCard({ className, children, ...props }: DashboardCardProps) {
   return (
-    <div className={cn(dashboardCardClass, className)} {...props}>
+    <div data-seasonal-surface className={cn(dashboardCardClass, className)} {...props}>
       {children}
     </div>
   );

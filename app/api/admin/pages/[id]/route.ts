@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
 import { requireAdmin } from "@/lib/require-admin";
 import { prisma } from "@/lib/prisma";
+import { revalidateCmsSlug } from "@/lib/revalidate-public-cache";
 
 // GET - получить страницу по ID
 export async function GET(
@@ -88,6 +89,11 @@ export async function PUT(
       );
     }
 
+    const existing = await prisma.page.findUnique({
+      where: { id: params.id },
+      select: { slug: true },
+    });
+
     const page = await prisma.page.update({
       where: { id: params.id },
       data: {
@@ -110,6 +116,9 @@ export async function PUT(
         },
       },
     });
+
+    if (existing?.slug) revalidateCmsSlug(existing.slug);
+    revalidateCmsSlug(page.slug);
 
     return NextResponse.json({ page });
   } catch (error) {
@@ -151,6 +160,8 @@ export async function DELETE(
     await prisma.page.delete({
       where: { id: params.id },
     });
+
+    revalidateCmsSlug(page.slug);
 
     return NextResponse.json({ success: true });
   } catch (error) {

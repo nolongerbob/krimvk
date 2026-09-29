@@ -7,8 +7,7 @@ import { DashboardCard, DashboardCardBody } from "@/components/dashboard/Dashboa
 import { sitePageClass, siteContainerClass, sitePrimaryBtnClass } from "@/components/site/site-styles";
 import { dashboardTileClass } from "@/components/dashboard/dashboard-styles";
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+export const revalidate = 300;
 
 const iconMap: { [key: string]: any } = {
   подключение: Plug,

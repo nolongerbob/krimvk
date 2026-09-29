@@ -11,6 +11,9 @@ const customJestConfig = {
   testEnvironment: 'jest-environment-jsdom',
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
+    // MapLibre 6 exports only ESM. Resolve the real browser entry before the
+    // WebGL test mock is applied; do not pretend that a missing package exists.
+    '^maplibre-gl$': '<rootDir>/node_modules/maplibre-gl/dist/maplibre-gl.mjs',
   },
   collectCoverageFrom: [
     'app/**/*.{js,jsx,ts,tsx}',
@@ -34,4 +37,3 @@ const customJestConfig = {
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
 module.exports = createJestConfig(customJestConfig)
-

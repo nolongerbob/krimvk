@@ -10,11 +10,11 @@ export function AuthBrandPanel({ className }: { className?: string }) {
       )}
     >
       <Image
-        src="/images/logo.png"
+        src="/images/brand/company-logo-512.png"
         alt="КрымВК"
         width={112}
         height={112}
-        className="mb-6 h-24 w-24 object-contain brightness-0 invert"
+        className="mb-6 h-28 w-28 rounded-full bg-white p-2 object-contain"
         priority
       />
       <p className="mb-4 text-2xl font-bold tracking-tight md:text-3xl">КрымВК</p>

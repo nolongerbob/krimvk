@@ -44,6 +44,14 @@ const headerSquareBtn =
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [megaMenu, setMegaMenu] = useState<MegaMenuId | "phone" | "profile" | null>(null);
+  const [retainedMenu, setRetainedMenu] = useState<typeof megaMenu>(null);
+  const displayedMenu = megaMenu ?? retainedMenu;
+  useEffect(() => {
+    if (megaMenu) { setRetainedMenu(megaMenu); return; }
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const timer = setTimeout(() => setRetainedMenu(null), reduced ? 0 : 280);
+    return () => clearTimeout(timer);
+  }, [megaMenu]);
   const megaMenuCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pathname = usePathname();
   const { data: session, status } = useSession();
@@ -98,23 +106,27 @@ export function Header() {
     { href: "/news", label: "Новости" },
     { href: "/contact", label: "Контакты" },
   ];
+  const waterQualityActive = pathname === '/o-kompanii/kachestvo-vody' || pathname.startsWith('/o-kompanii/kachestvo-vody/');
+  const subscribersActive = pathname.startsWith('/abonenty') || waterQualityActive;
+  const companyActive = pathname.startsWith('/o-kompanii') && !waterQualityActive;
 
   return (
     <header id="site-header" className="site-header-root bvi-no-styles sticky top-0 z-50 w-full bg-white">
       <div className="relative">
-      <div data-header-inner className="relative w-full flex h-16 lg:h-[4.5rem] items-stretch pr-0">
-        <div className="flex flex-1 min-w-0 items-stretch border-b border-slate-200 pl-3 sm:pl-4 lg:pl-6 xl:pl-8">
+      <div data-header-inner className="relative w-full flex h-14 sm:h-[4.5rem] items-stretch pr-0">
+        <div className="flex flex-1 min-w-0 items-stretch border-b border-slate-200 pl-3 sm:pl-6">
         {/* Левая часть: Логотип */}
         <div className="flex items-center flex-shrink-0 z-10 self-center">
           <Link href="/" className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
             <Image
-              src="/images/logo.png"
+              src="/images/brand/company-logo-256.png"
               alt="Крымская Водная Компания"
               width={48}
               height={48}
-              className="h-10 w-10 sm:h-11 sm:w-11 lg:h-12 lg:w-12"
+              priority
+              className="h-10 w-10 sm:h-12 sm:w-12"
             />
-            <span className="text-base sm:text-lg lg:text-xl font-bold hidden sm:inline text-slate-900">КрымВК</span>
+            <span className="text-base sm:text-xl font-bold text-slate-900">КрымВК</span>
           </Link>
         </div>
         </div>
@@ -142,12 +154,12 @@ export function Header() {
             >
               <button
                 type="button"
-                className={navItemClass(pathname.startsWith("/abonenty"))}
+                className={navItemClass(subscribersActive)}
               >
                 <NavItemLabel>
                   Абонентам
                   <ChevronDown className={`h-5 w-5 transition-transform duration-200 ${megaMenu === "abonenty" ? "rotate-180" : ""}`} />
-                  <NavUnderline active={pathname.startsWith("/abonenty") || megaMenu === "abonenty"} />
+                  <NavUnderline active={subscribersActive || megaMenu === "abonenty"} />
                 </NavItemLabel>
               </button>
             </div>
@@ -160,12 +172,12 @@ export function Header() {
             >
               <button
                 type="button"
-                className={navItemClass(pathname.startsWith("/o-kompanii"))}
+                className={navItemClass(companyActive)}
               >
                 <NavItemLabel>
                   О компании
                   <ChevronDown className={`h-5 w-5 transition-transform duration-200 ${megaMenu === "company" ? "rotate-180" : ""}`} />
-                  <NavUnderline active={pathname.startsWith("/o-kompanii") || megaMenu === "company"} />
+                  <NavUnderline active={companyActive || megaMenu === "company"} />
                 </NavItemLabel>
               </button>
             </div>
@@ -214,7 +226,7 @@ export function Header() {
             >
               <button
                 type="button"
-                className="flex h-full items-center gap-2 px-4 text-base transition-colors hover:bg-slate-50 focus:outline-none lg:px-5"
+                className="flex h-full items-center gap-2 px-4 text-base transition-colors hover:bg-slate-50 focus:outline-none lg:px-7"
                 aria-expanded={megaMenu === "profile"}
               >
                 <User className="h-5 w-5" />
@@ -264,15 +276,18 @@ export function Header() {
         </div>
       </div>
 
-      {megaMenu && (
+      {displayedMenu && (
         <div
-          className="header-mega-dropdown hidden 2xl:block absolute left-0 right-0 top-full z-40"
-          onMouseEnter={() => openMegaMenu(megaMenu)}
+          key={displayedMenu}
+          aria-hidden={!megaMenu || undefined}
+          ref={element => { element?.toggleAttribute('inert', !megaMenu); }}
+          className={`header-mega-dropdown hidden 2xl:block absolute left-0 right-0 top-full z-40 ${megaMenu ? 'header-dropdown-enter' : 'header-dropdown-exit pointer-events-none'}`}
+          onMouseEnter={() => openMegaMenu(displayedMenu)}
           onMouseLeave={scheduleCloseMegaMenu}
         >
-          {megaMenu === "phone" ? (
+          {displayedMenu === "phone" ? (
             <HeaderPhoneMenu session={session ?? null} onLinkClick={() => setMegaMenu(null)} />
-          ) : megaMenu === "profile" ? (
+          ) : displayedMenu === "profile" ? (
             session ? (
               <HeaderProfileMenu
                 session={session}
@@ -282,7 +297,7 @@ export function Header() {
             ) : null
           ) : (
             <HeaderMegaMenu
-              menu={megaMenu}
+              menu={displayedMenu}
               pathname={pathname}
               onLinkClick={() => setMegaMenu(null)}
             />
@@ -302,4 +317,3 @@ export function Header() {
     </header>
   );
 }
-

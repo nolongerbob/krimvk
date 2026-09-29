@@ -7,7 +7,7 @@ import { sanitizeHTML } from "@/lib/sanitize-html";
 import { Prisma } from "@prisma/client";
 import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 type PageWithRelations = Prisma.PageGetPayload<{
   include: {

@@ -115,7 +115,8 @@ export default function BillsPage() {
         const data = await response.json();
         setAccounts(data.accounts || []);
         if (data.accounts?.length > 0 && !selectedAccountId) {
-          setSelectedAccountId(data.accounts[0].id);
+          const requested = new URLSearchParams(window.location.search).get('accountId');
+          setSelectedAccountId(data.accounts.find((account: Account) => account.id === requested)?.id ?? data.accounts[0].id);
         }
       } else {
         const errorData = await response.json().catch(() => ({}));

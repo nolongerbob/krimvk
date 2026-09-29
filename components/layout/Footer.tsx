@@ -37,11 +37,11 @@ export function Footer() {
       }`}
     >
       <div className="container py-12 px-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div>
+        <div className="footer-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="footer-brand">
             <Link href="/" className="flex items-center space-x-2 mb-4">
               <Image
-                src="/images/logo.png"
+                src="/images/brand/company-logo-256.png"
                 alt="Крымская Водная Компания"
                 width={48}
                 height={48}
@@ -101,7 +101,7 @@ export function Footer() {
             </ul>
           </div>
 
-          <div>
+          <div className="footer-contacts">
             <h3 className="font-semibold mb-4">Контакты</h3>
             <ul className="space-y-3 text-sm">
               <li className="flex items-center space-x-2">
@@ -112,7 +112,7 @@ export function Footer() {
               </li>
               <li className="flex items-center space-x-2">
                 <Mail className="bvi-no-styles h-5 w-5 shrink-0 text-slate-600" aria-hidden />
-                <a href="mailto:sakwcompany@mail.ru" className="text-slate-600 hover:text-primary">
+                <a href="mailto:sakwcompany@mail.ru" className="min-w-0 break-words text-slate-600 hover:text-primary">
                   sakwcompany@mail.ru
                 </a>
               </li>
@@ -128,7 +128,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-8 pt-8 border-t text-center text-sm text-slate-600">
+        <div className="footer-legal mt-8 pt-8 border-t text-center text-sm text-slate-600">
           <p>&copy; {new Date().getFullYear()} КрымВК. Все права защищены.</p>
           <div className="mt-2 flex flex-wrap items-center justify-center gap-4">
             <Link href="/legal/privacy" className="hover:text-primary">
@@ -149,4 +149,3 @@ export function Footer() {
     </footer>
   );
 }
-

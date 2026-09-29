@@ -22,6 +22,7 @@ export function DashboardQuickActionCard({
 }: Props) {
   return (
     <Link
+      data-seasonal-surface
       href={href}
       className={cn(
         dashboardTileClass,

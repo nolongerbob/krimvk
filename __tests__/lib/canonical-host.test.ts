@@ -7,6 +7,8 @@ import { canonicalHostRedirect } from '@/lib/canonical-host';
 describe('canonicalHostRedirect', () => {
   const env = { ...process.env };
 
+  beforeEach(() => { delete process.env.DISABLE_CANONICAL_HOST_REDIRECT; });
+
   afterEach(() => {
     process.env = { ...env };
   });
@@ -43,5 +45,10 @@ describe('canonicalHostRedirect', () => {
     const res = canonicalHostRedirect(req);
     expect(res?.status).toBe(308);
     expect(res?.headers.get('location')).toBe('https://krimvk.ru/login?x=1');
+  });
+  it('supports the explicit loopback smoke-test override', () => {
+    process.env = { ...process.env, NODE_ENV: 'production', DISABLE_CANONICAL_HOST_REDIRECT: '1' };
+    const req = new NextRequest('http://127.0.0.1:3016/', { headers: { host: '127.0.0.1:3016' } });
+    expect(canonicalHostRedirect(req)).toBeNull();
   });
 });

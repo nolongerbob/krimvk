@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
 import { requireAdmin } from "@/lib/require-admin";
 import { prisma } from "@/lib/prisma";
+import { revalidateWaterQualityPaths } from "@/lib/revalidate-public-cache";
 import { storage } from "@/lib/storage";
 import {
   validateWaterQualityFile,
@@ -96,6 +97,8 @@ export async function POST(request: NextRequest) {
         mimeType: file.type || "application/octet-stream",
       },
     });
+
+    revalidateWaterQualityPaths();
 
     return NextResponse.json({
       success: true,

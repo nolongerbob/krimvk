@@ -1,114 +1,61 @@
 #!/usr/bin/env bash
-
-# Идемпотентный деплой на VPS:
-# git sync -> npm ci -> prisma migrate -> build -> pm2 reload -> healthcheck -> rollback
-
+# Prepare an immutable release. Never mutate the active checkout, DB, PM2 or Nginx.
 set -Eeuo pipefail
+umask 077
 
-APP_NAME="${APP_NAME:-krimvk}"
-PORT="${PORT:-3000}"
-if [[ "${APP_NAME}" == "krimvk-dev" && "${PORT}" == "3000" ]]; then
-  PORT=3001
+die() { echo "Release preparation stopped: $*" >&2; exit 1; }
+if [[ "${1:-}" != "--prepare" ]]; then
+  echo 'Usage: RELEASE_REF=<commit> RELEASES_DIR=<absolute directory> RELEASE_ENV_FILE=<absolute env file> METER_SUBMISSION_DIR=<existing journal> bash scripts/deploy-vps.sh --prepare' >&2
+  echo 'Preparation only. Migration and traffic switching require a separate approved release window.' >&2
+  exit 2
 fi
-
-DEPLOY_BRANCH="${DEPLOY_BRANCH:-}"
-HEALTHCHECK_URL="${HEALTHCHECK_URL:-http://127.0.0.1:${PORT}/api/health}"
-HEALTHCHECK_ATTEMPTS="${HEALTHCHECK_ATTEMPTS:-20}"
-HEALTHCHECK_DELAY_SEC="${HEALTHCHECK_DELAY_SEC:-3}"
-BACKUP_DIR=".deploy-backups"
-NEXT_BACKUP_PATH=""
-DEPLOY_FAILED=0
-
-log() {
-  echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"
-}
-
-rollback() {
-  if [[ "${DEPLOY_FAILED}" -ne 1 ]]; then
-    return
-  fi
-
-  log "Запущен rollback..."
-  if [[ -n "${NEXT_BACKUP_PATH}" && -d "${NEXT_BACKUP_PATH}" ]]; then
-    rm -rf .next
-    cp -a "${NEXT_BACKUP_PATH}" .next
-    log "Восстановлена предыдущая сборка .next"
-  fi
-
-  if command -v pm2 >/dev/null 2>&1; then
-    PORT="${PORT}" pm2 restart "${APP_NAME}" --update-env || true
-    pm2 save || true
-  fi
-}
-
-trap 'DEPLOY_FAILED=1; rollback' ERR
-
-log "Начинаем деплой ${APP_NAME} (PORT=${PORT})"
-
-if [[ "$(id -u)" -eq 0 && "${ALLOW_ROOT_DEPLOY:-}" != "1" ]]; then
-  log "Ошибка: деплой от root запрещён (git/PM2 будут у другого пользователя)."
-  log "Выполните: su - krimvk"
-  log "Затем: cd /var/www/krimvk && DEPLOY_BRANCH=main ./scripts/deploy-vps.sh"
-  exit 1
+for tool in git node npm tar mktemp; do command -v "$tool" >/dev/null || die "Missing $tool"; done
+[[ "$(id -u)" != 0 ]] || die 'Run as the application user, not root'
+SOURCE_DIR="$(git rev-parse --show-toplevel)"
+# A git archive silently omits unstaged and untracked work. Do not label an old
+# commit as the release that was just reviewed in a dirty working directory.
+[[ -z "$(git -C "$SOURCE_DIR" status --porcelain --untracked-files=normal)" ]] || die 'Working tree is not clean; review and commit the release files or use a clean checkout of RELEASE_REF'
+[[ -n "${RELEASE_REF:-}" && "$RELEASE_REF" != -* ]] || die 'RELEASE_REF is required'
+COMMIT="$(git -C "$SOURCE_DIR" rev-parse --verify "${RELEASE_REF}^{commit}")"
+[[ -n "${RELEASES_DIR:-}" && "$RELEASES_DIR" = /* && "$RELEASES_DIR" != / ]] || die 'Set an absolute RELEASES_DIR'
+[[ -n "${RELEASE_ENV_FILE:-}" && "$RELEASE_ENV_FILE" = /* && -f "$RELEASE_ENV_FILE" && -r "$RELEASE_ENV_FILE" ]] || die 'Set an existing absolute RELEASE_ENV_FILE'
+[[ -n "${METER_SUBMISSION_DIR:-}" && "$METER_SUBMISSION_DIR" = /* && -d "$METER_SUBMISSION_DIR" && -w "$METER_SUBMISSION_DIR" ]] || die 'Set the existing writable absolute METER_SUBMISSION_DIR; never create an empty replacement'
+METER_SUBMISSION_DIR="$(cd "$METER_SUBMISSION_DIR" && pwd -P)"
+RELEASE_ENV_FILE="$(node -e 'console.log(require("fs").realpathSync(process.argv[1]))' "$RELEASE_ENV_FILE")"
+mkdir -p "$RELEASES_DIR"
+RELEASES_DIR="$(cd "$RELEASES_DIR" && pwd -P)"
+[[ "$RELEASES_DIR" != / ]] || die 'Release storage cannot resolve to filesystem root'
+[[ "$RELEASES_DIR" != "$SOURCE_DIR" && "$RELEASES_DIR" != "$SOURCE_DIR/"* ]] || die 'Release storage must be outside the active checkout'
+[[ "$METER_SUBMISSION_DIR" != "$RELEASES_DIR" && "$METER_SUBMISSION_DIR" != "$RELEASES_DIR/"* ]] || die 'Meter journal must be outside disposable releases'
+[[ "$RELEASE_ENV_FILE" != "$RELEASES_DIR/"* ]] || die 'Environment file must live outside disposable releases'
+# Archive only committed files, never unreviewed worktree changes or local secrets.
+if git -C "$SOURCE_DIR" ls-tree -r --name-only "$COMMIT" | grep -E '(^|/)\.env($|\.)|^\.local-dev/|^\.meter-submissions/' | grep -Ev '(^|/)\.env\.example($|\.)' >/dev/null; then
+  die 'Release contains private environment/state files'
 fi
-
-if [[ ! -f "package.json" ]]; then
-  log "Ошибка: package.json не найден. Запускайте из корня проекта."
-  exit 1
-fi
-
-if [[ -d ".git" && -n "${DEPLOY_BRANCH}" ]]; then
-  log "Синхронизация ветки ${DEPLOY_BRANCH}..."
-  git fetch --all --prune
-  git checkout "${DEPLOY_BRANCH}"
-  git reset --hard "origin/${DEPLOY_BRANCH}"
-fi
-
-mkdir -p "${BACKUP_DIR}" logs
-
-if [[ -d ".next" ]]; then
-  NEXT_BACKUP_PATH="${BACKUP_DIR}/next-$(date +%Y%m%d%H%M%S)"
-  cp -a .next "${NEXT_BACKUP_PATH}"
-  log "Создан бэкап предыдущей сборки: ${NEXT_BACKUP_PATH}"
-fi
-
-log "Устанавливаем зависимости (npm ci)..."
-npm ci
-
-log "Генерируем Prisma Client..."
-npx prisma generate
-
-log "Применяем миграции базы данных..."
-npx prisma migrate deploy || npx prisma db push --skip-generate
-
-log "Собираем проект..."
-export PORT
+RELEASE_DIR="$(mktemp -d "$RELEASES_DIR/release-${COMMIT:0:12}.XXXXXX")"
+trap 'echo "Preparation failed; active release unchanged. Inspect retained directory: $RELEASE_DIR" >&2' ERR
+git -C "$SOURCE_DIR" archive "$COMMIT" | tar -x -C "$RELEASE_DIR"
+[[ -f "$RELEASE_DIR/package-lock.json" ]] || die 'Release must have package-lock.json'
+ln -s "$RELEASE_ENV_FILE" "$RELEASE_DIR/.env.production.local"
+export NODE_ENV=production METER_SUBMISSION_DIR
+cd "$RELEASE_DIR"
+npm ci --include=dev
+npm audit --omit=dev --audit-level=high
+./node_modules/.bin/prisma generate
+./node_modules/.bin/tsc --noEmit
+NODE_ENV=test ./node_modules/.bin/jest --runInBand
 npm run build
-
-if command -v pm2 >/dev/null 2>&1; then
-  log "Запускаем/перезагружаем процесс через PM2 (${APP_NAME})..."
-  if pm2 describe "${APP_NAME}" >/dev/null 2>&1; then
-    PORT="${PORT}" pm2 reload "${APP_NAME}" --update-env
-  else
-    PORT="${PORT}" pm2 start ecosystem.config.js --only "${APP_NAME}"
-  fi
-  pm2 save
-else
-  log "PM2 не установлен. Установите PM2 и повторите деплой."
-  exit 1
-fi
-
-log "Проверяем healthcheck: ${HEALTHCHECK_URL}"
-for i in $(seq 1 "${HEALTHCHECK_ATTEMPTS}"); do
-  if curl -fsS --max-time 5 "${HEALTHCHECK_URL}" >/dev/null; then
-    log "Healthcheck успешен (попытка ${i}/${HEALTHCHECK_ATTEMPTS})"
-    DEPLOY_FAILED=0
-    log "Деплой завершен успешно"
-    exit 0
-  fi
-  log "Healthcheck не прошел (попытка ${i}/${HEALTHCHECK_ATTEMPTS}), ждем ${HEALTHCHECK_DELAY_SEC}s..."
-  sleep "${HEALTHCHECK_DELAY_SEC}"
-done
-
-log "Healthcheck не прошел, деплой считается неуспешным"
-exit 1
+# Prisma CLI does not load .env.production.local. Use the same env as Next.
+# Pending or failed migrations STOP preparation; no automatic schema changes.
+node --input-type=commonjs - <<'JS'
+const {spawnSync} = require('node:child_process');
+require('@next/env').loadEnvConfig(process.cwd(), false);
+const result = spawnSync('./node_modules/.bin/prisma', ['migrate', 'status'], {stdio: 'inherit', env: process.env});
+process.exit(result.status ?? 1);
+JS
+node --input-type=commonjs - "$COMMIT" <<'JS'
+const fs = require('node:fs');
+fs.writeFileSync('release-manifest.json', JSON.stringify({commit: process.argv[2], preparedAt: new Date().toISOString(), meterSubmissionDir: process.env.METER_SUBMISSION_DIR}, null, 2), {mode: 0o600});
+JS
+echo "Prepared release: $RELEASE_DIR"
+echo 'NOT deployed. Start a loopback-only candidate, verify DB health and UI, then explicitly switch Nginx. Keep the old process for rollback.'

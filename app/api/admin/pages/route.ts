@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
 import { requireAdmin } from "@/lib/require-admin";
 import { prisma } from "@/lib/prisma";
+import { revalidateCmsSlug } from "@/lib/revalidate-public-cache";
 
 // GET - получить все страницы
 export async function GET(request: NextRequest) {
@@ -81,6 +82,8 @@ export async function POST(request: NextRequest) {
         parent: { select: { id: true, title: true, slug: true } },
       },
     });
+
+    revalidateCmsSlug(page.slug);
 
     return NextResponse.json({ page }, { status: 201 });
   } catch (error) {

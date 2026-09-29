@@ -17,6 +17,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { ChangeEmailForm } from "@/components/dashboard/change-email-form";
+import { YandexLink } from '@/components/auth/YandexLink';
+import { LinkedUtilityAccounts } from '@/components/dashboard/LinkedUtilityAccounts';
+import { DeleteAccountForm } from '@/components/dashboard/DeleteAccountForm';
 import { cn } from "@/lib/utils";
 import {
   dashboardButtonClass,
@@ -237,7 +240,8 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <form onSubmit={handleProfileUpdate} className="max-w-md space-y-4">
+        <div className="max-w-md space-y-4">
+          <form id="profile-settings-form" onSubmit={handleProfileUpdate}>
           <div className="space-y-1.5">
             <Label htmlFor="name" className={settingsLabelClass}>
               ФИО
@@ -262,6 +266,7 @@ export default function SettingsPage() {
             </p>
           </div>
 
+          </form>
           <div className="space-y-1.5">
             <Label htmlFor="email" className={settingsLabelClass}>
               Email
@@ -282,7 +287,7 @@ export default function SettingsPage() {
                 )}
               />
             </div>
-            <p className="text-xs text-slate-500">Для смены адреса используйте кнопку «Изменить email» ниже.</p>
+            {profileLoaded && <ChangeEmailForm />}
           </div>
 
           <div className="space-y-1.5">
@@ -291,6 +296,7 @@ export default function SettingsPage() {
             </Label>
             <Input
               id="phone"
+              form="profile-settings-form"
               type="tel"
               value={profileData.phone}
               onChange={(e) =>
@@ -303,6 +309,7 @@ export default function SettingsPage() {
 
           <Button
             type="submit"
+            form="profile-settings-form"
             disabled={saving || !profileLoaded}
             className={cn(
               dashboardButtonClass,
@@ -321,8 +328,9 @@ export default function SettingsPage() {
               </>
             )}
           </Button>
-        </form>
-        <div className="mt-6">{profileLoaded && <ChangeEmailForm />}</div>
+        </div>
+        {profileLoaded && <YandexLink />}
+        {profileLoaded && <LinkedUtilityAccounts />}
       </section>
 
       <div className="border-t border-slate-100" aria-hidden />
@@ -424,6 +432,7 @@ export default function SettingsPage() {
           </Button>
         </form>
       </section>
+      {profileLoaded && <DeleteAccountForm isAdmin={session?.user?.role === 'ADMIN'} />}
     </div>
   );
 }

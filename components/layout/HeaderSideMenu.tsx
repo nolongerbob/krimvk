@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Session } from "next-auth";
 import { X, MoreHorizontal, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -67,13 +67,17 @@ function SideMenuExpandable({
   expanded: boolean;
   onToggle: () => void;
 }) {
-  const sectionActive = pathname.startsWith(prefix);
+  const waterQualityActive = isPathActive(pathname, '/o-kompanii/kachestvo-vody');
+  const sectionActive = prefix === '/abonenty'
+    ? pathname.startsWith(prefix) || waterQualityActive
+    : pathname.startsWith(prefix) && !(prefix === '/o-kompanii' && waterQualityActive);
 
   return (
     <div>
       <button
         type="button"
         onClick={onToggle}
+        aria-expanded={expanded}
         className="flex w-full items-center justify-between gap-4 px-8 py-3 text-left"
       >
         <span
@@ -91,8 +95,12 @@ function SideMenuExpandable({
         />
       </button>
 
-      {expanded && (
-        <div className="pb-2 animate-in fade-in slide-in-from-top-1 duration-200">
+      <div
+        aria-hidden={!expanded || undefined}
+        ref={element => { element?.toggleAttribute('inert', !expanded); }}
+        className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out motion-reduce:transition-none ${expanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
+      >
+        <div className="min-h-0 overflow-hidden"><div className="pb-2">
           {sections.flatMap((section) =>
             section.links.map((link) => {
               const active = !link.href.startsWith("tel:") && isPathActive(pathname, link.href);
@@ -115,16 +123,24 @@ function SideMenuExpandable({
               );
             })
           )}
-        </div>
-      )}
+        </div></div>
+      </div>
     </div>
   );
 }
 
 export function HeaderSideMenu({ isOpen, onClose, pathname, session, navLinks }: HeaderSideMenuProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [present, setPresent] = useState(isOpen);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (isOpen) { setPresent(true); return; }
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const timer = setTimeout(() => setPresent(false), reduced ? 0 : 300);
+    return () => clearTimeout(timer);
+  }, [isOpen]);
+
+  if (!isOpen && !present) return null;
 
   const toggleSection = (id: string) => {
     setExpandedId((current) => (current === id ? null : id));
@@ -133,14 +149,19 @@ export function HeaderSideMenu({ isOpen, onClose, pathname, session, navLinks }:
   return (
     <>
       <div
-        className="header-side-menu-backdrop fixed inset-0 z-40 bg-black/20 backdrop-blur-sm 2xl:hidden animate-in fade-in duration-300"
+        data-state={isOpen ? 'open' : 'closed'}
+        className={`header-side-menu-backdrop fixed inset-0 z-40 bg-black/20 backdrop-blur-sm 2xl:hidden ${isOpen ? 'animate-in fade-in duration-300' : 'side-menu-backdrop-exit pointer-events-none'}`}
         onClick={onClose}
         aria-hidden
       />
 
       <div
-        className="header-side-menu-panel bvi-no-styles fixed inset-y-0 right-0 z-50 flex w-[min(100%,520px)] flex-col bg-white 2xl:hidden animate-in slide-in-from-right duration-300"
+        data-state={isOpen ? 'open' : 'closed'}
+        ref={element => { element?.toggleAttribute('inert', !isOpen); }}
+        aria-hidden={!isOpen || undefined}
+        className={`header-side-menu-panel bvi-no-styles fixed inset-y-0 right-0 z-50 flex w-[min(100%,520px)] flex-col bg-white 2xl:hidden ${isOpen ? 'animate-in slide-in-from-right duration-300' : 'side-menu-panel-exit pointer-events-none'}`}
         role="dialog"
+        data-seasonal-background="continue"
         aria-modal="true"
         aria-label="Навигация"
       >
@@ -220,6 +241,14 @@ export function HeaderSideMenu({ isOpen, onClose, pathname, session, navLinks }:
                 className="header-side-menu-footer-link block py-1.5 text-[20px] text-slate-900 hover:text-primary transition-colors"
               >
                 Личный кабинет
+              </Link>
+              <Link
+                href="/dashboard/settings"
+                onClick={onClose}
+                aria-current={pathname.startsWith('/dashboard/settings') ? 'page' : undefined}
+                className="header-side-menu-footer-link block py-1.5 text-[20px] text-slate-900 hover:text-primary transition-colors"
+              >
+                Настройки
               </Link>
               {(session.user.role === "ADMIN" || session.user?.role === "ADMIN") && (
                 <Link

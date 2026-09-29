@@ -48,8 +48,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Проверяем, что у пользователя есть пароль (не OAuth пользователь)
-    if (!user.password) {
+    // Passwordless accounts may establish a password only through an already
+    // verified mailbox. This also provides step-up proof for account deletion.
+    if (!user.password && !user.emailVerified) {
       return NextResponse.json(
         { 
           message: 'Если указанный email существует в системе, на него будет отправлено письмо с инструкциями по восстановлению пароля.' 

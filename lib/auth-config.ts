@@ -1,45 +1,25 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import YandexProvider from 'next-auth/providers/yandex';
+import { isYandexAuthEnabled } from './yandex-auth';
+import { cookies } from 'next/headers';
+import { decode } from 'next-auth/jwt';
+import { consumeYandexLink, YANDEX_LINK_COOKIE } from './yandex-link';
+import { createSocialDraft, SOCIAL_REG_COOKIE, socialCookieOptions } from './social-registration';
 import { getUserByEmail, verifyPassword } from "./auth";
 import { prisma } from "./prisma";
 import { applyCanonicalSiteUrl } from "./site-url";
 
 applyCanonicalSiteUrl();
 
-// Функция для создания кастомного OAuth провайдера Госуслуг
-function createGosuslugiProvider() {
-  return {
-    id: "gosuslugi",
-    name: "Госуслуги",
-    type: "oauth",
-    authorization: {
-      url: process.env.GOSUSLUGI_AUTHORIZATION_URL || "https://esia.gosuslugi.ru/aas/oauth2/ac",
-      params: {
-        scope: "openid profile email",
-        response_type: "code",
-        access_type: "online",
-      },
-    },
-    token: {
-      url: process.env.GOSUSLUGI_TOKEN_URL || "https://esia.gosuslugi.ru/aas/oauth2/te",
-    },
-    userinfo: {
-      url: process.env.GOSUSLUGI_USERINFO_URL || "https://esia.gosuslugi.ru/rs/prns",
-    },
-    clientId: process.env.GOSUSLUGI_CLIENT_ID,
-    clientSecret: process.env.GOSUSLUGI_CLIENT_SECRET,
-    profile(profile: any) {
-      return {
-        id: profile.sub || profile.id || profile.snils,
-        email: profile.email,
-        name: profile.name || `${profile.lastName || ""} ${profile.firstName || ""} ${profile.middleName || ""}`.trim() || profile.email,
-      };
-    },
-  };
-}
-
 export const authOptions: NextAuthOptions = {
   providers: [
+    ...(isYandexAuthEnabled() ? [YandexProvider({
+      clientId: process.env.YANDEX_CLIENT_ID!,
+      clientSecret: process.env.YANDEX_CLIENT_SECRET!,
+      authorization: { url: 'https://oauth.yandex.ru/authorize', params: { scope: 'login:info login:email', force_confirm: 'yes' } },
+      checks: ['state', 'pkce'],
+    })] : []),
     CredentialsProvider({
       name: "Credentials",
       credentials: {
@@ -81,10 +61,9 @@ export const authOptions: NextAuthOptions = {
         };
       }
     }),
-    // Добавляем провайдер Госуслуг только если настроены credentials
-    ...(process.env.GOSUSLUGI_CLIENT_ID && process.env.GOSUSLUGI_CLIENT_SECRET
-      ? [createGosuslugiProvider() as any]
-      : []),
+    // ЕСИА is not a generic client-secret OAuth provider. Keep it disconnected
+    // until the approved transport, signature verification and explicit linking
+    // flow are implemented. Legacy environment variables must not activate it.
   ],
   session: {
     strategy: "jwt",
@@ -95,76 +74,45 @@ export const authOptions: NextAuthOptions = {
     error: "/login",
   },
   callbacks: {
-    async signIn({ user, account, profile }) {
-      // Обработка входа через Госуслуги
-      if (account?.provider === "gosuslugi") {
-        try {
-          // Проверяем, существует ли пользователь с таким email
-          const existingUser = await getUserByEmail(user.email || "");
-          
-          if (!existingUser) {
-            // Создаем нового пользователя, если его нет
-            const newUser = await prisma.user.create({
-              data: {
-                email: user.email || "",
-                name: user.name || "",
-                password: "", // OAuth пользователи не имеют пароля
-                role: "USER",
-              },
-            });
-            
-            // Создаем связь с OAuth аккаунтом
-            if (account) {
-              await prisma.account.create({
-                data: {
-                  userId: newUser.id,
-                  type: account.type,
-                  provider: account.provider,
-                  providerAccountId: account.providerAccountId,
-                  access_token: account.access_token,
-                  expires_at: account.expires_at,
-                  token_type: account.token_type,
-                  scope: account.scope,
-                  id_token: account.id_token,
-                },
-              });
-            }
-          } else {
-            // Пользователь существует, проверяем связь с OAuth аккаунтом
-            const existingAccount = await prisma.account.findUnique({
-              where: {
-                provider_providerAccountId: {
-                  provider: account.provider,
-                  providerAccountId: account.providerAccountId,
-                },
-              },
-            });
-            
-            if (!existingAccount) {
-              // Создаем связь, если её нет
-              await prisma.account.create({
-                data: {
-                  userId: existingUser.id,
-                  type: account.type,
-                  provider: account.provider,
-                  providerAccountId: account.providerAccountId,
-                  access_token: account.access_token,
-                  expires_at: account.expires_at,
-                  token_type: account.token_type,
-                  scope: account.scope,
-                  id_token: account.id_token,
-                },
-              });
-            }
-          }
-        } catch (error) {
-          if (process.env.NODE_ENV === 'development') {
-            console.error("Error in signIn callback:", error);
-          }
-          return false;
+    async signIn({ account, user }) {
+      if (account?.provider === 'yandex') {
+        if (!isYandexAuthEnabled() || !account.providerAccountId) return false;
+        const jar = await cookies();
+        const intent = jar.get(YANDEX_LINK_COOKIE)?.value;
+        if (intent) {
+          jar.delete(YANDEX_LINK_COOKIE);
+          const cookieName = process.env.NEXTAUTH_URL?.startsWith('https:') ? '__Secure-next-auth.session-token' : 'next-auth.session-token';
+          const raw = jar.get(cookieName)?.value || jar.getAll().filter(c => c.name.startsWith(cookieName + '.'))
+            .sort((a, b) => Number(a.name.split('.').pop()) - Number(b.name.split('.').pop())).map(c => c.value).join('');
+          const current = raw ? await decode({ token: raw, secret: process.env.NEXTAUTH_SECRET! }) : null;
+          const id = typeof current?.id === 'string' ? current.id : current?.sub;
+          if (!id) return '/login?error=YandexLinkExpired';
+          try {
+            const linked = await consumeYandexLink(intent, id, account.providerAccountId);
+            return linked ? '/dashboard/settings?yandex=linked' : '/dashboard/settings?yandex=conflict';
+          } catch { return '/dashboard/settings?yandex=conflict'; }
         }
+        const linked = await prisma.account.findUnique({
+          where: { provider_providerAccountId: { provider: 'yandex', providerAccountId: account.providerAccountId } },
+          include: { user: true },
+        });
+        if (!linked) {
+          // Never infer ownership from a provider email or create an implicit link.
+          const sessionName = process.env.NEXTAUTH_URL?.startsWith('https:') ? '__Secure-next-auth.session-token' : 'next-auth.session-token';
+          const existingSession = jar.get(sessionName)?.value || jar.getAll().filter(c => c.name.startsWith(sessionName + '.')).map(c => c.value).join('');
+          if (existingSession) return '/dashboard/settings?yandex=needs-link';
+          const draft = await createSocialDraft('yandex', account.providerAccountId, { name: user.name, email: user.email });
+          jar.set(SOCIAL_REG_COOKIE, draft, socialCookieOptions());
+          return '/register?social=1';
+        }
+        user.id = linked.user.id;
+        user.email = linked.user.email;
+        user.name = linked.user.name;
+        user.role = linked.user.role;
+        return true;
       }
-      return true;
+      // No automatic email-based linking. The approved ESIA adapter is pending.
+      return account?.provider !== "gosuslugi";
     },
     async jwt({ token, user, account, trigger }) {
       // Логируем для отладки
@@ -225,7 +173,7 @@ export const authOptions: NextAuthOptions = {
       }
       
       // Обновляем токен при обновлении OAuth токена
-      if (account?.access_token) {
+      if (account?.access_token && account.provider !== 'yandex') {
         token.accessToken = account.access_token;
       }
       
@@ -233,6 +181,12 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (session.user && token) {
+        const userId = (token.id as string) || (token.sub as string);
+        // JWTs from other tabs/devices outlive cookie deletion. Never authorize
+        // a removed account, even while its token is cryptographically valid.
+        if (!userId || !await prisma.user.findUnique({ where: { id: userId }, select: { id: true } })) {
+          return null as unknown as typeof session;
+        }
         session.user.id = (token.id as string) || (token.sub as string) || '';
         session.user.email = (token.email as string) || session.user.email || '';
         session.user.name = (token.name as string) ?? session.user.name ?? null;

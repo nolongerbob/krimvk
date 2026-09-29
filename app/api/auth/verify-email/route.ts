@@ -65,6 +65,9 @@ export async function GET(request: NextRequest) {
       where: { id: verificationToken.id },
     });
 
+    const { syncProfileEmailTo1C } = await import('@/lib/utility-account-email');
+    await syncProfileEmailTo1C(verificationToken.userId).catch(() => undefined);
+
     const baseUrl = getSiteBaseUrl();
 
     const cookieStore = await cookies();
@@ -108,4 +111,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

@@ -456,6 +456,25 @@ export function UsersClient({
           open={!!selectedUser}
           onOpenChange={(open) => !open && setSelectedUser(null)}
           onRoleChange={handleRoleChange}
+          onAccountUnlinked={accountId => {
+            setUsers(previous => previous.map(user => user.id === selectedUser.id ? { ...user, userAccounts: user.userAccounts.filter(account => account.id !== accountId), balanceLoading: true } : user));
+            router.refresh();
+          }}
+          onAccountAdded={account => {
+            setUsers(previous => previous.map(user => user.id === selectedUser.id ? { ...user, userAccounts: [...user.userAccounts.filter(item => item.id !== account.id), account], balanceLoading: true } : user));
+            router.refresh();
+          }}
+          onUserUpdated={updated => {
+            setUsers(previous => previous.map(user => user.id === updated.id ? { ...user, ...updated } : user));
+            setSelectedUser(previous => previous?.id === updated.id ? { ...previous, ...updated } : previous);
+            router.refresh();
+          }}
+          onUserDeleted={id => {
+            setUsers(previous => previous.filter(user => user.id !== id));
+            setSelectedUser(null);
+            if (users.length === 1 && page > 1) router.push(pageHref(page - 1));
+            else router.refresh();
+          }}
           currentUserId={currentUserId}
         />
       )}

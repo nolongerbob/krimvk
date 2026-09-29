@@ -7,7 +7,7 @@ const globalForPrisma = globalThis as unknown as {
 // Настройка connection string с параметрами для предотвращения закрытия соединений
 const databaseUrl = process.env.DATABASE_URL || '';
 // Параметры для стабильного подключения:
-// - connection_limit: уменьшаем до 3 для меньшего количества idle соединений
+// - connection_limit: 10 для одного PM2-процесса (после снижения polling и Redis-кэша)
 // - pool_timeout: увеличиваем до 30 секунд
 // - connect_timeout: таймаут подключения 30 секунд
 // - statement_timeout: таймаут выполнения запроса 30 секунд
@@ -15,8 +15,8 @@ const databaseUrl = process.env.DATABASE_URL || '';
 // - keepalive_interval: 10 секунд - интервал между keepalive пакетами
 // - keepalive_count: 3 - количество попыток перед закрытием
 const urlWithParams = databaseUrl.includes('?') 
-  ? `${databaseUrl}&connection_limit=3&pool_timeout=30&connect_timeout=30&statement_timeout=30000&keepalive_idle=30&keepalive_interval=10&keepalive_count=3`
-  : `${databaseUrl}?connection_limit=3&pool_timeout=30&connect_timeout=30&statement_timeout=30000&keepalive_idle=30&keepalive_interval=10&keepalive_count=3`;
+  ? `${databaseUrl}&connection_limit=10&pool_timeout=30&connect_timeout=30&statement_timeout=30000&keepalive_idle=30&keepalive_interval=10&keepalive_count=3`
+  : `${databaseUrl}?connection_limit=10&pool_timeout=30&connect_timeout=30&statement_timeout=30000&keepalive_idle=30&keepalive_interval=10&keepalive_count=3`;
 
 export const prisma = globalForPrisma.prisma ?? new PrismaClient({
   log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],

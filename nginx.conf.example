@@ -106,6 +106,32 @@ server {
         proxy_cache_bypass $http_upgrade;
     }
 
+    location /_next/static/ {
+        proxy_pass http://krimvk_prod;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+    }
+
+    location /files/ {
+        proxy_pass http://krimvk_prod;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        add_header Cache-Control "public, max-age=86400";
+    }
+
+    location /images/ {
+        proxy_pass http://krimvk_prod;
+        expires 7d;
+        add_header Cache-Control "public";
+    }
+
+    location /leaflet/ {
+        proxy_pass http://krimvk_prod;
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+    }
+
     # Статику Next отдаёт Node (после deploy обязателен npm run build)
     location /_next/ {
         proxy_pass http://krimvk_prod;

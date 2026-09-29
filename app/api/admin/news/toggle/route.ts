@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
 import { requireAdmin } from "@/lib/require-admin";
 import { prisma } from "@/lib/prisma";
+import { revalidateNewsPaths } from "@/lib/revalidate-public-cache";
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,6 +25,8 @@ export async function POST(request: NextRequest) {
         publishedAt: published ? new Date() : null,
       },
     });
+
+    revalidateNewsPaths(id);
 
     return NextResponse.json({ success: true });
   } catch (error) {

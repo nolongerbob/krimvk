@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+// Search/category depend on this request; do not prerender a shared response.
+export const dynamic = "force-dynamic";
 
 // GET - получить все активные документы (публичный доступ)
 export async function GET(request: NextRequest) {
@@ -11,7 +12,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search") || "";
     const category = searchParams.get("category") || "";
 
-    const where: any = {
+    const where: Prisma.DisclosureDocumentWhereInput = {
       isActive: true,
     };
 

@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth-config";
 import { requireAdmin } from "@/lib/require-admin";
 import { prisma } from "@/lib/prisma";
 import { generateSlug } from "@/lib/slug";
+import { revalidateCmsSlug } from "@/lib/revalidate-public-cache";
 
 // GET - получить пост по ID
 export async function GET(
@@ -99,6 +100,8 @@ export async function PUT(
       },
     });
 
+    if (post.page?.slug) revalidateCmsSlug(post.page.slug);
+
     return NextResponse.json({ post });
   } catch (error) {
     console.error("Error updating post:", error);
@@ -119,9 +122,16 @@ export async function DELETE(
     const auth = await requireAdmin();
     if (!auth.ok) return auth.response;
 
+    const post = await prisma.post.findUnique({
+      where: { id: params.id },
+      include: { page: { select: { slug: true } } },
+    });
+
     await prisma.post.delete({
       where: { id: params.id },
     });
+
+    if (post?.page?.slug) revalidateCmsSlug(post.page.slug);
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth-config";
 import { requireAdmin } from "@/lib/require-admin";
 import { prisma } from "@/lib/prisma";
 import { generateSlug } from "@/lib/slug";
+import { revalidateCmsSlug } from "@/lib/revalidate-public-cache";
 
 // GET - получить все посты
 export async function GET(request: NextRequest) {
@@ -97,6 +98,8 @@ export async function POST(request: NextRequest) {
         author: { select: { name: true, email: true } },
       },
     });
+
+    if (post.page?.slug) revalidateCmsSlug(post.page.slug);
 
     return NextResponse.json({ post }, { status: 201 });
   } catch (error) {

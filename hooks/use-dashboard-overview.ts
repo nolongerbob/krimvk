@@ -18,6 +18,7 @@ export type DashboardOverviewAccount = {
 };
 
 export type DashboardOverviewAccountData = {
+  quickMetrics?: import('@/lib/quick-action-metrics').QuickMetrics;
   balance: number;
   paid: number;
   charged: number;
@@ -41,13 +42,21 @@ export type DashboardOverview = {
 export function useDashboardOverview() {
   const [loading, setLoading] = useState(true);
 
-  const fetchOverview = useCallback(async (accountId?: string | null) => {
-    const params = new URLSearchParams({ fresh: '1' });
+  const fetchOverview = useCallback(async (
+    accountId?: string | null,
+    options?: { fresh?: boolean }
+  ) => {
+    const params = new URLSearchParams();
     if (accountId) params.set('accountId', accountId);
-    const response = await fetch(`/api/dashboard/overview?${params}`, {
-      credentials: 'include',
-      cache: 'no-store',
-    });
+    if (options?.fresh) params.set('fresh', '1');
+    const query = params.toString();
+    const response = await fetch(
+      `/api/dashboard/overview${query ? `?${query}` : ''}`,
+      {
+        credentials: 'include',
+        cache: options?.fresh ? 'no-store' : 'default',
+      }
+    );
     if (!response.ok) {
       throw new Error('overview failed');
     }

@@ -3,16 +3,19 @@ import { useEffect, useState } from 'react';
 import { UserDetailsDialog, type UserDetails } from './UserDetailsDialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import type { UserProfileUpdate } from './UserSettingsPanel';
 
-export function ChatUserProfile({ userId, currentUserId, onClose }: {
+export function ChatUserProfile({ userId, currentUserId, onClose, onUserUpdated, onUserDeleted }: {
   userId: string; currentUserId: string; onClose: () => void;
+  onUserUpdated?: (user: UserProfileUpdate) => void;
+  onUserDeleted?: (userId: string) => void;
 }) {
   const [user, setUser] = useState<UserDetails | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     const controller = new AbortController();
-    setUser(null);
+    setUser(previous => previous?.id === userId ? previous : null);
     setError(null);
     void (async () => {
       try {
@@ -40,6 +43,19 @@ export function ChatUserProfile({ userId, currentUserId, onClose }: {
 
   if (user) return <UserDetailsDialog user={user} open currentUserId={currentUserId}
     onOpenChange={open => { if (!open) onClose(); }}
+    onAccountUnlinked={accountId => {
+      setUser(previous => previous ? { ...previous, userAccounts: previous.userAccounts.filter(account => account.id !== accountId), balanceLoading: true } : null);
+      setAttempt(value => value + 1);
+    }}
+    onAccountAdded={account => {
+      setUser(previous => previous ? { ...previous, userAccounts: [...previous.userAccounts.filter(item => item.id !== account.id), account], balanceLoading: true } : null);
+      setAttempt(value => value + 1);
+    }}
+    onUserUpdated={updated => {
+      setUser(previous => previous?.id === updated.id ? { ...previous, ...updated } : previous);
+      onUserUpdated?.(updated);
+    }}
+    onUserDeleted={id => onUserDeleted?.(id)}
     onRoleChange={(id, role) => setUser(previous => previous?.id === id ? { ...previous, role } : previous)} />;
   return <Dialog open onOpenChange={open => { if (!open) onClose(); }}>
     <DialogContent>

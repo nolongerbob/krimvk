@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/require-admin";
+import { revalidateNewsPaths } from "@/lib/revalidate-public-cache";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(request: NextRequest) {
@@ -27,8 +27,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (published) {
-      revalidatePath("/");
-      revalidatePath("/news");
+      revalidateNewsPaths(news.id);
     }
 
     return NextResponse.json({ success: true, news });

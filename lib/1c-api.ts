@@ -5,6 +5,10 @@
 
 import { assertValid1cRegion } from '@/lib/1c-regions';
 import { hasMonthlyReading, meterPeriod, MeterSubmissionError, reserveMeterSubmission } from '@/lib/meter-submission-guard';
+import { cacheGetJson, cacheSetJson } from '@/lib/cache/redis';
+import { createHash } from 'crypto';
+
+const ONE_C_CACHE_TTL_SECONDS = 180;
 
 /** Прежний захардкоженный адрес — fallback, если PM2 не подхватил .env */
 const LEGACY_1C_BASE_URL = 'http://46.172.223.34';
@@ -105,7 +109,8 @@ export async function get1CUserData(
   password: string,
   region?: string,
   dateFrom?: Date,
-  dateTo?: Date
+  dateTo?: Date,
+  options?: { bypassCache?: boolean }
 ): Promise<any> {
   const regionPath = getRegion(region);
   const params: Record<string, string> = {
@@ -115,12 +120,23 @@ export async function get1CUserData(
   if (dateFrom) params.WaDateFrom = formatDateFor1C(dateFrom);
   if (dateTo) params.WaDateTo = formatDateFor1C(dateTo);
 
+  const cacheable = !dateFrom && !dateTo && !options?.bypassCache;
+  const cacheKey = cacheable
+    ? `1c:data:${regionPath}:${accountNumber.trim()}:${createHash('sha256').update(password.trim()).digest('hex')}`
+    : null;
+
+  if (cacheKey) {
+    const cached = await cacheGetJson<unknown>(cacheKey);
+    if (cached !== null) return cached;
+  }
+
   const url = build1cGetUrl(regionPath, 'get_data', params);
 
   let response;
   try {
     response = await fetch(url, {
       method: "GET",
+      cache: 'no-store',
       headers: {
         "Accept": "application/json",
       },
@@ -135,7 +151,13 @@ export async function get1CUserData(
     throw map1cHttpError(response.status, errorText);
   }
 
-  return await response.json();
+  const data = await response.json();
+
+  if (cacheKey) {
+    await cacheSetJson(cacheKey, data, ONE_C_CACHE_TTL_SECONDS);
+  }
+
+  return data;
 }
 
 /**
@@ -149,6 +171,9 @@ export async function submitMeterReading(
   reading: number,
   region?: string
 ): Promise<any> {
+  if (process.env.ONE_C_READ_ONLY === 'true') {
+    throw new MeterSubmissionError('В тестовой версии разрешено только чтение из 1С. Передача показаний отключена.', 'ONE_C_READ_ONLY', 403);
+  }
   const regionPath = getRegion(region);
   if(typeof deviceNumber!=='string'||!deviceNumber.trim()||!Number.isFinite(reading)||reading<0)throw new MeterSubmissionError('Некорректные показания','METER_INVALID',400);
   const period=meterPeriod();

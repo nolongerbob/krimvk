@@ -1,10 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
-import { Calendar, User, ArrowLeft } from "lucide-react";
+import { Calendar, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import { formatPublicAuthorName } from "@/lib/format-public-author";
+
+export const revalidate = 300;
 
 export default async function NewsDetailPage({
   params,
@@ -16,9 +17,6 @@ export default async function NewsDetailPage({
     where: {
       id,
       published: true,
-    },
-    include: {
-      author: { select: { name: true, email: true } },
     },
   });
 
@@ -42,10 +40,6 @@ export default async function NewsDetailPage({
               {news.title}
             </h1>
             <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4" />
-                <span>{formatPublicAuthorName(news.author.name, news.author.email)}</span>
-              </div>
               {news.publishedAt && (
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
@@ -70,6 +64,7 @@ export default async function NewsDetailPage({
                   src={news.imageUrl}
                   alt={news.title}
                   fill
+                  sizes="(max-width: 896px) 100vw, 896px"
                   className="object-contain"
                   unoptimized={news.imageUrl.includes("blob.vercel-storage.com")}
                 />

@@ -5,6 +5,16 @@ import { getSiteBaseUrl } from '@/lib/site-url';
 // если RESEND_API_KEY не задан (напр. на Vercel). Ошибка будет при первой отправке.
 let _client: Resend | null = null;
 
+export async function sendUtilityPasswordRecovery(email: string, token: string, accountNumber: string) {
+  const url = `${getSiteBaseUrl()}/reset-utility-password#${token}.${accountNumber}`;
+  const { error } = await getClient().emails.send({
+    from: process.env.RESEND_FROM_EMAIL || 'КрымВК <send@krimvk.ru>', to: email,
+    subject: 'Смена пароля лицевого счёта КрымВК',
+    text: `Запрошена смена пароля лицевого счёта № ${accountNumber} (Сакский район).\nОткройте ссылку, войдите в тот же личный кабинет и задайте новый пароль: ${url}\nСсылка действует 15 минут и используется один раз. Открытие письма само по себе не меняет пароль. Если запрос сделали не вы, ничего не нажимайте. Пароль от самого личного кабинета сайта не меняется.`,
+  });
+  if (error) throw new Error('Email delivery failed');
+}
+
 export async function sendEmailChangeConfirmation(email: string, token: string) {
   // A fragment stays out of access logs and referrers; opening the link is read-only.
   const url = `${getSiteBaseUrl()}/confirm-email-change#${token}`;

@@ -160,7 +160,7 @@ export function HeaderProfileMenu({ session, pathname, onLinkClick }: HeaderProf
   const adminActive = pathname.startsWith("/admin");
 
   return (
-    <div className="w-full border-t border-slate-200/60 bg-white/75 backdrop-blur-xl shadow-[0_24px_48px_-12px_rgba(15,23,42,0.12)] animate-in fade-in slide-in-from-top-1 duration-200">
+    <div className="w-full border-t border-slate-200/60 bg-white/95 shadow-[0_24px_48px_-12px_rgba(15,23,42,0.12)] animate-in fade-in slide-in-from-top-1 duration-200">
       <div className="w-full px-6 py-8 sm:px-8 lg:px-14 lg:py-10 xl:px-20">
         <div className="grid w-full grid-cols-1 gap-x-10 gap-y-8 lg:grid-cols-12 lg:gap-x-16 lg:gap-y-10">
           <div className="lg:col-span-3">

@@ -4,11 +4,12 @@ import { GET } from "@/app/api/questions/get-or-create/route";
 import { POST } from "@/app/api/questions/create/route";
 import { GET as listAdmin } from "@/app/api/admin/questions/list/route";
 import { GET as notifications } from "@/app/api/admin/notifications/route";
+import { POST as answer } from '@/app/api/admin/questions/answer/route';
 import { prisma } from "@/lib/prisma";
 import { getAppSession } from "@/lib/get-app-session";
 
 jest.mock("@/lib/get-app-session", () => ({ getAppSession: jest.fn() }));
-jest.mock("@/lib/require-admin", () => ({ requireAdmin: jest.fn(async () => ({ ok: true })) }));
+jest.mock("@/lib/require-admin", () => ({ requireAdmin: jest.fn(async () => ({ ok: true, admin: { userId: 'operator' } })) }));
 jest.mock("@/lib/auth-config", () => ({ authOptions: {} }));
 jest.mock("@/lib/message-image-access", () => ({ assertMessageImageUrlOwnedByUser: jest.fn(() => ({ ok: true })) }));
 jest.mock("@/lib/prisma", () => ({
@@ -95,4 +96,33 @@ it("requires a client message in admin lists and notification counts", async () 
   for (const [args] of (prisma.question.count as jest.Mock).mock.calls) {
     expect(args.where.messages).toEqual({ some: { isFromAdmin: false } });
   }
+});
+
+it('touches the parent when a client writes to an already active conversation', async () => {
+  tx.question.findFirst.mockResolvedValue({ id: 'active', status: 'IN_PROGRESS', messages: [{ id: 'old' }] });
+  expect((await POST(request({ text: 'Follow up' }))).status).toBe(201);
+  expect(tx.question.update).toHaveBeenCalledWith({ where: { id: 'active' }, data: { updatedAt: expect.any(Date) } });
+});
+
+it('commits an operator reply and parent timestamp in one transaction without reopening a completed chat', async () => {
+  const response = await answer(request({ questionId: 'chat', text: 'Reply' }));
+  expect(response.status).toBe(200);
+  expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+  expect(tx.question.update).toHaveBeenCalledWith({ where: { id: 'chat' }, data: { updatedAt: expect.any(Date) } });
+  expect(tx.message.create).toHaveBeenCalledWith({ data: expect.objectContaining({ questionId: 'chat', text: 'Reply', isFromAdmin: true, authorId: 'operator' }) });
+});
+
+it('includes newly added messages independently of parent timestamp and returns a server cursor', async () => {
+  (prisma.question.findMany as jest.Mock).mockResolvedValue([{ id: 'chat', messages: [{ id: 'older' }, { id: 'new' }] }]);
+  const since = '2026-09-21T10:00:00.000Z';
+  const before = Date.now();
+  const response = await listAdmin(new NextRequest(`https://example.test/api/admin/questions/list?since=${since}`));
+  const result = await response.json();
+  expect(result.delta).toBe(true);
+  expect(new Date(result.cursor).getTime()).toBeGreaterThanOrEqual(before - 60_000);
+  const args = (prisma.question.findMany as jest.Mock).mock.calls[0][0];
+  expect(args.where.OR).toContainEqual({ messages: { some: { createdAt: { gte: new Date(since) } } } });
+  expect(args.include.messages.where).toBeUndefined();
+  expect(args.include.messages.take).toBeUndefined();
+  expect(result.questions[0].messages).toHaveLength(2);
 });

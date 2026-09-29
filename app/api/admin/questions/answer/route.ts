@@ -29,7 +29,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Создаем сообщение от админа
-    const message = await prisma.message.create({
+    const message = await prisma.$transaction(async (tx) => {
+      // Touch the parent in the same transaction so other operators see the reply.
+      await tx.question.update({ where: { id: questionId }, data: { updatedAt: new Date() } });
+      return tx.message.create({
       data: {
         questionId,
         text: hasText ? (text as string).trim() : "",
@@ -37,6 +40,7 @@ export async function POST(request: NextRequest) {
         isFromAdmin: true,
         authorId: auth.admin.userId,
       },
+      });
     });
 
     return NextResponse.json({ 
@@ -55,4 +59,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

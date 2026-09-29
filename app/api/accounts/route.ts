@@ -1,9 +1,12 @@
+import { parseMeterNumber } from "@/lib/parse-meter-number";
 import { NextRequest, NextResponse } from "next/server";
 import { withApiRoute } from "@/lib/api-route";
 import { getAppSession } from "@/lib/get-app-session";
 import { formatUserAccountsForApi } from "@/lib/format-user-accounts";
 import { prisma } from "@/lib/prisma";
 import { encryptPassword1c } from "@/lib/password1c-crypto";
+import { is1CAccountPayload, normalize1CResponse } from '@/lib/normalize-1c-response';
+import { UtilityAccessError } from '@/lib/utility-access-policy';
 
 export const dynamic = 'force-dynamic';
 
@@ -89,13 +92,16 @@ export async function POST(request: NextRequest) {
     // Проверяем авторизацию и получаем данные из 1С
     const { get1CUserData } = await import("@/lib/1c-api");
     let data;
+    const credentialCheckStartedAt = new Date();
     
     try {
       data = await get1CUserData(
         accountNumber.trim(),
         password1c.trim(),
-        regionSafe
+        regionSafe, undefined, undefined, { bypassCache: true }
       );
+      data = normalize1CResponse(data);
+      if (!is1CAccountPayload(data)) throw new Error('AUTH_ERROR: Данные счёта не подтверждены');
     } catch (error: any) {
       console.error("Error fetching data from 1C:", error);
       
@@ -126,29 +132,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Логируем структуру данных для отладки
-    if (process.env.NODE_ENV === "development") {
-      console.log("1C API Response structure:", JSON.stringify(data, null, 2));
-    }
-
     // Извлекаем данные из ответа 1С
     // Структура может отличаться, пробуем разные варианты
-    const address = data?.Address || data?.address || data?.Адрес || data?.AddressFull || data?.FullAddress || "Адрес не указан";
-    const name = data?.Name || data?.name || data?.ФИО || data?.Description || data?.FullName || data?.FIO || null;
-    const phone = data?.Phone || data?.phone || data?.Телефон || data?.PhoneNumber || null;
+    const textValue = (...values: unknown[]) => values.find((value): value is string => typeof value === 'string' && value.trim().length > 0) || null;
+    const address = textValue(data.Address, data.address, data.Адрес, data.AddressFull, data.FullAddress) || 'Адрес не указан';
+    const name = textValue(data.LSName, data.Name, data.name, data.ФИО, data.Description, data.FullName, data.FIO);
+    const phone = textValue(data.Phone, data.phone, data.Телефон, data.PhoneNumber);
 
     // Получаем счетчики из 1С
-    const meters = data?.MeteringDevices || data?.Devices || data?.meters || data?.Счетчики || data?.DevicesList || [];
+    const rawMeters = data.MeteringDevices || data.Devices || data.meters || data.Счетчики || data.DevicesList || [];
+    const meters: Record<string, unknown>[] = Array.isArray(rawMeters) ? rawMeters.filter(m => m && typeof m === 'object') : [];
     
-    if (process.env.NODE_ENV === "development") {
-      console.log("Extracted address:", address);
-      console.log("Extracted name:", name);
-      console.log("Extracted phone:", phone);
-      console.log("Extracted meters count:", meters.length);
-    }
-
     // Создаем лицевой счет
-    const account = await prisma.userAccount.create({
+    const account = await prisma.$transaction(async tx => {
+      if (regionSafe === 'saki') {
+        const key = `${regionSafe}:${accountNumber.trim()}`;
+        await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${key}, 0))::text`;
+        const access = await tx.utilityAccountAccess.findUnique({ where: { key } });
+        const recentChange = await tx.utilityPasswordChange.findFirst({ where: { accountKey: key, status: 'COMPLETED', completedAt: { gte: credentialCheckStartedAt } }, select: { id: true } });
+        if (access?.pendingChangeId || recentChange) throw new UtilityAccessError('Пароль этого счёта меняется или только что изменён. Повторите привязку с новым паролем.', 409);
+      }
+      return tx.userAccount.create({
       data: {
         userId: session.user.id,
         accountNumber: accountNumber.trim(),
@@ -158,32 +162,45 @@ export async function POST(request: NextRequest) {
         password1c: encryptPassword1c(password1c.trim()),
         region: regionSafe,
       },
+      });
     });
 
-    // Создаем счетчики из данных 1С
-    const createdMeters = [];
-    for (const meter of meters) {
-      const serialNumber: string = meter.SerialNumber || meter.Number || meter.DeviceNumber || meter.Номер || `Счетчик-${meter.Number || createdMeters.length + 1}`;
-      const serviceName = meter.ServiceName || meter.Услуга || "";
+    const meterRows = meters.map((meter: Record<string, unknown>, index: number) => {
+      const serialNumber: string =
+        (meter.SerialNumber as string) ||
+        (meter.Number as string) ||
+        (meter.DeviceNumber as string) ||
+        (meter.Номер as string) ||
+        `Счетчик-${(meter.Number as string) || index + 1}`;
+      const serviceName = (meter.ServiceName as string) || (meter.Услуга as string) || "";
       const type = serviceName.toLowerCase().includes("горяч") ? "горячая" : "холодная";
-      const parsedReading = parseMeterNumber(meter.LastReading);
-      const lastReading = Number.isFinite(parsedReading) ? parsedReading : null;
+      const lastReading = Number.isFinite(parseMeterNumber(meter.LastReading)) ? parseMeterNumber(meter.LastReading) : null;
 
-      const createdMeter = await prisma.waterMeter.create({
-        data: {
-          userId: session.user.id,
-          accountId: account.id,
-          serialNumber: serialNumber,
-          address: address,
-          type: type,
-          lastReading: lastReading,
-        },
-      });
-      createdMeters.push(createdMeter);
+      return {
+        userId: session.user.id,
+        accountId: account.id,
+        serialNumber,
+        address,
+        type,
+        lastReading,
+      };
+    });
+
+    const createdMeters =
+      meterRows.length > 0
+        ? await prisma.waterMeter.createManyAndReturn({ data: meterRows })
+        : [];
+
+    let emailSyncPending = false;
+    if (regionSafe === 'saki') {
+      try {
+        const { syncUtilityAccountEmail } = await import('@/lib/utility-account-email');
+        emailSyncPending = await syncUtilityAccountEmail(session.user.id, account.accountNumber, regionSafe) !== 'synced';
+      } catch { emailSyncPending = true; }
     }
-
     return NextResponse.json({
       success: true,
+      emailSyncPending,
       account: {
         id: account.id,
         accountNumber: account.accountNumber,
@@ -201,6 +218,7 @@ export async function POST(request: NextRequest) {
       message: `Успешно загружено счетчиков: ${createdMeters.length}`,
     });
   } catch (error: any) {
+    if (error instanceof UtilityAccessError) return NextResponse.json({ error: error.message }, { status: error.status });
     console.error("Error creating account:", error);
     return NextResponse.json(
       { 
@@ -211,4 +229,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-import { parseMeterNumber } from '@/lib/parse-meter-number';

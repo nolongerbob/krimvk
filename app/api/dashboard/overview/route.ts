@@ -7,14 +7,11 @@ import { formatUserAccountsForApi } from '@/lib/format-user-accounts';
 import { get1CUserData } from '@/lib/1c-api';
 import { tryDecryptPassword1c } from '@/lib/password1c-crypto';
 import { prisma } from '@/lib/prisma';
+import { cacheGetJson, cacheSetJson } from '@/lib/cache/redis';
 
 export const dynamic = 'force-dynamic';
 
-const CACHE_TTL_MS = 90_000;
-const overviewCache = new Map<
-  string,
-  { at: number; payload: Record<string, unknown> }
->();
+const OVERVIEW_CACHE_TTL_SECONDS = 90;
 
 async function getHandler(request: NextRequest) {
   const session = await getAppSession(request);
@@ -24,17 +21,21 @@ async function getHandler(request: NextRequest) {
 
   const userId = session.user.id;
   const accountId = request.nextUrl.searchParams.get('accountId');
-  const cacheKey = `${userId}:${accountId || ''}`;
+  // Validate membership before serving a cached balance, including after admin unlink.
+  // A fingerprint also prevents an in-flight old request repopulating the new cache.
+  const membership = await prisma.userAccount.findMany({
+    where: { userId, isActive: true }, select: { id: true }, orderBy: { id: 'asc' },
+  });
+  const cacheKey = `${userId}:${accountId || ''}:${membership.map(account => account.id).join(',')}`;
   const bypassCache = request.nextUrl.searchParams.get('fresh') === '1';
-  const cached = overviewCache.get(cacheKey);
-  if (
-    !bypassCache &&
-    cached &&
-    Date.now() - cached.at < CACHE_TTL_MS
-  ) {
-    return NextResponse.json(cached.payload, {
-      headers: { 'Cache-Control': 'private, max-age=60' },
-    });
+  const redisCacheKey = `dashboard:overview:${cacheKey}`;
+  if (!bypassCache) {
+    const cached = await cacheGetJson<Record<string, unknown>>(redisCacheKey);
+    if (cached) {
+      return NextResponse.json(cached, {
+        headers: { 'Cache-Control': 'private, no-store' },
+      });
+    }
   }
 
   const [user, accountsRaw, stats] = await Promise.all([
@@ -106,9 +107,9 @@ async function getHandler(request: NextRequest) {
     accountData,
   };
 
-  overviewCache.set(cacheKey, { at: Date.now(), payload });
+  await cacheSetJson(redisCacheKey, payload, OVERVIEW_CACHE_TTL_SECONDS);
   return NextResponse.json(payload, {
-    headers: { 'Cache-Control': 'private, max-age=60' },
+    headers: { 'Cache-Control': 'private, no-store' },
   });
 }
 

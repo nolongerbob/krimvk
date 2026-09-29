@@ -38,12 +38,14 @@ import {
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { ChatUserProfile } from './ChatUserProfile';
+import { UtilityPasswordAction } from './UtilityPasswordAction';
 
 interface Message {
   id: string;
   text: string;
   imageUrl: string | null;
   isFromAdmin: boolean;
+  isSensitive?: boolean;
   createdAt: Date;
 }
 
@@ -131,10 +133,15 @@ export function AdminMessageBubble({ message }: { message: Message }) {
 export function AdminQuestionsChat({ questions: initialQuestions, currentUserId }: AdminQuestionsChatProps) {
   const [profileUserId, setProfileUserId] = useState<string | null>(null);
   const [questions, setQuestions] = useState(initialQuestions);
+  const removedUserIds = useRef(new Set<string>());
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(
-    initialQuestions.find((q) => q.status !== "COMPLETED")?.id || initialQuestions[0]?.id || null
+    initialQuestions.find((q) => q.status === "PENDING")?.id || initialQuestions.find((q) => q.status !== "COMPLETED")?.id || initialQuestions[0]?.id || null
   );
   const [message, setMessage] = useState("");
+  const drafts = useRef(new Map<string, { text: string; image: File | null; preview: string | null }>());
+  const [searchDialogs, setSearchDialogs] = useState('');
+  const [dialogFilter, setDialogFilter] = useState('active');
+  const [sendError, setSendError] = useState('');
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -150,7 +157,7 @@ export function AdminQuestionsChat({ questions: initialQuestions, currentUserId 
   const [leftWidth, setLeftWidth] = useState(320);
   const [rightWidth, setRightWidth] = useState(380);
   const [isLeftCollapsed, setIsLeftCollapsed] = useState(false);
-  const [isRightCollapsed, setIsRightCollapsed] = useState(false);
+  const [isRightCollapsed, setIsRightCollapsed] = useState(true);
   const [isDragging, setIsDragging] = useState<"left" | "right" | null>(null);
 
   // Минимальные и максимальные размеры
@@ -419,7 +426,7 @@ export function AdminQuestionsChat({ questions: initialQuestions, currentUserId 
     if (!selectedQuestion || isAddingToKnowledge) return;
 
     // Проверяем, есть ли хотя бы один ответ админа
-    const hasAdminResponse = selectedQuestion.messages.some((m) => m.isFromAdmin);
+    const hasAdminResponse = selectedQuestion.messages.some((m) => m.isFromAdmin && !m.isSensitive);
     if (!hasAdminResponse) {
       alert("Сначала ответьте на вопрос клиента");
       return;
@@ -433,7 +440,7 @@ export function AdminQuestionsChat({ questions: initialQuestions, currentUserId 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           questionId: selectedQuestion.id,
-          messages: selectedQuestion.messages.map((m) => ({
+          messages: selectedQuestion.messages.filter(m => !m.isSensitive).map((m) => ({
             text: m.text,
             isFromAdmin: m.isFromAdmin,
           })),
@@ -492,25 +499,76 @@ export function AdminQuestionsChat({ questions: initialQuestions, currentUserId 
 
   // Автообновление
   useEffect(() => {
+    const lastSyncRef = { current: new Date(0).toISOString() };
+    let polling = false;
+    let disposed = false;
+    const controller = new AbortController();
+
     const interval = setInterval(async () => {
+      if (polling) return;
+      polling = true;
       try {
-        const response = await fetch("/api/admin/questions/list");
+        const since = encodeURIComponent(lastSyncRef.current);
+        const response = await fetch(`/api/admin/questions/list?since=${since}`, { signal: controller.signal, cache: 'no-store' });
         if (response.ok) {
           const data = await response.json();
+          if (disposed) return;
+          if (typeof data.cursor === 'string') lastSyncRef.current = data.cursor;
           const wasNearBottom = isNearBottom();
-          setQuestions(data.questions);
+
+          if (data.delta && Array.isArray(data.questions)) {
+            setQuestions((prev) => {
+              const byId = new Map(prev.map((q) => [q.id, q]));
+              for (const item of data.questions) {
+                if (removedUserIds.current.has(item.user.id)) continue;
+                const existing = byId.get(item.id);
+                if (existing) {
+                  const messageIds = new Set(existing.messages.map((m) => m.id));
+                  const mergedMessages = [
+                    ...existing.messages,
+                    ...item.messages.filter((m: { id: string }) => !messageIds.has(m.id)),
+                  ];
+                  byId.set(item.id, { ...existing, ...item, messages: mergedMessages });
+                } else {
+                  byId.set(item.id, item);
+                }
+              }
+              return Array.from(byId.values()).filter(q => !removedUserIds.current.has(q.user.id)).sort((a, b) => {
+                if (a.status !== b.status) return a.status.localeCompare(b.status);
+                return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+              });
+            });
+          } else if (Array.isArray(data.questions)) {
+            setQuestions(data.questions.filter((q: { user: { id: string } }) => !removedUserIds.current.has(q.user.id)));
+          }
+
           if (wasNearBottom) {
             setTimeout(() => scrollToBottom(), 100);
           }
         }
       } catch (error) {
-        console.error("Error fetching questions:", error);
+        if (!disposed) console.error("Error fetching questions:", error);
+      } finally {
+        polling = false;
       }
-    }, 5000);
-    return () => clearInterval(interval);
+    }, 10_000);
+    return () => { disposed = true; controller.abort(); clearInterval(interval); };
   }, []);
 
   const selectedQuestion = questions.find((q) => q.id === selectedQuestionId);
+
+  const selectQuestion = (id: string) => {
+    if (id === selectedQuestionId || isLoading || isGenerating || isUploadingImage) return;
+    if (selectedQuestionId) drafts.current.set(selectedQuestionId, { text: message, image: selectedImage, preview: imagePreview });
+    const draft = drafts.current.get(id);
+    setMessage(draft?.text || '');
+    setSelectedImage(draft?.image || null);
+    setImagePreview(draft?.preview || null);
+    setSendError('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (textareaRef.current) textareaRef.current.style.height = 'auto';
+    setSelectedQuestionId(id);
+  };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -541,6 +599,7 @@ export function AdminQuestionsChat({ questions: initialQuestions, currentUserId 
     if (!selectedQuestionId || ((!message.trim() && !selectedImage) || isLoading)) return;
 
     setIsLoading(true);
+    setSendError('');
     let imageUrl: string | null = null;
 
     try {
@@ -582,25 +641,31 @@ export function AdminQuestionsChat({ questions: initialQuestions, currentUserId 
         if (textareaRef.current) {
           textareaRef.current.style.height = "auto";
         }
-        setQuestions(
-          questions.map((q) =>
+        drafts.current.delete(selectedQuestionId);
+        setQuestions((current) =>
+          current.map((q) =>
             q.id === selectedQuestionId
-              ? { ...q, messages: [...q.messages, data.message], status: "IN_PROGRESS" }
+              ? { ...q, messages: q.messages.some(m => m.id === data.message.id) ? q.messages : [...q.messages, data.message], status: "IN_PROGRESS" }
               : q
           )
         );
         setTimeout(() => scrollToBottom(), 100);
+      } else {
+        setSendError('Не удалось отправить сообщение. Черновик сохранён — попробуйте ещё раз.');
       }
     } catch (error) {
       console.error("Error sending message:", error);
+      setSendError('Нет связи с сервером. Сообщение не отправлено, черновик сохранён.');
     } finally {
       setIsLoading(false);
+      setIsUploadingImage(false);
     }
   };
 
   const handleStatusChange = async (newStatus: string) => {
     if (!selectedQuestionId || isLoading) return;
     setIsLoading(true);
+    setSendError('');
     try {
       const response = await fetch("/api/admin/questions/status", {
         method: "POST",
@@ -608,22 +673,39 @@ export function AdminQuestionsChat({ questions: initialQuestions, currentUserId 
         body: JSON.stringify({ questionId: selectedQuestionId, status: newStatus }),
       });
       if (response.ok) {
-        setQuestions(questions.map((q) => (q.id === selectedQuestionId ? { ...q, status: newStatus } : q)));
+        setQuestions(current => current.map((q) => (q.id === selectedQuestionId ? { ...q, status: newStatus } : q)));
+      } else {
+        setSendError('Не удалось изменить статус. Попробуйте ещё раз.');
       }
     } catch (error) {
       console.error("Error changing status:", error);
+      setSendError('Нет связи с сервером. Статус не изменён.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const pendingQuestions = questions.filter((q) => q.status === "PENDING");
-  const inProgressQuestions = questions.filter((q) => q.status === "IN_PROGRESS");
-  const completedQuestions = questions.filter((q) => q.status === "COMPLETED");
+  const query = searchDialogs.trim().toLocaleLowerCase('ru');
+  const visibleQuestions = questions.filter(q =>
+    (dialogFilter === 'all' || (dialogFilter === 'active' ? q.status !== 'COMPLETED' : q.status === dialogFilter)) &&
+    (!query || [q.user.name, q.user.email, q.id, ...q.messages.map(m => m.text)].some(value => value?.toLocaleLowerCase('ru').includes(query)))
+  ).sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+  const pendingQuestions = visibleQuestions.filter((q) => q.status === "PENDING");
+  const inProgressQuestions = visibleQuestions.filter((q) => q.status === "IN_PROGRESS");
+  const completedQuestions = visibleQuestions.filter((q) => q.status === "COMPLETED");
 
   return (
     <div ref={containerRef} className="flex min-h-0 flex-1">
-      {profileUserId && <ChatUserProfile key={profileUserId} userId={profileUserId} currentUserId={currentUserId} onClose={() => setProfileUserId(null)} />}
+      {profileUserId && <ChatUserProfile key={profileUserId} userId={profileUserId} currentUserId={currentUserId} onClose={() => setProfileUserId(null)}
+        onUserUpdated={updated => setQuestions(previous => previous.map(q => q.user.id === updated.id ? { ...q, user: { ...q.user, name: updated.name, email: updated.email } } : q))}
+        onUserDeleted={id => {
+          removedUserIds.current.add(id);
+          for (const question of questions) if (question.user.id === id) drafts.current.delete(question.id);
+          setQuestions(previous => previous.filter(q => q.user.id !== id));
+          if (selectedQuestion?.user.id === id) { setSelectedQuestionId(null); setMessage(''); setSelectedImage(null); setImagePreview(null); }
+          setProfileUserId(null);
+          router.refresh();
+        }} />}
       {/* ЛЕВАЯ КОЛОНКА - Список чатов */}
       <DashboardCard
         style={{ width: isLeftCollapsed ? 48 : leftWidth }}
@@ -652,7 +734,18 @@ export function AdminQuestionsChat({ questions: initialQuestions, currentUserId 
                 <PanelLeftClose className="h-4 w-4 text-slate-500" />
               </button>
             </div>
+            <div className="space-y-2 border-b border-slate-200 p-3">
+              <Input aria-label="Поиск диалогов" placeholder="Имя, email или текст сообщения" value={searchDialogs} onChange={event => setSearchDialogs(event.target.value)} />
+              <select aria-label="Статус диалогов" value={dialogFilter} onChange={event => setDialogFilter(event.target.value)} className="h-10 w-full border border-slate-200 bg-white px-2 text-sm">
+                <option value="active">Активные ({questions.filter(q => q.status !== 'COMPLETED').length})</option>
+                <option value="PENDING">Ожидают оператора</option>
+                <option value="IN_PROGRESS">В работе</option>
+                <option value="COMPLETED">Завершённые</option>
+                <option value="all">Все диалоги</option>
+              </select>
+            </div>
         <div className="flex-1 overflow-y-auto">
+          {visibleQuestions.length === 0 && <p className="p-5 text-sm text-slate-500">Диалогов не найдено. Измените поиск или фильтр.</p>}
           {/* В работе */}
           {inProgressQuestions.length > 0 && (
             <>
@@ -664,7 +757,7 @@ export function AdminQuestionsChat({ questions: initialQuestions, currentUserId 
                   key={q.id}
                   question={q}
                   isSelected={selectedQuestionId === q.id}
-                  onClick={() => setSelectedQuestionId(q.id)}
+                  onClick={() => selectQuestion(q.id)}
                   icon={<AlertCircle className="h-4 w-4 text-blue-500" />}
                 />
               ))}
@@ -681,7 +774,7 @@ export function AdminQuestionsChat({ questions: initialQuestions, currentUserId 
                   key={q.id}
                   question={q}
                   isSelected={selectedQuestionId === q.id}
-                  onClick={() => setSelectedQuestionId(q.id)}
+                  onClick={() => selectQuestion(q.id)}
                   icon={<Clock className="h-4 w-4 text-yellow-500" />}
                 />
               ))}
@@ -698,7 +791,7 @@ export function AdminQuestionsChat({ questions: initialQuestions, currentUserId 
                   key={q.id}
                   question={q}
                   isSelected={selectedQuestionId === q.id}
-                  onClick={() => setSelectedQuestionId(q.id)}
+                  onClick={() => selectQuestion(q.id)}
                   icon={<CheckCircle className="h-4 w-4 text-slate-400" />}
                 />
               ))}
@@ -809,12 +902,20 @@ export function AdminQuestionsChat({ questions: initialQuestions, currentUserId 
                     </>
                   )}
                 </Button>
+                <UtilityPasswordAction key={selectedQuestion.id} questionId={selectedQuestion.id}
+                  recipient={selectedQuestion.user.name || selectedQuestion.user.email}
+                  disabled={isLoading} closed={selectedQuestion.status === 'COMPLETED'}
+                  onSent={sent => {
+                    setQuestions(previous => previous.map(q => q.id === selectedQuestion.id
+                      ? { ...q, status: 'IN_PROGRESS', updatedAt: new Date(), messages: q.messages.some(m => m.id === sent.id) ? q.messages : [...q.messages, sent] } : q));
+                    setTimeout(() => scrollToBottom(), 100);
+                  }} />
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={addToKnowledgeBase}
-                  disabled={isAddingToKnowledge || !selectedQuestion?.messages.some((m) => m.isFromAdmin)}
+                  disabled={isAddingToKnowledge || !selectedQuestion?.messages.some((m) => m.isFromAdmin && !m.isSensitive)}
                   className={cn(
                     adminOutlineBtnClass,
                     "gap-2 border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100"
@@ -855,6 +956,7 @@ export function AdminQuestionsChat({ questions: initialQuestions, currentUserId 
                 </div>
               )}
               <form onSubmit={handleSendMessage}>
+                {sendError && <p role="alert" className="mb-2 text-sm text-red-700">{sendError}</p>}
                 <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
                 <div
                   className={cn(
@@ -885,11 +987,12 @@ export function AdminQuestionsChat({ questions: initialQuestions, currentUserId 
                       e.target.style.height = `${Math.min(e.target.scrollHeight, 128)}px`;
                     }}
                     placeholder="Введите сообщение…"
+                    aria-label="Ответ пользователю"
                     rows={1}
                     disabled={isLoading || isUploadingImage}
                     className="max-h-28 min-h-[1.25rem] flex-1 resize-none self-center rounded-none border-0 bg-transparent py-0 text-sm leading-snug text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-0"
                     onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
+                      if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
                         e.preventDefault();
                         handleSendMessage(e);
                       }
@@ -913,6 +1016,7 @@ export function AdminQuestionsChat({ questions: initialQuestions, currentUserId 
                   </Button>
                 </div>
               </form>
+              <p className="mt-2 text-xs text-slate-500">Enter — отправить · Shift + Enter — новая строка · Черновики сохраняются при переключении диалогов</p>
               {isUploadingImage ? (
                 <p className="mt-1.5 text-xs text-slate-500">Загрузка изображения…</p>
               ) : null}
@@ -947,7 +1051,8 @@ export function AdminQuestionsChat({ questions: initialQuestions, currentUserId 
           <button
             onClick={() => setIsRightCollapsed(false)}
             className="flex h-full items-center justify-center hover:bg-slate-50"
-            title="Развернуть панель"
+            title="Шаблоны и база знаний"
+            aria-label="Открыть шаблоны и базу знаний"
           >
             <PanelRightClose className="h-5 w-5 rotate-180 text-slate-400" />
           </button>
@@ -1147,6 +1252,7 @@ function ChatListItem({
   return (
     <button
       onClick={onClick}
+      aria-pressed={isSelected}
       className={cn(
         "w-full border-b border-slate-100 p-3 text-left transition-colors hover:bg-slate-50",
         isSelected && "border-l-4 border-l-blue-500 bg-blue-50"
@@ -1159,7 +1265,10 @@ function ChatListItem({
             {question.user.name || question.user.email}
           </p>
           {lastMessage && (
-            <p className="truncate text-xs text-slate-500">{lastMessage.text}</p>
+            <p className="mt-1 line-clamp-2 break-words text-xs text-slate-500">{lastMessage.isFromAdmin ? 'Оператор: ' : ''}{lastMessage.text || (lastMessage.imageUrl ? 'Изображение' : '')}</p>
+          )}
+          {question.status !== 'COMPLETED' && (question.status === 'PENDING' || (lastMessage && !lastMessage.isFromAdmin)) && (
+            <span className="mt-2 inline-flex border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800">Ждёт ответа</span>
           )}
           <p className="mt-1 text-xs text-slate-400">
             {new Date(question.updatedAt).toLocaleString("ru-RU")}

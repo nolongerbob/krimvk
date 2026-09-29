@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
 import { requireAdmin } from "@/lib/require-admin";
 import { prisma } from "@/lib/prisma";
+import { revalidateWaterQualityPaths } from "@/lib/revalidate-public-cache";
 
 export const dynamic = 'force-dynamic';
 
@@ -61,6 +62,8 @@ export async function POST(request: NextRequest) {
         order: order || 0,
       },
     });
+
+    revalidateWaterQualityPaths();
 
     return NextResponse.json(district);
   } catch (error) {

@@ -716,10 +716,10 @@ ${fileUrls.map((url: string, i: number) => `${i + 1}. ${url}`).join("\n")}
               Ваша заявка принята в обработку. С вами свяжутся в ближайшее время.
             </p>
             <Button asChild>
-              <a href="/dashboard/applications">
+              <Link href="/dashboard/applications">
                 Перейти к заявкам
                 <ArrowRight className="h-4 w-4 ml-2" />
-              </a>
+              </Link>
             </Button>
           </DashboardCardBody>
         </DashboardCard>

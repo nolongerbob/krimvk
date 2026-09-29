@@ -40,7 +40,12 @@ export async function GET(request: NextRequest) {
     const auth = await requireAdmin();
     if (!auth.ok) return auth.response;
 
-    // Загружаем заявки на технологическое присоединение
+    const page = Math.max(1, Number.parseInt(request.nextUrl.searchParams.get('page') || '1', 10) || 1);
+    const limit = Math.min(
+      100,
+      Math.max(1, Number.parseInt(request.nextUrl.searchParams.get('limit') || '50', 10) || 50)
+    );
+
     const rawApplications = await prisma.application.findMany({
       include: {
         user: {
@@ -57,6 +62,8 @@ export async function GET(request: NextRequest) {
         },
       },
       orderBy: { createdAt: "desc" },
+      take: limit,
+      skip: (page - 1) * limit,
     });
 
     // Преобразуем в удобный формат для выпадающего списка
@@ -89,7 +96,7 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    return NextResponse.json({ applications });
+    return NextResponse.json({ applications, page, limit });
   } catch (error) {
     console.error("Error fetching applications list:", error);
     return NextResponse.json(

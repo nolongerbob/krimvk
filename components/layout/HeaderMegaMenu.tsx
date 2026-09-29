@@ -9,6 +9,12 @@ type MegaMenuSection = { title: string; links: MegaMenuLink[] };
 
 export const abonentyMegaMenu: MegaMenuSection[] = [
   {
+    title: "Качество воды",
+    links: [
+      { href: "/o-kompanii/kachestvo-vody", label: "Качество питьевой воды" },
+    ],
+  },
+  {
     title: "Услуги и подключение",
     links: [
       { href: "/abonenty/tehnologicheskoe-prisoedinenie", label: "Подключение" },
@@ -50,7 +56,6 @@ export const companyMegaMenu: MegaMenuSection[] = [
     title: "Водоснабжение",
     links: [
       { href: "/o-kompanii/vodosnabzhenie/struktura", label: "Структура водоснабжения" },
-      { href: "/o-kompanii/kachestvo-vody", label: "Качество питьевой воды" },
     ],
   },
   {

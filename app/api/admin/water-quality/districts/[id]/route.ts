@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
 import { requireAdmin } from "@/lib/require-admin";
 import { prisma } from "@/lib/prisma";
+import { revalidateWaterQualityPaths } from "@/lib/revalidate-public-cache";
 
 export const dynamic = 'force-dynamic';
 
@@ -28,6 +29,8 @@ export async function PUT(
       },
     });
 
+    revalidateWaterQualityPaths();
+
     return NextResponse.json(district);
   } catch (error) {
     console.error("Error updating district:", error);
@@ -51,6 +54,8 @@ export async function DELETE(
     await prisma.waterQualityDistrict.delete({
       where: { id: params.id },
     });
+
+    revalidateWaterQualityPaths();
 
     return NextResponse.json({ success: true });
   } catch (error) {

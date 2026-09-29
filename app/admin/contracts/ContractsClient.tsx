@@ -316,7 +316,7 @@ export function ContractsClient({ contracts: initialContracts }: ContractsClient
             </p>
             {searchTerm && (
               <p className="text-sm text-slate-500 mb-4">
-                По запросу "<span className="font-medium">{searchTerm}</span>" ничего не найдено
+                По запросу «<span className="font-medium">{searchTerm}</span>» ничего не найдено
               </p>
             )}
             {(searchTerm || statusFilter !== "all") && (

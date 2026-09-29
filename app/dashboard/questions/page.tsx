@@ -1,7 +1,9 @@
+import { assistantEnabled } from '@/lib/release-features';
 import { getSession } from "@/lib/get-session";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { QuestionsChat } from "@/components/questions/QuestionsChat";
+import { EmbeddedAssistantChat } from "@/components/seasonal/AssistantChat";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -60,11 +62,13 @@ export default async function QuestionsPage() {
           Задать вопрос
         </h1>
         <p className="text-sm text-slate-600">
-          Напишите службе поддержки — ответим в этом чате
+          {assistantEnabled() ? 'Капелька поможет с вопросом, а при необходимости подключит оператора' : 'Напишите службе поддержки — ответим в этом чате'}
         </p>
       </div>
 
-      <QuestionsChat question={question} className="min-h-0 flex-1" />
+      {assistantEnabled()
+        ? <EmbeddedAssistantChat initialOperator={!!question && question.status !== 'COMPLETED' && question.messages.some(message=>!message.isFromAdmin)} />
+        : <QuestionsChat question={question} className="min-h-0 flex-1" />}
     </div>
   );
 }

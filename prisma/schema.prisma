@@ -143,6 +143,7 @@ model Application {
   service Service           @relation(fields: [serviceId], references: [id], onDelete: Cascade)
   files   ApplicationFile[] // Документы, загруженные админом
 
+  @@index([userId, status])
   @@map("applications")
 }
 
@@ -209,6 +210,7 @@ model UserAccount {
   user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   meters WaterMeter[]
 
+  @@index([userId, isActive])
   @@map("user_accounts")
 }
 
@@ -251,6 +253,7 @@ model MeterReading {
 
 // Новости
 model News {
+  notices SiteNotice[]
   id          String    @id @default(cuid())
   title       String
   content     String    @db.Text
@@ -263,7 +266,23 @@ model News {
 
   author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
+  @@index([published, publishedAt])
   @@map("news")
+}
+
+model SiteNotice {
+  id          String   @id @default(cuid())
+  text        String
+  buttonLabel String   @default("Что изменится")
+  newsId      String
+  startsAt    DateTime
+  endsAt      DateTime
+  enabled     Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  news        News     @relation(fields: [newsId], references: [id], onDelete: Cascade)
+  @@index([enabled, startsAt, endsAt])
+  @@map("site_notices")
 }
 
 // Диалоги (чаты) с поддержкой
@@ -277,6 +296,7 @@ model Question {
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   messages Message[]
 
+  @@index([status, updatedAt])
   @@map("questions")
 }
 
@@ -293,12 +313,46 @@ model Message {
   text        String   @db.Text
   imageUrl    String? // URL изображения
   isFromAdmin Boolean  @default(false)
+  isSensitive Boolean  @default(false) // Credentials: exclude from AI/knowledge exports
   authorId    String? // ID админа, если сообщение от админа
   createdAt   DateTime @default(now())
 
   question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
+  @@index([questionId, createdAt])
   @@map("messages")
+}
+
+// Confirmed recovery destination, retained when a website association is unlinked.
+model UtilityAccountAccess {
+  key             String   @id // region:accountNumber
+  userId          String?
+  email           String?
+  emailSyncedAt   DateTime?
+  pendingChangeId String?
+  updatedAt       DateTime @updatedAt
+
+  @@map("utility_account_access")
+}
+
+// Durable idempotency journal. UNKNOWN results must be reconciled, never resent blindly.
+model UtilityPasswordChange {
+  id                String   @id
+  accountKey        String
+  accountNumber     String
+  region            String
+  actorId           String
+  userId            String
+  questionId        String?
+  recoveryTokenHash String?
+  passwordEncrypted String
+  status            String   @default("PENDING")
+  messageId         String?
+  createdAt         DateTime @default(now())
+  completedAt       DateTime?
+
+  @@index([accountKey, createdAt])
+  @@map("utility_password_changes")
 }
 
 // Страницы/разделы сайта (категории)
@@ -455,6 +509,7 @@ model DisclosureDocument {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([category, isActive])
   @@map("disclosure_documents")
 }
 

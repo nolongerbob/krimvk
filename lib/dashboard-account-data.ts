@@ -1,4 +1,6 @@
+import { quickMetrics, type QuickMetrics } from './quick-action-metrics';
 export type DashboardAccountSummary = {
+  quickMetrics?: QuickMetrics;
   balance: number;
   paid: number;
   charged: number;
@@ -37,6 +39,7 @@ export function parseDashboardAccountData(
       : 0;
 
   return {
+    quickMetrics: quickMetrics(responseData ?? {}),
     balance: parseAmount(balance as string | number),
     paid: parseAmount(paid as string | number),
     charged: parseAmount(charged as string | number),

@@ -12,26 +12,19 @@ sudo nginx -t && sudo systemctl reload nginx
 
 ## 2. Стандартный релиз
 
-1. Merge в `main`.
-2. Дождаться workflow `Deploy VPS`.
-3. Проверить:
-   - `curl -fsS https://yourdomain.ru/api/health`
-   - ключевые пользовательские сценарии (логин, отправка формы, загрузка файлов).
+Следовать [SAFE_RELEASE.md](./SAFE_RELEASE.md) и [DEV_RELEASE_GATE.md](./DEV_RELEASE_GATE.md).
+Push/merge больше не переключает сайт автоматически. Workflow только готовит
+отдельный релиз. Перед переключением нужны проверенная резервная копия,
+совместимые миграции и проверки кандидата на отдельном loopback-порту.
 
 ## 3. Ручной rollback
 
-Если автодеплой не прошел или обнаружен критичный дефект:
-
-```bash
-cd /var/www/krimvk
-pm2 logs krimvk --lines 200
-ls -1 .deploy-backups | tail -n 5
-rm -rf .next
-cp -a ".deploy-backups/<backup_folder>" .next
-pm2 restart krimvk --update-env
-pm2 save
-curl -fsS http://127.0.0.1:3000/api/health
-```
+При ошибке нового релиза вернуть сохранённую конфигурацию upstream Nginx,
+проверить `nginx -t` и выполнить graceful reload. Старый процесс и его сборку
+сохранять работающими до подтверждения нового релиза. Не удалять `.next`,
+не перезаписывать активную сборку и не восстанавливать базу поверх новых
+показаний/сообщений. Актуальные процесс, порт и файл отката сверять по журналу
+конкретной выкладки, а не по устаревшим примерам ниже.
 
 ## 4. Мониторинг (Grafana / Prometheus)
 

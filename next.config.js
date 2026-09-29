@@ -13,6 +13,10 @@ const assetPrefix =
     : undefined;
 
 const nextConfig = {
+  ...(process.env.NODE_ENV === 'development' ? { allowedDevOrigins: ['dev.krimvk.ru'] } : {}),
+  ...(process.env.NODE_ENV === 'development' && process.env.SEASONAL_DEV_DIST === '1'
+    ? { distDir: process.env.ESIA_DEV_PREVIEW === 'true' ? '.next-esia-dev' : '.next-seasonal-dev' }
+    : {}),
   ...(assetPrefix ? { assetPrefix } : {}),
   env: {
     NEXT_PUBLIC_SITE_URL: siteUrl.replace(/\/$/, ''),
@@ -23,7 +27,7 @@ const nextConfig = {
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    minimumCacheTTL: 60,
+    minimumCacheTTL: 3600,
     remotePatterns: [
       {
         protocol: 'https',
@@ -63,21 +67,21 @@ const nextConfig = {
   // Сжатие только на CDN (gzip-on) или nginx. Двойное gzip (Next + CDN) ломает Safari на HTTP/2.
   compress: false,
   // Оптимизация production сборки
-  // Отключаем ESLint во время сборки для Vercel
+  // Линтер — обязательная часть проверки production-сборки.
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
-  // Отключаем проверку типов во время сборки для Vercel (если есть проблемы)
   typescript: {
-    // Next 15: async route/page params — миграция по файлам на develop
     ignoreBuildErrors: false,
   },
   // Лимиты тела запроса: Next 15.5+ буферизует body в middleware/proxy (по умолчанию ~10MB).
   // Без этого multipart обрезается → "Failed to parse body as FormData".
   experimental: {
-    cpus: 2,
+    // Keep release builds bounded on the 2 GB VPS alongside the live process.
+    cpus: 1,
     // proxyClientMaxBodySize — только Next.js 16+; в 15.5 достаточно middleware + serverActions
     middlewareClientMaxBodySize: '200mb',
+    optimizePackageImports: ['lucide-react'],
     serverActions: {
       bodySizeLimit: '200mb',
     },
@@ -142,4 +146,8 @@ const nextConfig = {
   },
 }
 
-module.exports = nextConfig
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
+module.exports = withBundleAnalyzer(nextConfig);

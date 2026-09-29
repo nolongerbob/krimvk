@@ -10,6 +10,7 @@ import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { AuthBrandPanel, AuthSplitLayout } from "@/components/auth/AuthBrandPanel";
 import { authButtonClass, authFieldClass } from "@/components/auth/auth-styles";
+import { GosuslugiEntry } from "@/components/auth/GosuslugiEntry";
 
 export const dynamic = "force-dynamic";
 
@@ -150,17 +151,25 @@ function LoginForm() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {verified === "true" && (
-            <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+            <div className="rounded-none border border-green-200 bg-green-50 p-3 text-sm text-green-800">
               Email успешно подтвержден! Теперь вы можете войти.
             </div>
           )}
           {searchParams.get("passwordReset") === "true" && (
-            <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+            <div className="rounded-none border border-green-200 bg-green-50 p-3 text-sm text-green-800">
               Пароль успешно изменён! Теперь вы можете войти с новым паролем.
             </div>
           )}
+          {searchParams.get('error')?.startsWith('Vk') && <div role="alert" className="mb-4 border border-blue-100 bg-blue-50 p-4 text-sm text-slate-700">
+            {searchParams.get('error') === 'VkNotLinked' ? 'Этот VK ID пока не привязан. Войдите по почте и паролю и привяжите сервис в настройках. Если кабинета ещё нет — зарегистрируйтесь.' : searchParams.get('error') === 'VkSessionConflict' ? 'Вы уже вошли в другой кабинет. Сначала выйдите из него.' : searchParams.get('error') === 'VkCancelled' ? 'Вход отменён.' : 'Не удалось завершить вход VK ID: запрос истёк или произошла ошибка. Попробуйте ещё раз.'}
+          </div>}
+          {searchParams.get('error') === 'YandexNotLinked' && (
+            <div role="status" className="mb-4 border border-blue-100 bg-blue-50 p-4 text-sm text-slate-700">
+              Этот Яндекс ID пока не привязан к кабинету. Войдите по почте и паролю и привяжите Яндекс в настройках. Если кабинета ещё нет — зарегистрируйтесь. Автоматически связывать аккаунты по почте мы не будем.
+            </div>
+          )}
           {error && (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+            <div className="rounded-none border border-red-200 bg-red-50 p-3 text-sm text-red-800">
               {error}
             </div>
           )}
@@ -208,6 +217,8 @@ function LoginForm() {
             {isLoading ? "Вход..." : "Войти"}
           </Button>
         </form>
+
+        <GosuslugiEntry />
 
         <p className="mt-6 text-center text-sm lg:text-left">
           <span className="text-slate-600">Нет аккаунта? </span>

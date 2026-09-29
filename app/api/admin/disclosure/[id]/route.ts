@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth-config";
 import { requireAdmin } from "@/lib/require-admin";
 import { prisma } from "@/lib/prisma";
 import { storage } from "@/lib/storage";
+import { revalidateDisclosurePaths } from "@/lib/revalidate-public-cache";
 
 export const dynamic = 'force-dynamic';
 
@@ -29,6 +30,8 @@ export async function PUT(
         ...(isActive !== undefined && { isActive }),
       },
     });
+
+    revalidateDisclosurePaths(document.category);
 
     return NextResponse.json(document);
   } catch (error) {
@@ -71,6 +74,8 @@ export async function DELETE(
     await prisma.disclosureDocument.delete({
       where: { id: params.id },
     });
+
+    revalidateDisclosurePaths(document.category);
 
     return NextResponse.json({ success: true });
   } catch (error) {

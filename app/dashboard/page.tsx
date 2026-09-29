@@ -5,6 +5,7 @@ import { Loader2, Droplet, CreditCard, FileText, Wrench } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import DashboardTour from "@/components/DashboardTour";
+import { DashboardHomePreview } from "@/components/dashboard/DashboardHomePreview";
 import { useDashboardOverview } from "@/hooks/use-dashboard-overview";
 import { useDashboardEmailVerification } from "@/hooks/use-dashboard-email-verification";
 import { EmailVerificationBanner } from "@/components/dashboard/EmailVerificationBanner";
@@ -13,6 +14,7 @@ import { DashboardStatsGrid } from "@/components/dashboard/DashboardStatsGrid";
 import { DashboardQuickActionCard } from "@/components/dashboard/DashboardQuickActionCard";
 import { dashboardPageClass } from "@/components/dashboard/dashboard-styles";
 import type { DashboardAccount, DashboardAccountData } from "@/lib/dashboard-types";
+import { accountHomeEnabled } from "@/lib/release-features";
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
@@ -34,6 +36,7 @@ export default function DashboardPage() {
   const [accountDataError, setAccountDataError] = useState<string | null>(null);
   const { fetchOverview } = useDashboardOverview();
   const skipAccountRefetch = useRef(true);
+  const overviewRequest = useRef(0);
 
   const {
     emailVerified,
@@ -62,20 +65,26 @@ export default function DashboardPage() {
     setAccounts(data.accounts || []);
     setOverviewEmailVerified(data.profile.emailVerified ? true : false);
     setOverviewEmail(data.profile.email || "");
-    if (data.selectedAccountId) {
-      setSelectedAccountId(data.selectedAccountId);
-    }
+    setSelectedAccountId(data.selectedAccountId);
+    setAccountData(data.accountData);
     if (data.accountData) {
       setAccountData(data.accountData);
       setAccountDataError(null);
     }
   };
 
-  const loadOverview = async (accountId?: string | null) => {
+  const loadOverview = async (
+    accountId?: string | null,
+    options?: { fresh?: boolean }
+  ) => {
+    const request = ++overviewRequest.current;
     try {
-      const data = await fetchOverview(accountId ?? selectedAccountId);
+      const data = await fetchOverview(accountId ?? selectedAccountId, options);
+      if (request !== overviewRequest.current) return;
       applyOverview(data);
     } catch {
+      if (request !== overviewRequest.current) return;
+      setAccountData(null);
       setAccountDataError("Не удалось загрузить данные личного кабинета.");
     } finally {
       setLoading(false);
@@ -149,7 +158,7 @@ export default function DashboardPage() {
   // Обновляем статистику при возврате с других страниц (например, после создания заявки)
   useEffect(() => {
     if (status === "authenticated" && searchParams.get("refresh") === "true") {
-      fetchStats();
+      loadOverview(selectedAccountId, { fresh: true });
       // Убираем параметр из URL
       router.replace("/dashboard", { scroll: false });
     }
@@ -168,8 +177,8 @@ export default function DashboardPage() {
     }
   }, [status, searchParams, router]);
 
-  const fetchStats = async () => {
-    await loadOverview(selectedAccountId);
+  const fetchStats = async (fresh = false) => {
+    await loadOverview(selectedAccountId, fresh ? { fresh: true } : undefined);
   };
 
   useEffect(() => {
@@ -185,10 +194,9 @@ export default function DashboardPage() {
   // Обновляем статистику периодически, при фокусе страницы и при событии обновления
   useEffect(() => {
     if (status === "authenticated") {
-      // Обновляем статистику каждые 10 секунд (чаще для быстрого обновления)
       const interval = setInterval(() => {
         fetchStats();
-      }, 10000);
+      }, 90_000);
 
       // Обновляем статистику при возврате на страницу
       const handleFocus = () => {
@@ -198,7 +206,7 @@ export default function DashboardPage() {
 
       // Обновляем статистику при событии обновления (например, после создания заявки)
       const handleStatsUpdate = () => {
-        fetchStats();
+        fetchStats(true);
       };
       window.addEventListener("stats-update", handleStatsUpdate);
 
@@ -233,6 +241,20 @@ export default function DashboardPage() {
   if (!session) {
     return null;
   }
+
+  if (accountHomeEnabled()) return (
+    <DashboardHomePreview name={session.user?.name || ''} accounts={accounts}
+      selectedAccountId={selectedAccountId}
+      onSelectAccount={id => { setLoadingData(true); setAccountData(null); setSelectedAccountId(id); }}
+      accountData={accountData} loadingData={loadingData} error={accountDataError}
+      activeApplications={stats.activeApplications}>
+      {emailVerified === false && <EmailVerificationBanner
+        userEmail={userEmail} emailMessage={emailMessage} resendingEmail={resendingEmail}
+        changingEmail={changingEmail} newEmail={newEmail} onNewEmailChange={setNewEmail}
+        onResend={handleResendVerification} onChangeEmail={handleChangeEmail}
+      />}
+    </DashboardHomePreview>
+  );
 
   return (
     <div

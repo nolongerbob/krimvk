@@ -6,7 +6,12 @@ const mockRefresh = jest.fn();
 const mockRouter = { push: mockPush, refresh: mockRefresh };
 jest.mock('next/navigation', () => ({ useRouter: () => mockRouter }));
 
-jest.mock("@/components/admin/UserDetailsDialog", () => ({ UserDetailsDialog: () => null }));
+jest.mock("@/components/admin/UserDetailsDialog", () => ({ UserDetailsDialog: ({ user, onUserUpdated, onUserDeleted, onAccountAdded }: any) => <div>
+  <button onClick={() => onUserUpdated({ id: user.id, name: 'Новое имя' })}>rename profile</button>
+  <button onClick={() => onUserDeleted(user.id)}>delete profile</button>
+  <span data-testid="profile-accounts">{user.userAccounts.map((account: any) => account.accountNumber).join(',')}</span>
+  <button onClick={() => onAccountAdded({ id: 'new-account', accountNumber: '123', address: 'Адрес', region: 'saki', meters: [] })}>add utility</button>
+</div> }));
 
 const user = {
   id: "one", email: "example@example.test", name: "Тестовый пользователь", phone: null,
@@ -78,5 +83,25 @@ describe("admin users page controls", () => {
     rerender(<UsersClient users={[{ ...user, role: 'ADMIN' }]} totalUsers={1} query="" />);
     await act(async () => {});
     expect(global.fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('immediately updates the directory after a profile edit and removes a deleted card', async () => {
+    render(<UsersClient users={[user]} totalUsers={1} query="" />);
+    await act(async () => {});
+    fireEvent.click(screen.getByRole('button', { name: 'Подробнее' }));
+    fireEvent.click(screen.getByText('rename profile'));
+    expect(screen.getByRole('heading', { name: 'Новое имя' })).toBeInTheDocument();
+    fireEvent.click(screen.getByText('delete profile'));
+    expect(screen.queryByRole('heading', { name: 'Новое имя' })).not.toBeInTheDocument();
+    expect(screen.queryByText('delete profile')).not.toBeInTheDocument();
+    expect(mockRefresh).toHaveBeenCalledTimes(2);
+  });
+  it('immediately adds the account to the selected profile and refreshes the directory', async () => {
+    render(<UsersClient users={[user]} totalUsers={1} query="" />);
+    await act(async () => {});
+    fireEvent.click(screen.getByRole('button', { name: 'Подробнее' }));
+    fireEvent.click(screen.getByText('add utility'));
+    expect(screen.getByTestId('profile-accounts')).toHaveTextContent('123');
+    expect(mockRefresh).toHaveBeenCalledTimes(1);
   });
 });

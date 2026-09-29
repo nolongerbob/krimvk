@@ -59,7 +59,7 @@ export function HeaderPhoneMenu({ session, onLinkClick }: HeaderPhoneMenuProps) 
   const chatHref = session ? "/dashboard/questions" : "/login?callbackUrl=/dashboard/questions";
 
   return (
-    <div className="w-full border-t border-slate-200/60 bg-white/75 backdrop-blur-xl shadow-[0_24px_48px_-12px_rgba(15,23,42,0.12)] animate-in fade-in slide-in-from-top-1 duration-200">
+    <div className="w-full border-t border-slate-200/60 bg-white/95 shadow-[0_24px_48px_-12px_rgba(15,23,42,0.12)] animate-in fade-in slide-in-from-top-1 duration-200">
       <div className="w-full px-6 py-8 sm:px-8 lg:px-14 lg:py-10 xl:px-20">
         <div className="grid w-full grid-cols-1 gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 lg:gap-x-20 lg:gap-y-10">
           {phoneSections.map((section) => (

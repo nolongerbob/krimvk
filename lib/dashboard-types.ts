@@ -7,6 +7,7 @@ export type DashboardAccount = {
 };
 
 export type DashboardAccountData = {
+  quickMetrics?: import('./quick-action-metrics').QuickMetrics;
   balance: number;
   paid: number;
   charged: number;

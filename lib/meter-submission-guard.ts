@@ -43,6 +43,9 @@ export function hasMonthlyReading(payload:unknown,device:string,period:string):b
 /** Persistent exclusive reservation before the external write. Shared by all
  * processes on this VPS. Never auto-delete pending/unknown results. */
 export async function reserveMeterSubmission(region:string,account:string,device:string,reading:number,period:string){
+  if (process.env.NODE_ENV === 'production' && (!process.env.METER_SUBMISSION_DIR || !path.isAbsolute(process.env.METER_SUBMISSION_DIR))) {
+    throw new MeterSubmissionError('Передача показаний временно недоступна: не настроено постоянное хранилище защиты от повторов.', 'METER_STORAGE_UNCONFIGURED', 503);
+  }
   const dir=process.env.METER_SUBMISSION_DIR||path.join(process.cwd(),'.meter-submissions');
   const key=createHash('sha256').update(JSON.stringify([region.trim(),account.trim(),device.trim(),period])).digest('hex');
   await mkdir(dir,{recursive:true,mode:0o700});let handle;

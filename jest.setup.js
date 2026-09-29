@@ -39,6 +39,7 @@ jest.mock('next-auth/react', () => ({
   })),
   signIn: jest.fn(),
   signOut: jest.fn(),
+  getProviders: jest.fn().mockResolvedValue(null),
   SessionProvider: ({ children }) => children,
 }))
 
@@ -48,4 +49,3 @@ global.console = {
   error: jest.fn(),
   warn: jest.fn(),
 }
-

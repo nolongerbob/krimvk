@@ -908,4 +908,3 @@ export default function DirectAccountReceiptPage() {
     </div>
   );
 }
-

@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { driver } from "driver.js";
-import "driver.js/dist/driver.css";
 import { Button } from "@/components/ui/button";
 import { HelpCircle, X } from "lucide-react";
 
@@ -79,8 +77,11 @@ export default function DashboardTour() {
     setShowPrompt(true);
   }, []);
 
-  const runTour = useCallback((hidePrompt = true) => {
+  const runTour = useCallback(async (hidePrompt = true) => {
     if (hidePrompt) setShowPrompt(false);
+
+    const { driver } = await import("driver.js");
+    await import("driver.js/dist/driver.css");
 
     const driverObj = driver({
       showProgress: true,

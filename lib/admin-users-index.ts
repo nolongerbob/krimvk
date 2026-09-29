@@ -7,6 +7,13 @@ type Snapshot = { balances: Map<string, BalanceResult | null>; running: boolean;
 const scope = globalThis as typeof globalThis & { adminUsersSnapshot?: Snapshot };
 const state = scope.adminUsersSnapshot ??= { balances: new Map(), running: false, finishedAt: 0, startedAt: 0, error: false };
 const TTL = 5 * 60_000;
+const invalidatedUsers = new Set<string>();
+
+export function invalidateUserBalance(userId: string) {
+  invalidatedUsers.add(userId);
+  state.balances.set(userId, null);
+  state.finishedAt = 0;
+}
 
 export function getBalanceSnapshot() { return state; }
 
@@ -16,6 +23,7 @@ export function ensureBalanceSnapshot(force = false) {
   state.error = false;
   state.startedAt = Date.now();
   state.balances = new Map();
+  invalidatedUsers.clear();
   void (async () => {
     try {
       const users = await withRetry(() => prisma.user.findMany({ select: {
@@ -36,14 +44,14 @@ export function ensureBalanceSnapshot(force = false) {
               await new Promise(resolve => setTimeout(resolve, requestAt - Date.now()));
             }
             const balance = await loadAdminUserBalance(id, user);
-            state.balances.set(id, Number.isFinite(balance.totalDebt) && Number.isFinite(balance.unpaidBillsCount) ? balance : null);
+            state.balances.set(id, !invalidatedUsers.has(id) && Number.isFinite(balance.totalDebt) && Number.isFinite(balance.unpaidBillsCount) ? balance : null);
           } catch { state.balances.set(id, null); }
         }
       };
       // Bound 1C and DB concurrency, regardless of the number of open admin tabs.
       await Promise.all([worker(), worker()]);
     } catch { state.error = true; }
-    finally { state.running = false; state.finishedAt = Date.now(); }
+    finally { state.running = false; state.finishedAt = invalidatedUsers.size ? 0 : Date.now(); }
   })();
 }
 

@@ -1,9 +1,14 @@
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+
+let sharedClient: S3Client | null = null;
 
 export function createS3Client(): S3Client {
+  if (sharedClient) return sharedClient;
+
   const endpoint = process.env.S3_ENDPOINT?.replace(/\/$/, '');
   const region = process.env.S3_REGION || 'ru-central1';
-  return new S3Client({
+  sharedClient = new S3Client({
     region,
     endpoint,
     forcePathStyle:
@@ -15,6 +20,8 @@ export function createS3Client(): S3Client {
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
     },
   });
+
+  return sharedClient;
 }
 
 export function getS3BucketName(): string {
@@ -33,4 +40,16 @@ export async function getS3Object(key: string) {
       Key: key,
     })
   );
+}
+
+export async function getPresignedS3Url(
+  key: string,
+  expiresInSeconds = 900
+): Promise<string> {
+  const client = createS3Client();
+  const command = new GetObjectCommand({
+    Bucket: getS3BucketName(),
+    Key: key,
+  });
+  return getSignedUrl(client, command, { expiresIn: expiresInSeconds });
 }

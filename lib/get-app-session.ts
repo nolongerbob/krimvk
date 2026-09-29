@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server';
 import { getServerSession, type Session } from 'next-auth';
 import { decode } from 'next-auth/jwt';
 import { authOptions } from '@/lib/auth-config';
+import { prisma } from '@/lib/prisma';
 
 function sessionFromJwt(payload: Record<string, unknown>): Session {
   const id = (payload.id as string) || (payload.sub as string);
@@ -53,7 +54,9 @@ export async function getAppSession(
     if (!payload || (!payload.sub && !payload.id)) {
       return null;
     }
-    return sessionFromJwt(payload as Record<string, unknown>);
+    const session = sessionFromJwt(payload as Record<string, unknown>);
+    if (!await prisma.user.findUnique({ where: { id: session.user.id }, select: { id: true } })) return null;
+    return session;
   } catch {
     return null;
   }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Loader2, Download, Printer, ArrowLeft, Phone, MapPin, Clock } from "lucide-react";
@@ -111,6 +111,7 @@ export default function ReceiptViewPage() {
   const accountId = searchParams.get("accountId");
   const dateFrom = searchParams.get("dateFrom");
   const dateTo = searchParams.get("dateTo");
+  const embedded = searchParams.get("embedded") === "1";
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -160,6 +161,7 @@ export default function ReceiptViewPage() {
   };
 
   const receiptRef = useRef<HTMLDivElement>(null);
+  const downloadPdfRef = useRef<() => Promise<void>>(async () => {});
 
   const generatePDF = async (openForPrint = false) => {
     if (!receiptRef.current) return;
@@ -222,8 +224,17 @@ export default function ReceiptViewPage() {
           };
         }
       } else {
-        // Скачиваем PDF
-        pdf.save(fileName);
+        // Скачиваем PDF (в Android WebView — через JS-мост)
+        const bridge = (window as unknown as { AndroidReceipt?: { savePdf: (b64: string, name: string) => void } })
+          .AndroidReceipt;
+        if (bridge?.savePdf) {
+          const base64 = pdf.output("datauristring").split(",")[1];
+          if (base64) {
+            bridge.savePdf(base64, fileName);
+          }
+        } else {
+          pdf.save(fileName);
+        }
       }
     } catch (error) {
       console.error("Error generating PDF:", error);
@@ -237,10 +248,21 @@ export default function ReceiptViewPage() {
     await generatePDF(true);
   };
 
-  const handleDownloadPDF = async () => {
-    // Генерируем PDF и скачиваем
+  const handleDownloadPDF = useCallback(async () => {
     await generatePDF(false);
-  };
+  }, [receiptData, accountInfo, dateFrom]);
+
+  downloadPdfRef.current = handleDownloadPDF;
+
+  useEffect(() => {
+    (window as unknown as { krimvkDownloadReceipt?: () => void }).krimvkDownloadReceipt =
+      () => {
+        void downloadPdfRef.current();
+      };
+    return () => {
+      delete (window as unknown as { krimvkDownloadReceipt?: () => void }).krimvkDownloadReceipt;
+    };
+  }, []);
 
   const parseAmount = (value: string | number | null | undefined): number => {
     if (value === null || value === undefined || value === "") return 0;
@@ -300,7 +322,8 @@ export default function ReceiptViewPage() {
   }
 
   return (
-    <div className={cn(dashboardPageClass, "min-h-screen [&_button]:!rounded-none")}>
+    <div className={cn(dashboardPageClass, "min-h-screen [&_button]:!rounded-none", embedded && "bg-white")}>
+      {!embedded && (
       <div className="container max-w-4xl px-4 py-6 print:hidden">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <Button asChild variant="outline" className={cn(outlineBtnClass)}>
@@ -329,6 +352,7 @@ export default function ReceiptViewPage() {
           </div>
         </div>
       </div>
+      )}
 
       <div className="container mx-auto max-w-4xl px-4 pb-8 print:block">
         <div ref={receiptRef}>
@@ -930,4 +954,3 @@ export default function ReceiptViewPage() {
     </div>
   );
 }
-

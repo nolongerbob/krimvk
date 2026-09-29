@@ -1,0 +1,65 @@
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { AddAccountForm } from '@/components/AddAccountForm';
+import { UtilityPasswordAction } from '@/components/admin/UtilityPasswordAction';
+const fetchMock = jest.fn();
+const ok = (data: unknown) => ({ ok: true, json: async () => data });
+beforeEach(() => { jest.clearAllMocks(); sessionStorage.clear(); global.fetch = fetchMock; Object.defineProperty(crypto, 'randomUUID', { configurable: true, value: () => '53ca1ba9-a9fa-43ae-ae97-44cce94312d8' }); });
+it('shows recovery only for saki and sends only account+region, not a client-supplied email', async () => {
+  fetchMock.mockResolvedValue(ok({ message: 'Письмо отправлено на почту ЛК' }));
+  render(<AddAccountForm onAccountAdded={jest.fn()} />);
+  fireEvent.click(screen.getByRole('button', { name: 'Добавить лицевой счет' }));
+  fireEvent.change(screen.getByLabelText(/Номер лицевого счета/), { target: { value: '123' } });
+  fireEvent.change(screen.getByLabelText(/Район/), { target: { value: 'krasn' } });
+  expect(screen.queryByText('Забыли пароль лицевого счёта?')).not.toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText(/Район/), { target: { value: 'saki' } });
+  fireEvent.click(screen.getByText('Забыли пароль лицевого счёта?'));
+  await screen.findByText('Письмо отправлено на почту ЛК');
+  expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ action: 'request', accountNumber: '123', region: 'saki' });
+  fireEvent.change(screen.getByLabelText(/Номер лицевого счета/), { target: { value: '456' } });
+  expect(screen.queryByText('Письмо отправлено на почту ЛК')).not.toBeInTheDocument();
+});
+it('clears a restored operation once 1C has definitively rejected it', async () => {
+  sessionStorage.setItem('utility-password-operation:chat', JSON.stringify({ id: '53ca1ba9-a9fa-43ae-ae97-44cce94312d8', accountNumber: '123', action: 'generate' }));
+  fetchMock.mockImplementation(async (_url, init) => init?.method === 'POST' ? { ok: false, status: 400, json: async () => ({ code: 'ONE_C_REJECTED', error: 'Запрос отклонён' }) } : ok({ writesEnabled: true }));
+  render(<UtilityPasswordAction questionId="chat" recipient="Анна" onSent={jest.fn()} />);
+  fireEvent.click(screen.getByText('Пароль 1С'));
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Проверить результат' })).toBeEnabled());
+  fireEvent.click(screen.getByRole('button', { name: 'Проверить результат' }));
+  await screen.findByText('Запрос отклонён');
+  expect(screen.getByRole('button', { name: 'Сгенерировать и отправить' })).toBeEnabled();
+  expect(screen.getByLabelText('Лицевой счёт')).toBeEnabled();
+  expect(sessionStorage.getItem('utility-password-operation:chat')).toBeNull();
+});
+it('generates and sends in the selected chat without a client-side password', async () => {
+  const sent = jest.fn(); fetchMock.mockImplementation(async (_url, init) => init?.method === 'POST' ? ok({ message: { id: 'sent', text: 'password' } }) : ok({ writesEnabled: true }));
+  render(<UtilityPasswordAction questionId="chat" recipient="Анна" onSent={sent} />);
+  fireEvent.click(screen.getByText('Пароль 1С'));
+  expect(screen.getByText(/Новый пароль будет отправлен в чат: Анна/)).toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText('Лицевой счёт'), { target: { value: '123' } });
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Сгенерировать и отправить' })).toBeEnabled());
+  fireEvent.click(screen.getByRole('button', { name: 'Сгенерировать и отправить' }));
+  await waitFor(() => expect(sent).toHaveBeenCalledWith({ id: 'sent', text: 'password' }));
+  expect(JSON.parse(fetchMock.mock.calls.find(([, init]) => init?.method === 'POST')[1].body)).toEqual({ questionId: 'chat', accountNumber: '123', region: 'saki', action: 'generate', requestId: expect.any(String) });
+});
+it('keeps the same operation and uses check-only after a timeout', async () => {
+  fetchMock.mockImplementation(async (_url, init) => init?.method === 'POST' ? { ok: false, status: 503, json: async () => ({ code: 'ONE_C_RESULT_UNKNOWN', error: 'Проверьте результат' }) } : ok({ writesEnabled: true }));
+  render(<UtilityPasswordAction questionId="chat" recipient="Анна" onSent={jest.fn()} />);
+  fireEvent.click(screen.getByText('Пароль 1С')); fireEvent.change(screen.getByLabelText('Лицевой счёт'), { target: { value: '123' } });
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Сгенерировать и отправить' })).toBeEnabled());
+  fireEvent.click(screen.getByRole('button', { name: 'Сгенерировать и отправить' }));
+  await screen.findByRole('alert');
+  fireEvent.click(screen.getByRole('button', { name: 'Проверить результат' }));
+  await waitFor(() => expect(fetchMock.mock.calls.filter(([, init]) => init?.method === 'POST')).toHaveLength(2));
+  const requests = fetchMock.mock.calls.filter(([, init]) => init?.method === 'POST').map(([, init]) => JSON.parse(init.body));
+  expect(requests[1]).toEqual({ ...requests[0], action: 'check' });
+});
+it('does not send credentials when the server rollout/transport check is disabled', async () => {
+  fetchMock.mockResolvedValue(ok({ writesEnabled: false }));
+  render(<UtilityPasswordAction questionId="chat" recipient="Анна" onSent={jest.fn()} />);
+  fireEvent.click(screen.getByText('Пароль 1С'));
+  await screen.findByText(/Изменение паролей и почты в 1С отключено на сервере/);
+  fireEvent.change(screen.getByLabelText('Лицевой счёт'), { target: { value: '123' } });
+  expect(screen.getByRole('button', { name: 'Сгенерировать и отправить' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Передать почту профиля в 1С' })).toBeDisabled();
+  expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'POST')).toBe(false);
+});

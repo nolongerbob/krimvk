@@ -1,5 +1,6 @@
 "use client";
 
+import { seasonalEnabled } from '@/lib/release-features';
 import {
   FileText,
   MessageSquare,
@@ -133,6 +134,12 @@ export function AdminHomeDashboard({ stats }: { stats: AdminHomeStats }) {
           description="Прямой доступ к л/с в 1С: квитанция, показания, платежи"
           icon={CreditCard}
         />
+        {seasonalEnabled() && <AdminModuleCard
+          href="/admin/site-settings"
+          title="Настройки сайта · DEV"
+          description="Локальный просмотр осеннего оформления"
+          icon={Settings}
+        />}
       </div>
     </>
   );

@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2, Plus, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ONE_C_REGION_OPTIONS } from "@/lib/1c-regions";
+import { supportsUtilityAccess } from '@/lib/utility-access-policy';
 import { DashboardCard, DashboardCardBody } from "@/components/dashboard/DashboardCard";
 import { cn } from "@/lib/utils";
 import { dashboardButtonClass } from "@/components/dashboard/dashboard-styles";
@@ -19,11 +20,25 @@ export function AddAccountForm({ onAccountAdded }: AddAccountFormProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [recoveryMessage, setRecoveryMessage] = useState('');
+  const [notice, setNotice] = useState('');
   const [formData, setFormData] = useState({
     accountNumber: "",
     password1c: "",
     region: "",
   });
+
+  async function requestRecovery() {
+    if (isSubmitting) return;
+    setIsSubmitting(true); setError(null); setRecoveryMessage('');
+    try {
+      const response = await fetch('/api/accounts/password-recovery', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'request', accountNumber: formData.accountNumber.trim(), region: formData.region }) });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Не удалось запросить восстановление');
+      setRecoveryMessage(data.message);
+    } catch (e) { setError(e instanceof Error ? e.message : 'Нет связи с сервером'); }
+    finally { setIsSubmitting(false); }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,6 +60,7 @@ export function AddAccountForm({ onAccountAdded }: AddAccountFormProps) {
 
       if (response.ok) {
         const result = await response.json();
+        setNotice(result.emailSyncPending ? 'Счёт добавлен. Почта пока не передана в 1С: подтвердите её в настройках профиля. Если она уже подтверждена, обратитесь к оператору.' : '');
         setIsOpen(false);
         setFormData({
           accountNumber: "",
@@ -75,7 +91,7 @@ export function AddAccountForm({ onAccountAdded }: AddAccountFormProps) {
 
   if (!isOpen) {
     return (
-      <Button
+      <div><Button
         onClick={() => setIsOpen(true)}
         variant="outline"
         className={cn(dashboardButtonClass, "h-10 w-full border-slate-200 sm:w-auto")}
@@ -83,6 +99,7 @@ export function AddAccountForm({ onAccountAdded }: AddAccountFormProps) {
         <Plus className="mr-2 h-4 w-4" />
         Добавить лицевой счет
       </Button>
+      {notice && <p role="status" className="mt-2 text-sm text-amber-800">{notice}</p>}</div>
     );
   }
 
@@ -112,9 +129,10 @@ export function AddAccountForm({ onAccountAdded }: AddAccountFormProps) {
               id="accountNumber"
               type="text"
               value={formData.accountNumber}
-              onChange={(e) =>
-                setFormData({ ...formData, accountNumber: e.target.value })
-              }
+              onChange={(e) => {
+                setFormData({ ...formData, accountNumber: e.target.value });
+                setRecoveryMessage(''); setError(null);
+              }}
               placeholder="Например: 12345"
               required
               disabled={isSubmitting}
@@ -129,9 +147,10 @@ export function AddAccountForm({ onAccountAdded }: AddAccountFormProps) {
             <select
               id="region"
               value={formData.region}
-              onChange={(e) =>
-                setFormData({ ...formData, region: e.target.value })
-              }
+              onChange={(e) => {
+                setFormData({ ...formData, region: e.target.value });
+                setRecoveryMessage(''); setError(null);
+              }}
               required
               disabled={isSubmitting}
               className="mt-1.5 flex h-10 w-full rounded-none border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
@@ -166,6 +185,11 @@ export function AddAccountForm({ onAccountAdded }: AddAccountFormProps) {
             <p className="mt-1.5 text-xs text-slate-500">
               Пароль с сайта aqua-crimea.ru
             </p>
+            {supportsUtilityAccess(formData.region) && <div className="mt-3 space-y-2">
+              <Button type="button" variant="link" className="h-auto p-0" disabled={isSubmitting || !formData.accountNumber.trim()} onClick={requestRecovery}>Забыли пароль лицевого счёта?</Button>
+              <p className="text-xs text-slate-500">Письмо придёт на подтверждённую почту вашего личного кабинета, ранее связанную с этим счётом. Пока только Сакский район.</p>
+              {recoveryMessage && <p role="status" className="border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">{recoveryMessage}</p>}
+            </div>}
           </div>
 
           <div className="flex flex-wrap gap-2 border-t border-slate-100 pt-4">

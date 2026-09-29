@@ -16,8 +16,8 @@ export async function POST(request: NextRequest) {
   if (!body.success) return NextResponse.json({ error: 'Проверьте email или ссылку подтверждения' }, { status: 400 });
   try {
     if (body.data.action === 'confirm') {
-      await confirmEmailChange(session.user.id, body.data.token);
-      return NextResponse.json({ message: 'Email изменён. Для входа используйте новый адрес.' });
+      const sync = await confirmEmailChange(session.user.id, body.data.token);
+      return NextResponse.json({ message: 'Email изменён. Для входа используйте новый адрес.' + (sync?.pending ? ' Почта пока не передана в 1С; обратитесь к оператору для повторной синхронизации.' : ''), emailSyncPending: Boolean(sync?.pending) });
     }
     await requestEmailChange(session.user.id, body.data.newEmail);
     return NextResponse.json({ message: 'Письмо отправлено на новый адрес. До подтверждения действует прежний email.' });

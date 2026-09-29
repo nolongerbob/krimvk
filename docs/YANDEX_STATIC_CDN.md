@@ -6,6 +6,8 @@ Yandex **не разрешил POST** на CDN для динамического
 https://krimvk.ru          → A → VPS (HTML, API, NextAuth, ЛК)
 https://www.krimvk.ru      → редирект на krimvk.ru
 https://cdn.krimvk.ru      → CNAME → Yandex CDN → origin (только GET, /_next/static/*)
+
+Опционально (долгий кэш origin): `/images/*`, публичные `/files/*` — отдельное правило CDN GET-only, если статика раздаётся с origin без cookie.
 ```
 
 Защита от DDoS на весь сервер: [YANDEX_DDOS.md](./YANDEX_DDOS.md).

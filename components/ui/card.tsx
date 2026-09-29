@@ -7,6 +7,7 @@ const Card = React.forwardRef<
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
   <div
+    data-seasonal-surface
     ref={ref}
     className={cn(
       "rounded-none border border-slate-100 bg-white text-slate-900 shadow-none transition-colors hover:shadow-none hover:translate-y-0",
@@ -77,5 +78,4 @@ const CardFooter = React.forwardRef<
 CardFooter.displayName = "CardFooter"
 
 export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }
-
 

@@ -25,6 +25,13 @@ it.each([{},{Error:'failed'},{History:null},{History:'wrong'},{History:[row]}])(
   expect(()=>hasMonthlyReading(payload,'5181279','2026-09')).toThrow();
 });
 it('accepts an explicitly empty history',()=>expect(hasMonthlyReading({History:{}},'5181279','2026-09')).toBe(false));
+it('requires an explicit persistent absolute reservation directory in production', async () => {
+  Object.assign(process.env, { NODE_ENV: 'production' });
+  delete process.env.METER_SUBMISSION_DIR;
+  await expect(reserveMeterSubmission('saki','a','m',100,'2026-09')).rejects.toMatchObject({ code: 'METER_STORAGE_UNCONFIGURED' });
+  process.env.METER_SUBMISSION_DIR = '.meter-submissions';
+  await expect(reserveMeterSubmission('saki','a','m',100,'2026-09')).rejects.toMatchObject({ code: 'METER_STORAGE_UNCONFIGURED' });
+});
 it('allows only one concurrent reservation and blocks changed values',async()=>{
   const results=await Promise.allSettled(Array.from({length:12},(_,i)=>reserveMeterSubmission('saki','a','m',100+i,'2026-09')));
   expect(results.filter(r=>r.status==='fulfilled')).toHaveLength(1);
@@ -36,6 +43,13 @@ it('retains accepted and unknown reservations, independent of upstream deletion'
   const record=JSON.parse(await readFile(path.join(dir,(await readdir(dir))[0]),'utf8'));
   expect(record.state).toBe('unknown');
   await expect(reserveMeterSubmission('saki','a','m',110,'2026-10')).resolves.toBeInstanceOf(Function);
+});
+it('blocks read-only dev submissions before any network request or reservation',async()=>{
+  process.env.ONE_C_READ_ONLY='true';
+  const fetchMock=jest.spyOn(global,'fetch');
+  await expect(submitMeterReading('a','secret','m',100,'saki')).rejects.toMatchObject({code:'ONE_C_READ_ONLY',status:403});
+  expect(fetchMock).not.toHaveBeenCalled();
+  expect(await readdir(dir)).toHaveLength(0);
 });
 it('does not write to 1C when history already contains this month',async()=>{
   const fetchMock=jest.spyOn(global,'fetch').mockResolvedValue(new Response(JSON.stringify({History:{'1789948800':[row]}})));

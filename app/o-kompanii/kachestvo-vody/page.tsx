@@ -1,8 +1,7 @@
 import { prisma, withRetry } from "@/lib/prisma";
 import { KachestvoVodyClient } from "./KachestvoVodyClient";
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+export const revalidate = 300;
 
 interface WaterQualityDocument {
   id: string;

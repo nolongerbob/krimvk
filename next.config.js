@@ -79,6 +79,8 @@ const nextConfig = {
   experimental: {
     // Keep release builds bounded on the 2 GB VPS alongside the live process.
     cpus: 1,
+    // Release webpack's heap before lint/type checking, including with our alias hook.
+    webpackBuildWorker: true,
     // proxyClientMaxBodySize — только Next.js 16+; в 15.5 достаточно middleware + serverActions
     middlewareClientMaxBodySize: '200mb',
     optimizePackageImports: ['lucide-react'],

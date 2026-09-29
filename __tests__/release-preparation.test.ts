@@ -43,4 +43,7 @@ it('keeps schema changes out of every build entry point', () => {
   }
   const config = fs.readFileSync(path.join(process.cwd(), 'next.config.js'), 'utf8');
   expect(config).toContain('ignoreDuringBuilds: false');
+  expect(config).toContain('ignoreBuildErrors: false');
+  expect(config).toContain('cpus: 1');
+  expect(config).toContain('webpackBuildWorker: true');
 });
